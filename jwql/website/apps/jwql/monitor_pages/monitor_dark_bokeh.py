@@ -24,7 +24,8 @@ import os
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
-from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool,  Legend, LinearAxis, LinearColorMapper, Range1d, Whisker
+from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool,  Legend, LinearAxis
+from bokeh.models import LinearColorMapper, Range1d, Text, Whisker
 from bokeh.models.tickers import LogTicker
 from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
@@ -59,13 +60,17 @@ class DarkMonitorPlots():
         self.db = DarkMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        available_apertures = self.db.get_unique_stats_column_vals('aperture')
-        #available_apertures = np.unique(np.array(self.db.stats_table.apertures))
+        self.available_apertures = self.db.get_unique_stats_column_vals('aperture')
+
+        # Require entries for all full frame apertures. If there are no data for a
+        # particular full frame entry, then produce an empty plot, in order to
+        # keep the plot layout consistent
+        self.ensure_all_full_frame_apertures()
 
         # List of full frame aperture names
         full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
-        for aperture in available_apertures:
+        for aperture in self.available_apertures:
             self.aperture = aperture
 
             # Retrieve data from database. Retrieve bad pixel data (which is
@@ -76,6 +81,7 @@ class DarkMonitorPlots():
 
                 # Convert query results for the bad pixel data to a series of arrays
                 self.pixel_data_to_lists()
+                self.stats_data_to_lists()
 
                 # Organize the information that will be used to show the mean dark images
                 # and possible bad pixels
@@ -88,12 +94,10 @@ class DarkMonitorPlots():
                 # For apertures that are not full frame, we retrieve only the histogram
                 # and trending data. No mean dark image nor bad pixel lists
                 self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
+                self.stats_data_to_lists()
 
             # In all cases, full frame as well as subarray apertures, we create dark
             # current histogram and trending plots.
-
-            # Convert the columns we are interested in to lists
-            self.stats_data_to_lists()
 
             # Organize the data to create the histogram plot
             self.get_latest_histogram_data()
@@ -105,6 +109,15 @@ class DarkMonitorPlots():
             self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data).plot
             self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime).plot
 
+    def ensure_all_full_frame_apertures(self):
+        """Be sure that self.available_apertures contains entires for all
+        full frame apertures. These are needed to make sure the plot layout
+        is consistent later
+        """
+        full_apertures = FULL_FRAME_APERTURES[self.instrument.upper()]
+        for ap in full_apertures:
+            if ap not in self.available_apertures:
+                self.available_apertures.append(ap)
 
     def get_mean_dark_images(self):
         """Organize data for the tab of the dark monitor plots that shows
@@ -283,98 +296,114 @@ class DarkHistPlot():
     def create_plot(self):
         """
         """
-        # Specify which key ("amplifier") to show. If there is data for amp='5',
-        # show that, as it will be the data for the entire detector. If not then
-        # we have subarray data and should use amp='1'.
-        # A bug in the dark monitor means that for NIRISS, there is no amp = '5'
-        # entry at the moment. So we set amp=1. Normally this would only plot the
-        # histogram for amp 1, but since the dark_monitor output at the moment is
-        # wrong and the histogram for the entire detector is being saved in the entries
-        # for each amp, we can get away with using use_amp=1 at the moment.
-        if '5' in self.data:
-            use_amp = '5'
+        if len(self.data) > 0:
+            # Specify which key ("amplifier") to show. If there is data for amp='5',
+            # show that, as it will be the data for the entire detector. If not then
+            # we have subarray data and should use amp='1'.
+            # A bug in the dark monitor means that for NIRISS, there is no amp = '5'
+            # entry at the moment. So we set amp=1. Normally this would only plot the
+            # histogram for amp 1, but since the dark_monitor output at the moment is
+            # wrong and the histogram for the entire detector is being saved in the entries
+            # for each amp, we can get away with using use_amp=1 at the moment.
+            if '5' in self.data:
+                use_amp = '5'
+            else:
+                use_amp = '1'
+
+            # If there are histogram data for multiple amps, then we can plot each histogram.
+            if len(self.data) > 1:
+                # Looks like the histogram data for the individual amps is not being saved
+                # correctly. The data are identical for the full aperture and all amps. So
+                # for the moment, show only the full aperture data (by setting per_amp=False).
+                per_amp = False
+                main_label = 'Full Aperture'
+
+                # Colors to use for the amp-dpendent plots
+                colors = ['red', 'orange', 'green', 'gray']
+            else:
+                per_amp = False
+
+            mainx, mainy = self.data[use_amp]
+            mainx = np.array(mainx)
+            mainy = np.array(mainy)
+
+            # Calculate edge values
+            left_edges, right_edges = self.calc_bin_edges(mainx)
+
+            # Create the CDF
+            pdf = mainy / sum(mainy)
+            cdf = np.cumsum(pdf)
+
+            # Create ColumnDataSource for main plot and CDF line
+            source = ColumnDataSource(data=dict(dark_rate=mainx,
+                                                num_pix=mainy,
+                                                cdf=cdf,
+                                                left_edges=left_edges,
+                                                right_edges=right_edges
+                                                )
+                                      )
+
+            self.plot = figure(title=f'{self.aperture}: Dark Rate Histogram',
+                               tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
+
+            # Plot the histogram for the "main" amp
+            self.plot.quad(top='num_pix', bottom=0, left='left_edges', right='right_edges',
+                           fill_color="navy", line_color="white", alpha=0.5, source=source)
+            hover_tool = HoverTool(tooltips=[('Dark rate:', '@dark_rate'),
+                                             ('Num Pix:', '@num_pix'),
+                                             ('CDF:', '@cdf')
+                                             ],
+                                   mode='mouse')
+            self.plot.tools.append(hover_tool)
+
+            # If there are multiple amps to be plotted, do that here
+            if per_amp:
+                self.plot.quad(top=mainy, bottom=0, left=left_edges, right=right_edges,
+                               fill_color="navy", line_color="white", alpha=0.5, legend_label='Full Aperture')
+                # Repeat for all amps. Be sure to skip the amp that's already completed
+                for amp, color in zip(self.data, colors):
+                    if amp != use_amp:
+                        x, y = self.data[amp]
+                        x = np.array(x)
+                        y = np.array(y)
+                        amp_left_edges, amp_right_edges = self.calc_bin_edges(x)
+                        self.plot.quad(top=y, bottom=0, left=amp_left_edges, right=amp_right_edges,
+                                       fill_color=color, line_color="white", alpha=0.25, legend_label=f'Amp {amp}')
+
+            # Set ranges
+            self.plot.extra_y_ranges = {"cdf_line": Range1d(0,1)}
+            self.plot.add_layout(LinearAxis(y_range_name='cdf_line', axis_label="Cumulative Distribution"), "right")
+
+            # Add cumulative distribution function
+            self.plot.line('dark_rate', 'cdf', source=source, line_color="orange", line_width=2, alpha=0.7,
+                           y_range_name='cdf_line', color="red", legend_label="CDF")
+
+            # Set the initial x range to include 99.8% of the distribution
+            disp_index = np.where((cdf > 0.001) & (cdf < 0.999))[0]
+
+            self.plot.y_range.start = 0
+            self.plot.y_range.end = np.max(mainy) * 1.1
+            self.plot.x_range.start = mainx[disp_index[0]]
+            self.plot.x_range.end = mainx[disp_index[-1]]
+            self.plot.legend.location = "top_right"
+            self.plot.legend.background_fill_color = "#fefefe"
+            self.plot.grid.grid_line_color="white"
         else:
-            use_amp = '1'
+            # If self.data is empty, then make a placeholder plot
+            self.plot = figure(title=f'{self.aperture}: Dark Rate Histogram',
+                               tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
+            self.plot.y_range.start = 0
+            self.plot.y_range.end = 1
+            self.plot.x_range.start = 0
+            self.plot.x_range.end = 1
 
-        # If there are histogram data for multiple amps, then we can plot each histogram.
-        if len(self.data) > 1:
-            # Looks like the histogram data for the individual amps is not being saved
-            # correctly. The data are identical for the full aperture and all amps. So
-            # for the moment, show only the full aperture data (by setting per_amp=False).
-            per_amp = False
-            main_label = 'Full Aperture'
-
-            # Colors to use for the amp-dpendent plots
-            colors = ['red', 'orange', 'green', 'gray']
-        else:
-            per_amp = False
-
-        mainx, mainy = self.data[use_amp]
-        mainx = np.array(mainx)
-        mainy = np.array(mainy)
-
-        # Calculate edge values
-        left_edges, right_edges = self.calc_bin_edges(mainx)
-
-        # Create the CDF
-        pdf = mainy / sum(mainy)
-        cdf = np.cumsum(pdf)
-
-        # Create ColumnDataSource for main plot and CDF line
-        source = ColumnDataSource(data=dict(dark_rate=mainx,
-                                            num_pix=mainy,
-                                            cdf=cdf,
-                                            left_edges=left_edges,
-                                            right_edges=right_edges
-                                            )
-                                  )
-
-        self.plot = figure(title=f'{self.aperture}: Dark Rate Histogram', tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
-
-        # Plot the histogram for the "main" amp
-        self.plot.quad(top='num_pix', bottom=0, left='left_edges', right='right_edges',
-                       fill_color="navy", line_color="white", alpha=0.5, source=source)
-        hover_tool = HoverTool(tooltips=[('Dark rate:', '@dark_rate'),
-                                         ('Num Pix:', '@num_pix'),
-                                         ('CDF:', '@cdf')
-                                        ],
-                               mode='mouse')
-        self.plot.tools.append(hover_tool)
-
-        # If there are multiple amps to be plotted, do that here
-        if per_amp:
-            self.plot.quad(top=mainy, bottom=0, left=left_edges, right=right_edges,
-                           fill_color="navy", line_color="white", alpha=0.5, legend_label='Full Aperture')
-            # Repeat for all amps. Be sure to skip the amp that's already completed
-            for amp, color in zip(self.data, colors):
-                if amp != use_amp:
-                    x, y = self.data[amp]
-                    x = np.array(x)
-                    y = np.array(y)
-                    amp_left_edges, amp_right_edges = self.calc_bin_edges(x)
-                    self.plot.quad(top=y, bottom=0, left=amp_left_edges, right=amp_right_edges,
-                                   fill_color=color, line_color="white", alpha=0.25, legend_label=f'Amp {amp}')
+            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            self.plot.add_glyph(source, glyph)
 
         # Set labels and ranges
         self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
         self.plot.yaxis.axis_label = 'Number of Pixels'
-        self.plot.extra_y_ranges = {"cdf_line": Range1d(0,1)}
-        self.plot.add_layout(LinearAxis(y_range_name='cdf_line', axis_label="Cumulative Distribution"), "right")
-
-        # Add cumulative distribution function
-        self.plot.line('dark_rate', 'cdf', source=source, line_color="orange", line_width=2, alpha=0.7,
-                       y_range_name='cdf_line', color="red", legend_label="CDF")
-
-        # Set the initial x range to include 99.8% of the distribution
-        disp_index = np.where((cdf > 0.001) & (cdf < 0.999))[0]
-
-        self.plot.y_range.start = 0
-        self.plot.y_range.end = np.max(mainy) * 1.1
-        self.plot.x_range.start = mainx[disp_index[0]]
-        self.plot.x_range.end = mainx[disp_index[-1]]
-        self.plot.legend.location = "top_right"
-        self.plot.legend.background_fill_color = "#fefefe"
-        self.plot.grid.grid_line_color="white"
 
 
 class DarkTrendPlot():
@@ -409,102 +438,117 @@ class DarkTrendPlot():
     def create_plot(self):
         """
         """
-        # Specify which key ("amplifier") to show. If there is data for amp='5',
-        # show that, as it will be the data for the entire detector. If not then
-        # we have subarray data and should use amp='1'.
-        # A bug in the dark monitor means that for NIRISS, there is no amp = '5'
-        # entry at the moment. So we set amp=1. Normally this would only plot the
-        # histogram for amp 1, but since the dark_monitor output at the moment is
-        # wrong and the histogram for the entire detector is being saved in the entries
-        # for each amp, we can get away with using use_amp=1 at the moment.
-        if '5' in self.mean_dark:
-            use_amp = '5'
-        else:
-            use_amp = '1'
+        if len(self.mean_dark) > 0:
+            # Specify which key ("amplifier") to show. If there is data for amp='5',
+            # show that, as it will be the data for the entire detector. If not then
+            # we have subarray data and should use amp='1'.
+            # A bug in the dark monitor means that for NIRISS, there is no amp = '5'
+            # entry at the moment. So we set amp=1. Normally this would only plot the
+            # histogram for amp 1, but since the dark_monitor output at the moment is
+            # wrong and the histogram for the entire detector is being saved in the entries
+            # for each amp, we can get away with using use_amp=1 at the moment.
+            if '5' in self.mean_dark:
+                use_amp = '5'
+            else:
+                use_amp = '1'
 
-        # If there are trending data for multiple amps, then we can plot each
-        if len(self.mean_dark) > 1:
-            # Looks like the histogram data for the individual amps is not being saved
-            # correctly. The data are identical for the full aperture and all amps. So
-            # for the moment, show only the full aperture data (by setting per_amp=False).
-            per_amp = False
-            main_label = 'Full Aperture'
+            # If there are trending data for multiple amps, then we can plot each
+            if len(self.mean_dark) > 1:
+                # Looks like the histogram data for the individual amps is not being saved
+                # correctly. The data are identical for the full aperture and all amps. So
+                # for the moment, show only the full aperture data (by setting per_amp=False).
+                per_amp = False
+                main_label = 'Full Aperture'
 
-            # Colors to use for the amp-dpendent plots
-            colors = ['red', 'orange', 'green', 'grey']
-        else:
-            per_amp = False
+                # Colors to use for the amp-dpendent plots
+                colors = ['red', 'orange', 'green', 'grey']
+            else:
+                per_amp = False
 
-        error_lower = self.mean_dark[use_amp] - self.stdev_dark[use_amp]
-        error_upper = self.mean_dark[use_amp] + self.stdev_dark[use_amp]
+            error_lower = self.mean_dark[use_amp] - self.stdev_dark[use_amp]
+            error_upper = self.mean_dark[use_amp] + self.stdev_dark[use_amp]
 
-        # Create a ColumnDataSource for the main amp to use
-        source = ColumnDataSource(data=dict(mean_dark=self.mean_dark[use_amp],
-                                            stdev_dark=self.stdev_dark[use_amp],
-                                            error_lower=error_lower,
-                                            error_upper=error_upper,
-                                            time=self.obstime[use_amp]
-                                            )
-                                  )
-        self.plot = figure(title=f'{self.aperture}: Mean +/- 1 sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
-
-        # Plot the "main" amp data along with error bars
-        self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source)
-        self.plot.add_layout(Whisker(source=source, base="time", upper="error_upper", lower="error_lower", line_color='navy'))
-        hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
-                                         ('Date:', '@time{%d %b %Y}')
-                                        ])
-        hover_tool.formatters = {'@time': 'datetime'}
-        self.plot.tools.append(hover_tool)
-
-        # If there are multiple amps to plot, do that here
-        if per_amp:
-            amp_source = {}
-            # Repeat for all amps. Be sure to skip the amp that's already completed
-            for amp, color in zip(self.mean_dark, colors):
-                if amp != use_amp:
-                    amp_source[amp] = ColumnDataSource(data=dict(mean_dark=self.mean_dark[amp],
-                                                                 stdev_dark=self.stdev_dark[amp],
-                                                                 time=self.obstime[amp]
-                                                                 )
-                                                       )
-                    self.plot.scatter(x='time', y='mean_dark', fill_color=color, alpha=0.5, source=amp_source[amp],
-                                      legend_label=f'Amp {amp}')
-
-        # Make the x axis tick labels look nice
-        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                seconds=["%d %b %H:%M:%S.%3N"],
-                                                hours=["%d %b %H:%M"],
-                                                days=["%d %b %H:%M"],
-                                                months=["%d %b %Y %H:%M"],
-                                                years=["%d %b %Y"]
+            # Create a ColumnDataSource for the main amp to use
+            source = ColumnDataSource(data=dict(mean_dark=self.mean_dark[use_amp],
+                                                stdev_dark=self.stdev_dark[use_amp],
+                                                error_lower=error_lower,
+                                                error_upper=error_upper,
+                                                time=self.obstime[use_amp]
                                                 )
-        self.plot.xaxis.major_label_orientation = np.pi / 4
+                                    )
+            self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
+                               background_fill_color="#fafafa")
+
+            # Plot the "main" amp data along with error bars
+            self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source)
+            self.plot.add_layout(Whisker(source=source, base="time", upper="error_upper", lower="error_lower", line_color='navy'))
+            hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
+                                             ('Date:', '@time{%d %b %Y}')
+                                             ])
+            hover_tool.formatters = {'@time': 'datetime'}
+            self.plot.tools.append(hover_tool)
+
+            # If there are multiple amps to plot, do that here
+            if per_amp:
+                amp_source = {}
+                # Repeat for all amps. Be sure to skip the amp that's already completed
+                for amp, color in zip(self.mean_dark, colors):
+                    if amp != use_amp:
+                        amp_source[amp] = ColumnDataSource(data=dict(mean_dark=self.mean_dark[amp],
+                                                                     stdev_dark=self.stdev_dark[amp],
+                                                                     time=self.obstime[amp]
+                                                                     )
+                                                           )
+                        self.plot.scatter(x='time', y='mean_dark', fill_color=color, alpha=0.5, source=amp_source[amp],
+                                          legend_label=f'Amp {amp}')
+
+            # Make the x axis tick labels look nice
+            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                              seconds=["%d %b %H:%M:%S.%3N"],
+                                                              hours=["%d %b %H:%M"],
+                                                              days=["%d %b %H:%M"],
+                                                              months=["%d %b %Y %H:%M"],
+                                                              years=["%d %b %Y"]
+                                                              )
+            self.plot.xaxis.major_label_orientation = np.pi / 4
+
+            # Set x range
+            time_pad = (max(self.obstime[use_amp]) - min(self.obstime[use_amp])) * 0.05
+            if time_pad == timedelta(seconds=0):
+                time_pad = timedelta(days=1)
+            self.plot.x_range.start = min(self.obstime[use_amp]) - time_pad
+            self.plot.x_range.end = max(self.obstime[use_amp]) + time_pad
+
+            # Set y range
+            max_val = -99999.
+            min_val = 99999.
+            for key in self.mean_dark:
+                mx = np.max(self.mean_dark[key])
+                mn = np.min(self.mean_dark[key])
+                if mx > max_val:
+                    max_val = mx
+                if mn < min_val:
+                    min_val = mn
+            self.plot.y_range.start = min_val * 0.95
+            self.plot.y_range.end = max_val * 1.05
+            self.plot.legend.location = "top_right"
+            self.plot.legend.background_fill_color = "#fefefe"
+            self.plot.grid.grid_line_color="white"
+        else:
+            # If there are no data, make a placeholder plot
+            self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
+                               background_fill_color="#fafafa")
+            self.plot.x_range.start = min_val * 0
+            self.plot.x_range.end = max_val * 1
+            self.plot.y_range.start = min_val * 0
+            self.plot.y_range.end = max_val * 1
+
+            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            self.plot.add_glyph(source, glyph)
+
         self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
         self.plot.yaxis.axis_label = 'Date'
-
-        # Set x range
-        time_pad = (max(self.obstime[use_amp]) - min(self.obstime[use_amp])) * 0.05
-        if time_pad == timedelta(seconds=0):
-            time_pad = timedelta(days=1)
-        self.plot.x_range.start = min(self.obstime[use_amp]) - time_pad
-        self.plot.x_range.end = max(self.obstime[use_amp]) + time_pad
-
-        # Set y range
-        max_val = -99999.
-        min_val = 99999.
-        for key in self.mean_dark:
-            mx = np.max(self.mean_dark[key])
-            mn = np.min(self.mean_dark[key])
-            if mx > max_val:
-                max_val = mx
-            if mn < min_val:
-                min_val = mn
-        self.plot.y_range.start = min_val * 0.95
-        self.plot.y_range.end = max_val * 1.05
-        self.plot.legend.location = "top_right"
-        self.plot.legend.background_fill_color = "#fefefe"
-        self.plot.grid.grid_line_color="white"
 
 
 class DarkImagePlot():
@@ -676,9 +720,22 @@ class DarkImagePlot():
             self.plot.tools.append(hover_tool_noisy)
 
             # Add the legend
-            legend = Legend(items=[("Higher than baseline"   , [hot]),
-                                   ("Lower than baseline" , [dead]),
-                                   ("Noisier than baseline" , [noisy]),
+            if len(self.image_data["hot_pixels"][0]) > 0:
+                hot_text = "Higher than baseline"
+            else:
+                hot_text = "No new hot"
+            if len(self.image_data["dead_pixels"][0]) > 0:
+                dead_text = "Lower than baseline"
+            else:
+                dead_text = "No new dead"
+            if len(self.image_data["noisy_pixels"][0]) > 0:
+                noisy_text = "Noisier than baseline"
+            else:
+                noisy_text = "No new noisy"
+
+            legend = Legend(items=[(hot_text, [hot]),
+                                   (dead_text, [dead]),
+                                   (noisy_text, [noisy]),
                                    ],
                             location="center",
                             orientation='horizontal')
@@ -688,7 +745,14 @@ class DarkImagePlot():
         else:
             # If no mean image is given, we return an empty figure
             self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
+            self.plot.x_range.start = min_val * 0
+            self.plot.x_range.end = max_val * 1
+            self.plot.y_range.start = min_val * 0
+            self.plot.y_range.end = max_val * 1
 
+            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            self.plot.add_glyph(source, glyph)
 
 
 
