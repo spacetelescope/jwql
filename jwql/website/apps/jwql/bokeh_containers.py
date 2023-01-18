@@ -30,7 +30,6 @@ import numpy as np
 import pysiaf
 
 from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
-#from .monitor_dark_bokeh import DarkMonitorPlots
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
@@ -429,10 +428,10 @@ def dark_monitor_tabs(instrument):
     # Create a tab for each type of plot
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
     line_tab = Panel(child=trending_layout, title="Trending")
-    #image_tab = Panel(child=image_layout, title="Mean Dark Image")
+    image_tab = Panel(child=image_layout, title="Mean Dark Image")
 
     # Build tabs
-    tabs = Tabs(tabs=[histogram_tab, line_tab])#, image_tab])
+    tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)

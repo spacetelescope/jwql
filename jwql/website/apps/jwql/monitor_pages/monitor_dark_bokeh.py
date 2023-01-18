@@ -329,7 +329,7 @@ class DarkHistPlot():
                                             )
                                   )
 
-        self.plot = figure(title=self.aperture, tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
+        self.plot = figure(title=f'{self.aperture}: Dark Rate Histogram', tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
 
         # Plot the histogram for the "main" amp
         self.plot.quad(top='num_pix', bottom=0, left='left_edges', right='right_edges',
@@ -446,10 +446,10 @@ class DarkTrendPlot():
                                             time=self.obstime[use_amp]
                                             )
                                   )
-        self.plot = figure(title=self.aperture, tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
+        self.plot = figure(title=f'{self.aperture}: Mean +/- 1 sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
 
         # Plot the "main" amp data along with error bars
-        self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label='Full Aperture')
+        self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source)
         self.plot.add_layout(Whisker(source=source, base="time", upper="error_upper", lower="error_lower", line_color='navy'))
         hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
                                          ('Date:', '@time{%d %b %Y}')
@@ -480,9 +480,13 @@ class DarkTrendPlot():
                                                 years=["%d %b %Y"]
                                                 )
         self.plot.xaxis.major_label_orientation = np.pi / 4
+        self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
+        self.plot.yaxis.axis_label = 'Date'
 
         # Set x range
         time_pad = (max(self.obstime[use_amp]) - min(self.obstime[use_amp])) * 0.05
+        if time_pad == timedelta(seconds=0):
+            time_pad = timedelta(days=1)
         self.plot.x_range.start = min(self.obstime[use_amp]) - time_pad
         self.plot.x_range.end = max(self.obstime[use_amp]) + time_pad
 
@@ -603,7 +607,7 @@ class DarkImagePlot():
             img_mn, img_med, img_dev = sigma_clipped_stats(self.image_data["image_array"][4: ny - 4, 4: nx - 4])
 
             # Create figure
-            self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
+            self.plot = figure(title=f'{self.detector}: Mean Dark Rate Image', tools='pan,box_zoom,reset,wheel_zoom,save')
             self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
             # Create the color mapper that will be used to scale the image
