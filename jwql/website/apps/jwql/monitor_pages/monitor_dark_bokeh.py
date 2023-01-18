@@ -176,8 +176,10 @@ class DarkMonitorPlots():
         if mean_dark_image is None:
             if len(self._stats_mean_dark_image_files) > 0:
                 image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
-            if os.path.isfile(image_path):
-                mean_dark_image = fits.getdata(image_path, 1)
+                if os.path.isfile(image_path):
+                    mean_dark_image = fits.getdata(image_path, 1)
+                else:
+                    mean_dark_image = None
             else:
                 mean_dark_image = None
             self.image_data["image_array"] = mean_dark_image
@@ -194,39 +196,42 @@ class DarkMonitorPlots():
         been filtered such that all entries are for the aperture of interest.
 
         """
-        # Find the index of the most recent entry
-        #self._aperture_entries = np.where((self._apertures == aperture))[0]
-        latest_date = np.max(self._entry_dates) #[self._aperture_entries])
-
-        # Get indexes of entries for all amps that were added in the
-        # most recent run of the monitor for the aperture. All entries
-        # for a given run are added to the database within a fraction of
-        # a second, so using a time range of a few seconds should be fine.
-        delta_time = timedelta(seconds=10)
-        most_recent_idx = np.where(self._entry_dates > (latest_date - delta_time))[0]
-
-        # Store the histogram data in a dictionary where the keys are the
-        # amplifier values (note that these are strings e.g. '1''), and the
-        # values are tuples of (x, y) lists
         self.hist_data = {}
-        for idx in most_recent_idx:
-            self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
-                                                                 self.db.stats_data[idx].hist_amplitudes)
+        if len(self._entry_dates) > 0:
+            # Find the index of the most recent entry
+            #self._aperture_entries = np.where((self._apertures == aperture))[0]
+            latest_date = np.max(self._entry_dates) #[self._aperture_entries])
+
+            # Get indexes of entries for all amps that were added in the
+            # most recent run of the monitor for the aperture. All entries
+            # for a given run are added to the database within a fraction of
+            # a second, so using a time range of a few seconds should be fine.
+            delta_time = timedelta(seconds=10)
+            most_recent_idx = np.where(self._entry_dates > (latest_date - delta_time))[0]
+
+            # Store the histogram data in a dictionary where the keys are the
+            # amplifier values (note that these are strings e.g. '1''), and the
+            # values are tuples of (x, y) lists
+            for idx in most_recent_idx:
+                self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
+                                                                     self.db.stats_data[idx].hist_amplitudes)
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
         the aperture. Keep amplifier-specific data separated.
         """
         # Separate the trending data by amplifier
-        amp_vals = np.unique(np.array(self._amplifiers))
         self.mean_dark = {}
         self.stdev_dark = {}
         self.obstime = {}
-        for amp in amp_vals:
-            amp_rows = np.where(self._amplifiers == amp)[0]
-            self.mean_dark[amp] = self._mean[amp_rows]
-            self.stdev_dark[amp] = self._stdev[amp_rows]
-            self.obstime[amp] = self._obs_mid_time[amp_rows]
+
+        if len(self._amplifiers) > 0:
+            amp_vals = np.unique(np.array(self._amplifiers))
+            for amp in amp_vals:
+                amp_rows = np.where(self._amplifiers == amp)[0]
+                self.mean_dark[amp] = self._mean[amp_rows]
+                self.stdev_dark[amp] = self._stdev[amp_rows]
+                self.obstime[amp] = self._obs_mid_time[amp_rows]
 
     def pixel_data_to_lists(self):
         """Convert db query results to arrays
@@ -745,10 +750,10 @@ class DarkImagePlot():
         else:
             # If no mean image is given, we return an empty figure
             self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
-            self.plot.x_range.start = min_val * 0
-            self.plot.x_range.end = max_val * 1
-            self.plot.y_range.start = min_val * 0
-            self.plot.y_range.end = max_val * 1
+            self.plot.x_range.start = 0
+            self.plot.x_range.end = 1
+            self.plot.y_range.start = 0
+            self.plot.y_range.end = 1
 
             source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
             glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
