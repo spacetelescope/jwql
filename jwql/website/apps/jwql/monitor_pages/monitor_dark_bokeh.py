@@ -128,6 +128,7 @@ class DarkMonitorPlots():
         types 'hot', 'dead', 'noisy'. Make sure to get all three.
         """
         self.image_data = {}
+        mean_dark_image = None
 
         # Use the most recent entry for each of the three bad pixel types
         hot_idx = np.where(self._types == 'hot')[0]
@@ -138,6 +139,7 @@ class DarkMonitorPlots():
         # type of bad pixel ('hot_pixel', 'dead_pixel', or 'noisy_pixel'),
         # and the values are tuples of (x, y) lists. If there is no database
         # entry for the bad pixels, then set them to empty lists.
+        image_path = None
         if len(hot_idx) > 0:
             hot_idx = hot_idx[-1]
             self.image_data["hot_pixels"] = (self._x_coords[hot_idx],
@@ -146,21 +148,17 @@ class DarkMonitorPlots():
             self.image_data["baseline_file"] = self._baseline_files[hot_idx]
 
             image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
-            if os.path.isfile(image_path):
-                mean_dark_image = fits.getdata(image_path, 1)
-            else:
-                mean_dark_image = None
         else:
             self.image_data["hot_pixels"] = ([], [])
             self.image_data["baseline_file"] = ''
-            mean_dark_image = None
-        self.image_data["image_array"] = mean_dark_image
 
         if len(dead_idx) > 0:
             dead_idx = dead_idx[-1]
             self.image_data["dead_pixels"] = (self._x_coords[dead_idx],
                                              self._y_coords[dead_idx]
                                              )
+            if image_path is None:
+                image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[dead_idx])
         else:
             self.image_data["dead_pixels"] = ([], [])
 
@@ -169,8 +167,15 @@ class DarkMonitorPlots():
             self.image_data["noisy_pixels"] = (self._x_coords[noisy_idx],
                                                self._y_coords[noisy_idx]
                                                )
+            if image_path is None:
+                image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[noisy_idx])
         else:
             self.image_data["noisy_pixels"] = ([], [])
+
+        # If we have a valid path for a mean dark image, read it in
+        if image_path is not None:
+            if os.path.isfile(image_path):
+                mean_dark_image = fits.getdata(image_path, 1)
 
         #If there is no entry for the mean image file in the pixel table, we
         # may be able to retrieve it from the stats table
@@ -179,11 +184,8 @@ class DarkMonitorPlots():
                 image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
                 if os.path.isfile(image_path):
                     mean_dark_image = fits.getdata(image_path, 1)
-                else:
-                    mean_dark_image = None
-            else:
-                mean_dark_image = None
-            self.image_data["image_array"] = mean_dark_image
+
+        self.image_data["image_array"] = mean_dark_image
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
@@ -971,9 +973,39 @@ class DarkMonitorData():
             # NIRCam LW detectors use 'LONG' rather than 5 in the pixel_table
             if '5' in self.detector:
                 self.detector = self.detector.replace('5', 'LONG')
-
+            """
             self.pixel_data = session.query(self.pixel_table) \
                 .filter(self.pixel_table.detector == self.detector) \
                 .all()
+            """
+
+            # Get the latest entry for each of the three types of bad pixel, but only
+            # if the number of bad pixels is under the threshold for the number of pixels
+            # we are willing to overplot
+            subq = (session
+                    .query(pixel_table.type, func.max(pixel_table.entry_date).label("max_created"))
+                    .filter(pixel_table.detector == self.detector,
+                            pixel_table.type.in_(['hot', 'dead', 'noisy']),
+                            func.array_length(pixel_table.x_coord, 1) < DARK_MONITOR_MAX_BADPOINTS_TO_PLOT)
+                    .group_by(pixel_table.type)
+                    .subquery()
+                    )
+
+            query = (session.query(pixel_table)
+                     .join(subq, and_(pixel_table.type == subq.c.type,
+                           pixel_table.entry_date == subq.c.max_created))
+                     )
+
+            if query.count() > 0:
+                # In this case, at least one of the types of bad pixel has a most
+                # recent entry where the number of bad pixels is below the threshold.
+                # Perform the query.
+                self.pixel_data = query.all()
+            else:
+                # In this case, the number of all three types of bad pixel are over
+                # the threshold. So here we skip reading in data from this database
+                # and we get the mean dark image filename from the stats_data table
+                # instead.
+                self.pixel_data = []
 
         session.close()
