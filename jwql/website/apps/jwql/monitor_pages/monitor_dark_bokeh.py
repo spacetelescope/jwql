@@ -753,7 +753,7 @@ class DarkImagePlot():
 
             legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
                             location="center",
-                            orientation='horizontal')
+                            orientation='vertical')
 
             self.plot.add_layout(legend, 'below')
 
@@ -791,6 +791,7 @@ class DarkImagePlot():
         adjective = {"hot": "hotter", "dead": "lower", "noisy": "noisier"}
         sources = {}
         badpixplots = {}
+        hover_tools = {}
 
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=self.image_data[f"{pix_type}_pixels"][0],
                                                            pixels_y=self.image_data[f"{pix_type}_pixels"][1],
@@ -814,9 +815,9 @@ class DarkImagePlot():
         numpix = len(self.image_data[f"{pix_type}_pixels"][0])
         if  numpix > 0:
             if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
-                text = f"{adjective[pix_type]} than baseline"
-            else:
                 text = f"{numpix} pix {adjective[pix_type]} than baseline"
+            else:
+                text = f"{numpix} pix {adjective[pix_type]} than baseline (not shown)"
         else:
             text = f"No new adjective[pix_type]"
 
