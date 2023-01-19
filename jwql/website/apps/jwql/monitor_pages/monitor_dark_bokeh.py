@@ -38,7 +38,7 @@ from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkP
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
-from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
+from jwql.utils.constants import DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
 from jwql.utils.utils import get_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -237,8 +237,8 @@ class DarkMonitorPlots():
         """Convert db query results to arrays
         """
         self._pixel_entry_dates = np.array([e.entry_date for e in self.db.pixel_data])
-        self._x_coords = np.array([e.x_coord for e in self.db.pixel_data])
-        self._y_coords = np.array([e.y_coord for e in self.db.pixel_data])
+        self._x_coords = [e.x_coord for e in self.db.pixel_data]
+        self._y_coords = [e.y_coord for e in self.db.pixel_data]
         self._types = np.array([e.type for e in self.db.pixel_data])
         self._mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.pixel_data])
         self._baseline_files = np.array([e.baseline_file for e in self.db.pixel_data])
@@ -528,8 +528,8 @@ class DarkTrendPlot():
             max_val = -99999.
             min_val = 99999.
             for key in self.mean_dark:
-                mx = np.max(self.mean_dark[key])
-                mn = np.min(self.mean_dark[key])
+                mx = np.max(self.mean_dark[key] + self.stdev_dark[key])
+                mn = np.min(self.mean_dark[key] - self.stdev_dark[key])
                 if mx > max_val:
                     max_val = mx
                 if mn < min_val:
@@ -543,17 +543,17 @@ class DarkTrendPlot():
             # If there are no data, make a placeholder plot
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
-            self.plot.x_range.start = min_val * 0
-            self.plot.x_range.end = max_val * 1
-            self.plot.y_range.start = min_val * 0
-            self.plot.y_range.end = max_val * 1
+            self.plot.x_range.start = 0
+            self.plot.x_range.end = 1
+            self.plot.y_range.start = 0
+            self.plot.y_range.end = 1
 
             source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
             glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
             self.plot.add_glyph(source, glyph)
 
-        self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
-        self.plot.yaxis.axis_label = 'Date'
+        self.plot.xaxis.axis_label = 'Date'
+        self.plot.yaxis.axis_label = 'Dark Rate (DN/sec)'
 
 
 class DarkImagePlot():
@@ -687,6 +687,11 @@ class DarkImagePlot():
             for x, y in zip(self.image_data["noisy_pixels"][0], self.image_data["noisy_pixels"][1]):
                 noisy_vals.append(self.image_data["image_array"][y, x])
 
+            hot_legend = self.overplot_bad_pix("hot", hot_vals)
+            dead_legend = self.overplot_bad_pix("dead", dead_vals)
+            noisy_legend = self.overplot_bad_pix("noisy", noisy_vals)
+
+            """
             source = ColumnDataSource(data=dict(hot_pixels_x=self.image_data["hot_pixels"][0],
                                                 hot_pixels_y=self.image_data["hot_pixels"][1],
                                                 hot_values=hot_vals,
@@ -744,6 +749,11 @@ class DarkImagePlot():
                                    ],
                             location="center",
                             orientation='horizontal')
+            """
+
+            legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
+                            location="center",
+                            orientation='horizontal')
 
             self.plot.add_layout(legend, 'below')
 
@@ -760,6 +770,59 @@ class DarkImagePlot():
             self.plot.add_glyph(source, glyph)
 
 
+    def overplot_bad_pix(self, pix_type, values):
+        """Add a scatter plot of potential new bad pixels to the plot
+
+        Paramters
+        ---------
+        pix_type : str
+            Type of bad pixel. "hot", "dead", or "noisy"
+
+        values : list
+            Values in the mean dark image at the locations of the bad pixels
+
+        Returns
+        -------
+        legend_item : tup
+            Tuple of legend text and associated plot. Will be converted into
+            a LegendItem and added to the plot legend
+        """
+        colors = {"hot": "red", "dead": "blue", "noisy": "pink"}
+        adjective = {"hot": "hotter", "dead": "lower", "noisy": "noisier"}
+        sources = {}
+        badpixplots = {}
+
+        sources[pix_type] = ColumnDataSource(data=dict(pixels_x=self.image_data[f"{pix_type}_pixels"][0],
+                                                           pixels_y=self.image_data[f"{pix_type}_pixels"][1],
+                                                           values=values
+                                                           )
+                                                 )
+
+        # Overplot the bad pixel locations
+        badpixplots[pix_type] = self.plot.circle(x=f'{pix_type}_pixels_x', y=f'{pix_type}_pixels_y',
+                                                     source=sources[pix_type], color=colors[pix_type])
+
+        # Create hover tools for the bad pixel types
+        hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
+                                                 ('value:', f'@values'),
+                                                 ],
+                                       renderers=[badpixplots[pix_type]])
+        # Add tool to plot
+        self.plot.tools.append(hover_tools[pix_type])
+
+        # Add to the legend
+        numpix = len(self.image_data[f"{pix_type}_pixels"][0])
+        if  numpix > 0:
+            if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
+                text = f"{adjective[pix_type]} than baseline"
+            else:
+                text = f"{numpix} pix {adjective[pix_type]} than baseline"
+        else:
+            text = f"No new adjective[pix_type]"
+
+        # Create a tuple to be added to the plot legend
+        legend_item = (text, [badpixplots[pix_type]])
+        return legend_item
 
 
 
