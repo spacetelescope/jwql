@@ -31,6 +31,7 @@ from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
 from datetime import datetime, timedelta
 import numpy as np
+from sqlalchemy import func
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
@@ -390,7 +391,7 @@ class DarkHistPlot():
             self.plot.y_range.end = np.max(mainy) * 1.1
             self.plot.x_range.start = mainx[disp_index[0]]
             self.plot.x_range.end = mainx[disp_index[-1]]
-            self.plot.legend.location = "top_right"
+            self.plot.legend.location = "top_left"
             self.plot.legend.background_fill_color = "#fefefe"
             self.plot.grid.grid_line_color="white"
         else:
@@ -677,6 +678,14 @@ class DarkImagePlot():
             self.plot.tools.append(hover_tool)
 
             # Create lists of hot/dead/noisy pixel values
+
+            to speed up:
+            when querying the database, only get data if the number of bad,dead,or noisy pixels is 1000>n>0
+            otherwise you can get the mean dark image file name from the other table. querying the pixel table
+            is slow when there are a lot of bad pixels
+
+
+            # This is slow for large numbers of pixels
             hot_vals = []
             for x, y in zip(self.image_data["hot_pixels"][0], self.image_data["hot_pixels"][1]):
                 hot_vals.append(self.image_data["image_array"][y, x])
@@ -819,7 +828,7 @@ class DarkImagePlot():
             else:
                 text = f"{numpix} pix {adjective[pix_type]} than baseline (not shown)"
         else:
-            text = f"No new adjective[pix_type]"
+            text = f"No new {adjective[pix_type]}"
 
         # Create a tuple to be added to the plot legend
         legend_item = (text, [badpixplots[pix_type]])

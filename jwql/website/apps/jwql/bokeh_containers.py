@@ -319,88 +319,6 @@ def cosmic_ray_monitor_tabs(instrument):
 
     return div, script
 
-def dark_monitor_layout(instrument, plots):
-    """Arrange a set of plots for display on the dark monitor page.
-    Full frame aperture plots are placed first, with subarray plots
-    beneath. This function assumes that there are plots for all full
-    frame apertures present.
-
-    Paramters
-    ---------
-    instrument : str
-        Name of the instrument that the plots are for
-
-    plots : dict
-        Dictionary containing a set of one type of dark monitor plot
-        for an instrument. Keys are aperture names and values are the
-        plots (bokeh figures)
-
-    Returns
-    -------
-    plot_layout : bokeh.layouts.layout
-    """
-
-    # Generate nested lists of the full frame apertures, which will be shown at the top
-    # of the tab. Note that order below is intentional. It mimics the detectors' locations
-    # relative to one another in the focal plane.
-    if instrument.lower() == 'nircam':
-        full_frame_lists = [
-            [plots['NRCA2_FULL'], plots['NRCA4_FULL'], plots['NRCB3_FULL'], plots['NRCB1_FULL']],
-            [plots['NRCA1_FULL'], plots['NRCA3_FULL'], plots['NRCB4_FULL'], plots['NRCB2_FULL']],
-            [plots['NRCA5_FULL'], plots['NRCB5_FULL']]
-        ]
-    elif instrument.lower() == 'niriss':
-        full_frame_lists = [
-            [plots['NIS_CEN']]
-            ]
-    elif instrument.lower() == 'miri':
-        full_frame_lists = [
-            [plots['MIRIM_FULL']]
-        ]
-    elif instrument.lower() == 'nirspec':
-        full_frame_lists = [
-            [plots['NRS1_FULL'], plots['NRS2_FULL']]
-        ]
-    elif instrument.lower() == 'fgs':
-        full_frame_lists = [
-            [plots['FGS1_FULL'], plots['FGS2_FULL']]
-        ]
-
-    # Next create lists of subarrays. Keep the subarrays in the order in which
-    # they exist in pyiaf, in order to make the page a little more readable.
-    # The dark monitor also populates aperture names using pysiaf.
-    subarrs = [p for p in plots.keys() if p not in FULL_FRAME_APERTURES[instrument.upper()]]
-    siaf = pysiaf.Siaf(instrument.lower())
-    all_apertures = np.array(list(siaf.apernames))
-
-    indexes = []
-    for key in subarrs:
-        subarr_plot_idx = np.where(all_apertures == key)[0]
-        if len(subarr_plot_idx) > 0:
-            indexes.append(subarr_plot_idx[0])
-    to_sort = np.argsort(indexes)
-    sorted_keys = np.array(subarrs)[to_sort]
-
-    # Place 4 subarray plots in each row. Generate a nested
-    # list where each sublist contains the plots to place in
-    # a given row
-    subarr_plots_per_row = 4
-    first_col = np.arange(0, len(sorted_keys), 4)
-
-    subarr_lists = []
-    for idx in first_col:
-        row_keys = sorted_keys[idx: idx + subarr_plots_per_row]
-        row_list = [plots[key] for key in row_keys]
-        subarr_lists.append(row_list)
-
-    # Combine full frame and subarray aperture lists
-    full_list = full_frame_lists + subarr_lists
-
-    # Now create a layout that holds the lists
-    plot_layout = layout(full_list)
-
-    return plot_layout
-
 
 def dark_monitor_tabs(instrument):
     """Creates the various tabs of the dark monitor results page.
@@ -421,9 +339,9 @@ def dark_monitor_tabs(instrument):
     plots = DarkMonitorPlots(instrument)
 
     # Define the layout for each plot type
-    histogram_layout = dark_monitor_layout(instrument, plots.hist_plots)
-    trending_layout = dark_monitor_layout(instrument, plots.trending_plots)
-    image_layout = dark_monitor_layout(instrument, plots.dark_image_data)
+    histogram_layout = standard_monitor_plot_layout(instrument, plots.hist_plots)
+    trending_layout = standard_monitor_plot_layout(instrument, plots.trending_plots)
+    image_layout = standard_monitor_plot_layout(instrument, plots.dark_image_data)
 
     # Create a tab for each type of plot
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
@@ -591,3 +509,88 @@ def readnoise_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
+
+
+def standard_monitor_plot_layout(instrument, plots):
+    """Arrange a set of plots into a bokeh layout. The layout will
+    show the plots for full frame apertures in an orientation that
+    matches the relative detector locations within the instrument.
+    Any subarray aperture plots will be arranged below the full frame
+    plots, with 4 plots to a row, in an order matching that in pysiaf's
+    aperture list. This function assumes that there are plots for all full
+    frame apertures present.
+
+    Paramters
+    ---------
+    instrument : str
+        Name of the instrument that the plots are for
+
+    plots : dict
+        Dictionary containing a set of plots for an instrument.
+        Keys are aperture names (e.g. NRCA1_FULL) and values are the
+        plots (bokeh figures)
+
+    Returns
+    -------
+    plot_layout : bokeh.layouts.layout
+    """
+    # Generate nested lists of the full frame apertures, which will be shown at the top
+    # of the tab. Note that order below is intentional. It mimics the detectors' locations
+    # relative to one another in the focal plane.
+    if instrument.lower() == 'nircam':
+        full_frame_lists = [
+            [plots['NRCA2_FULL'], plots['NRCA4_FULL'], plots['NRCB3_FULL'], plots['NRCB1_FULL']],
+            [plots['NRCA1_FULL'], plots['NRCA3_FULL'], plots['NRCB4_FULL'], plots['NRCB2_FULL']],
+            [plots['NRCA5_FULL'], plots['NRCB5_FULL']]
+        ]
+    elif instrument.lower() == 'niriss':
+        full_frame_lists = [
+            [plots['NIS_CEN']]
+            ]
+    elif instrument.lower() == 'miri':
+        full_frame_lists = [
+            [plots['MIRIM_FULL']]
+        ]
+    elif instrument.lower() == 'nirspec':
+        full_frame_lists = [
+            [plots['NRS1_FULL'], plots['NRS2_FULL']]
+        ]
+    elif instrument.lower() == 'fgs':
+        full_frame_lists = [
+            [plots['FGS1_FULL'], plots['FGS2_FULL']]
+        ]
+
+    # Next create lists of subarrays. Keep the subarrays in the order in which
+    # they exist in pyiaf, in order to make the page a little more readable.
+    # The dark monitor also populates aperture names using pysiaf.
+    subarrs = [p for p in plots.keys() if p not in FULL_FRAME_APERTURES[instrument.upper()]]
+    siaf = pysiaf.Siaf(instrument.lower())
+    all_apertures = np.array(list(siaf.apernames))
+
+    indexes = []
+    for key in subarrs:
+        subarr_plot_idx = np.where(all_apertures == key)[0]
+        if len(subarr_plot_idx) > 0:
+            indexes.append(subarr_plot_idx[0])
+    to_sort = np.argsort(indexes)
+    sorted_keys = np.array(subarrs)[to_sort]
+
+    # Place 4 subarray plots in each row. Generate a nested
+    # list where each sublist contains the plots to place in
+    # a given row
+    subarr_plots_per_row = 4
+    first_col = np.arange(0, len(sorted_keys), 4)
+
+    subarr_lists = []
+    for idx in first_col:
+        row_keys = sorted_keys[idx: idx + subarr_plots_per_row]
+        row_list = [plots[key] for key in row_keys]
+        subarr_lists.append(row_list)
+
+    # Combine full frame and subarray aperture lists
+    full_list = full_frame_lists + subarr_lists
+
+    # Now create a layout that holds the lists
+    plot_layout = layout(full_list)
+
+    return plot_layout
