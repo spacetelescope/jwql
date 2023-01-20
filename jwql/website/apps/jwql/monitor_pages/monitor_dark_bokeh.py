@@ -724,7 +724,7 @@ class DarkImagePlot():
             start_time = self.image_data["dark_start_time"].strftime("%m/%d/%Y")
             end_time  = self.image_data["dark_end_time"].strftime("%m/%d/%Y")
 
-            self.plot = figure(title=f'{self.detector}: {self.image_data['num_hot_files']} files. {start_time} to {end_time}',
+            self.plot = figure(title=f'{self.detector}: {self.image_data["num_hot_files"]} files. {start_time} to {end_time}',
                                tools='pan,box_zoom,reset,wheel_zoom,save')
             self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
