@@ -40,7 +40,7 @@ from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkP
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
-from jwql.utils.constants import DARK_MONITOR_BADPIX_TYPES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, FULL_FRAME_APERTURES,
+from jwql.utils.constants import DARK_MONITOR_BADPIX_TYPES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
 from jwql.utils.utils import get_config
 
@@ -243,7 +243,7 @@ class DarkMonitorPlots():
                 image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
                 if os.path.isfile(image_path):
                     mean_dark_image = fits.getdata(image_path, 1)
-                    self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.filename(image_path))
+                    self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.basename(image_path))
 
         self.image_data["image_array"] = mean_dark_image
 
@@ -981,6 +981,13 @@ class AperturePlots():
 """
 
 
+instrument = 'niriss'
+aperture = 'NIS_CEN'
+detector = 'NIS'
+
+
+
+
 
 
 
@@ -1091,6 +1098,10 @@ class DarkMonitorData():
 
         if get_pixtable_for_detector:
             self.detector = aperture.split('_')[0].upper()
+            # The MIRI imaging detector does not line up with the full frame aperture. Fix that here
+            if self.detector == 'MIRIM':
+                self.detector = 'MIRIMAGE'
+
             # NIRCam LW detectors use 'LONG' rather than 5 in the pixel_table
             if '5' in self.detector:
                 self.detector = self.detector.replace('5', 'LONG')
@@ -1107,7 +1118,7 @@ class DarkMonitorData():
                     .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
                     .filter(self.pixel_table.detector == self.detector,
                             self.pixel_table.type.in_(DARK_MONITOR_BADPIX_TYPES),
-                            func.array_length(self.pixel_table.x_coord, 1) < DARK_MONITOR_MAX_BADPOINTS_TO_PLOT)
+                            func.cardinality(self.pixel_table.x_coord) < DARK_MONITOR_MAX_BADPOINTS_TO_PLOT)
                     .group_by(self.pixel_table.type)
                     .subquery()
                     )
@@ -1175,11 +1186,6 @@ class DarkMonitorData():
 
         session.close()
 
-        if self.detector == 'NIS':
-            ll = len(self.pixel_data)
-            raise ValueError
-
-
     def retrieve_data_coord_counts(self, badpix_types):
         """Get all nedded data from the database
 
@@ -1193,7 +1199,7 @@ class DarkMonitorData():
                 .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
                 .filter(self.pixel_table.detector == self.detector,
                         self.pixel_table.type.in_(badpix_types),
-                        func.array_length(self.pixel_table.x_coord, 1) >= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT)
+                        func.cardinality(self.pixel_table.x_coord) >= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT)
                     .group_by(self.pixel_table.type)
                     .subquery()
                 )
