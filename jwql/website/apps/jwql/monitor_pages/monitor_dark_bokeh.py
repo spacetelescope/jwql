@@ -316,22 +316,6 @@ class DarkMonitorPlots():
         else:
             self._detectors = np.array([e.detector for e in self.db.pixel_data])
 
-
-        if self.aperture == 'NRS2_FULL':
-            pixel_entry_dates = self._pixel_entry_dates
-            x_coords = self._x_coords
-            y_coords = self._y_coords
-            x_coords_len = self._x_coords_len
-            y_coords_len = self._y_coords_len
-            numfiles = self._numfiles
-            types = self._types
-            mean_dark_image_files = self._mean_dark_image_files
-            baseline_files = self._baseline_files
-            raise ValueError
-
-
-
-
     def stats_data_to_lists(self):
         """Create arrays from some of the stats database columns that are
         used by multiple plot types
