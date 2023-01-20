@@ -1114,6 +1114,29 @@ class DarkMonitorData():
             # Get the latest entry for each of the three types of bad pixel, but only
             # if the number of bad pixels is under the threshold for the number of pixels
             # we are willing to overplot
+
+
+            # Latest attempt. Get the latest record for each bad pixel type, but only if it has fewer x_coord than the threshold
+            subq = (session
+                    .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
+                    .filter(self.pixel_table.detector == self.detector)
+                    .group_by(self.pixel_table.type)
+                    .subquery()
+                    )
+
+            query = (session.query(self.pixel_table)
+                     .join(subq, and_(self.pixel_table.entry_date == subq.c.max_created,
+                                      func.cardinality(self.pixel_table.x_coord) <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT))
+                     )
+
+
+
+            """
+            the function below is not quite right. when there are multiple entries for a given type of bad pixel,
+            it is returning the entry that has x_coord length under the threshold, and i think grabbing the entry with
+            the latest date of those. but what we want is to grab the latest entry for the bad pixel type, and return
+            it if the length of x_coord is under the threshold
+
             subq = (session
                     .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
                     .filter(self.pixel_table.detector == self.detector,
@@ -1127,6 +1150,7 @@ class DarkMonitorData():
                      .join(subq, and_(self.pixel_table.type == subq.c.type,
                            self.pixel_table.entry_date == subq.c.max_created))
                      )
+            """
 
             """
             ############FOR MANUAL TESTING
@@ -1151,6 +1175,27 @@ class DarkMonitorData():
                      .join(subq, and_(pixel_table.type == subq.c.type,
                                       pixel_table.entry_date == subq.c.max_created))
                     )
+
+
+
+
+        maybe maybe----just switch the < sign to > for the other query?
+             subq = (session
+    ...:                     .query(pixel_table.type, func.max(pixel_table.entry_date).label("max_created"))
+    ...:                     .filter(pixel_table.detector == detector)
+    ...:                     .group_by(pixel_table.type)
+    ...:                     .subquery()
+    ...:                     )
+    ...:
+    ...:             # WORKS!! Returns bad pixel type and the length of x_coord
+    ...:             query = (session.query(pixel_table.type, pixel_table.entry_date, func.array_length(pixel_table.x_coord, 1).label('numpts'))
+    ...:                      .join(subq, and_(pixel_table.entry_date == subq.c.max_created, func.cardinality(pixel_table.x_coord) < DARK_MONITOR_MAX_BADPOINTS_TO_PLOT))
+    ...:                     )
+
+
+
+
+
             ########################
             """
 
@@ -1183,8 +1228,17 @@ class DarkMonitorData():
             # overplotted points
             if len(needed_types) > 0:
                 self.retrieve_data_coord_counts(needed_types)
+            else:
+                self.pixel_data_coord_counts = []
 
         session.close()
+
+
+        if self.detector == 'NRS':
+            typess = [row.type for row in self.pixel_data]
+            numpixx = [row.numpix for row in self.pixel_data_coord_counts]
+            typesx = [row.type for row in self.pixel_data_coord_counts]
+            raise ValueError
 
     def retrieve_data_coord_counts(self, badpix_types):
         """Get all nedded data from the database
@@ -1195,6 +1249,7 @@ class DarkMonitorData():
             List of bad pixel types to query for.
         """
         # Query database for all data in <instrument>DarkDarkCurrent with a matching aperture
+        """
         subq = (session
                 .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
                 .filter(self.pixel_table.detector == self.detector,
@@ -1211,6 +1266,25 @@ class DarkMonitorData():
                                func.array_length(self.pixel_table.source_files, 1).label('numfiles'))
                  .join(subq, and_(self.pixel_table.type == subq.c.type,
                                   self.pixel_table.entry_date == subq.c.max_created))
+                )
+        """
+
+
+        subq = (session
+                .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
+                .filter(self.pixel_table.detector == self.detector,
+                        self.pixel_table.type.in_(badpix_types))
+                .group_by(self.pixel_table.type)
+                .subquery()
+                )
+
+        query = (session
+                 .query(self.pixel_table.detector, self.pixel_table.entry_date, self.pixel_table.mean_dark_image_file,
+                        self.pixel_table.baseline_file, self.pixel_table.type,
+                        func.cardinality(self.pixel_table.x_coord).label('numpts'),
+                        func.cardinality(self.pixel_table.source_files).label('numfiles'))
+                .join(subq, and_(self.pixel_table.entry_date == subq.c.max_created,
+                                 func.cardinality(self.pixel_table.x_coord) > DARK_MONITOR_MAX_BADPOINTS_TO_PLOT))
                 )
 
         if query.count() > 0:
