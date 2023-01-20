@@ -40,7 +40,8 @@ from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkP
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
-from jwql.utils.constants import DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
+from jwql.utils.constants import DARK_MONITOR_BADPIX_TYPES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, FULL_FRAME_APERTURES,
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
 from jwql.utils.utils import get_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -139,8 +140,8 @@ class DarkMonitorPlots():
             Datetime of the end of the range covered by the file
         """
         file_parts = filename.split('_')
-        start = Time(parts[3], format='mjd')
-        end = Time(parts[5], format='mjd')
+        start = Time(file_parts[3], format='mjd')
+        end = Time(file_parts[5], format='mjd')
         return start.tt.datetime, end.tt.datetime
 
     def get_mean_dark_images(self):
@@ -242,6 +243,7 @@ class DarkMonitorPlots():
                 image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
                 if os.path.isfile(image_path):
                     mean_dark_image = fits.getdata(image_path, 1)
+                    self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.filename(image_path))
 
         self.image_data["image_array"] = mean_dark_image
 
@@ -819,16 +821,18 @@ class DarkImagePlot():
                             location="center",
                             orientation='horizontal')
             """
-
+            if self.image_data["base_start_time"] is not None:
+                base_start_time = self.image_data["base_start_time"].strftime("%m/%d/%Y")
+                base_end_time  = self.image_data["base_end_time"].strftime("%m/%d/%Y")
+                legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
+            else:
+                legend_title = 'Compared to previous mean dark'
             legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
                             location="center",
-                            orientation='vertical')
+                            orientation='vertical',
+                            title = legend_title)
 
             self.plot.add_layout(legend, 'below')
-            base_start_time = self.image_data["base_start_time"].strftime("%m/%d/%Y")
-            base_end_time  = self.image_data["base_end_time"].strftime("%m/%d/%Y")
-            self.legend.title = f'Compared to dark from {base_start_time} to {base_end_time}'
-
         else:
             # If no mean image is given, we return an empty figure
             self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
@@ -1013,7 +1017,10 @@ class DarkMonitorData():
         return distinct_colvals
 
     def query_around_pixel_threshold(self, badpix_type):
-        """For a type of bad pixel ("hot", "dead", "noisy"), query the database for
+        """
+        NOT USED
+
+        For a type of bad pixel ("hot", "dead", "noisy"), query the database for
         the most recent entry. If the number of bad pixels in the entry is above the
         threshold, then we ignore it and do not perform the query in order to save time.
         If the number is less than the threshold, then perform the query.
@@ -1046,7 +1053,7 @@ class DarkMonitorData():
             # array length, but we can't do that without executing the query.....so maybe we skip it and just post a note
             # that there are more than DARK_MONITOR_MAX_BADPOINTS_TO_PLOT points
 
-        subq_over_threshold = (session
+            subq_over_threshold = (session
                                 .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
                                 .filter(self.pixel_table.detector == self.detector,
                                         self.pixel_table.type == badpix_type,
@@ -1055,7 +1062,7 @@ class DarkMonitorData():
                                 .subquery()
                                 )
 
-        query_over_threshold = (session.query(self.pixel_table)
+            query_over_threshold = (session.query(self.pixel_table)
                                  .join(subq_over_threshold, and_(self.pixel_table.type == subq.c.type,
                                        self.pixel_table.entry_date == subq.c.max_created))
                                  )
@@ -1099,7 +1106,7 @@ class DarkMonitorData():
             subq = (session
                     .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
                     .filter(self.pixel_table.detector == self.detector,
-                            self.pixel_table.type.in_(['hot', 'dead', 'noisy']),
+                            self.pixel_table.type.in_(DARK_MONITOR_BADPIX_TYPES),
                             func.array_length(self.pixel_table.x_coord, 1) < DARK_MONITOR_MAX_BADPOINTS_TO_PLOT)
                     .group_by(self.pixel_table.type)
                     .subquery()
@@ -1163,10 +1170,14 @@ class DarkMonitorData():
             # the length of the bad pixel coordinate lists, rather than the lists themselves.
             # This is primarily to save time, and avoid plots that are too crowded with
             # overplotted points
-            if len(need) > 0:
+            if len(needed_types) > 0:
                 self.retrieve_data_coord_counts(needed_types)
 
         session.close()
+
+        if self.detector == 'NIS':
+            ll = len(self.pixel_data)
+            raise ValueError
 
 
     def retrieve_data_coord_counts(self, badpix_types):
@@ -1191,7 +1202,7 @@ class DarkMonitorData():
         query = (session.query(self.pixel_table.detector, self.pixel_table.entry_date, self.pixel_table.mean_dark_image_file,
                                self.pixel_table.baseline_file, self.pixel_table.type,
                                func.array_length(self.pixel_table.x_coord, 1).label('numpts'),
-                               func.array_length(pixel_table.source_files, 1).label('numfiles'))
+                               func.array_length(self.pixel_table.source_files, 1).label('numfiles'))
                  .join(subq, and_(self.pixel_table.type == subq.c.type,
                                   self.pixel_table.entry_date == subq.c.max_created))
                 )
