@@ -316,6 +316,22 @@ class DarkMonitorPlots():
         else:
             self._detectors = np.array([e.detector for e in self.db.pixel_data])
 
+
+        if self.aperture == 'NRS2_FULL':
+            pixel_entry_dates = self._pixel_entry_dates
+            x_coords = self._x_coords
+            y_coords = self._y_coords
+            x_coords_len = self._x_coords_len
+            y_coords_len = self._y_coords_len
+            numfiles = self._numfiles
+            types = self._types
+            mean_dark_image_files = self._mean_dark_image_files
+            baseline_files = self._baseline_files
+            raise ValueError
+
+
+
+
     def stats_data_to_lists(self):
         """Create arrays from some of the stats database columns that are
         used by multiple plot types
@@ -870,10 +886,10 @@ class DarkImagePlot():
         hover_tools = {}
 
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=self.image_data[f"{pix_type}_pixels"][0],
-                                                           pixels_y=self.image_data[f"{pix_type}_pixels"][1],
-                                                           values=values
-                                                           )
-                                                 )
+                                                       pixels_y=self.image_data[f"{pix_type}_pixels"][1],
+                                                       values=values
+                                                       )
+                                             )
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'{pix_type}_pixels_x', y=f'{pix_type}_pixels_y',
@@ -888,7 +904,7 @@ class DarkImagePlot():
         self.plot.tools.append(hover_tools[pix_type])
 
         # Add to the legend
-        numpix = len(self.image_data[f"{pix_type}_pixels"][0])
+        numpix = self.image_data[f'num_{pix_type}_pixels']
         if  numpix > 0:
             if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
                 text = f"{numpix} pix {adjective[pix_type]} than baseline"
@@ -1232,13 +1248,6 @@ class DarkMonitorData():
                 self.pixel_data_coord_counts = []
 
         session.close()
-
-
-        if self.detector == 'NRS':
-            typess = [row.type for row in self.pixel_data]
-            numpixx = [row.numpix for row in self.pixel_data_coord_counts]
-            typesx = [row.type for row in self.pixel_data_coord_counts]
-            raise ValueError
 
     def retrieve_data_coord_counts(self, badpix_types):
         """Get all nedded data from the database
