@@ -2,7 +2,7 @@ MNEMONIC, string
 LATEST_QUERY, datetime
 TIME, datetime_array_1d
 MNEMONIC_VALUE, float_array_1d
-MEAN, float
+MEDIAN, float
 STDEV, float
 DEPENDENCY_MNEMONIC, string
 DEPENDENCY_VALUE, string
