@@ -44,6 +44,7 @@ Dependencies
 from collections import defaultdict
 from copy import deepcopy
 import csv
+import glob
 import logging
 import os
 import operator
@@ -759,7 +760,6 @@ def log_view(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    import glob
 
     template = 'log_view.html'
     log_path = get_config()['log_dir']
