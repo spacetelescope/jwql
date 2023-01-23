@@ -777,6 +777,7 @@ def log_view(request):
     full_log_paths = glob.glob(os.path.join(log_path, server, '*', '*'))
     full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
     log_dictionary = {os.path.basename(path): path for path in full_log_paths}
+    log_dictionary = dict(sorted(log_dictionary.items()))
 
     if log_name:
         with open(log_dictionary[log_name]) as f:
