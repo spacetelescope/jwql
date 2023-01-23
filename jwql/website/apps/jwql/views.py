@@ -765,19 +765,6 @@ def log_view(request):
     log_path = get_config()['log_dir']
     log_name = request.POST.get('log_submit', None)
 
-    full_log_paths = glob.glob(os.path.join(log_path, server, '*', '*'))
-    full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
-    log_dictionary = {os.path.basename(path): path for path in full_log_paths}
-
-    print('LOGNAME: {}'.format(log_name))
-    print(log_dictionary)
-
-    if log_name:
-        with open(log_dictionary[log_name]) as f:
-            log_text = f.read()
-    else:
-        log_text = None
-
     full_uri = request.build_absolute_uri()
 
     if 'dljwql' in full_uri:
@@ -786,6 +773,16 @@ def log_view(request):
         server = 'test'
     else:
         server = 'ops'
+
+    full_log_paths = glob.glob(os.path.join(log_path, server, '*', '*'))
+    full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
+    log_dictionary = {os.path.basename(path): path for path in full_log_paths}
+
+    if log_name:
+        with open(log_dictionary[log_name]) as f:
+            log_text = f.read()
+    else:
+        log_text = None
 
     context = {'all_logs': log_dictionary,
                'log_text': log_text,
