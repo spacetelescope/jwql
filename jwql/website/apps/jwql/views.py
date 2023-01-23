@@ -784,8 +784,8 @@ def log_view(request):
     else:
         log_text = None
 
-    context = {'all_logs': log_dictionary,
-               'inst': "",
+    context = {'inst': '',
+               'all_logs': log_dictionary,
                'log_text': log_text,
                'log_name': log_name}
 
