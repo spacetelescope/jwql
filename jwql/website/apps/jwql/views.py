@@ -54,6 +54,7 @@ from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 import numpy as np
+import socket
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config, monitor_utils
@@ -765,11 +766,11 @@ def log_view(request):
     log_path = get_config()['log_dir']
     log_name = request.POST.get('log_submit', None)
 
-    full_uri = request.build_absolute_uri()
+    hostname = socket.gethostname()
 
-    if 'dljwql' in full_uri:
+    if 'dljwql' in hostname:
         server = 'dev'
-    elif 'tljwql' in full_uri:
+    elif 'tljwql' in hostname:
         server = 'test'
     else:
         server = 'ops'
@@ -787,9 +788,7 @@ def log_view(request):
     context = {'inst': '',
                'all_logs': log_dictionary,
                'log_text': log_text,
-               'log_name': log_name,
-               'full_uri': full_uri,
-               'server': server}
+               'log_name': log_name}
 
     return render(request, template, context)
 
