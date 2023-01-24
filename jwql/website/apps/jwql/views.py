@@ -787,7 +787,9 @@ def log_view(request):
     context = {'inst': '',
                'all_logs': log_dictionary,
                'log_text': log_text,
-               'log_name': log_name}
+               'log_name': log_name,
+               'full_uri': full_uri,
+               'server': server}
 
     return render(request, template, context)
 
