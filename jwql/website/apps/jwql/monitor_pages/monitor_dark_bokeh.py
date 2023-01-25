@@ -936,12 +936,13 @@ class DarkImagePlot():
         """
         """
         if self.image_data["dark_image_picture"] is not None:
-            if os.path.isfile(self.image_data["dark_image_picture"]):
+            png_image_file = self.image_data["dark_image_picture"].replace('fits', 'png')
+            if os.path.isfile(png_image_file):
 
                 # for testing
-                self.image_data["dark_image_picture"] = 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'
+                #self.image_data["dark_image_picture"] = 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'
 
-                rgba_img = Image.open(self.image_data["dark_image_picture"]).convert('RGBA')
+                rgba_img = Image.open(png_image_file).convert('RGBA')
                 xdim, ydim = rgba_img.size
 
                 # Create an array representation for the image `img`, and an 8-bit "4

@@ -244,6 +244,13 @@ class Dark():
                                                                        self.query_start, self.query_end)
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
+
+
+        # FOR TESTING
+        #mean_slope_dir = '/grp/jwst/ins/jwql/temp/'
+        mean_slope_dir = '/Volumes/jwst_ins/jwql/temp_dark_mon'
+
+
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
         logging.info("Name of mean slope image: {}".format(output_filename))
@@ -282,21 +289,24 @@ class Dark():
                 # Create lists of hot/dead/noisy pixel values if present
                 hot_vals = []
                 for x, y in zip(hotxy[0], hotxy[1]):
-                    hot_vals.append(image[y, x])
+                    if ((x < nx) & (y < ny)):
+                        hot_vals.append(image[y, x])
             else:
                 hot_vals = None
 
             if deadxy is not None:
                 dead_vals = []
                 for x, y in zip(deadxy[0], deadxy[1]):
-                    dead_vals.append(image[y, x])
+                    if ((x < nx) & (y < ny)):
+                        dead_vals.append(image[y, x])
             else:
                 dead_vals = None
 
             if noisyxy is not None:
                 noisy_vals = []
                 for x, y in zip(noisyxy[0], noisyxy[1]):
-                    noisy_vals.append(image[y, x])
+                    if ((x < nx) & (y < ny)):
+                        noisy_vals.append(image[y, x])
             else:
                 noisy_vals = None
 
@@ -341,8 +351,8 @@ class Dark():
 
         try:
             self.detector = header['DETECTOR']
-            self.x0 = header['SUBSTRT1']
-            self.y0 = header['SUBSTRT2']
+            self.x0 = header['SUBSTRT1'] - 1
+            self.y0 = header['SUBSTRT2'] - 1
             self.xsize = header['SUBSIZE1']
             self.ysize = header['SUBSIZE2']
             self.sample_time = header['TSAMPLE']
@@ -582,6 +592,7 @@ class Dark():
         """
         if coords is None:
             coords = ([], [])
+            values = []
 
         numpix = len(coords[0])
 
@@ -594,14 +605,22 @@ class Dark():
         # Need to make sources a dict because we can't use the same variable name
         # for multiple ColumnDataSources
         sources = {}
+        badpixplots = {}
+
+        # If the number of pixels to overplot is higher than the threshold,
+        # then empty the coords list. This way we can still create a
+        # legend entry for them
+        if numpix > DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
+            coords = ([], [])
+            values = []
+
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
-                                                        pixels_y=coords[1],
-                                                        values=values
-                                                        )
+                                                       pixels_y=coords[1],
+                                                       values=values
+                                                      )
                                              )
 
         # Overplot the bad pixel locations
-        badpixplots = {}
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
 
@@ -609,7 +628,7 @@ class Dark():
         hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
                                                     ('value:', f'@values'),
                                                     ],
-                                          renderers=[badpixplots[pix_type]])
+                                            renderers=[badpixplots[pix_type]])
         # Add tool to plot
         self.plot.tools.append(hover_tools[pix_type])
 
