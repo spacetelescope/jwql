@@ -62,7 +62,12 @@ import os
 
 from astropy.io import ascii, fits
 from astropy.modeling import models
+from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
+from bokeh.io import export_png
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
+from bokeh.models import LinearColorMapper
+from bokeh.plotting import figure
 import numpy as np
 from pysiaf import Siaf
 from sqlalchemy import func
@@ -78,8 +83,8 @@ from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
-    RAPID_READPATTERNS
+from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -208,6 +213,127 @@ class Dark():
                  'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
+
+    def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None):
+        """Create and save a png containing the mean dark slope image,
+        to be displayed in the web app
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array of the dark slop image
+
+        num_files : int
+            Number of individual exposures that went into creating the mean slope image
+
+        hotxy : tup
+            2-tuple of lists that give x, y coordinates of possible new hot pixels
+
+        deadxy : tup
+            2-tuple of lists that give x, y coordinates of possible new hot pixels
+
+        noisyxy : tup
+            2-tuple of lists that give x, y coordinates of possible new hot pixels
+
+        baseline_file : str
+            Name of fits file containing the mean slope image to which ``image`` was compared
+            when looking for new hot/dead/noisy pixels
+        """
+        output_filename = '{}_{}_{}_to_{}_mean_slope_image.png'.format(self.instrument.lower(),
+                                                                       self.aperture.lower(),
+                                                                       self.query_start, self.query_end)
+
+        mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
+
+
+        # FOR TESTING
+        #mean_slope_dir = '/grp/jwst/ins/jwql/temp/'
+        mean_slope_dir = '/Volumes/jwst_ins/jwql/temp_dark_mon'
+
+
+        ensure_dir_exists(mean_slope_dir)
+        output_filename = os.path.join(mean_slope_dir, output_filename)
+        logging.info("Name of mean slope image: {}".format(output_filename))
+
+        if image is not None:
+            # Get info on image for better display later
+            ny, nx = image.shape
+            img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
+
+            # Create figure
+            start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            end_time  = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+
+            self.plot = figure(title=f'{self.detector}: {num_files} files. {start_time} to {end_time}',
+                               tools='pan,box_zoom,reset,wheel_zoom,save')
+            self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
+
+            # Create the color mapper that will be used to scale the image
+            mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+
+            # Plot image and add color bar
+            imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                                      color_mapper=mapper, level="image")
+
+            color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
+            self.plot.add_layout(color_bar, 'right')
+
+            # Add hover tool for all pixel values
+            hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
+                                             ('value:', '@image')
+                                             ],
+                                   renderers=[imgplot])
+            self.plot.tools.append(hover_tool)
+
+            if hotxy is not None:
+                # Create lists of hot/dead/noisy pixel values if present
+                hot_vals = []
+                for x, y in zip(hotxy[0], hotxy[1]):
+                    hot_vals.append(image[y, x])
+            else:
+                hot_vals = None
+
+            if deadxy is not None:
+                dead_vals = []
+                for x, y in zip(deadxy[0], deadxy[1]):
+                    dead_vals.append(image[y, x])
+            else:
+                dead_vals = None
+
+            if noisyxy is not None:
+                noisy_vals = []
+                for x, y in zip(noisyxy[0], noisyxy[1]):
+                    noisy_vals.append(image[y, x])
+            else:
+                noisy_vals = None
+
+            hot_legend = self.overplot_bad_pix("hot", hotxy, hot_vals)
+            dead_legend = self.overplot_bad_pix("dead", deadxy, dead_vals)
+            noisy_legend = self.overplot_bad_pix("noisy", noisyxy, noisy_vals)
+
+            # Collect information about the file this image was compared against
+            if baseline_file is not None:
+                base_parts = baseline_file.split('_')
+
+                # Get the starting and ending time from the filename.
+                base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
+                base_end = Time(float(base_parts[5]), format='mjd').tt.datetime
+                base_start_time = base_start.strftime("%m/%d/%Y")
+                base_end_time  = base_end.strftime("%m/%d/%Y")
+                legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
+            else:
+                legend_title = 'Compared to previous mean dark'
+            legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
+                            location="center",
+                            orientation='vertical',
+                            title = legend_title)
+
+            self.plot.add_layout(legend, 'below')
+
+            # Save the plot in a png
+            export_png(self.plot, filename=output_filename)
+            set_permissions(output_filename)
+
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file
@@ -441,6 +567,72 @@ class Dark():
 
         return noisy
 
+    def overplot_bad_pix(self, pix_type, coords, values):
+        """Add a scatter plot of potential new bad pixels to the plot
+
+        Paramters
+        ---------
+        pix_type : str
+            Type of bad pixel. "hot", "dead", or "noisy"
+
+        coords : tup
+            2-tuple of lists, containing the x and y coordinates of the bad pixels
+
+        values : list
+            Values in the mean dark image at the locations of the bad pixels
+
+        Returns
+        -------
+        legend_item : tup
+            Tuple of legend text and associated plot. Will be converted into
+            a LegendItem and added to the plot legend
+        """
+        if coords is None:
+            coords = ([], [])
+
+        numpix = len(coords[0])
+
+        colors = {"hot": "red", "dead": "blue", "noisy": "pink"}
+        adjective = {"hot": "hotter", "dead": "lower", "noisy": "noisier"}
+        sources = {}
+        badpixplots = {}
+        hover_tools = {}
+
+        # Need to make sources a dict because we can't use the same variable name
+        # for multiple ColumnDataSources
+        sources = {}
+        sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
+                                                        pixels_y=coords[1],
+                                                        values=values
+                                                        )
+                                             )
+
+        # Overplot the bad pixel locations
+        badpixplots = {}
+        badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
+                                                 source=sources[pix_type], color=colors[pix_type])
+
+        # Create hover tools for the bad pixel types
+        hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
+                                                    ('value:', f'@values'),
+                                                    ],
+                                          renderers=[badpixplots[pix_type]])
+        # Add tool to plot
+        self.plot.tools.append(hover_tools[pix_type])
+
+        # Add to the legend
+        if  numpix > 0:
+            if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
+                text = f"{numpix} pix {adjective[pix_type]} than baseline"
+            else:
+                text = f"{numpix} pix {adjective[pix_type]} than baseline (not shown)"
+        else:
+            text = f"No new {adjective[pix_type]}"
+
+        # Create a tuple to be added to the plot legend
+        legend_item = (text, [badpixplots[pix_type]])
+        return legend_item
+
     def process(self, file_list):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -500,7 +692,6 @@ class Dark():
             # Calculate a mean slope image from the inputs
             slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
             mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-            logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
             # Free up memory
             del slope_image_stack
@@ -514,6 +705,9 @@ class Dark():
             # Limit checks for hot/dead/noisy pixels to full frame data since
             # subarray data have much shorter exposure times and therefore lower
             # signal-to-noise
+            new_hot_pix = None
+            new_dead_pix = None
+            new_noisy_pixels = None
             aperture_type = Siaf(self.instrument)[self.aperture].AperType
             if aperture_type == 'FULLSCA':
                 baseline_file = self.get_baseline_filename()
@@ -557,6 +751,11 @@ class Dark():
                 # Add new noisy pixels to the database
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+
+            # Create png file of mean slope image. Add bad pixels only for full frame apertures
+            self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
+                                          noisyxy=new_noisy_pixels, baseline_file=baseline_file)
+            logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
             # ----- Calculate image statistics -----
 
