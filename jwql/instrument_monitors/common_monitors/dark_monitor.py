@@ -244,13 +244,6 @@ class Dark():
                                                                        self.query_start, self.query_end)
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
-
-
-        # FOR TESTING
-        #mean_slope_dir = '/grp/jwst/ins/jwql/temp/'
-        mean_slope_dir = '/Volumes/jwst_ins/jwql/temp_dark_mon'
-
-
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
         logging.info("Name of mean slope image: {}".format(output_filename))
