@@ -103,7 +103,7 @@ class DarkMonitorPlots():
             self.get_mean_dark_image_from_stats_table()
 
             # Create the mean dark image figure
-            self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data).plot
+            self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data, self.aperture).plot
 
             # Organize the data to create the histogram plot
             self.get_latest_histogram_data()
@@ -868,8 +868,9 @@ class DarkImagePlotUsingFitsFile():
 class DarkImagePlot():
     """
     """
-    def __init__(self, data):
+    def __init__(self, data, aperture):
         self.image_data = data
+        self.aperture = aperture
 
         self.create_plot()
 
@@ -903,6 +904,21 @@ class DarkImagePlot():
 
             else:
                 raise ValueError(f'Unable to locate {self.image_data["dark_image_picture"]}.')
+        else:
+            # If no filename is given, then create an empty plot
+            self.empty_plot()
+
+    def empty_plot(self):
+        # If no mean image is given, we return an empty figure
+        self.plot = figure(title=self.aperture, tools='')
+        self.plot.x_range.start = 0
+        self.plot.x_range.end = 1
+        self.plot.y_range.start = 0
+        self.plot.y_range.end = 1
+
+        source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
+        glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+        self.plot.add_glyph(source, glyph)
 
 
 
