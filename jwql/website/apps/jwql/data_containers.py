@@ -948,6 +948,37 @@ def get_preview_images_by_rootname(rootname):
 
     return preview_images
 
+def get_proposals_by_category(instrument):
+    """Return a dictionary of program numbers based on category type
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+    Returns
+    -------
+    category_sorted_dict : dict
+        Dictionary with category as the key and a list of program id's as the value
+    """
+
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns": "program, category",
+              "filters": []}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Get all unique dictionaries
+    unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
+
+    # Seperate the catagories from programs
+    categories = set([sub['category'] for sub in unique_results])
+
+    # build dict where key in catagory and value is a list of programs belonging to the category key.
+    category_sorted_dict = {}
+    for category in categories:
+        category_sorted_dict[category] = [d['program'] for d in unique_results if d['category'] == category]
+
+    return category_sorted_dict
 
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
