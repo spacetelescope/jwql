@@ -91,18 +91,20 @@ class DarkMonitorPlots():
                 # and possible bad pixels
                 self.get_mean_dark_images()
 
-                # Create the mean dark image fiugure
-                #self.dark_image_data[self.aperture] = DarkImagePlotUsingFitsFile(self.db.detector, self.image_data).plot
-                self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data).plot
+                # Create the mean dark image figure
+                ##self.dark_image_data[self.aperture] = DarkImagePlotUsingFitsFile(self.db.detector, self.image_data).plot
+                #self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data).plot
 
             else:
-                # For apertures that are not full frame, we retrieve only the histogram
-                # and trending data. No mean dark image nor bad pixel lists
+                # For apertures that are not full frame, we retrieve just the mean dark
+                # image (from the stats table). No bad pixel or baseline file info
                 self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
                 self.stats_data_to_lists()
+                self.get_mean_dark_image_from_stats_table()
 
-            # In all cases, full frame as well as subarray apertures, we create dark
-            # current histogram and trending plots.
+
+            # Create the mean dark image figure
+            self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data).plot
 
             # Organize the data to create the histogram plot
             self.get_latest_histogram_data()
@@ -244,21 +246,34 @@ class DarkMonitorPlots():
         #If there is no entry for the mean image file in the pixel table, we
         # may be able to retrieve it from the stats table
         if mean_dark_image is None:
-            if len(self._stats_mean_dark_image_files) > 0:
-                image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
-                if os.path.isfile(image_path):
-                    mean_dark_image = fits.getdata(image_path, 1)
-                    self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.basename(image_path))
+            self.get_mean_dark_image_from_stats_table()
+            #if len(self._stats_mean_dark_image_files) > 0:
+            #    image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
+            #    if os.path.isfile(image_path):
+            #        mean_dark_image = fits.getdata(image_path, 1)
+            #        self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.basename(image_path))
 
         self.image_data["image_array"] = mean_dark_image
-        self.image_data["dark_image_picture"] = image_path.replace('fits' ,'jpg')
+        self.image_data["dark_image_picture"] = image_path.replace('fits' ,'png')
 
         ##########FOR TESTING ONLY. DELETE BEFORE MERGING
         #self.image_data["dark_image_picture"] = os.path.join(self.mean_slope_dir, 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png')  # test server
         #self.image_data["dark_image_picture"] = '/Volumes/jwst_ins/jwql/tmp/nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'  # local
         #self.image_data["dark_image_picture"] = os.path.join(self.mean_slope_dir, 'temp', 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png')  # local
-        self.image_data["dark_image_picture"] = '/ifs/jwst/wit/nircam/hilbert/temp/nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'
+        #self.image_data["dark_image_picture"] = '/ifs/jwst/wit/nircam/hilbert/temp/nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'
         ##########FOR TESTING ONLY. DELETE BEFORE MERGING
+
+    def get_mean_dark_image_from_stats_table(self):
+        """
+        """
+        self.image_data = {}
+        self.image_data["dark_image_picture"] = None
+        self.image_data["image_array"] = None
+        if len(self._stats_mean_dark_image_files) > 0:
+            image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
+            if os.path.isfile(image_path):
+                self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.basename(image_path))
+                self.image_data["dark_image_picture"] = image_path.replace('fits' ,'png')
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
@@ -936,13 +951,12 @@ class DarkImagePlot():
         """
         """
         if self.image_data["dark_image_picture"] is not None:
-            png_image_file = self.image_data["dark_image_picture"].replace('fits', 'png')
-            if os.path.isfile(png_image_file):
+            if os.path.isfile(self.image_data["dark_image_picture"]):
 
                 # for testing
                 #self.image_data["dark_image_picture"] = 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'
 
-                rgba_img = Image.open(png_image_file).convert('RGBA')
+                rgba_img = Image.open(self.image_data["dark_image_picture"]).convert('RGBA')
                 xdim, ydim = rgba_img.size
 
                 # Create an array representation for the image `img`, and an 8-bit "4

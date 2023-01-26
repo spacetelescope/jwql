@@ -247,7 +247,6 @@ class Dark():
 
 
         # FOR TESTING
-        #mean_slope_dir = '/grp/jwst/ins/jwql/temp/'
         mean_slope_dir = '/Volumes/jwst_ins/jwql/temp_dark_mon'
 
 
@@ -264,8 +263,8 @@ class Dark():
             start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
             end_time  = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
 
-            self.plot = figure(title=f'{self.detector}: {num_files} files. {start_time} to {end_time}',
-                               tools='pan,box_zoom,reset,wheel_zoom,save')
+            self.plot = figure(title=f'{self.aperture}: {num_files} files. {start_time} to {end_time}', tools='')
+            #                   tools='pan,box_zoom,reset,wheel_zoom,save')
             self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
             # Create the color mapper that will be used to scale the image
@@ -279,59 +278,61 @@ class Dark():
             self.plot.add_layout(color_bar, 'right')
 
             # Add hover tool for all pixel values
-            hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
-                                             ('value:', '@image')
-                                             ],
-                                   renderers=[imgplot])
-            self.plot.tools.append(hover_tool)
+            #hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
+            #                                 ('value:', '@image')
+            #                                 ],
+            #                       renderers=[imgplot])
+            #self.plot.tools.append(hover_tool)
 
-            if hotxy is not None:
-                # Create lists of hot/dead/noisy pixel values if present
-                hot_vals = []
-                for x, y in zip(hotxy[0], hotxy[1]):
-                    if ((x < nx) & (y < ny)):
-                        hot_vals.append(image[y, x])
-            else:
-                hot_vals = None
+            if (('FULL' in self.aperture) or ('_CEN' in self.aperture)):
 
-            if deadxy is not None:
-                dead_vals = []
-                for x, y in zip(deadxy[0], deadxy[1]):
-                    if ((x < nx) & (y < ny)):
-                        dead_vals.append(image[y, x])
-            else:
-                dead_vals = None
+                if hotxy is not None:
+                    # Create lists of hot/dead/noisy pixel values if present
+                    hot_vals = []
+                    for x, y in zip(hotxy[0], hotxy[1]):
+                        if ((x < nx) & (y < ny)):
+                            hot_vals.append(image[y, x])
+                else:
+                    hot_vals = None
 
-            if noisyxy is not None:
-                noisy_vals = []
-                for x, y in zip(noisyxy[0], noisyxy[1]):
-                    if ((x < nx) & (y < ny)):
-                        noisy_vals.append(image[y, x])
-            else:
-                noisy_vals = None
+                if deadxy is not None:
+                    dead_vals = []
+                    for x, y in zip(deadxy[0], deadxy[1]):
+                        if ((x < nx) & (y < ny)):
+                            dead_vals.append(image[y, x])
+                else:
+                    dead_vals = None
 
-            hot_legend = self.overplot_bad_pix("hot", hotxy, hot_vals)
-            dead_legend = self.overplot_bad_pix("dead", deadxy, dead_vals)
-            noisy_legend = self.overplot_bad_pix("noisy", noisyxy, noisy_vals)
+                if noisyxy is not None:
+                    noisy_vals = []
+                    for x, y in zip(noisyxy[0], noisyxy[1]):
+                        if ((x < nx) & (y < ny)):
+                            noisy_vals.append(image[y, x])
+                else:
+                    noisy_vals = None
 
-            # Collect information about the file this image was compared against
-            if baseline_file is not None:
-                base_parts = baseline_file.split('_')
+                hot_legend = self.overplot_bad_pix("hot", hotxy, hot_vals)
+                dead_legend = self.overplot_bad_pix("dead", deadxy, dead_vals)
+                noisy_legend = self.overplot_bad_pix("noisy", noisyxy, noisy_vals)
 
-                # Get the starting and ending time from the filename.
-                base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
-                base_end = Time(float(base_parts[5]), format='mjd').tt.datetime
-                base_start_time = base_start.strftime("%m/%d/%Y")
-                base_end_time  = base_end.strftime("%m/%d/%Y")
-                legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
-            else:
-                legend_title = 'Compared to previous mean dark'
-            legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
-                            location="center",
-                            orientation='vertical',
-                            title = legend_title)
+                # Collect information about the file this image was compared against
+                if baseline_file is not None:
+                    base_parts = baseline_file.split('_')
 
-            self.plot.add_layout(legend, 'below')
+                    # Get the starting and ending time from the filename.
+                    base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
+                    base_end = Time(float(base_parts[5]), format='mjd').tt.datetime
+                    base_start_time = base_start.strftime("%m/%d/%Y")
+                    base_end_time  = base_end.strftime("%m/%d/%Y")
+                    legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
+                else:
+                    legend_title = 'Compared to previous mean dark'
+                legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
+                                location="center",
+                                orientation='vertical',
+                                title = legend_title)
+
+                self.plot.add_layout(legend, 'below')
 
             # Save the plot in a png
             export_png(self.plot, filename=output_filename)
@@ -625,12 +626,12 @@ class Dark():
                                                  source=sources[pix_type], color=colors[pix_type])
 
         # Create hover tools for the bad pixel types
-        hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
-                                                    ('value:', f'@values'),
-                                                    ],
-                                            renderers=[badpixplots[pix_type]])
+        #hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
+        #                                            ('value:', f'@values'),
+        #                                            ],
+        #                                    renderers=[badpixplots[pix_type]])
         # Add tool to plot
-        self.plot.tools.append(hover_tools[pix_type])
+        #self.plot.tools.append(hover_tools[pix_type])
 
         # Add to the legend
         if  numpix > 0:
