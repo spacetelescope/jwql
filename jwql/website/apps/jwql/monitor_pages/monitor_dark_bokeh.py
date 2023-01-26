@@ -51,7 +51,7 @@ OUTPUTS_DIR = get_config()['outputs']
 
 class DarkMonitorPlots():
     """This is the top-level class, which will call and use results from
-    DarkMonitorData and AperturePlots.
+    DarkMonitorData and the three plotting classes.
     """
     def __init__(self, instrument):
         self.mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
@@ -80,28 +80,27 @@ class DarkMonitorPlots():
             # Retrieve data from database. Retrieve bad pixel data (which is
             # associated with the detector rather than the aperture) only if
             # the aperture is a full frame aperture.
-            if self.aperture in full_apertures:
-                self.db.retrieve_data(self.aperture, get_pixtable_for_detector=True)
+            #if self.aperture in full_apertures:
+            #    self.db.retrieve_data(self.aperture, get_pixtable_for_detector=True)
 
-                # Convert query results for the bad pixel data to a series of arrays
-                self.pixel_data_to_lists()
-                self.stats_data_to_lists()
+            #    # Convert query results for the bad pixel data to a series of arrays
+            #    self.pixel_data_to_lists()
+            #    self.stats_data_to_lists()
 
-                # Organize the information that will be used to show the mean dark images
-                # and possible bad pixels
-                self.get_mean_dark_images()
+            #    # Organize the information that will be used to show the mean dark images
+            #    # and possible bad pixels
+            #    self.get_mean_dark_images()
 
-                # Create the mean dark image figure
-                ##self.dark_image_data[self.aperture] = DarkImagePlotUsingFitsFile(self.db.detector, self.image_data).plot
-                #self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data).plot
-
-            else:
+            #else:
                 # For apertures that are not full frame, we retrieve just the mean dark
                 # image (from the stats table). No bad pixel or baseline file info
-                self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
-                self.stats_data_to_lists()
-                self.get_mean_dark_image_from_stats_table()
+            #    self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
+            #    self.stats_data_to_lists()
+            #    self.get_mean_dark_image_from_stats_table()
 
+            self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
+            self.stats_data_to_lists()
+            self.get_mean_dark_image_from_stats_table()
 
             # Create the mean dark image figure
             self.dark_image_data[self.aperture] = DarkImagePlot(self.image_data).plot
@@ -170,98 +169,25 @@ class DarkMonitorPlots():
         image_path = None
         if len(hot_idx) > 0:
             hot_idx = hot_idx[-1]
-            #self.image_data["hot_pixels"] = (self._x_coords[hot_idx],
-            #                                 self._y_coords[hot_idx]
-            #                                 )
-            #self.image_data["num_hot_pixels"] = self._x_coords_len[hot_idx]
-            #self.image_data["baseline_file"] = self._baseline_files[hot_idx]
-            #self.image_data["num_hot_files"] = self._numfiles[hot_idx]
-
             image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
-
-            # Get the date range covered by the meand dark image. At the moment,
-            # this assumes a filename format for the fits file output by the
-            # dark monitor
-            #self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(self._mean_dark_image_files[hot_idx])
-            #self.image_data['base_start_time'], self.image_data['base_end_time'] = self.extract_times_from_filename(self._baseline_files[hot_idx])
-
-        else:
-            #self.image_data["hot_pixels"] = ([], [])
-            #self.image_data["num_hot_pixels"] = 0
-            #self.image_data["baseline_file"] = None
-            #self.image_data['dark_start_time'] = None
-            #self.image_data['dark_end_time'] = None
-            #self.image_data['base_start_time'] = None
-            #self.image_data['base_end_time'] = None
-            #self.image_data["num_hot_files"] = 0
-            pass
 
         if len(dead_idx) > 0:
             dead_idx = dead_idx[-1]
-            #self.image_data["dead_pixels"] = (self._x_coords[dead_idx],
-            #                                 self._y_coords[dead_idx]
-            #                                 )
-            #self.image_data["num_dead_pixels"] = self._x_coords_len[dead_idx]
-            #self.image_data["num_dead_files"] = self._numfiles[dead_idx]
-
-            #if self.image_data["baseline_file"] is None:
-            #    self.image_data["baseline_file"] = self._baseline_files[dead_idx]
-            #    self.image_data['base_start_time'], self.image_data['base_end_time'] = self.extract_times_from_filename(self._baseline_files[dead_idx])
-
             if image_path is None:
                 image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[dead_idx])
-                #self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(self._mean_dark_image_files[dead_idx])
-        else:
-            #self.image_data["dead_pixels"] = ([], [])
-            #self.image_data["num_dead_pixels"] = 0
-            #self.image_data["num_dead_files"] = 0
-            pass
 
         if len(noisy_idx) > 0:
             noisy_idx = noisy_idx[-1]
-            #self.image_data["noisy_pixels"] = (self._x_coords[noisy_idx],
-            #                                   self._y_coords[noisy_idx]
-            #                                   )
-            #self.image_data["num_noisy_pixels"] = self._x_coords_len[noisy_idx]
-            #self.image_data["num_noisy_files"] = self._numfiles[noisy_idx]
-
-            #if self.image_data["baseline_file"] is None:
-            #    self.image_data["baseline_file"] = self._baseline_files[noisy_idx]
-            #    self.image_data['base_start_time'], self.image_data['base_end_time'] = self.extract_times_from_filename(self._baseline_files[noisy_idx])
-
             if image_path is None:
                 image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[noisy_idx])
-                #self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(self._mean_dark_image_files[noisy_idx])
-        else:
-            #self.image_data["noisy_pixels"] = ([], [])
-            #self.image_data["num_noisy_pixels"] = 0
-            #self.image_data["num_noisy_files"] = 0
-            pass
-
-        # If we have a valid path for a mean dark image, read it in
-        #if image_path is not None:
-        #    if os.path.isfile(image_path):
-        #        mean_dark_image = fits.getdata(image_path, 1)
 
         #If there is no entry for the mean image file in the pixel table, we
         # may be able to retrieve it from the stats table
         if mean_dark_image is None:
             self.get_mean_dark_image_from_stats_table()
-            #if len(self._stats_mean_dark_image_files) > 0:
-            #    image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
-            #    if os.path.isfile(image_path):
-            #        mean_dark_image = fits.getdata(image_path, 1)
-            #        self.image_data['dark_start_time'], self.image_data['dark_end_time'] = self.extract_times_from_filename(os.path.basename(image_path))
 
         self.image_data["image_array"] = mean_dark_image
         self.image_data["dark_image_picture"] = image_path.replace('fits' ,'png')
-
-        ##########FOR TESTING ONLY. DELETE BEFORE MERGING
-        #self.image_data["dark_image_picture"] = os.path.join(self.mean_slope_dir, 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png')  # test server
-        #self.image_data["dark_image_picture"] = '/Volumes/jwst_ins/jwql/tmp/nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'  # local
-        #self.image_data["dark_image_picture"] = os.path.join(self.mean_slope_dir, 'temp', 'nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png')  # local
-        #self.image_data["dark_image_picture"] = '/ifs/jwst/wit/nircam/hilbert/temp/nircam_nrcb5_full_59607.0_to_59879.75923899602_mean_slope_image.png'
-        ##########FOR TESTING ONLY. DELETE BEFORE MERGING
 
     def get_mean_dark_image_from_stats_table(self):
         """
