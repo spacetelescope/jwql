@@ -23,158 +23,22 @@
         <div id="introduction">
             <h4>What is the JWQL API?</h4><hr>
             <p align="justify">
-                JWQL allows users to access the data available through our programmatic Application Programming Interface (API). In short, an API
-                accepts requests for services from a system, gathers the items in the request, and returns a response to the user. A popular example used to describe the
+                An Application Programming Interface (API) accepts requests for services from a system, gathers the items in the request, and returns a response to the user. A
+                popular example used to describe the
                 functionality of an API is describing the role of a waiter in a restaurant. When you enter a restaurant and sit at your table, you are typically
                 provided a menu containing all of the drink and food options. But how do you communicate your food and drink order to
                 the kitchen staff? This is where the waiter (API) comes in, you provide the waiter with your order (request), they will communicate
                 your order to the kitchen staff (system), and bring your food and drinks when they are prepared (the response). The waiter (API) disguises
                 all of the steps that are necessary to getting your final product delivered (cooking the food, counting stock, knowing recipes, etc.) but, is the
                 link to the user and the response they wish to obtain from a system.
+                <br><br>
+                JWQL allows users to access some JWST proposal and filename information through our web-based API. Note that JWQL does
+                not have a programmatic API due to security concerns and the authorization layer between the app and the outside world. The services listed
+                below will return lists of proposal numbers or filenames in json format when the appropriate URL is entered into the browser.
+
             </p>
         </div>
         <br>
-
-        <div id="examples">
-            <h4>Examples</h4><hr>
-            <p align="justify">
-                Here we showcase a few examples of a few of the APIs that we offer. To see a full list of supported APIs click <a href="#api_list">here</a>.
-            </p><br>
-
-            <h5>Getting a list of proposal IDs for a given instrument</h5>
-            <p align="justify">
-                    A user is interested in all of the proposal IDs associated with NIRCam.
-            </p>
-            <pre>
-                <code class="python">
-                from urllib import request
-                import json
-
-                # Build the URL https://jwql.stsci.edu/api/instrument/service/
-                url = 'https://jwql.stsci.edu/api/nircam/proposals/'
-                req = request.urlopen(url)
-                proposals = json.loads(req.read().decode())
-
-                print(proposals)
-
-                {
-                    "proposals": [
-                        "2751",
-                        "2744",
-                        "2739",
-                        "2738",
-                        "2736",
-                        "2733",
-                        "2732",
-                        "2731",
-                        "2729",
-                        "2727",
-                        "2726",
-                        "2725",
-                        "2724",
-                        "2692",
-                        "2640",
-                        "2635",
-                        "2609",
-                        "2586",
-                        ...,
-                        ...]}
-
-                </code>
-            </pre>
-
-
-            <h5>Obtaining Filenames for a Proposal ID </h5>
-            <p align="justify">
-                A user is interested in all of the thumbnail files associated with a particular proposal ID.
-            </p>
-            <pre>
-                <code class="python">
-                from urllib import request
-                import json
-
-                # Build the URL https://jwql.stsci.edu/api/proposal/service/
-                url = 'https://jwql.stsci.edu/api/02751/filenames/'
-                req = request.urlopen(url)
-                filenames = json.loads(req.read().decode())
-
-                print(filenames)
-
-                {
-                    "filenames": [
-                        "jw02751-o001_20220816t072136_image2_001_asn.json",
-                        "jw02751-o001_20220816t072136_image2_002_asn.json",
-                        "jw02751-o001_20220816t072136_image2_003_asn.json",
-                        "jw02751-o001_20220816t072136_image2_004_asn.json",
-                        "jw02751-o001_20220816t072136_image2_005_asn.json",
-                        "jw02751-o001_20220816t072136_image2_006_asn.json",
-                        "jw02751-o001_20220816t072136_image2_007_asn.json",
-                        "jw02751-o001_20220816t072136_image2_008_asn.json",
-                        "jw02751-o001_20220816t072136_image3_001_asn.json",
-                        "jw02751-o001_20220816t072136_image3_002_asn.json",
-                        "jw02751001001_02102_00001_nrcb1.pod",
-                        "jw02751001001_02102_00001_nrcb1.sqlite",
-                        "jw02751001001_02102_00001_nrcb1_cal.fits",
-                        "jw02751001001_02102_00001_nrcb1_cal.jpg",
-                        "jw02751001001_02102_00001_nrcb1_cal_thumb.jpg",
-                        "jw02751001001_02102_00001_nrcb1_i2d.fits",
-                        "jw02751001001_02102_00001_nrcb1_original_thumb.jpg",
-                        "jw02751001001_02102_00001_nrcb1_rate.fits",
-                        ...,
-                        ...]}
-
-                        </code>
-                    </pre>
-
-            <h5>Obtaining Filenames Associated with a Rootname</h5>
-            <p align="justify">
-                A user is interested in all of the filenames associated with a specific JWST rootname.
-            </p>
-            <pre>
-                <code class="python">
-                    from urllib import request
-                    import json
-
-                    # Build the URL https://jwql.stsci.edu/api/roontname/service/
-                    url = 'https://jwql.stsci.edu/api/jw01068001001_02102_00001_nrcb1/filenames/'
-                    req = request.urlopen(url)
-                    filenames = json.loads(req.read().decode())
-
-                    print(filenames)
-
-                    {
-                        "filenames": [
-                            "jw01068001001_02102_00001_nrcb1.pod",
-                            "jw01068001001_02102_00001_nrcb1.sqlite",
-                            "jw01068001001_02102_00001_nrcb1_cal.fits",
-                            "jw01068001001_02102_00001_nrcb1_cal.jpg",
-                            "jw01068001001_02102_00001_nrcb1_cal_thumb.jpg",
-                            "jw01068001001_02102_00001_nrcb1_i2d.fits",
-                            "jw01068001001_02102_00001_nrcb1_o001_crf.fits",
-                            "jw01068001001_02102_00001_nrcb1_o001_crf.jpg",
-                            "jw01068001001_02102_00001_nrcb1_o001_crf_thumb.jpg",
-                            "jw01068001001_02102_00001_nrcb1_original_thumb.jpg",
-                            "jw01068001001_02102_00001_nrcb1_rate.fits",
-                            "jw01068001001_02102_00001_nrcb1_rate.jpg",
-                            "jw01068001001_02102_00001_nrcb1_rate_thumb.jpg",
-                            "jw01068001001_02102_00001_nrcb1_rateints.fits",
-                            "jw01068001001_02102_00001_nrcb1_rateints.jpg",
-                            "jw01068001001_02102_00001_nrcb1_rateints_thumb.jpg",
-                            "jw01068001001_02102_00001_nrcb1_trapsfilled.fits",
-                            "jw01068001001_02102_00001_nrcb1_trapsfilled.jpg",
-                            "jw01068001001_02102_00001_nrcb1_trapsfilled_thumb.jpg",
-                            "jw01068001001_02102_00001_nrcb1_uncal.cal_outputs",
-                            "jw01068001001_02102_00001_nrcb1_uncal.fits",
-                            "jw01068001001_02102_00001_nrcb1_uncal.jpg",
-                            "jw01068001001_02102_00001_nrcb1_uncal_thumb.jpg"
-                            ]
-                    }
-
-                    </code>
-             </pre>
-
-
-        </div>
 
         <div id="api_list">
             <h4>List of Available Services</h4><hr>
