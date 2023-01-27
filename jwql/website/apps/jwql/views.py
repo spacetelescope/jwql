@@ -44,6 +44,7 @@ Dependencies
 from collections import defaultdict
 from copy import deepcopy
 import csv
+import glob
 import logging
 import os
 import operator
@@ -53,6 +54,7 @@ from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 import numpy as np
+import socket
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config, monitor_utils
@@ -745,6 +747,50 @@ def jwqldb_table_viewer(request, tablename_param=None):
 
     return render(request, template, context)
 
+
+def log_view(request):
+    """Access JWQL monitoring logs from the web app.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = 'log_view.html'
+    log_path = get_config()['log_dir']
+    log_name = request.POST.get('log_submit', None)
+
+    hostname = socket.gethostname()
+
+    if 'dljwql' in hostname:
+        server = 'dev'
+    elif 'tljwql' in hostname:
+        server = 'test'
+    else:
+        server = 'ops'
+
+    full_log_paths = sorted(glob.glob(os.path.join(log_path, server, '*', '*')), reverse=True)
+    full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
+    log_dictionary = {os.path.basename(path): path for path in full_log_paths}
+
+    if log_name:
+        with open(log_dictionary[log_name]) as f:
+            log_text = f.read()
+    else:
+        log_text = None
+
+    context = {'inst': '',
+               'all_logs': log_dictionary,
+               'log_text': log_text,
+               'log_name': log_name}
+
+    return render(request, template, context)
 
 def not_found(request, *kwargs):
     """Generate a ``not_found`` page
