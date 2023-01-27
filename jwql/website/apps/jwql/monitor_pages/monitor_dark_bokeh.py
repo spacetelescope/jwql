@@ -560,9 +560,10 @@ class DarkMonitorPlots():
         """
         self.dark_image_picture = None
         if len(self._stats_mean_dark_image_files) > 0:
-            image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
+            # Grab the most recent entry
+            image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[-1].replace('fits', 'png'))
             if os.path.isfile(image_path):
-                self.dark_image_picture = image_path.replace('fits' ,'png')
+                self.dark_image_picture = image_path
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
