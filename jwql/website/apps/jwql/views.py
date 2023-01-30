@@ -70,6 +70,7 @@ from .data_containers import get_edb_components
 from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
+from .data_containers import get_proposals_by_category
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import random_404_page
 from .data_containers import text_scrape
@@ -307,8 +308,10 @@ def archived_proposals(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'archive.html'
+    proposals_by_category = get_proposals_by_category(inst)
     context = {'inst': inst,
-               'base_url': get_base_url()}
+               'base_url': get_base_url(),
+               'props_by_cat': proposals_by_category}
 
     return render(request, template, context)
 

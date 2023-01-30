@@ -45,6 +45,18 @@
                   </div>
                 </span>
             </div>
+
+            <div class="mx-4 mr-5 ml-auto">
+                Sort by Category:<br>
+                <span class="dropdown">
+                  <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Category</button>
+                  <div class="dropdown-menu" aria-labelledby="categoryButton">
+                    {% for category in prop_by_cat %}
+                        <a class="dropdown-item" href="#" onclick="sort_by_proposals('Recent');">category</a>
+                    {% endfor %}
+                  </div>
+                </span>
+            </div>
         </div>
 
         <hr>
