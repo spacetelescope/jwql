@@ -57,13 +57,6 @@ from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 
-# These lines are needed in order to use the Django models in a standalone
-# script (as opposed to code run as a result of a webpage request). If these
-# lines are not run, the script will crash when attempting to import the
-# Django models in the line below.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
-setup()
-
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
@@ -78,6 +71,13 @@ if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # These lines are needed in order to use the Django models in a standalone
+    # script (as opposed to code run as a result of a webpage request). If these
+    # lines are not run, the script will crash when attempting to import the
+    # Django models in the line below.
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    setup()
+
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     from jwql.website.apps.jwql.models import RootFileInfo
     check_config_for_key('auth_mast')
