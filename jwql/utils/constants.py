@@ -150,6 +150,14 @@ DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'nirspec': ['NRS_DARK'],
                   'fgs': ['FGS_DARK']}
 
+# Types of potential bad pixels identified by the dark current monitor
+DARK_MONITOR_BADPIX_TYPES = ['hot', 'dead', 'noisy']
+
+# Maximum number of potential new bad pixels to overplot on the dark monitor
+# mean dark image plot. Too many overplotted points starts to obscure the image
+# itself, and are most likely not really new bad pixels
+DARK_MONITOR_MAX_BADPOINTS_TO_PLOT = 1000
+
 # Dictionary of observing modes available for each instrument
 DETECTOR_PER_INSTRUMENT = {'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
                            'nircam': ['NRCB4', 'NRCA4', 'NRCA2', 'NRCALONG',
