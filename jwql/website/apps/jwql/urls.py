@@ -106,8 +106,6 @@ urlpatterns = [
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
-    re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
-    re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
     re_path(r'^api/(?P<proposal>[\d]{1,5})/filenames/$', api_views.filenames_by_proposal, name='filenames_by_proposal'),
     re_path(r'^api/(?P<proposal>[\d]{1,5})/preview_images/$', api_views.preview_images_by_proposal, name='preview_images_by_proposal'),
     re_path(r'^api/(?P<proposal>[\d]{1,5})/thumbnails/$', api_views.thumbnails_by_proposal, name='preview_images_by_proposal'),

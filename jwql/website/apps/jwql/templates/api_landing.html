@@ -23,125 +23,31 @@
         <div id="introduction">
             <h4>What is the JWQL API?</h4><hr>
             <p align="justify">
-                JWQL allows users to access the data available through our programmatic Application Programming Interface (API). In short, an API
-                accepts requests for services from a system, gathers the items in the request, and returns a response to the user. A popular example used to describe the
+                An Application Programming Interface (API) accepts requests for services from a system, gathers the items in the request, and returns a response to the user. A
+                popular example used to describe the
                 functionality of an API is describing the role of a waiter in a restaurant. When you enter a restaurant and sit at your table, you are typically
                 provided a menu containing all of the drink and food options. But how do you communicate your food and drink order to
                 the kitchen staff? This is where the waiter (API) comes in, you provide the waiter with your order (request), they will communicate
                 your order to the kitchen staff (system), and bring your food and drinks when they are prepared (the response). The waiter (API) disguises
                 all of the steps that are necessary to getting your final product delivered (cooking the food, counting stock, knowing recipes, etc.) but, is the
                 link to the user and the response they wish to obtain from a system.
+                <br><br>
+                JWQL allows users to access some JWST proposal and filename information through our web-based API. Note that JWQL does
+                not have a programmatic API due to security concerns and the authorization layer between the app and the outside world. The services listed
+                below will return lists of proposal numbers or filenames in json format when the appropriate URL is entered into the browser.
+
             </p>
         </div>
         <br>
-
-        <div id="examples">
-            <h4>Examples</h4><hr>
-            <p align="justify">
-                Here we showcase a few examples of a few of the APIs that we offer. To see a full list of supported APIs click <a href="#api_list">here</a>.
-            </p><br>
-            <h5>Obtaining Filenames Associated with a Rootname</h5>
-            <p align="justify">
-                A user is interested in all of the filenames associated with a specific JWST rootname.
-            </p>
-            <pre>
-                <code class="python">
-                    from urllib import request
-                    import json
-
-                    # Build the URL https://jwql.stsci.edu/api/roontname/service/
-                    url = 'https://jwql.stsci.edu/api/jw93025001001_02102_00001_nrca2/filenames/'
-                    req = request.urlopen(url)
-                    filenames = json.loads(req.read().decode())
-
-                    print(filenames)
-
-                    {'filenames': ['jw93025001001_02102_00001_nrca2_calints.fits',
-                                    'jw93025001001_02102_00001_nrca2_rate.fits',
-                                    'jw93025001001_02102_00001_nrca2_rateints.fits',
-                                    'jw93025001001_02102_00001_nrca2_trapsfilled.fits',
-                                    'jw93025001001_02102_00001_nrca2_uncal.fits']}
-                    </code>
-             </pre>
-
-                <h5>Obtaining Thumbnails with Instrument Name</h5>
-                <p align="justify">
-                    A user is interested in all of the thumbnail associated with the Fine Guider Sensors (FGS).
-                </p>
-                <pre>
-                    <code class="python">
-                    from urllib import request
-                    import json
-
-                    # Build the URL https://jwql.stsci.edu/api/instrument/service/
-                    url = 'https://jwql.stsci.edu/api/fgs/thumbnails/'
-                    req = request.urlopen(url)
-                    thumbnails = json.loads(req.read().decode())
-
-                    print(thumbnails)
-
-                    {'thumbnails': ['jw97012001003_02101_00001_guider1_trapsfilled_integ2.thumb',
-                                    'jw97012001001_02101_00001_guider1_rateints_integ1.thumb',
-                                    'jw97012001002_02101_00001_guider1_trapsfilled_integ2.thumb',
-                                    'jw97012001004_02101_00001_guider1_rateints_integ0.thumb',
-                                    'jw97012001003_02101_00001_guider1_rateints_integ0.thumb',
-                                    'jw97012001001_02101_00001_guider1_cal_integ0.thumb',
-                                    'jw97012001001_02101_00001_guider1_rateints_integ0.thumb',
-                                    'jw97012001004_02101_00001_guider1_rate_integ0.thumb',
-                                    'jw97012001004_02101_00001_guider1_trapsfilled_integ0.thumb',
-                                    'jw97012001001_02101_00001_guider1_trapsfilled_integ1.thumb',
-                                    'jw97012001004_02101_00001_guider1_trapsfilled_integ1.thumb',
-                                    ...,
-                                    ...]}
-                        </code>
-                    </pre>
-
-                    <h5>Obtaining Filenames with Proposal ID </h5>
-                    <p align="justify">
-                        A user is interested in all of the thumbnail associated with the Fine Guider Sensors (FGS).
-                    </p>
-                    <pre>
-                        <code class="python">
-                        from urllib import request
-                        import json
-
-                        # Build the URL https://jwql.stsci.edu/api/proposal/service/
-                        url = 'https://jwql.stsci.edu/api/86600/filenames/'
-                        req = request.urlopen(url)
-                        filenames = json.loads(req.read().decode())
-
-                        print(filenames)
-
-                        {'filenames': ['jw86600001001_02101_00001_guider1_cal.fits',
-                                       'jw86600001001_02101_00001_guider1_rate.fits',
-                                       'jw86600001001_02101_00001_guider1_trapsfilled.fits',
-                                       'jw86600001001_02101_00001_guider1_uncal.fits',
-                                       'jw86600001001_02101_00002_guider1_cal.fits',
-                                       'jw86600001001_02101_00002_guider1_rate.fits',
-                                       'jw86600001001_02101_00002_guider1_trapsfilled.fits',
-                                       'jw86600001001_02101_00002_guider1_uncal.fits',
-                                       'jw86600001001_02101_00003_guider1_cal.fits',
-                                       'jw86600001001_02101_00003_guider1_rate.fits',
-                                       'jw86600001001_02101_00003_guider1_trapsfilled.fits',
-                                       'jw86600001001_02101_00003_guider1_uncal.fits',
-                                       'jw86600001001_02101_00004_guider1_cal.fits',
-                                       'jw86600001001_02101_00004_guider1_rate.fits',
-                                       'jw86600001001_02101_00004_guider1_trapsfilled.fits',
-                                       ...,
-                                       ...]}
-                        </code>
-                    </pre>
-        </div>
 
         <div id="api_list">
             <h4>List of Available Services</h4><hr>
                 <ul>
                     <li>All Proposals (<code class="python">https://jwql.stsci.edu/api/proposals/</code>)</li>
                     <li>Instrument Proposals (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
-                    <li>Preview Images by Instrument (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/preview_images/</code>)</li>
-                    <li>Thumbnails by Instrument (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/thumbnails/</code>)</li>
-                    <li>Filenames by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
+                    <li>Filenames by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/filenames/</code>)</li>
                     <li>Preview Images by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/preview_images/</code>)</li>
+                    <li>Thumbnails by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/thumbnails/</code>)</li>
                     <li>Filenames by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/filenames/</code>)</li>
                     <li>Preview Images by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/preview_images/</code>)</li>
                     <li>Thumbnails by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/thumbnails/</code>)</li>
