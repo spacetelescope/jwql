@@ -51,7 +51,7 @@
                   <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Category</button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     {% for category in props_by_cat.keys() %}
-                        <a class="dropdown-item" href="#" onclick="sort_by_proposals('Recent');">category</a>
+                        <a class="dropdown-item" href="#" onclick="sort_by_proposals('Recent');">{{ category }}</a>
                     {% endfor %}
                   </div>
                 </span>
