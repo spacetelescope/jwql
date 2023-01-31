@@ -17,7 +17,6 @@
     <main role="main" class="container">
 
         <h3 id='title'>Archived {{ inst }} Images</h3>
-        <h4>{{ props_by_cat }}</h4>
         <p id='img_show_count'></p>
         <hr>
 
@@ -51,7 +50,7 @@
                 <span class="dropdown">
                   <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Category</button>
                   <div class="dropdown-menu" aria-labelledby="categoryButton">
-                    {% for category in props_by_cat.keys %}
+                    {% for category in props_by_cat.keys() %}
                         <a class="dropdown-item" href="#" onclick="sort_by_proposals('Recent');">category</a>
                     {% endfor %}
                   </div>
