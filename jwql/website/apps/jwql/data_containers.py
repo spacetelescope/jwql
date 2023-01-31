@@ -607,6 +607,9 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
     result : dict
         Dictionary of file information
     """
+    # Be sure the instrument name is properly capitalized
+    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+
     if other_columns is None:
         columns = "filename, isRestricted"
     else:
@@ -642,7 +645,7 @@ def get_filenames_by_proposal(proposal):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -671,7 +674,7 @@ def get_filenames_by_rootname(rootname):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -866,45 +869,6 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_preview_images_by_instrument(inst):
-    """Return a list of preview images available in the filesystem for
-    the given instrument.
-
-    Parameters
-    ----------
-    inst : str
-        The instrument of interest (e.g. ``NIRCam``).
-
-    Returns
-    -------
-    preview_images : list
-        A list of preview images available in the filesystem for the
-        given instrument.
-    """
-    # Get list of all preview_images. Text file contains only preview
-    # images for a single instrument.
-    preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
-    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
-
-    # Query MAST for all rootnames for the instrument
-    all_preview_images = []
-    all_proposals = get_instrument_proposals(inst)
-    for prop in all_proposals:
-        prop_result = mast_query_filenames_by_instrument(inst, prop)
-
-        # Parse the results to get the rootnames
-        filenames = [result['filename'].split('.')[0] for result in prop_result]
-
-        if len(filenames) > 0:
-            # Get subset of preview images that match the filenames
-            prop_preview_images = [os.path.basename(item) for item in preview_images if
-                                   os.path.basename(item).split('_integ')[0] in filenames]
-            all_preview_images.extend(prop_preview_images)
-
-    # Return only preview images that match the filenames retrieved from MAST
-    return all_preview_images
-
-
 def get_preview_images_by_proposal(proposal):
     """Return a list of preview images available in the filesystem for
     the given ``proposal``.
@@ -924,7 +888,7 @@ def get_preview_images_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
-    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+    preview_images = [item for item in preview_images if os.path.splitext(item)[0].split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -952,7 +916,7 @@ def get_preview_images_by_rootname(rootname):
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
-    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+    preview_images = [item for item in preview_images if os.path.splitext(item)[0].split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 

@@ -63,6 +63,7 @@ dependencies:
     - pysqlite3==0.4.7
     - pyvo==1.4
     - redis
+    - selenium==4.8.0
     - stsci_rtd_theme==1.0.0
     - stcal==1.2.1
     - git+https://github.com/spacetelescope/jwst_reffiles
