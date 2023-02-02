@@ -308,10 +308,8 @@ def archived_proposals(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'archive.html'
-    proposals_by_category = get_proposals_by_category(inst)
     context = {'inst': inst,
-               'base_url': get_base_url(),
-               'props_by_cat': proposals_by_category}
+               'base_url': get_base_url()}
 
     return render(request, template, context)
 
@@ -360,9 +358,13 @@ def archived_proposals_ajax(request, inst):
     exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
     exp_types = sorted(list(set(exp_types)))
 
+    # Get all proposals based on category type
+    proposals_by_category = get_proposals_by_category(inst)
+
     # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
     dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
-                      'exp_type': exp_types}
+                      'exp_type': exp_types,
+                      'cat_type': proposals_by_category.keys()}
     thumbnails_dict = {}
 
     for proposal_num in proposal_nums:
