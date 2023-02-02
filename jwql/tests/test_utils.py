@@ -289,6 +289,14 @@ FILENAME_PARSER_TEST_DATA = [
       'segment': '002',
       'suffix': 'uncal',
       'visit': '001'}),
+
+    # Test msa file
+    ('jw02560013001_01_msa.fits',
+     {'program_id': '02560',
+      'observation': '013',
+      'visit': '001',
+      'filename_type': 'stage_2_msa',
+      'instrument': 'nirspec'})
 ]
 
 

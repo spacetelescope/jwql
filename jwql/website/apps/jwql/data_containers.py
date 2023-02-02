@@ -36,6 +36,7 @@ import logging
 from astropy.io import fits
 from astropy.time import Time
 from bs4 import BeautifulSoup
+from django import setup
 from django.conf import settings
 from django.contrib import messages
 import numpy as np
@@ -70,6 +71,13 @@ if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # These lines are needed in order to use the Django models in a standalone
+    # script (as opposed to code run as a result of a webpage request). If these
+    # lines are not run, the script will crash when attempting to import the
+    # Django models in the line below.
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    setup()
+
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     from jwql.website.apps.jwql.models import RootFileInfo
     check_config_for_key('auth_mast')
@@ -1499,7 +1507,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
 
 def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exclusive_stop_time_mjd):
-    """Generate a page that provides data necessary to render thumbnails for 
+    """Generate a page that provides data necessary to render thumbnails for
     ``archive_date_range`` template.
 
     Parameters

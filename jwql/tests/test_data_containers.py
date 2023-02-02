@@ -27,7 +27,9 @@ import pytest
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
-from jwql.utils.utils import get_config
+
+if not ON_GITHUB_ACTIONS:
+    from jwql.utils.utils import get_config
 
 
 def test_get_acknowledgements():

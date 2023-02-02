@@ -358,6 +358,9 @@ MIRI_POS_RATIO_VALUES = {'FW': {'FND': (-164.8728073, 0.204655346),
                                  }
                          }
 
+# Suffix for msa files
+MSA_SUFFIX = ['msa']
+
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
@@ -461,7 +464,7 @@ WFSC_SUFFIX_TYPES = ['wfscmb']
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
+    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES + MSA_SUFFIX
 
 # Instrument Documentation Links
 URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor',
