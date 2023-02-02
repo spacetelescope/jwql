@@ -351,64 +351,17 @@ class GeneralDashboard:
         """
         # build_table_latest_query will return only the database entries with the latest date. This should
         # correspond to one row/entry per instrument
-
-        ####################################################
-        # Commented out for testing. uncomment before merging
         data = build_table_latest_entry('filesystem_characteristics')
 
         # Sort by instrument name so that the order of the tabs will always be the same
         data = data.sort_values('instrument')
-        ##################################################
 
-
-        #title = 'File Counts Per Filter'
         figures = []
-
-        #outer_radii = vals / np.max(vals) * 100. + 0.1
-        #inner_radii = [0.1] * len(waves)
-        #start_angle = np.arange(len(waves))*360./len(waves)
-        #end_angle = np.arange(1, len(waves)+1)*360./len(waves)
-
         # This is a loop over instruments
         for i in range(len(data)):
             instrument = data.loc[i]['instrument']
             filterpupil = data.loc[i]['filter_pupil']
             num_obs = data.loc[i]['obs_per_filter_pupil']
-
-            # For testing
-            #instrument = 'nircam'
-            #num_obs = np.linspace(0.01, 30., 100)
-            #num_obs = np.linspace(1, 400, 100)
-            #num_obs = np.array([88, 3, 95, 187, 1, 1, 1, 60, 10, 10, 6, 175, 3, 56, 32, 35, 8, 5, 1, 36, 8, 4, 12, 43, 3, 3, 8, 15, 255, 1, 12, 6, 12, 6, 9, 115, 19, 17, 14, 560, 6, 3, 5, 3, 241, 273, 61, 8, 6, 10, 9, 219, 1, 12, 6, 5, 2, 45, 8, 6, 5, 9, 57, 50, 1, 29, 66, 6, 109, 6, 8, 6, 35, 75, 216, 16, 36, 4, 39, 37, 8, 6, 5, 6, 73, 10, 7, 8, 9, 38, 10, 9, 8, 13, 202, 315, 27, 44, 14, 38, 5, 39, 29, 10, 9, 8, 6, 327, 10, 10, 9, 6, 253,109,5,57,57])
-            #filterpupil = np.array(['F070W/CLEAR', 'F070W/WLP8', 'F090W/CLEAR', 'F115W/CLEAR',
-       #'F115W/FLAT', 'F115W/MASKBAR', 'F115W/MASKRND', 'F140M/CLEAR',
-       #'F140M/GDHS0', 'F140M/GDHS60', 'F140M/WLP8', 'F150W/CLEAR',
-       #'F150W/WLP8', 'F150W2/CLEAR', 'F150W2/F162M', 'F150W2/F164N',
-       #'F150W2/GDHS0', 'F150W2/GDHS60', 'F150W2/MASKIPR', 'F182M/CLEAR',
-       #'F182M/MASKBAR', 'F182M/MASKRND', 'F182M/WLP8', 'F187N/CLEAR',
-       #'F187N/MASKBAR', 'F187N/MASKRND', 'F187N/WLM8', 'F187N/WLP8',
-       #'F200W/CLEAR', 'F200W/GDHS60', 'F200W/MASKBAR', 'F200W/MASKIPR',
-       #'F200W/MASKRND', 'F200W/WLM8', 'F200W/WLP8', 'F210M/CLEAR',
-       #'F210M/MASKBAR', 'F210M/MASKRND', 'F210M/WLP8', 'F212N/CLEAR',
-       #'F212N/FLAT', 'F212N/MASKBAR', 'F212N/MASKIPR', 'F212N/MASKRND',
-       #'F212N/WLM8', 'F212N/WLP8', 'F250M/CLEAR', 'F250M/GRISMC',
-       #'F250M/GRISMR', 'F250M/MASKBAR', 'F250M/MASKRND', 'F277W/CLEAR',
-       #'F277W/FLAT', 'F277W/GRISMC', 'F277W/GRISMR', 'F277W/MASKBAR',
-       #'F277W/MASKRND', 'F300M/CLEAR', 'F300M/GRISMC', 'F300M/GRISMR',
-       #'F300M/MASKBAR', 'F300M/MASKRND', 'F322W2/CLEAR', 'F322W2/F323N',
-       #'F322W2/F405N', 'F322W2/GRISMC', 'F322W2/GRISMR', 'F322W2/MASKRND',
-       #'F335M/CLEAR', 'F335M/FLAT', 'F335M/GRISMC', 'F335M/GRISMR',
-       #'F335M/MASKBAR', 'F335M/MASKRND', 'F356W/CLEAR', 'F356W/GRISMC',
-       #'F356W/GRISMR', 'F356W/MASKBAR', 'F356W/MASKRND', 'F360M/CLEAR',
-       #'F360M/GRISMC', 'F360M/GRISMR', 'F360M/MASKBAR', 'F360M/MASKRND',
-       #'F410M/CLEAR', 'F410M/GRISMC', 'F410M/GRISMR', 'F410M/MASKBAR',
-       #'F410M/MASKRND', 'F430M/CLEAR', 'F430M/GRISMC', 'F430M/GRISMR',
-       #'F430M/MASKBAR', 'F430M/MASKRND', 'F444W/CLEAR', 'F444W/F405N',
-       #'F444W/F466N', 'F444W/F470N', 'F444W/GRISMC', 'F444W/GRISMR',
-       #'F444W/MASKBAR', 'F444W/MASKRND', 'F460M/CLEAR', 'F460M/GRISMC',
-       #'F460M/GRISMR', 'F460M/MASKBAR', 'F460M/MASKRND', 'F480M/CLEAR',
-       #'F480M/GRISMC', 'F480M/GRISMR', 'F480M/MASKBAR', 'F480M/MASKRND',
-       #'N/A/FLAT', 'WLP4/CLEAR', 'WLP4/MASKIPR', 'WLP4/WLM8', 'WLP4/WLP8'])
 
             # Sort by num_obs in order to make the plot more readable
             idx = np.argsort(num_obs)
