@@ -29,6 +29,7 @@ from bokeh.plotting import figure, output_file
 import numpy as np
 import pysiaf
 
+from jwql.website.apps.jwql import monitor_pages
 from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
