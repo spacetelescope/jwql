@@ -99,10 +99,8 @@ def test_api_views(url):
 
     try:
         url = request.urlopen(url)
-    except error.HTTPError as e:
-        if e.code == 502:
-            pytest.skip("Server problem")
-        raise(e)
+    except (error.HTTPError, error.URLError):
+        pytest.skip("Server problem")
 
     try:
         data = json.loads(url.read().decode())

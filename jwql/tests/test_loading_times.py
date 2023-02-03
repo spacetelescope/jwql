@@ -80,10 +80,9 @@ def test_loading_times(url):
     t1 = time.time()
     try:
         urllib.request.urlopen(url)
-    except urllib.error.HTTPError:
-        # may be some missing data
-        print('Server error')
-        return
+    except (urllib.error.HTTPError, urllib.error.URLError):
+        # may be missing data or no running server
+        pytest.skip("Server problem")
 
     t2 = time.time()
 
