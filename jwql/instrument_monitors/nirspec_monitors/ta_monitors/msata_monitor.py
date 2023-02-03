@@ -1149,7 +1149,7 @@ class MSATA():
                     logging.info('\tData from previous html output file and new data concatenated.')
                 else:
                     self.msata_data = self.new_msata_data
-                    logging.info('\Only new data was found - no previous html file.')
+                    logging.info('\tOnly new data was found - no previous html file.')
             else:
                 logging.info('\tMSATA monitor skipped. No MSATA data found.')
         # make sure to return the old data if no new data is found
