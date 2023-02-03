@@ -305,13 +305,14 @@ def test_plt_mags_time():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_mk_plt_layout():
+def test_mk_plt_layout(tmp_path):
     """Test the ``mk_plt_layout`` function"""
 
     truth_script, truth_div = components(figure())
 
     ta = MSATA()
-    ta.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor/tests')
+    #ta.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor/tests')
+    ta.output_dir = str(tmp_path)
     ensure_dir_exists(ta.output_dir)
     ta.output_file_name = os.path.join(ta.output_dir, "msata_layout.html")
     ta.msata_data = define_testdata()

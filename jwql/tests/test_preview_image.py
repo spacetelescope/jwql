@@ -32,9 +32,6 @@ from jwst.datamodels import dqflags
 from jwql.utils.preview_image import PreviewImage, crop_to_subarray
 from jwql.utils.utils import get_config, ensure_dir_exists
 
-# directory to be created and populated during tests running
-TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
-
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
@@ -82,36 +79,6 @@ def test_crop_to_subarray():
     expected = np.zeros((5, 5), dtype=int)
     expected[3:, 2:] = 1
     assert np.all(c == expected)
-
-
-@pytest.fixture(scope="module")
-def test_directory(test_dir=TEST_DIRECTORY):
-    """Create a test directory for preview image.
-
-    Parameters
-    ----------
-    test_dir : str
-        Path to directory used for testing
-
-    Yields
-    ------
-    test_dir : str
-        Path to directory used for testing
-
-    """
-    # Set up local test directory
-    ensure_dir_exists(test_dir)
-    yield test_dir
-
-    # Tear down local test directory and any files within
-    if os.path.isdir(test_dir):
-        shutil.rmtree(test_dir)
-
-    # Empty test directory on central storage
-    jpgs = glob.glob(os.path.join(get_config()['test_dir'], '*.jpg'))
-    thumbs = glob.glob(os.path.join(get_config()['test_dir'], '*.thumbs'))
-    for file in jpgs + thumbs:
-        os.remove(file)
 
 
 def get_test_fits_files():
@@ -164,7 +131,7 @@ def test_get_nonsci_map():
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('filename', get_test_fits_files())
-def test_make_image(test_directory, filename):
+def test_make_image(tmp_path, filename):
     """Use PreviewImage.make_image to create preview images of a sample
     JWST exposure.
 
@@ -173,12 +140,12 @@ def test_make_image(test_directory, filename):
 
     Parameters
     ----------
-    test_directory : str
-        Path of directory used for testing
+    tmp_path : pathlib.Path
+        Temporary directory to write to
     filename : str
         Path of FITS image to generate preview of
     """
-
+    test_directory = str(tmp_path)
     header = fits.getheader(filename)
 
     # Create and save the preview image or thumbnail
@@ -189,26 +156,27 @@ def test_make_image(test_directory, filename):
             image.scaling = 'log'
             image.cmap = 'viridis'
             image.output_format = 'jpg'
-            image.thumbnail = create_thumbnail
 
             if create_thumbnail:
                 image.thumbnail_output_directory = test_directory
             else:
                 image.preview_output_directory = test_directory
 
-            image.make_image()
+            image.make_image(create_thumbnail=create_thumbnail)
         except ValueError as error:
             print(error)
 
         if create_thumbnail:
             extension = 'thumb'
+            n_img = 1
         else:
             extension = 'jpg'
+            n_img = header['NINTS']
 
         # list of preview images
-        preview_image_filenames = glob.glob(os.path.join(test_directory, '*.{}'.format(
-            extension)))
-        assert len(preview_image_filenames) == header['NINTS']
+        preview_image_filenames = glob.glob(
+            os.path.join(test_directory, '*.{}'.format(extension)))
+        assert len(preview_image_filenames) == n_img
 
         # clean up: delete preview images
         for file in preview_image_filenames:

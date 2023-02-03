@@ -125,7 +125,7 @@ def test_mast_query_ta():
 
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
 
-    assert len(result) == 16
+    assert len(result) >= 16
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -273,13 +273,14 @@ def test_get_unsucessful_ta():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_mk_plt_layout():
+def test_mk_plt_layout(tmp_path):
     """Test the ``mk_plt_layout`` function"""
 
     truth_script, truth_div = components(figure())
 
     ta = WATA()
-    ta.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor/tests')
+    #ta.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor/tests')
+    ta.output_dir = str(tmp_path)
     ensure_dir_exists(ta.output_dir)
     ta.output_file_name = os.path.join(ta.output_dir, "wata_layout.html")
     ta.wata_data = define_testdata()

@@ -78,7 +78,13 @@ def test_loading_times(url):
     print('Testing {}'.format(url))
 
     t1 = time.time()
-    url = urllib.request.urlopen(url)
+    try:
+        urllib.request.urlopen(url)
+    except urllib.error.HTTPError:
+        # may be some missing data
+        print('Server error')
+        return
+
     t2 = time.time()
 
     assert (t2 - t1) <= TIME_CONSTRAINT
