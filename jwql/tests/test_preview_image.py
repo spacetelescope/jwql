@@ -156,12 +156,8 @@ def test_make_image(tmp_path, filename):
             image.scaling = 'log'
             image.cmap = 'viridis'
             image.output_format = 'jpg'
-
-            if create_thumbnail:
-                image.thumbnail_output_directory = test_directory
-            else:
-                image.preview_output_directory = test_directory
-
+            image.thumbnail_output_directory = test_directory
+            image.preview_output_directory = test_directory
             image.make_image(create_thumbnail=create_thumbnail)
         except ValueError as error:
             print(error)
