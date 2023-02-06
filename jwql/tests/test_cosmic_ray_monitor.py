@@ -51,7 +51,6 @@ def define_test_data(nints):
         rate_data = np.ones((2, 10, 10))
 
     filesystem = get_config()['filesystem']
-    #filename = os.path.join(filesystem, 'public', 'jw00623', 'jw00623087001', 'jw00623087001_07101_00001_mirimage_rate.fits')
     filename = os.path.join(filesystem, 'public', 'jw02733', 'jw02733002001',
                             'jw02733002001_02101_00001_mirimage_rate.fits')
     aperture = 'MIRIM_FULL'

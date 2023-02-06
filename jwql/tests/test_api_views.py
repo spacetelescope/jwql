@@ -42,14 +42,6 @@ for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
 
 # Proposal-specific URLs
-
-# TODO: currently missing in central storage
-# proposals = ['01018',  # FGS
-#              '01022',  # MIRI
-#              '01068',  # NIRCam
-#              '01059',  # NIRISS
-#              '1059',  # NIRISS
-#              '01106']  # NIRSpec
 proposals = ['2640', '02733', '1541', '02589']
 
 for proposal in proposals:
@@ -58,13 +50,6 @@ for proposal in proposals:
     urls.append('api/{}/thumbnails/'.format(proposal))  # thumbnails_by_proposal
 
 # Filename-specific URLs
-
-# TODO: currently missing in central storage
-#rootnames = ['jw01018001004_02101_00001_guider1',  # FGS
-#             'Jjw1022017001_03101_00001_mirimage',  # MIRI
-#             'jw01068001001_02102_00001_nrcb1',  # NIRCam
-#             'jw01059121001_02107_00001_nis',  # NIRISS
-#             'jw01106002001_02101_00002_nrs1']
 rootnames = ['jw02733002001_02101_00001_mirimage',  # MIRI
              'jw02733001001_02101_00001_nrcb2']  # NIRCam
 

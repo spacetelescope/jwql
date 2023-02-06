@@ -41,8 +41,6 @@ def test_completed_pipeline_steps():
     filename : str
         File to be checked
     """
-
-    #filename = os.path.join(get_config()['filesystem'], 'public', 'jw00312', 'jw00312002001', 'jw00312002001_02102_00001_nrcb4_rateints.fits')
     filename = os.path.join(get_config()['filesystem'], 'public', 'jw02733',
                             'jw02733001001',
                             'jw02733001001_02101_00001_nrcb2_rateints.fits')

@@ -128,7 +128,7 @@ def test_get_preview_images_by_proposal():
 def test_get_preview_images_by_rootname():
     """Tests the ``get_preview_images_by_rootname`` function."""
 
-    preview_images = data_containers.get_preview_images_by_rootname('jw01033006001_gs-fg_2022149123539')
+    preview_images = data_containers.get_preview_images_by_rootname('jw02589001001_02101_00001-seg001_nis')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -160,7 +160,7 @@ def test_get_thumbnails_by_proposal():
 def test_get_thumbnails_by_rootname():
     """Tests the ``get_thumbnails_by_rootname`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_rootname('jw01033006001_gs-fg_2022149123539')
+    preview_images = data_containers.get_thumbnails_by_rootname('jw02589001001_02101_00001-seg001_nis')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
