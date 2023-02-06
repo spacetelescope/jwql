@@ -171,32 +171,6 @@ def test_magnitude_fake_data():
     assert mag == 10.
 
 
-@pytest.mark.skip(reason='Needs update: API has changed')
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_cr_mags():
-    """Test the ``get_cr_mags`` function"""
-
-    cr = CosmicRay()
-
-    jump_locations = [(2, 1, 1)]
-    jump_locations_pre = [(1, 1, 1)]
-    cr.nints = 1
-    data, rate_data, filename, aperture = define_test_data(cr.nints)
-    header = fits.getheader(filename)
-
-    # TOD: update to new return values
-    mags = cr.get_cr_mags(jump_locations, jump_locations_pre, rate_data, data, header)
-    assert mags == [-2.77504]
-
-    jump_locations = [(1, 2, 1, 1)]
-    jump_locations_pre = [(1, 1, 1, 1)]
-    cr.nints = 5
-    data, rate_data, filename, aperture = define_test_data(cr.nints)
-
-    mags = cr.get_cr_mags(jump_locations, jump_locations_pre, rate_data, data, header)
-    assert mags == [-2.77504]
-
-
 def test_get_cr_mags_fake_data():
     """Test the calculation of multiple CR magnitudes"""
     data, rate, header, jump_coords, prior_coords = define_fake_test_data()
