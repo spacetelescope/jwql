@@ -55,9 +55,6 @@ def test_all_tables_exist():
     # Ensure that the ORMs defined in database_interface actually exist
     # as tables in the database
     for table in table_orms:
-        # TODO: table doesn't exist on dev server
-        if table in ['nirspec_ta_stats']:
-            continue
         assert table in existing_tables
 
 
