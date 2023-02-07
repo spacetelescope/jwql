@@ -8,14 +8,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
-  jobs:
-    post_create_environment:
-      - pip install . --no-deps
-      - pip install sphinx_automodapi
-      - pip install stsci_rtd_theme
-      - pip install pyvo
-      - pip install jsonschema
-      - pip install inflection
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
    configuration: docs/source/conf.py
@@ -24,3 +17,8 @@ sphinx:
 # formats:
 #    - pdf
 # Optionally declare the Python requirements required to build your docs
+#python:
+#   install:
+#      - requirements: rtd_requirements.txt
+#      - method: pip
+#        path: .
