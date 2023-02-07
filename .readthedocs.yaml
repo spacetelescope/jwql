@@ -11,6 +11,7 @@ build:
   jobs:
     post_create_environment:
       - pip install . --no-deps
+      - pip install sqlalchemy==1.49.3
 
 #conda:
 #  environment: environment_python_3_8.yml
