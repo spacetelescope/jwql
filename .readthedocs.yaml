@@ -8,6 +8,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
+  jobs:
+    post_create_environment:
+      - pip install . --no-deps
 
 conda:
   environment: environment_python_3_8.yml
