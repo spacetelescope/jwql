@@ -4,6 +4,11 @@
 # Required
 version: 2
 # Set the version of Python and other tools you might need
+# Explicit sqlalchemy install using post_install in order to get around the RTD
+# command pip install --upgrade --upgrade-strategy eager
+# This command upgrades all packages listed in rtd_reuirements.txt. This was causing
+# a problem when upgrading to sqlalchemy >=2.0, which has large changes from versions
+# <2.0, and was causing jwql to crash.
 build:
   os: ubuntu-22.04
   tools:
@@ -11,12 +16,6 @@ build:
   jobs:
     post_install:
       - pip install sqlalchemy==1.4.43
-#    post_create_environment:
-#      - pip install . --no-deps
-#      - pip install sqlalchemy==1.4.43
-
-#conda:
-#  environment: environment_python_3_8.yml
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
