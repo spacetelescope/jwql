@@ -9,9 +9,11 @@ build:
   tools:
     python: "3.9"
   jobs:
-    post_create_environment:
-      - pip install . --no-deps
+    post_install:
       - pip install sqlalchemy==1.4.43
+#    post_create_environment:
+#      - pip install . --no-deps
+#      - pip install sqlalchemy==1.4.43
 
 #conda:
 #  environment: environment_python_3_8.yml
