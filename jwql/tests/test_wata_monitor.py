@@ -29,7 +29,7 @@ from bokeh.plotting import figure
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors.wata_monitor import WATA
 from jwql.database.database_interface import NIRSpecTAQueryHistory
 from jwql.utils.utils import get_config, ensure_dir_exists
-from jwql.utils import monitor_utils
+from jwql.utils import monitor_utils, permissions
 
 
 
@@ -273,18 +273,23 @@ def test_get_unsucessful_ta():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_mk_plt_layout(tmp_path):
+def test_mk_plt_layout():
     """Test the ``mk_plt_layout`` function"""
 
     truth_script, truth_div = components(figure())
 
     ta = WATA()
-    #ta.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor/tests')
-    ta.output_dir = str(tmp_path)
+    ta.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor/tests')
     ensure_dir_exists(ta.output_dir)
     ta.output_file_name = os.path.join(ta.output_dir, "wata_layout.html")
     ta.wata_data = define_testdata()
     script, div = ta.mk_plt_layout()
+
+    # set group write permission for the test file
+    # to make sure others can overwrite it
+    owner = permissions.get_owner_string(ta.output_file_name)
+    permissions.set_permissions(ta.output_file_name,
+                                owner=owner, mode=0o664)
 
     assert type(script) == type(truth_script)
     assert type(div) == type(truth_div)
