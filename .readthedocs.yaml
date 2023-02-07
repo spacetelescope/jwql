@@ -11,6 +11,8 @@ build:
   jobs:
     post_create_environment:
       - pip install . --no-deps
+      - pip install sphinx_automodapi
+      - pip install stsci_rtd_theme
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
    configuration: docs/source/conf.py
