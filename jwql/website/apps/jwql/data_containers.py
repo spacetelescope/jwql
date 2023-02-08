@@ -1058,11 +1058,12 @@ def get_thumbnails_all_instruments(parameters):
         results = response[0].json()['data']
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
-        inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+        inst_filenames = [filename for filename in inst_filenames if filename.split('_')[-1] not in IGNORED_SUFFIXES]
 
         # Get list of all thumbnails
-        thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
-
+        thumb_inventory = os.path.join(f"{THUMBNAIL_FILESYSTEM}", f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt")
+        thumbnail_inst_list = retrieve_filelist(thumb_inventory)
+        
         # Get subset of thumbnail images that match the filenames
         thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
                                   os.path.basename(item).split('_integ')[0] in inst_filenames]
@@ -1095,7 +1096,7 @@ def get_thumbnails_all_instruments(parameters):
     return list(set(final_subset))
 
 
-def get_thumbnails_by_instrument(inst):
+def get_thumbnails_by_instrument(inst):  # SAPP TODO REMOVE THIS?
     """Return a list of thumbnails available in the filesystem for the
     given instrument.
 
