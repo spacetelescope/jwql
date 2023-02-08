@@ -268,12 +268,18 @@ if __name__ == '__main__':
     if pipe_type not in ['jump', 'cal']:
         raise ValueError("Unknown calibration type {}".format(pipe_type))
 
-    if pipe_type == 'jump':
+    try:
+        if pipe_type == 'jump':
+            with open(status_file, 'a+') as out_file:
+                out_file.write("Running jump pipeline.\n")
+            run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True)
+        elif pipe_type == 'cal':
+            with open(status_file, 'a+') as out_file:
+                out_file.write("Running cal pipeline.\n")
+            outputs = outputs.split(",")
+            run_pipe(input_file, short_name, work_directory, instrument, outputs)
+    except Exception as e:
         with open(status_file, 'a+') as out_file:
-            out_file.write("Running jump pipeline.\n")
-        run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True)
-    elif pipe_type == 'cal':
-        with open(status_file, 'a+') as out_file:
-            out_file.write("Running cal pipeline.\n")
-        outputs = outputs.split(",")
-        run_pipe(input_file, short_name, work_directory, instrument, outputs)
+            out_file.write("Exception when starting pipeline.\n")
+            out_file.write("{}".format(e))
+        raise e
