@@ -277,7 +277,7 @@ if __name__ == '__main__':
             with open(status_file, 'a+') as out_file:
                 out_file.write("Running cal pipeline.\n")
             outputs = outputs.split(",")
-            run_pipe(input_file, short_name, work_directory, instrument, outputs)
+            run_pipe(input_file, short_name, working_path, instrument, outputs)
     except Exception as e:
         with open(status_file, 'a+') as out_file:
             out_file.write("Exception when starting pipeline.\n")
