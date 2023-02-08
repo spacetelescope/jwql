@@ -216,7 +216,6 @@ if __name__ == '__main__':
     with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "w") as status_file:
         status_file.write("Started at {}\n".format(time.ctime()))
         status_file.write("\targv={}\n".format(sys.argv))
-        status_file.write("\toriginal argv={}\n".format(sys.orig_argv))
 
     file_help = 'Input file to calibrate'
     path_help = 'Directory in which to do the calibration'
