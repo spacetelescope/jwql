@@ -8,6 +8,7 @@ from glob import glob
 import os
 import shutil
 import sys
+import time
 
 from jwst import datamodels
 from jwst.dq_init import DQInitStep
@@ -209,8 +210,12 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
         statfile.write("SUCCEEDED")
     # Done.
 
+#CompletedProcess(args=['/home/svc_jwqladm_mon/jwql/jwql/jwql/shared_tasks/run_pipeline.py', 'cal', 'refpix', '/internal/data1/outputs/ops/calibrated_data', 'niriss', '/grp/jwst/ins/jwql/transfer/ops/incoming/jw01499040001_02201_00001_nis_uncal.fits', 'jw01499040001_02201_00001_nis'], returncode=126)
 
 if __name__ == '__main__':
+    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+        status_file.write("Started at {}".format(time.ctime()))
+
     file_help = 'Input file to calibrate'
     path_help = 'Directory in which to do the calibration'
     ins_help = 'Instrument that was used to produce the input file'
@@ -224,10 +229,14 @@ if __name__ == '__main__':
     parser.add_argument('instrument', metavar='INSTRUMENT', type=str, help=ins_help)
     parser.add_argument('input_file', metavar='FILE', type=str, help=file_help)
     parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
+
+    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+        status_file.write("Created argument parser at {}".format(time.ctime()))
+
     args = parser.parse_args()
-    
-    if not os.path.isfile(args.input_file):
-        raise FileNotFoundError("No input file {}".format(args.input_file))
+
+    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+        status_file.write("Finished parsing args at {}".format(time.ctime()))
     
     input_file = args.input_file
     instrument = args.instrument
@@ -245,6 +254,9 @@ if __name__ == '__main__':
         out_file.write("\tinstrument is {}\n".format(instrument))
         out_file.write("\tinput_file is {}\n".format(input_file))
         out_file.write("\tshort_name is {}\n".format(short_name))
+    
+    if not os.path.isfile(args.input_file):
+        raise FileNotFoundError("No input file {}".format(args.input_file))
     
     if pipe_type not in ['jump', 'cal']:
         raise ValueError("Unknown calibration type {}".format(pipe_type))
