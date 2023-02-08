@@ -214,7 +214,7 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
 
 if __name__ == '__main__':
     with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
-        status_file.write("Started at {}".format(time.ctime()))
+        status_file.write("Started at {}\n".format(time.ctime()))
 
     file_help = 'Input file to calibrate'
     path_help = 'Directory in which to do the calibration'
@@ -231,12 +231,18 @@ if __name__ == '__main__':
     parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
 
     with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
-        status_file.write("Created argument parser at {}".format(time.ctime()))
+        status_file.write("Created argument parser at {}\n".format(time.ctime()))
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except Exception as e:
+        with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+            status_file.write("Error parsing arguments.\n")
+            status_file.write("{}".format(e))
+        raise e
 
     with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
-        status_file.write("Finished parsing args at {}".format(time.ctime()))
+        status_file.write("Finished parsing args at {}\n".format(time.ctime()))
     
     input_file = args.input_file
     instrument = args.instrument
