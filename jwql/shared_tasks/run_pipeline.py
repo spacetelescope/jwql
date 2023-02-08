@@ -43,6 +43,9 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
     
+    with open(status_file, 'a+') as status_file:
+        status_file.write("Starting pipeline\n")
+    
     try:    
         copy_files([input_file_name], work_directory)
         set_permissions(uncal_file)
@@ -50,6 +53,8 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
         steps = get_pipeline_steps(instrument)
         first_step_to_be_run = True
         for step_name in steps:
+            with open(status_file, 'a+') as status_file:
+                status_file.write("Running step {}\n".format(step_name))
             kwargs = {}
             if step_name in ['jump', 'rate']:
                 kwargs = {'maximum_cores': 'all'}
@@ -94,13 +99,14 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
                     if done:
                         break
     except Exception as e:
-        with open(status_file, "w") as statfile:
+        with open(status_file, "a+") as statfile:
             statfile.write("EXCEPTION\n")
-            statfile.write(e)
+            statfile.write("{}\n".format(e))
+            statfile.write("FAILED")
         sys.exit(1)
     
-    with open(status_file, "w") as statfile:
-        statfile.write("DONE\n")
+    with open(status_file, "a+") as statfile:
+        statfile.write("SUCCEEDED")
     # Done.
 
 
@@ -114,6 +120,9 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
     status_file_name = short_name + "_status.txt"
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
+
+    with open(status_file, 'a+') as status_file:
+        status_file.write("Starting pipeline\n")
     
     try:
         # Find the instrument used to collect the data
@@ -187,16 +196,17 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
             print(("Files with all requested calibration states for {} already present in "
                    "output directory. Skipping pipeline call.".format(uncal_file)))
     except Exception as e:
-        with open(status_file, "w") as statfile:
+        with open(status_file, "a+") as statfile:
             statfile.write("EXCEPTION\n")
-            statfile.write(e)
+            statfile.write("{}\n".format(e))
+            statfile.write("FAILED")
         sys.exit(1)
     
-    with open(status_file, "w") as statfile:
-        statfile.write("DONE\n")
+    with open(status_file, "a+") as statfile:
         statfile.write("{}\n".format(jump_output))
         statfile.write("{}\n".format(pipe_output))
         statfile.write("{}\n".format(fitopt_output))
+        statfile.write("SUCCEEDED")
     # Done.
 
 
@@ -224,11 +234,27 @@ if __name__ == '__main__':
     short_name = args.short_name
     working_path = args.working_path
     pipe_type = args.pipe
+    outputs = args.outputs
+    
+    status_file = os.path.join(working_path, short_name+"_status.txt")
+    with open(status_file, 'a+') as out_file:
+        out_file.write("Starting Process\n")
+        out_file.write("\tpipeline is {}\n".format(pipe_type))
+        out_file.write("\toutputs is {}\n".format(outputs))
+        out_file.write("\tworking_path is {}\n".format(working_path))
+        out_file.write("\tinstrument is {}\n".format(instrument))
+        out_file.write("\tinput_file is {}\n".format(input_file))
+        out_file.write("\tshort_name is {}\n".format(short_name))
+    
     if pipe_type not in ['jump', 'cal']:
         raise ValueError("Unknown calibration type {}".format(pipe_type))
 
     if pipe_type == 'jump':
+        with open(status_file, 'a+') as out_file:
+            out_file.write("Running jump pipeline.\n")
         run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True)
     elif pipe_type == 'cal':
-        outputs = args.outputs.split(",")
+        with open(status_file, 'a+') as out_file:
+            out_file.write("Running cal pipeline.\n")
+        outputs = outputs.split(",")
         run_pipe(input_file, short_name, work_directory, instrument, outputs)

@@ -278,11 +278,13 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     with open(result_file, 'r') as inf:
         status = inf.readlines()
     
-    if status[0].strip() == "DONE":
+    if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
-        logging.error("ERROR: {}".format(status[1].strip()))
-        raise ValueError(status[1].strip())
+        logging.error("Pipeline subprocess failed.")
+        for line in status:
+            logging.error("\t{}".format(line.strip()))
+        raise ValueError("Pipeline Failed")
     
     for file in calibrated_files:
         if not os.path.isfile(os.path.join(cal_dir, file)):
@@ -365,13 +367,16 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     with open(result_file, 'r') as inf:
         status = inf.readlines()
 
-    if status[0].strip() == "DONE":
+    if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
-        logging.error("ERROR: {}".format(status[1].strip()))
-        raise ValueError(status[1].strip())
-    
-    for line in status[1:]:
+        logging.error("Pipeline subprocess failed.")
+        for line in status:
+            logging.error("\t{}".format(line.strip()))
+        raise ValueError("Pipeline Failed")
+
+
+    for line in status[-4:-1]:
         file = line.strip()
         if not os.path.isfile(os.path.join(cal_dir, file)):
             logging.error("ERROR: {} not found".format(file))
