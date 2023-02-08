@@ -32,13 +32,13 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 
-def run_pipe(input_file_name, short_name, work_directory, instrument, outputs):
+def run_pipe(input_file, short_name, work_directory, instrument, outputs):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
     """
-    input_file_basename = os.path.basename(input_file_name)
-    start_dir = os.path.dirname(input_file_name)
+    input_file_basename = os.path.basename(input_file)
+    start_dir = os.path.dirname(input_file)
     status_file_name = short_name + "_status.txt"
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
@@ -199,31 +199,33 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
 
 if __name__ == '__main__':
     file_help = 'Input file to calibrate'
+    path_help = 'Directory in which to do the calibration'
+    ins_help = 'Instrument that was used to produce the input file'
     pipe_help = 'Pipeline type to run (valid values are "jump" and "cal")'
     out_help = 'Comma-separated list of output extensions (for cal only, otherwise just "all")'
+    name_help = 'Input file name with no path or extensions'
     parser = argparse.ArgumentParser(description='Run local calibration')
     parser.add_argument('pipe', metavar='PIPE', type=str, help=pipe_help)
     parser.add_argument('outputs', metavar='OUTPUTS', type=str, help=out_help)
+    parser.add_argument('working_path', metavar='PATH', type=str, help=path_help)
+    parser.add_argument('instrument', metavar='INSTRUMENT', type=str, help=ins_help)
     parser.add_argument('input_file', metavar='FILE', type=str, help=file_help)
+    parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
     args = parser.parse_args()
     
-    input_files = glob(args.input_file)
-    if len(input_files) == 0:
-        raise FileNotFoundError("Pattern {} produced no input files!".format(args.input_file))
-    for input_file in input_files:
-        if not os.path.isfile(input_file):
-            print("ERROR: Can't find input file {}".format(input_file))
-            continue
-        instrument = get_instrument(input_file)
-        if instrument == 'unknown':
-            raise ValueError("Can't figure out instrument for {}".format(input_file))
+    if not os.path.isfile(args.input_file):
+        raise FileNotFoundError("No input file {}".format(args.input_file))
     
-        pipe_type = args.pipe
-        if pipe_type not in ['jump', 'cal']:
-            raise ValueError("Unknown calibration type {}".format(pipe_type))
-    
-        if pipe_type == 'jump':
-            run_save_jump(input_file, instrument)
-        elif pipe_type == 'cal':
-            outputs = args.outputs.split(",")
-            run_pipe(input_file, instrument, outputs)
+    input_file = args.input_file
+    instrument = args.instrument
+    short_name = args.short_name
+    working_path = args.working_path
+    pipe_type = args.pipe
+    if pipe_type not in ['jump', 'cal']:
+        raise ValueError("Unknown calibration type {}".format(pipe_type))
+
+    if pipe_type == 'jump':
+        run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True)
+    elif pipe_type == 'cal':
+        outputs = args.outputs.split(",")
+        run_pipe(input_file, short_name, work_directory, instrument, outputs)
