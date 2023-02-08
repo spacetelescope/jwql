@@ -270,11 +270,17 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     msg = "Running {} cal {} {} {} {} {}"
     logging.info(msg.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name))
     
-    result = subprocess.run([cmd_name, "cal", outputs, cal_dir, instrument, input_file, short_name], 
-        env=os.environ.copy(), shell=True)
+    cmd = "{} cal {} '{}' {} {} {}".format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
+    result = subprocess.run(cmd, env=os.environ.copy(), shell=True)
     
     logging.info("Subprocess result was {}".format(result))
-    
+
+    if not os.path.isfile(result_file):
+        logging.error("Result file was not created.")
+        with open(os.path.join(cal_dir, "general_status.txt")) as status_file:
+            for line in status_file.readlines():
+                logging.error(line.strip())
+        
     with open(result_file, 'r') as inf:
         status = inf.readlines()
     
@@ -361,8 +367,8 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
-    result = subprocess.run([cmd_name, "jump", "all", cal_dir, instrument, input_file, short_name], 
-        env=os.environ.copy(), shell=True)
+    cmd = "{} cal {} '{}' {} {} {}".format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
+    result = subprocess.run(cmd, env=os.environ.copy(), shell=True)
 
     if not os.path.isfile(result_file):
         logging.error("Result file was not created.")
