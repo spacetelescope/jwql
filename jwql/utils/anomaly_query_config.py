@@ -16,6 +16,9 @@ Use
 
         from jwql.utils.query_config import CHOSEN_INSTRUMENTS
 """
+
+# SAPP TODO REMOVE THIS MODULE AND ALL REFERENCES
+
 # Anomalies selected by user in anomaly_query
 ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = {}
 

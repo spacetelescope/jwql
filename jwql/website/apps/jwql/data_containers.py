@@ -51,7 +51,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemo
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS, QUERY_CONFIG_TEMPLATE
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
@@ -1002,15 +1002,9 @@ def get_thumbnails_all_instruments(parameters):
 
     Parameters
     ----------
-    parameters: dict
-        A dictionary containing the following keys, some of which are dictionaries:
-            instruments
-            apertures
-            filters
-            detector
-            effexptm_min
-            effexptm_max
-            anomalies
+    parameters: dict of type QUERY_CONFIG_TEMPLATE
+        A dictionary containing keys of QUERY_CONFIG_KEYS, some of which are dictionaries:
+ 
 
     Returns
     -------
@@ -1019,38 +1013,38 @@ def get_thumbnails_all_instruments(parameters):
         given instrument.
     """
 
-    anomalies = parameters['anomalies']
+    anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES]
 
     thumbnails_subset = []
 
-    for inst in parameters['instruments']:
+    for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
         # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper() + inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if ((parameters['apertures'][inst.lower()] == [])
-                and (parameters['detectors'][inst.lower()] == [])
-                and (parameters['filters'][inst.lower()] == [])
-                and (parameters['exposure_types'][inst.lower()] == [])
-                and (parameters['read_patterns'][inst.lower()] == [])):  # noqa: W503
+        if ((parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()] == [])):  # noqa: W503
             params = {"columns": "*", "filters": []}
         else:
             query_filters = []
-            if (parameters['apertures'][inst.lower()] != []):
+            if (parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()] != []):
                 if instrument != "Nircam":
-                    query_filters.append({"paramName": "pps_aper", "values": parameters['apertures'][inst.lower()]})
+                    query_filters.append({"paramName": "pps_aper", "values": parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()]})
                 if instrument == "Nircam":
-                    query_filters.append({"paramName": "apername", "values": parameters['apertures'][inst.lower()]})
-            if (parameters['detectors'][inst.lower()] != []):
-                query_filters.append({"paramName": "detector", "values": parameters['detectors'][inst.lower()]})
-            if (parameters['filters'][inst.lower()] != []):
-                query_filters.append({"paramName": "filter", "values": parameters['filters'][inst.lower()]})
-            if (parameters['exposure_types'][inst.lower()] != []):
-                query_filters.append({"paramName": "exp_type", "values": parameters['exposure_types'][inst.lower()]})
-            if (parameters['read_patterns'][inst.lower()] != []):
-                query_filters.append({"paramName": "readpatt", "values": parameters['read_patterns'][inst.lower()]})
+                    query_filters.append({"paramName": "apername", "values": parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()] != []):
+                query_filters.append({"paramName": "detector", "values": parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()] != []):
+                query_filters.append({"paramName": "filter", "values": parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()] != []):
+                query_filters.append({"paramName": "exp_type", "values": parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()] != []):
+                query_filters.append({"paramName": "readpatt", "values": parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()]})
             params = {"columns": "*",
                       "filters": query_filters}
 
