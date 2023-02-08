@@ -265,7 +265,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
     calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in ext_or_exts]
     
-    result = subprocess.run(["python", cmd_name, "cal", outputs, cal_dir, instrument, input_file, short_name], 
+    result = subprocess.run([cmd_name, "cal", outputs, cal_dir, instrument, input_file, short_name], 
         env=os.environ.copy(), shell=True)
     
     with open(result_file, 'r') as inf:
@@ -352,7 +352,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
-    result = subprocess.run(["python", cmd_name, "jump", "all", cal_dir, instrument, input_file, short_name], 
+    result = subprocess.run([cmd_name, "jump", "all", cal_dir, instrument, input_file, short_name], 
         env=os.environ.copy(), shell=True)
 
     with open(result_file, 'r') as inf:
