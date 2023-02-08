@@ -265,8 +265,13 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
     calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in ext_or_exts]
     
+    msg = "Running {} cal {} {} {} {} {}"
+    logging.info(msg.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name))
+    
     result = subprocess.run([cmd_name, "cal", outputs, cal_dir, instrument, input_file, short_name], 
         env=os.environ.copy(), shell=True)
+    
+    logging.info("Subprocess result was {}".format(result))
     
     with open(result_file, 'r') as inf:
         status = inf.readlines()
