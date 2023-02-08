@@ -364,6 +364,12 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     result = subprocess.run([cmd_name, "jump", "all", cal_dir, instrument, input_file, short_name], 
         env=os.environ.copy(), shell=True)
 
+    if not os.path.isfile(result_file):
+        logging.error("Result file was not created.")
+        with open(os.path.join(cal_dir, "general_status.txt")) as status_file:
+            for line in status_file.readlines():
+                logging.error(line.strip())
+    
     with open(result_file, 'r') as inf:
         status = inf.readlines()
 

@@ -213,9 +213,10 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
 #CompletedProcess(args=['/home/svc_jwqladm_mon/jwql/jwql/jwql/shared_tasks/run_pipeline.py', 'cal', 'refpix', '/internal/data1/outputs/ops/calibrated_data', 'niriss', '/grp/jwst/ins/jwql/transfer/ops/incoming/jw01499040001_02201_00001_nis_uncal.fits', 'jw01499040001_02201_00001_nis'], returncode=126)
 
 if __name__ == '__main__':
-    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "w") as status_file:
         status_file.write("Started at {}\n".format(time.ctime()))
-        status_file.write("\targv={}".format(sys.argv))
+        status_file.write("\targv={}\n".format(sys.argv))
+        status_file.write("\toriginal argv={}\n".format(sys.orig_argv))
 
     file_help = 'Input file to calibrate'
     path_help = 'Directory in which to do the calibration'
