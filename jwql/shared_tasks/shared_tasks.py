@@ -80,6 +80,7 @@ from logging import FileHandler, StreamHandler
 import os
 import redis
 import shutil
+import subprocess
 import sys
 
 from astropy.io import fits
@@ -247,110 +248,53 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     reduction_path : str
         The path at which the reduced data file(s) may be found.
     """
-    msg = "*****CELERY: Starting {} calibration task for {}"
+    msg = "Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
     config = get_config()
 
     input_dir = os.path.join(config['transfer_dir'], "incoming")
     cal_dir = os.path.join(config['outputs'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
-    logging.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
+    msg = "Input from {}, calibrate in {}, output to {}"
+    logging.info(msg.format(input_dir, cal_dir, output_dir))
+    
+    input_file = os.path.join(input_dir, input_file_name)
+    current_dir = os.path.dirname(__file__)
+    cmd_name = os.path.join(current_dir, "run_pipeline.py")
+    outputs = ",".join(ext_or_exts)
+    result_file = os.path.join(cal_dir, short_name+"_status.txt")
+    calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in ext_or_exts]
+    
+    result = subprocess.run(["python", cmd_name, "cal", outputs, cal_dir, instrument, input_file, short_name], 
+        env=os.environ.copy(), shell=True)
+    
+    with open(result_file, 'r') as inf:
+        status = inf.readlines()
+    
+    if status[0].strip() == "DONE":
+        logging.info("Subprocess reports successful finish.")
+    else:
+        logging.error("ERROR: {}".format(status[1].strip()))
+        raise ValueError(status[1].strip())
+    
+    for file in calibrated_files:
+        if not os.path.isfile(os.path.join(cal_dir, file)):
+            logging.error("ERROR: {} not found".format(file))
+            raise FileNotFoundError(file)
+        copy_files([os.path.join(cal_dir, file)], output_dir)
+        set_permissions(os.path.join(output_dir, file))
 
-    input_file = os.path.join(deepcopy(input_dir), input_file_name)
-    if not os.path.isfile(input_file):
-        logging.error("*****CELERY: File {} not found!".format(input_file))
-        raise FileNotFoundError("{} not found".format(input_file))
-
-    uncal_file = os.path.join(deepcopy(cal_dir), input_file_name)
-    ensure_dir_exists(deepcopy(cal_dir))
-    logging.info("*****CELERY: Copying {} to {}".format(input_file, cal_dir))
-    copy_files([input_file], deepcopy(cal_dir))
-    set_permissions(uncal_file)
-
-    # Check for exposures with too many groups
-    max_groups = config.get("max_groups", 1000)
-    with fits.open(uncal_file) as inf:
-        total_groups = inf[0].header["NINTS"] * inf[0].header["NGROUPS"]
-    if total_groups > max_groups:
-        msg = "File {} has {} groups (greater than maximum of {})"
-        logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
-        raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
-
-    steps = get_pipeline_steps(instrument)
-
-    first_step_to_be_run = True
-    for step_name in steps:
-        kwargs = {}
-        if step_name in step_args:
-            kwargs = step_args[step_name]
-        if steps[step_name]:
-            output_filename = short_name + "_{}.fits".format(step_name)
-            logging.info("*****CELERY: Output File Name is {}".format(output_filename))
-            output_file = os.path.join(cal_dir, deepcopy(output_filename))
-            logging.info("*****CELERY: Creating output file {}".format(output_file))
-            transfer_file = os.path.join(output_dir, output_filename)
-            # skip already-done steps
-            if not os.path.isfile(output_file):
-                logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
-                if first_step_to_be_run:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, **kwargs)
-                    first_step_to_be_run = False
-                else:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(model, **kwargs)
-
-                if step_name != 'rate':
-                    # Make sure the dither_points metadata entry is at integer (was a
-                    # string prior to jwst v1.2.1, so some input data still have the
-                    # string entry.
-                    # If we don't change that to an integer before saving the new file,
-                    # the jwst package will crash.
-                    try:
-                        model.meta.dither.dither_points = int(model.meta.dither.dither_points)
-                    except TypeError:
-                        # If the dither_points entry is not populated, then ignore this
-                        # change
-                        pass
-                    logging.info("*****CELERY: Saving to {}".format(output_file))
-                    model.save(output_file)
-                else:
-                    try:
-                        model[0].meta.dither.dither_points = int(model[0].meta.dither.dither_points)
-                    except TypeError:
-                        # If the dither_points entry is not populated, then ignore this change
-                        pass
-                    logging.info("*****CELERY: Saving to {}".format(output_file))
-                    model[0].save(output_file)
-            else:
-                logging.info("*****CELERY: File {} exists".format(output_filename))
-            if not os.path.isfile(transfer_file):
-                logging.info("*****CELERY: Copying {} to {}".format(output_file, output_dir))
-                copy_files([output_file], output_dir)
-            else:
-                logging.info("*****CELERY: File {} already exists".format(transfer_file))
-            set_permissions(transfer_file)
-
-        # Check for everything being done (in which case we don't need to run 
-        # subsequent pipeline steps)
-        done = True
-        for ext in ext_or_exts:
-            if not os.path.isfile("{}_{}.fits".format(short_name, ext)):
-                done = False
-        if done:
-            print("*****CELERY: Created all files in {}. Finished.".format(ext_or_exts))
-            break
-
-    logging.info("*****CELERY: Removing local files.")
+    logging.info("Removing local files.")
     files_to_remove = glob(uncal_file.replace("_uncal.fits", "*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
 
-    logging.info("*****CELERY: Finished calibration.")
-    return output_dir
+    logging.info("Finished calibration.")
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
-def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True):
+def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -386,119 +330,54 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
         Name of the saved file containing the output after ramp-fitting
         is performed (if requested). Otherwise ``None``.
     """
-    config = get_config()
-    msg = "*****CELERY: Started Save Jump Task on {}. ramp_fit={}, save_fitopt={}"
+    msg = "Started Save Jump Task on {}. ramp_fit={}, save_fitopt={}"
     logging.info(msg.format(input_file_name, ramp_fit, save_fitopt))
+    config = get_config()
 
-    input_file = os.path.join(config["transfer_dir"], "incoming", input_file_name)
+    input_dir = os.path.join(config["transfer_dir"], "incoming")
+    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    output_dir = os.path.join(config['transfer_dir'], "outgoing")
+    msg = "Input from {}, calibrate in {}, output to {}"
+    logging.info(msg.format(input_dir, cal_dir, output_dir))
+
+    input_file = os.path.join(input_dir, input_file_name)
     if not os.path.isfile(input_file):
-        logging.error("*****CELERY: File {} not found!".format(input_file))
+        logging.error("File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
 
-    cal_dir = os.path.join(config['outputs'], "calibrated_data")
-    uncal_file = os.path.join(cal_dir, input_file_name)
-    short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
+    short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "").replace(".fits", "")
     ensure_dir_exists(cal_dir)
-    copy_files([input_file], cal_dir)
-    set_permissions(uncal_file)
-
-    # Check for exposures with too many groups
-    max_groups = config.get("max_groups", 1000)
-    with fits.open(uncal_file) as inf:
-        total_groups = inf[0].header["NINTS"] * inf[0].header["NGROUPS"]
-    if total_groups > max_groups:
-        msg = "File {} has {} groups (greater than maximum of {})"
-        logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
-        raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
-
     output_dir = os.path.join(config["transfer_dir"], "outgoing")
+    
+    cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
+    result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
-    log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
+    result = subprocess.run(["python", cmd_name, "jump", "all", cal_dir, instrument, input_file, short_name], 
+        env=os.environ.copy(), shell=True)
 
-    # Find the instrument used to collect the data
-    datamodel = datamodels.RampModel(uncal_file)
-    instrument = datamodel.meta.instrument.name.lower()
+    with open(result_file, 'r') as inf:
+        status = inf.readlines()
 
-    # If the data pre-date jwst version 1.2.1, then they will have
-    # the NUMDTHPT keyword (with string value of the number of dithers)
-    # rather than the newer NRIMDTPT keyword (with an integer value of
-    # the number of dithers). If so, we need to update the file here so
-    # that it doesn't cause the pipeline to crash later. Both old and
-    # new keywords are mapped to the model.meta.dither.dither_points
-    # metadata entry. So we should be able to focus on that.
-    if isinstance(datamodel.meta.dither.dither_points, str):
-        # If we have a string, change it to an integer
-        datamodel.meta.dither.dither_points = int(datamodel.meta.dither.dither_points)
-    elif datamodel.meta.dither.dither_points is None:
-        # If the information is missing completely, put in a dummy value
-        datamodel.meta.dither.dither_points = 1
-
-    # Switch to calling the pipeline rather than individual steps,
-    # and use the run() method so that we can set parameters
-    # progammatically.
-    model = Detector1Pipeline()
-
-    # Always true
-    if instrument == 'nircam':
-        model.refpix.odd_even_rows = False
-
-    # Default CR rejection threshold is too low
-    model.jump.rejection_threshold = 15
-
-    # Turn off IPC step until it is put in the right place
-    model.ipc.skip = True
-
-    model.jump.save_results = True
-    model.jump.output_dir = cal_dir
-    jump_output = os.path.join(cal_dir, input_file.replace('uncal', 'jump'))
-
-    model.logcfg = log_config
-
-    # Check to see if the jump version of the requested file is already
-    # present
-    run_jump = not os.path.isfile(jump_output)
-
-    if ramp_fit:
-        model.ramp_fit.save_results = True
-        # model.save_results = True
-        model.output_dir = cal_dir
-        # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
-        pipe_output = os.path.join(cal_dir, input_file.replace('uncal', '0_ramp_fit'))
-        run_slope = not os.path.isfile(pipe_output)
-        if save_fitopt:
-            model.ramp_fit.save_opt = True
-            fitopt_output = os.path.join(cal_dir, input_file.replace('uncal', 'fitopt'))
-            run_fitopt = not os.path.isfile(fitopt_output)
-        else:
-            model.ramp_fit.save_opt = False
-            fitopt_output = None
-            run_fitopt = False
+    if status[0].strip() == "DONE":
+        logging.info("Subprocess reports successful finish.")
     else:
-        model.ramp_fit.skip = True
-        pipe_output = None
-        fitopt_output = None
-        run_slope = False
-        run_fitopt = False
+        logging.error("ERROR: {}".format(status[1].strip()))
+        raise ValueError(status[1].strip())
+    
+    for line in status[1:]:
+        file = line.strip()
+        if not os.path.isfile(os.path.join(cal_dir, file)):
+            logging.error("ERROR: {} not found".format(file))
+            raise FileNotFoundError(file)
+        copy_files([os.path.join(cal_dir, file)], output_dir)
+        set_permissions(os.path.join(output_dir, file))
 
-    # Call the pipeline if any of the files at the requested calibration
-    # states are not present in the output directory
-    logging.info("*****CELERY: Running save_jump pipeline")
-    if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
-        model.run(datamodel)
-    else:
-        print(("Files with all requested calibration states for {} already present in "
-               "output directory. Skipping pipeline call.".format(input_file)))
-
-    calibrated_files = glob(uncal_file.replace("_uncal.fits", "*"))
-    logging.info("*****CELERY: Pipeline Output is {}".format(calibrated_files))
-    copy_files(calibrated_files, output_dir)
-
-    logging.info("*****CELERY: Removing local files.")
+    logging.info("Removing local files.")
     for file_name in calibrated_files:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
 
-    logging.info("*****CELERY: Finished pipeline")
+    logging.info("Finished pipeline")
     return jump_output, pipe_output, fitopt_output
 
 
@@ -618,7 +497,7 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
                 ramp_fit = True
             elif "fitopt" in ext:
                 save_fitopt = True
-        result = calwebb_detector1_save_jump.delay(input_file, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
+        result = calwebb_detector1_save_jump.delay(input_file, instrument, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
     else:
         result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument)
     return result

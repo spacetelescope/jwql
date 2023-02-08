@@ -194,6 +194,9 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
     
     with open(status_file, "w") as statfile:
         statfile.write("DONE\n")
+        statfile.write("{}\n".format(jump_output))
+        statfile.write("{}\n".format(pipe_output))
+        statfile.write("{}\n".format(fitopt_output))
     # Done.
 
 
