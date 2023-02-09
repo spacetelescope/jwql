@@ -296,6 +296,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         if not os.path.isfile(os.path.join(cal_dir, file)):
             logging.error("ERROR: {} not found".format(file))
             raise FileNotFoundError(file)
+        logging.info("Copying output file {}".format(file))
         copy_files([os.path.join(cal_dir, file)], output_dir)
         set_permissions(os.path.join(output_dir, file))
 
@@ -390,6 +391,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
 
     for line in status[-4:-1]:
         file = line.strip()
+        logging.info("Copying output file {}".format(file))
         if not os.path.isfile(os.path.join(cal_dir, file)):
             logging.error("ERROR: {} not found".format(file))
             raise FileNotFoundError(file)
