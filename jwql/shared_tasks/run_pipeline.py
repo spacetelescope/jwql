@@ -44,18 +44,21 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
     
-    with open(status_file, 'a+') as status_file:
-        status_file.write("Starting pipeline\n")
+    with open(status_file, 'a+') as status_f:
+        status_f.write("Running run_pipe\n")
+        status_f.write("\t input_file_basename is {} ({})\n".format(input_file_basename, type(input_file_basename)))
+        status_f.write("\t start_dir is {} ({})\n".format(start_dir, type(start_dir)))
+        status_f.write("\t uncal_file is {} ({})\n".format(uncal_file, type(uncal_file)))
     
-    try:    
+    try:
         copy_files([input_file_name], work_directory)
         set_permissions(uncal_file)
     
         steps = get_pipeline_steps(instrument)
         first_step_to_be_run = True
         for step_name in steps:
-            with open(status_file, 'a+') as status_file:
-                status_file.write("Running step {}\n".format(step_name))
+            with open(status_file, 'a+') as status_f:
+                status_f.write("Running step {}\n".format(step_name))
             kwargs = {}
             if step_name in ['jump', 'rate']:
                 kwargs = {'maximum_cores': 'all'}
@@ -100,14 +103,14 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
                     if done:
                         break
     except Exception as e:
-        with open(status_file, "a+") as statfile:
-            statfile.write("EXCEPTION\n")
-            statfile.write("{}\n".format(e))
-            statfile.write("FAILED")
+        with open(status_file, "a+") as status_f:
+            status_f.write("EXCEPTION\n")
+            status_f.write("{}\n".format(e))
+            status_f.write("FAILED")
         sys.exit(1)
     
-    with open(status_file, "a+") as statfile:
-        statfile.write("SUCCEEDED")
+    with open(status_file, "a+") as status_f:
+        status_f.write("SUCCEEDED")
     # Done.
 
 
@@ -122,8 +125,8 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
 
-    with open(status_file, 'a+') as status_file:
-        status_file.write("Starting pipeline\n")
+    with open(status_file, 'a+') as status_f:
+        status_f.write("Starting pipeline\n")
     
     try:
         # Find the instrument used to collect the data
@@ -197,17 +200,17 @@ def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_
             print(("Files with all requested calibration states for {} already present in "
                    "output directory. Skipping pipeline call.".format(uncal_file)))
     except Exception as e:
-        with open(status_file, "a+") as statfile:
-            statfile.write("EXCEPTION\n")
-            statfile.write("{}\n".format(e))
-            statfile.write("FAILED")
+        with open(status_file, "a+") as status_f:
+            status_f.write("EXCEPTION\n")
+            status_f.write("{}\n".format(e))
+            status_f.write("FAILED")
         sys.exit(1)
     
-    with open(status_file, "a+") as statfile:
-        statfile.write("{}\n".format(jump_output))
-        statfile.write("{}\n".format(pipe_output))
-        statfile.write("{}\n".format(fitopt_output))
-        statfile.write("SUCCEEDED")
+    with open(status_file, "a+") as status_f:
+        status_f.write("{}\n".format(jump_output))
+        status_f.write("{}\n".format(pipe_output))
+        status_f.write("{}\n".format(fitopt_output))
+        status_f.write("SUCCEEDED")
     # Done.
 
 #CompletedProcess(args=['/home/svc_jwqladm_mon/jwql/jwql/jwql/shared_tasks/run_pipeline.py', 'cal', 'refpix', '/internal/data1/outputs/ops/calibrated_data', 'niriss', '/grp/jwst/ins/jwql/transfer/ops/incoming/jw01499040001_02201_00001_nis_uncal.fits', 'jw01499040001_02201_00001_nis'], returncode=126)
