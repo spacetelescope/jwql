@@ -1666,15 +1666,7 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
         try:
             filename_dict = filename_parser(rootname)
         except ValueError:
-            # Temporary workaround for noncompliant files in filesystem
-            filename_dict = {'activity': rootname[17:19],
-                             'detector': rootname[26:],
-                             'exposure_id': rootname[20:25],
-                             'observation': rootname[7:10],
-                             'parallel_seq_id': rootname[16],
-                             'program_id': rootname[2:7],
-                             'visit': rootname[10:13],
-                             'visit_group': rootname[14:16]}
+            continue
 
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
@@ -1689,9 +1681,33 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
-                                                        filename in available_files]
+        data_dict['file_data'][rootname]['suffixes'] = []
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
+        for filename in available_files:
+            try:
+                suffix = filename_parser(filename)['suffix']
+                data_dict['file_data'][rootname]['suffixes'].append(suffix)
+            except ValueError:
+                continue
+
+        # SAPP TODO MAKE THE FOLLOWING ITS OWN ROUTINE or integrate into get_thumbnails_by_rootname
+        
+        # We generate thumbnails only for rate and dark files. Check if these files
+        # exist in the thumbnail filesystem. In the case where neither rate nor
+        # dark thumbnails are present, revert to 'none', which will then cause the
+        # "thumbnail not available" fallback image to be used.
+        available_thumbnails = get_thumbnails_by_rootname(rootname)
+
+        if len(available_thumbnails) > 0:
+            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
+            if len(preferred) == 0:
+                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
+            if len(preferred) > 0:
+                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+            else:
+                data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        else:
+            data_dict['file_data'][rootname]['thumbnail'] = 'none'
 
     # Extract information for sorting with dropdown menus
     try:

@@ -516,13 +516,9 @@ def archive_thumbnails_query_ajax(request):
         instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
         instruments_list.append(instrument)
 
-    # parameters = anomaly_query_config.PARAMETERS  # SAPP TODO REMOVE
-
     # when parameters only contains nirspec as instrument, thumbnails still end up being all niriss data
     thumbnails = get_thumbnails_all_instruments(parameters)
-
-    # anomaly_query_config.THUMBNAILS = thumbnails # SAPP TODO REMOVE
-
+    
     data = thumbnails_query_ajax(thumbnails)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     save_page_navigation_data(request, data)
