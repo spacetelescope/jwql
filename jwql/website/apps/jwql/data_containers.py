@@ -1449,9 +1449,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict['file_data'] = {}
     exp_types = []
 
-    # Get category for each instrument proposal {prop_id: category}
-    proposals_by_category = get_proposals_by_category(inst)
-
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
     for rootname in rootnames:
@@ -1501,7 +1498,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]["viewed"] = viewed
         data_dict['file_data'][rootname]["exp_type"] = exp_type
-        data_dict['file_data'][rootname]["cat_type"] = proposals_by_category[filename_dict['program_id']]
 
         # We generate thumbnails only for rate and dark files. Check if these files
         # exist in the thumbnail filesystem. In the case where neither rate nor
