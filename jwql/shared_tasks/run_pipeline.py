@@ -57,6 +57,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
         steps = get_pipeline_steps(instrument)
         first_step_to_be_run = True
         for step_name in steps:
+            sys.stderr.write("Running step {}\n".format(step_name))
             with open(status_file, 'a+') as status_f:
                 status_f.write("Running step {}\n".format(step_name))
             kwargs = {}
@@ -101,6 +102,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
                         if not os.path.isfile(output_check_file):
                             done = False
                     if done:
+                        sys.stderr.write("Done pipeline.\n")
                         break
     except Exception as e:
         with open(status_file, "a+") as status_f:
@@ -125,6 +127,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
 
+    sys.stderr.write("Starting pipeline\n")
     with open(status_file, 'a+') as status_f:
         status_f.write("Starting pipeline\n")
     
@@ -213,7 +216,6 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         status_f.write("SUCCEEDED")
     # Done.
 
-#CompletedProcess(args=['/home/svc_jwqladm_mon/jwql/jwql/jwql/shared_tasks/run_pipeline.py', 'cal', 'refpix', '/internal/data1/outputs/ops/calibrated_data', 'niriss', '/grp/jwst/ins/jwql/transfer/ops/incoming/jw01499040001_02201_00001_nis_uncal.fits', 'jw01499040001_02201_00001_nis'], returncode=126)
 
 if __name__ == '__main__':
     with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "w") as status_file:

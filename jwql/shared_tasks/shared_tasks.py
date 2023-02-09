@@ -80,7 +80,7 @@ from logging import FileHandler, StreamHandler
 import os
 import redis
 import shutil
-import subprocess
+from subprocess import Popen, PIPE, run, STDOUT
 import sys
 
 from astropy.io import fits
@@ -198,6 +198,15 @@ def create_task_log_handler(logger, propagate):
             cfg_file.write("handler = append:{}\n".format(log_file_name))
 
 
+def log_subprocess_output(pipe):
+    """
+    If a subprocess STDOUT has been set to subprocess.PIPE, this function will log each
+    line to the logging output.
+    """
+    for line in iter(pipe.readline, b''): # b'\n'-separated lines
+        logging.info("\t{}".format(line))
+
+
 @after_setup_task_logger.connect
 def after_setup_celery_task_logger(logger, **kwargs):
     """ This function sets the 'celery.task' logger handler and formatter """
@@ -270,9 +279,12 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     msg = "Running {} cal {} {} {} {} {}"
     logging.info(msg.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name))
     
-    cmd = "{} cal {} '{}' {} {} {}".format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
-    result = subprocess.run(cmd, env=os.environ.copy(), shell=True)
-    
+    cmd = "{} cal {} '{}' {} {} {}"
+    cmd = cmd.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
+    process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
+    with process.stderr:
+        log_subprocess_output(process.stderr)
+    result = process.wait()    
     logging.info("Subprocess result was {}".format(result))
 
     if not os.path.isfile(result_file):
@@ -368,8 +380,13 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
-    cmd = "{} cal {} '{}' {} {} {}".format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
-    result = subprocess.run(cmd, env=os.environ.copy(), shell=True)
+    cmd = "{} cal {} '{}' {} {} {}"
+    cmd = cmd.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
+    process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
+    with process.stderr:
+        log_subprocess_output(process.stderr)
+    result = process.wait()
+    logging.info("Subprocess result was {}".format(result))
 
     if not os.path.isfile(result_file):
         logging.error("Result file was not created.")
