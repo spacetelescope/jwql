@@ -300,7 +300,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         set_permissions(os.path.join(output_dir, file))
 
     logging.info("Removing local files.")
-    files_to_remove = glob(uncal_file.replace("_uncal.fits", "*"))
+    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
@@ -397,7 +397,8 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         set_permissions(os.path.join(output_dir, file))
 
     logging.info("Removing local files.")
-    for file_name in calibrated_files:
+    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
 
