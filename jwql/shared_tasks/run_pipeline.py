@@ -253,14 +253,14 @@ if __name__ == '__main__':
     outputs = args.outputs
     
     status_file = os.path.join(working_path, short_name+"_status.txt")
-    with open(status_file, 'a+') as out_file:
+    with open(status_file, 'w') as out_file:
         out_file.write("Starting Process\n")
-        out_file.write("\tpipeline is {}\n".format(pipe_type))
-        out_file.write("\toutputs is {}\n".format(outputs))
-        out_file.write("\tworking_path is {}\n".format(working_path))
-        out_file.write("\tinstrument is {}\n".format(instrument))
-        out_file.write("\tinput_file is {}\n".format(input_file))
-        out_file.write("\tshort_name is {}\n".format(short_name))
+        out_file.write("\tpipeline is {} ({})\n".format(pipe_type, type(pipe_type)))
+        out_file.write("\toutputs is {} ({})\n".format(outputs, type(outputs)))
+        out_file.write("\tworking_path is {} ({})\n".format(working_path, type(working_path)))
+        out_file.write("\tinstrument is {} ({})\n".format(instrument, type(instrument)))
+        out_file.write("\tinput_file is {} ({})\n".format(input_file, type(input_file)))
+        out_file.write("\tshort_name is {} ({})\n".format(short_name, type(short_name)))
     
     if not os.path.isfile(args.input_file):
         raise FileNotFoundError("No input file {}".format(args.input_file))
@@ -281,5 +281,5 @@ if __name__ == '__main__':
     except Exception as e:
         with open(status_file, 'a+') as out_file:
             out_file.write("Exception when starting pipeline.\n")
-            out_file.write("{}".format(e))
+            out_file.write("{}\n".format(e))
         raise e
