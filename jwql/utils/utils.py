@@ -503,7 +503,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         if len(filenames_found) > 0:
             filename = os.path.basename(filenames_found[0])
         else:
-            raise FileNotFoundError('{} did not yeild any files in predicted location {}'.format(search, full_subdir))
+            raise FileNotFoundError('{} did not yield any files in predicted location {}'.format(search, full_subdir))
 
     full_path = os.path.join(subdir1, subdir2, filename)
 
