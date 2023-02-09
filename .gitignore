@@ -3,6 +3,8 @@
 *.ipynb_checkpoints/
 config.json
 .DS_Store
+.idea
+.coverage*
 build/
 dist/
 jwql.egg-info/
