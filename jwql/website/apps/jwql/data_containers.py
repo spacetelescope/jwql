@@ -970,15 +970,10 @@ def get_proposals_by_category(instrument):
     # Get all unique dictionaries
     unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
 
-    # Seperate the catagories from programs
-    categories = set([sub['category'] for sub in unique_results])
+    # Make a dictionary of {program: category} to pull from
+    proposals_by_category = {d['program']:d['category'] for d in unique_results}
 
-    # build dict where key in catagory and value is a list of programs belonging to the category key.
-    category_sorted_dict = {}
-    for category in categories:
-        category_sorted_dict[category] = [d['program'] for d in unique_results if d['category'] == category]
-
-    return category_sorted_dict
+    return proposals_by_category
 
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
@@ -1454,6 +1449,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict['file_data'] = {}
     exp_types = []
 
+    # Get category for each instrument proposal {prop_id: category}
+    proposals_by_category = get_proposals_by_category(inst)
+
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
     for rootname in rootnames:
@@ -1487,6 +1485,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
         exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
         exp_types.append(exp_type)
+
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
@@ -1502,6 +1501,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]["viewed"] = viewed
         data_dict['file_data'][rootname]["exp_type"] = exp_type
+        data_dict['file_data'][rootname]["cat_type"] = proposals_by_category[filename_dict['program_id']]
 
         # We generate thumbnails only for rate and dark files. Check if these files
         # exist in the thumbnail filesystem. In the case where neither rate nor

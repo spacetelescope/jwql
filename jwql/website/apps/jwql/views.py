@@ -360,11 +360,12 @@ def archived_proposals_ajax(request, inst):
 
     # Get all proposals based on category type
     proposals_by_category = get_proposals_by_category(inst)
+    unique_cat_types = list(set(proposals_by_category.values()))
 
     # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
     dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
                       'exp_type': exp_types,
-                      'cat_type': proposals_by_category.keys()}
+                      'cat_type': unique_cat_types}
     thumbnails_dict = {}
 
     for proposal_num in proposal_nums:
