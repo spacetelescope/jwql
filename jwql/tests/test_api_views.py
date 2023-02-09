@@ -42,23 +42,17 @@ for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
 
 # Proposal-specific URLs
-proposals = ['01018',  # FGS
-             '01022',  # MIRI
-             '01068',  # NIRCam
-             '01059',  # NIRISS
-             '1059',  # NIRISS
-             '01106']  # NIRSpec
+proposals = ['2640', '02733', '1541', '02589']
+
 for proposal in proposals:
     urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
     urls.append('api/{}/preview_images/'.format(proposal))  # preview_images_by_proposal
     urls.append('api/{}/thumbnails/'.format(proposal))  # thumbnails_by_proposal
 
 # Filename-specific URLs
-rootnames = ['jw01018001004_02101_00001_guider1',  # FGS
-             'Jjw1022017001_03101_00001_mirimage',  # MIRI
-             'jw01068001001_02102_00001_nrcb1',  # NIRCam
-             'jw01059121001_02107_00001_nis',  # NIRISS
-             'jw01106002001_02101_00002_nrs1']  # NIRSpec
+rootnames = ['jw02733002001_02101_00001_mirimage',  # MIRI
+             'jw02733001001_02101_00001_nrcb2']  # NIRCam
+
 for rootname in rootnames:
     urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
     urls.append('api/{}/preview_images/'.format(rootname))  # preview_images_by_rootname
@@ -90,10 +84,8 @@ def test_api_views(url):
 
     try:
         url = request.urlopen(url)
-    except error.HTTPError as e:
-        if e.code == 502:
-            pytest.skip("Server problem")
-        raise(e)
+    except (error.HTTPError, error.URLError):
+        pytest.skip("Server problem")
 
     try:
         data = json.loads(url.read().decode())

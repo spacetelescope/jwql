@@ -268,9 +268,9 @@ class PreviewImage():
                 if ext in extnames:
                     dimensions = len(hdulist[ext].data.shape)
                     if dimensions == 4:
-                        data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
+                        data = hdulist[ext].data[:, [0, -1], :, :].astype(float)
                     else:
-                        data = hdulist[ext].data.astype(np.float)
+                        data = hdulist[ext].data.astype(float)
                     yd, xd = data.shape[-2:]
                     try:
                         self.units = f"{hdulist[ext].header['BUNIT']}  "
@@ -531,7 +531,7 @@ class PreviewImage():
         # If preview image, set a title
         if not thumbnail:
             filename = os.path.split(self.file)[-1]
-            ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
+            ax.set_title(filename + ' Int: {}'.format(int(integration_number)))
 
     def make_image(self, max_img_size=8.0, create_thumbnail=False):
         """The main function of the ``PreviewImage`` class.
