@@ -624,9 +624,10 @@ function update_archive_page(inst, base_url) {
                 viewed = data.thumbnails.viewed[i];
                 exp_types = data.thumbnails.exp_types[i];
                 obs_time = data.thumbnails.obs_time[i];
+                cat_type = data.thumbnails.cat_type[i];
 
                 // Build div content
-                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '">';
+                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '" cat_type="' + cat_type + '">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
