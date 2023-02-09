@@ -204,7 +204,7 @@ def log_subprocess_output(pipe):
     line to the logging output.
     """
     for line in iter(pipe.readline, b''): # b'\n'-separated lines
-        logging.info("\t{}".format(str(line).strip()))
+        logging.info("\t{}".format(line.decode('UTF-8').strip()))
 
 
 @after_setup_task_logger.connect
