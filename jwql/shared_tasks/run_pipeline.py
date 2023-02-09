@@ -51,7 +51,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
         status_f.write("\t uncal_file is {} ({})\n".format(uncal_file, type(uncal_file)))
     
     try:
-        copy_files([input_file_name], work_directory)
+        copy_files([input_file], work_directory)
         set_permissions(uncal_file)
     
         steps = get_pipeline_steps(instrument)
@@ -68,7 +68,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
                 # skip already-done steps
                 if not os.path.isfile(output_file):
                     if first_step_to_be_run:
-                        model = PIPELINE_STEP_MAPPING[step_name].call(input_file_name, **kwargs)
+                        model = PIPELINE_STEP_MAPPING[step_name].call(input_file, **kwargs)
                         first_step_to_be_run = False
                     else:
                         model = PIPELINE_STEP_MAPPING[step_name].call(model, **kwargs)
@@ -114,13 +114,13 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
     # Done.
 
 
-def run_save_jump(input_file_name, short_name, work_directory, instrument, ramp_fit=True, save_fitopt=True):
+def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=True, save_fitopt=True):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
     """
-    input_file_basename = os.path.basename(input_file_name)
-    start_dir = os.path.dirname(input_file_name)
+    input_file_basename = os.path.basename(input_file)
+    start_dir = os.path.dirname(input_file)
     status_file_name = short_name + "_status.txt"
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
