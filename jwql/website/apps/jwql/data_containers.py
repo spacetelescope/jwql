@@ -1090,7 +1090,7 @@ def get_thumbnails_all_instruments(parameters):
     return list(set(final_subset))
 
 
-def get_thumbnails_by_instrument(inst):  # SAPP TODO REMOVE THIS?
+def get_thumbnails_by_instrument(inst):
     """Return a list of thumbnails available in the filesystem for the
     given instrument.
 
