@@ -57,7 +57,7 @@ import numpy as np
 import socket
 
 from jwql.database.database_interface import load_connection
-from jwql.utils import anomaly_query_config, monitor_utils
+from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
