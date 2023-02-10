@@ -76,7 +76,7 @@ from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .data_containers import thumbnails_date_range_ajax
-from .forms import AnomalyQueryForm
+from .forms import JwqlQueryForm
 from .forms import FileSearchForm
 if not os.environ.get("READTHEDOCS"):
     from .models import Observation, Proposal, RootFileInfo
@@ -88,7 +88,7 @@ import astropy.units as u
 def jwql_query(request):
     """The anomaly query form page"""
 
-    form = AnomalyQueryForm(request.POST or None)
+    form = JwqlQueryForm(request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
