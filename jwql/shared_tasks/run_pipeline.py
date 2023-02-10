@@ -169,7 +169,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         model.ipc.skip = True
 
         model.jump.save_results = True
-        model.jump.output_dir = os.getcwd()
+        model.jump.output_dir = work_directory
         model.jump.maximum_cores = 'all'
         jump_output = uncal_file.replace('uncal', 'jump')
 
@@ -181,7 +181,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
             model.ramp_fit.save_results = True
             model.ramp_fit.maximum_cores = 'all'
             # model.save_results = True
-            model.output_dir = os.getcwd()
+            model.output_dir = work_directory
             # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
             pipe_output = uncal_file.replace('uncal', '0_ramp_fit')
             run_slope = not os.path.isfile(pipe_output)
