@@ -132,6 +132,9 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         status_f.write("Starting pipeline\n")
     
     try:
+        copy_files([input_file], work_directory)
+        set_permissions(uncal_file)
+
         # Find the instrument used to collect the data
         datamodel = datamodels.RampModel(uncal_file)
         instrument = datamodel.meta.instrument.name.lower()
