@@ -85,7 +85,7 @@ from astropy.time import Time
 import astropy.units as u
 
 
-def anomaly_query(request):
+def jwql_query(request):
     """The anomaly query form page"""
 
     form = AnomalyQueryForm(request.POST or None)
@@ -131,7 +131,7 @@ def anomaly_query(request):
 
     context = {'form': form,
                'inst': ''}
-    template = 'anomaly_query.html'
+    template = 'jwql_query.html'
 
     return render(request, template, context)
 
