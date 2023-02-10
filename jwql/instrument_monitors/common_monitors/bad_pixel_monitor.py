@@ -846,8 +846,11 @@ class BadPixels():
                 else:
                     index += 1
 
-            min_illum_time = min(illuminated_obstimes)
-            max_illum_time = max(illuminated_obstimes)
+            min_illum_time = 0.
+            max_illum_time = 0.
+            if len(illuminated_obstimes) > 0:
+                min_illum_time = min(illuminated_obstimes)
+                max_illum_time = max(illuminated_obstimes)
             mid_illum_time = instrument_properties.mean_time(illuminated_obstimes)
 
         # Dark files - Run calwebb_detector1 on all uncal files, saving the
