@@ -157,12 +157,17 @@ def test_get_thumbnails_by_proposal():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_thumbnails_by_rootname():
-    """Tests the ``get_thumbnails_by_rootname`` function."""
+def test_get_thumbnail_by_rootname():
+    """Tests the ``get_thumbnail_by_rootname`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_rootname('jw02589001001_02101_00001-seg001_nis')
-    assert isinstance(preview_images, list)
+    preview_images = data_containers.get_thumbnail_by_rootname('jw02589001001_02101_00001-seg001_nis')
+    assert isinstance(preview_images, str)
     assert len(preview_images) > 0
+    assert preview_images != 'none'
+    preview_images = data_containers.get_thumbnail_by_rootname('invalid_rootname')
+    assert isinstance(preview_images, str)
+    assert len(preview_images) > 0
+    assert preview_images == 'none'
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

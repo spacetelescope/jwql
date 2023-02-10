@@ -1150,9 +1150,11 @@ def get_thumbnails_by_proposal(proposal):
     return thumbnails
 
 
-def get_thumbnails_by_rootname(rootname):
-    """Return a list of preview images available in the filesystem for
-    the given ``rootname``.
+def get_thumbnail_by_rootname(rootname):
+    """Return the most appropriate existing thumbnail basename available in the filesystem for the given ``rootname``.
+    We generate thumbnails only for 'rate' and 'dark' files. 
+    Check if these files exist in the thumbnail filesystem. 
+    In the case where neither rate nor dark thumbnails are present, revert to 'none'
 
     Parameters
     ----------
@@ -1162,9 +1164,8 @@ def get_thumbnails_by_rootname(rootname):
 
     Returns
     -------
-    thumbnails : list
-        A list of preview images available in the filesystem for the
-        given ``rootname``.
+    thumbnail_basename : str
+        A thumbnail_basename available in the filesystem for the given ``rootname``.
     """
 
     proposal = rootname.split('_')[0].split('jw')[-1][0:5]
@@ -1174,8 +1175,16 @@ def get_thumbnails_by_rootname(rootname):
         '{}*'.format(rootname))))
 
     thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+    thumbnail_basename = 'none'
 
-    return thumbnails
+    if len(thumbnails) > 0:
+        preferred = [thumb for thumb in thumbnails if 'rate' in thumb]
+        if len(preferred) == 0:
+            preferred = [thumb for thumb in thumbnails if 'dark' in thumb]
+        if len(preferred) > 0:
+            thumbnail_basename = os.path.basename(preferred[0])
+
+    return thumbnail_basename
 
 
 def log_into_mast(request):
@@ -1438,23 +1447,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]["viewed"] = viewed
         data_dict['file_data'][rootname]["exp_type"] = exp_type
-
-        # We generate thumbnails only for rate and dark files. Check if these files
-        # exist in the thumbnail filesystem. In the case where neither rate nor
-        # dark thumbnails are present, revert to 'none', which will then cause the
-        # "thumbnail not available" fallback image to be used.
-        available_thumbnails = get_thumbnails_by_rootname(rootname)
-
-        if len(available_thumbnails) > 0:
-            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
-            if len(preferred) == 0:
-                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
-            if len(preferred) > 0:
-                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
-            else:
-                data_dict['file_data'][rootname]['thumbnail'] = 'none'
-        else:
-            data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -1580,22 +1573,7 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
                 data_dict['file_data'][rootname]['available_files'] = available_files
                 data_dict['file_data'][rootname]["viewed"] = viewed
                 data_dict['file_data'][rootname]["exp_type"] = exp_type
-
-                # We generate thumbnails only for rate and dark files. Check if these files
-                # exist in the thumbnail filesystem. In the case where neither rate nor
-                # dark thumbnails are present, revert to 'none', which will then cause the
-                # "thumbnail not available" fallback image to be used.
-                available_thumbnails = get_thumbnails_by_rootname(rootname)
-                if len(available_thumbnails) > 0:
-                    preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
-                    if len(preferred) == 0:
-                        preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
-                    if len(preferred) > 0:
-                        data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
-                    else:
-                        data_dict['file_data'][rootname]['thumbnail'] = 'none'
-                else:
-                    data_dict['file_data'][rootname]['thumbnail'] = 'none'
+                data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
                 try:
                     data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -1689,25 +1667,7 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
                 data_dict['file_data'][rootname]['suffixes'].append(suffix)
             except ValueError:
                 continue
-
-        # SAPP TODO MAKE THE FOLLOWING ITS OWN ROUTINE or integrate into get_thumbnails_by_rootname
-        
-        # We generate thumbnails only for rate and dark files. Check if these files
-        # exist in the thumbnail filesystem. In the case where neither rate nor
-        # dark thumbnails are present, revert to 'none', which will then cause the
-        # "thumbnail not available" fallback image to be used.
-        available_thumbnails = get_thumbnails_by_rootname(rootname)
-
-        if len(available_thumbnails) > 0:
-            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
-            if len(preferred) == 0:
-                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
-            if len(preferred) > 0:
-                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
-            else:
-                data_dict['file_data'][rootname]['thumbnail'] = 'none'
-        else:
-            data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
     # Extract information for sorting with dropdown menus
     try:
