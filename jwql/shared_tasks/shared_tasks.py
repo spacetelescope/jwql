@@ -380,8 +380,8 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
-    cmd = "{} cal {} '{}' {} {} {}"
-    cmd = cmd.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
+    cmd = "{} cal all '{}' {} {} {}"
+    cmd = cmd.format(cmd_name, cal_dir, instrument, input_file, short_name)
     process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
     with process.stderr:
         log_subprocess_output(process.stderr)
