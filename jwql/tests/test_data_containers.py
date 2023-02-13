@@ -7,6 +7,10 @@ Authors
 -------
 
     - Matthew Bourque
+    - Mees Fix
+    - Bryan Hilbert
+    - Bradley Sappington
+    - Melanie Clarke
 
 Use
 ---
@@ -69,8 +73,8 @@ def test_get_filenames_by_instrument():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_proposal():
     """Tests the ``get_filenames_by_proposal`` function."""
-
-    filenames = data_containers.get_filenames_by_proposal('1068')
+    pid = '2589'
+    filenames = data_containers.get_filenames_by_proposal(pid)
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -78,10 +82,61 @@ def test_get_filenames_by_proposal():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
-
-    filenames = data_containers.get_filenames_by_rootname('jw01068001001_02102_00001_nrcb1')
+    rname = 'jw02589006001_04101_00001-seg002_nrs2'
+    filenames = data_containers.get_filenames_by_rootname(rname)
     assert isinstance(filenames, list)
     assert len(filenames) > 0
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.parametrize('pid,rname,success',
+                         [('2589', None, True),
+                          (None, 'jw02589006001_04101_00001-seg002_nrs2', True),
+                          ('2589', 'jw02589006001_04101_00001-seg002_nrs2', True),
+                          (None, None, False)])
+def test_get_filesystem_filenames(pid, rname, success):
+    """Tests the ``get_filesystem_filenames`` function."""
+    filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, rootname=rname)
+    assert isinstance(filenames, list)
+    if not success:
+        assert len(filenames) == 0
+    else:
+        assert len(filenames) > 0
+
+        # check specific file_types
+        fits_files = [f for f in filenames if f.endswith('.fits')]
+        assert len(fits_files) < len(filenames)
+
+        fits_filenames = data_containers.get_filesystem_filenames(
+            proposal=pid, rootname=rname, file_types=['fits'])
+        assert isinstance(fits_filenames, list)
+        assert len(fits_filenames) > 0
+        assert len(fits_filenames) == len(fits_files)
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_get_filesystem_filenames_options():
+    """Tests the ``get_filesystem_filenames`` function."""
+    pid = '2589'
+
+    # basenames only
+    filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, full_path=False, file_types=['fits'])
+    assert not os.path.isfile(filenames[0])
+
+    # full path
+    filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, full_path=True, file_types=['fits'])
+    assert os.path.isfile(filenames[0])
+
+    # sorted
+    sorted_filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, sort_names=True, file_types=['fits'])
+    unsorted_filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, sort_names=False, file_types=['fits'])
+    assert sorted_filenames != unsorted_filenames
+    assert sorted_filenames == sorted(unsorted_filenames)
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -113,6 +168,28 @@ def test_get_instrument_proposals():
     proposals = data_containers.get_instrument_proposals('Fgs')
     assert isinstance(proposals, list)
     assert len(proposals) > 0
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.parametrize('keys', [None, [],
+                                  ['proposal', 'obsnum', 'other',
+                                   'prop_id', 'obsstart']])
+def test_get_instrument_viewed(keys):
+    """Tests the ``get_instrument_viewed`` function."""
+
+    viewed = data_containers.get_instrument_viewed('nirspec', keys=keys)
+    assert isinstance(viewed, list)
+    assert len(viewed) > 0
+    first_file = viewed[0]
+    assert first_file['root_name'] != ''
+    assert isinstance(first_file['viewed'], bool)
+    if keys is not None:
+        assert len(first_file) == 2 + len(keys)
+        for key in keys:
+            assert key in first_file
+    else:
+        # only root name and viewed by default
+        assert len(first_file) == 2
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
