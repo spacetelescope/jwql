@@ -806,6 +806,25 @@ class BadPixels():
                         logging.info("\t\tCalibrated files already exist for {}".format(short_name))
                 else:
                     logging.info("\tRate file found for {}".format(uncal_file))
+                    if os.path.isfile(rate_file):
+                        copy_files([rate_file], self.data_dir)
+                    else:
+                        logging.warning("\tRate file {} doesn't actually exist".format(rate_file))
+                        short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
+                        local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                        logging.info('Calling pipeline for {}'.format(uncal_file))
+                        logging.info("Copying raw file to {}".format(self.data_dir))
+                        copy_files([uncal_file], self.data_dir)
+                        if hasattr(self, 'nints') and self.nints > 1:
+                            out_exts[short_name] = ['jump', '1_ramp_fit']
+                        needs_calibration = False
+                        for file_type in out_exts[short_name]:
+                            if not os.path.isfile(local_uncal_file.replace("uncal", file_type)):
+                                needs_calibration = True
+                        if needs_calibration:
+                            in_files.append(local_uncal_file)
+                        else:
+                            logging.info("\t\tCalibrated files already exist for {}".format(short_name))
 
             outputs = {}
             if len(in_files) > 0:
@@ -824,11 +843,17 @@ class BadPixels():
                     logging.info("\t\tCalibration was skipped for file")
                     self.get_metadata(illuminated_raw_files[index])
                     local_ramp_file = local_uncal_file.replace("uncal", "0_ramp_fit")
+                    local_rateints_file = local_uncal_file.replace("uncal", "rateints")
                     if hasattr(self, 'nints') and self.nints > 1:
                         local_ramp_file = local_ramp_file.replace("0_ramp_fit", "1_ramp_fit")
                     if os.path.isfile(local_ramp_file):
+                        logging.info("\t\t\tFound local ramp file")
                         illuminated_slope_files[index] = local_ramp_file
+                    elif os.path.isfile(local_rateints_file):
+                        logging.info("\t\t\tFound local rateints file")
+                        illuminated_slope_files[index] = local_rateints_file
                     else:
+                        logging.info("\t\t\tNo local files found")
                         illuminated_slope_files[index] = None
                 index += 1
 
