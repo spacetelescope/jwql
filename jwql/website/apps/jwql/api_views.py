@@ -201,7 +201,7 @@ def thumbnails_by_proposal(request, proposal):
 
 
 def thumbnail_by_rootname(request, rootname):
-    """Return a list of available thumbnails in the filesystem for the
+    """Return the best available thumbnail in the filesystem for the
     given ``rootname``.
 
     Parameters
