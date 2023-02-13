@@ -50,6 +50,7 @@ from .data_containers import get_all_proposals
 from .data_containers import get_filenames_by_proposal
 from .data_containers import get_filenames_by_rootname
 from .data_containers import get_instrument_proposals
+from .data_containers import get_instrument_viewed
 from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_proposal
@@ -135,6 +136,41 @@ def instrument_proposals(request, inst):
 
     proposals = get_instrument_proposals(inst)
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
+
+
+def instrument_viewed(request, inst):
+    """Return a table of viewed information for the given instrument.
+
+    'Viewed' indicates whether an observation is new or has been reviewed
+    for QA.  In addition to 'filename', and 'viewed', observation
+    descriptors included in the table are currently 'proposal', 'obsnum',
+    'number_of_files', 'exptypes', 'obsstart', 'obsend'.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+    inst : str
+        The JWST instrument of interest.
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # TODO: define more useful keys by instrument in config
+    # currently, optional keys are just the values available
+    # in local models
+    optional_keys = ['proposal', 'obsnum', 'number_of_files',
+                     'exptypes', 'obsstart', 'obsend']
+    full_keys = ['root_name', 'viewed'] + optional_keys
+
+    # get all observation viewed status from file info model
+    # and join with observation descriptors
+    viewed = get_instrument_viewed(inst, keys=optional_keys)
+    return JsonResponse({'instrument': inst,
+                         'keys': full_keys,
+                         'viewed': viewed}, json_dumps_params={'indent': 2})
 
 
 def preview_images_by_proposal(request, proposal):

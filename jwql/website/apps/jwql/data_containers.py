@@ -13,6 +13,8 @@ Authors
     - Teagan King
     - Bryan Hilbert
     - Maria Pena-Guerrero
+    - Bradley Sappington
+    - Melanie Clarke
 
 Use
 ---
@@ -532,7 +534,7 @@ def get_filenames_by_instrument(instrument, proposal, observation_id=None, restr
         filenames in this file will be used rather than calling mask_query_filenames_by_instrument.
         This can save a significant amount of time when the number of files is large.
     query_response : dict
-        Dictionary with "data" key ontaining a list of filenames. This is assumed to
+        Dictionary with "data" key containing a list of filenames. This is assumed to
         essentially be the returned value from a call to mast_query_filenames_by_instrument.
         If this is provided, the call to that function is skipped, which can save a
         significant amount of time.
@@ -598,7 +600,7 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
         Proposal ID number to use to filter the results
     observation_id : str
         Observation ID number to use to filter the results. If None, all files for the ``proposal_id`` are
-        retreived
+        retrieved
     other_columns : list
         List of other columns to return from the MAST query
 
@@ -625,6 +627,79 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
     return result
 
 
+def get_filesystem_filenames(proposal=None, rootname=None,
+                             file_types=None, full_path=False,
+                             sort_names=True):
+    """Return a list of filenames on the filesystem.
+
+    One of proposal or rootname must be specified. If both are
+    specified, only proposal is used.
+
+    Parameters
+    ----------
+    proposal : str, optional
+        The one- to five-digit proposal number (e.g. ``88600``).
+    rootname : str, optional
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
+    file_types : list of str, optional
+        If provided, only matching file extension types will be
+        returned (e.g. ['fits', 'jpg']).
+    full_path : bool, optional
+        If set, the full path to the file will be returned instead
+        of the basename.
+    sort_names : bool, optional
+        If set, the returned files are sorted.
+
+    Returns
+    -------
+    filenames : list
+        A list of filenames associated with the given ``rootname``.
+    """
+    if proposal is not None:
+        proposal_string = '{:05d}'.format(int(proposal))
+        filenames = glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'public',
+                         'jw{}'.format(proposal_string), '*/*'))
+        filenames.extend(glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'proprietary',
+                         'jw{}'.format(proposal_string), '*/*')))
+    elif rootname is not None:
+        proposal_dir = rootname[0:7]
+        observation_dir = rootname.split('_')[0]
+        filenames = glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'public', proposal_dir,
+                         observation_dir, '{}*'.format(rootname)))
+        filenames.extend(glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir,
+                         observation_dir, '{}*'.format(rootname))))
+    else:
+        logging.warning("Must provide either proposal or rootname; "
+                        "no files returned.")
+        filenames = []
+
+    # check suffix and file type
+    good_filenames = []
+    for filename in filenames:
+        split_file = os.path.splitext(filename)
+
+        # certain suffixes are always ignored
+        test_suffix = split_file[0].split('_')[-1]
+        if test_suffix not in IGNORED_SUFFIXES:
+
+            # check against additional file type requirement
+            test_type = split_file[-1].lstrip('.')
+            if file_types is None or test_type in file_types:
+                if full_path:
+                    good_filenames.append(filename)
+                else:
+                    good_filenames.append(os.path.basename(filename))
+
+    if sort_names:
+        good_filenames.sort()
+    return good_filenames
+
+
 def get_filenames_by_proposal(proposal):
     """Return a list of filenames that are available in the filesystem
     for the given ``proposal``.
@@ -639,16 +714,7 @@ def get_filenames_by_proposal(proposal):
     filenames : list
         A list of filenames associated with the given ``proposal``.
     """
-
-    proposal_string = '{:05d}'.format(int(proposal))
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
-
-    # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
-    filenames = sorted([os.path.basename(filename) for filename in filenames])
-
-    return filenames
+    return get_filesystem_filenames(proposal=proposal)
 
 
 def get_filenames_by_rootname(rootname):
@@ -666,18 +732,7 @@ def get_filenames_by_rootname(rootname):
     filenames : list
         A list of filenames associated with the given ``rootname``.
     """
-
-    proposal_dir = rootname[0:7]
-    observation_dir = rootname.split('_')[0]
-
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
-
-    # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
-    filenames = sorted([os.path.basename(filename) for filename in filenames])
-
-    return filenames
+    return get_filesystem_filenames(rootname=rootname)
 
 
 def get_header_info(filename, filetype):
@@ -867,6 +922,64 @@ def get_instrument_proposals(instrument):
     proposals = prop_table['proposal_id'].data
     inst_proposals = sorted(proposals.compressed(), reverse=True)
     return inst_proposals
+
+
+def get_instrument_viewed(instrument, keys=None):
+    """Return a table of viewed information for the given instrument.
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument.
+    keys : list of str, optional
+        Additional FITS key names for information to return.
+
+    Returns
+    -------
+    viewed : list
+        List of viewed information by observation for the given instrument.
+    """
+    # standardize input
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
+    if keys is None:
+        keys = []
+
+    # configure some special keys to avoid table name conflicts
+    special_keys = {'proposal': 'root',
+                    'obsnum': 'observation',
+                    'prop_id': 'proposal'}
+
+    # get files by instrument from local model
+    root_file_info = RootFileInfo.objects.filter(instrument=inst)
+
+    viewed = []
+    for root_file in root_file_info:
+        # for now, report viewed by root name only.
+        # if specific files are needed, use get_filesystem_files
+        result = {'root_name': root_file.root_name,
+                  'viewed': root_file.viewed}
+        for key in keys:
+            try:
+                # override root file default if needed
+                if key in special_keys and special_keys[key] == 'observation':
+                    result[key] = getattr(root_file.obsnum, key)
+                elif key in special_keys and special_keys[key] == 'proposal':
+                    result[key] = getattr(root_file.obsnum.proposal, key)
+                else:
+                    # try  the root file table
+                    result[key] = getattr(root_file, key)
+            except AttributeError:
+                try:
+                    # try the observation table
+                    result[key] = getattr(root_file.obsnum, key)
+                except AttributeError:
+                    try:
+                        # try the proposal table
+                        result[key] = getattr(root_file.obsnum.proposal, key)
+                    except AttributeError:
+                        result[key] = ''
+        viewed.append(result)
+    return viewed
 
 
 def get_preview_images_by_proposal(proposal):
