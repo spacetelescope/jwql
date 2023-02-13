@@ -245,11 +245,6 @@ class Dark():
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
 
-
-        # FOR TESTING
-        mean_slope_dir = '/Volumes/jwst_ins/jwql/temp_dark_mon'
-
-
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
         logging.info("Name of mean slope image: {}".format(output_filename))
@@ -764,7 +759,8 @@ class Dark():
                 # Add new noisy pixels to the database
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-
+            
+            logging.info("Creating Mean Slope Image {}".format(slope_image))
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
                                           noisyxy=new_noisy_pixels, baseline_file=baseline_file)
