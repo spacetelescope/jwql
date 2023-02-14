@@ -406,20 +406,20 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         raise ValueError("Pipeline Failed")
 
     files = {"jump_output": None, "pipe_output": None, "fitopt_output": None}
-    for line in status[-4:-1]:
+    for line in status[-5:-1]:
         file = line.strip()
         logging.info("Copying output file {}".format(file))
         if not os.path.isfile(os.path.join(cal_dir, file)):
-            logging.error("ERROR: {} not found".format(file))
-            raise FileNotFoundError(file)
-        copy_files([os.path.join(cal_dir, file)], output_dir)
-        set_permissions(os.path.join(output_dir, file))
-        if "jump" in file:
-            files["jump_output"] = os.path.join(output_dir, file)
-        if "ramp" in file:
-            files["pipe_output"] = os.path.join(output_dir, file)
-        if "fitopt" in file:
-            files["fitopt_output"] = os.path.join(output_dir, file)
+            logging.error("WARNING: {} not found".format(file))
+        else:
+            copy_files([os.path.join(cal_dir, file)], output_dir)
+            set_permissions(os.path.join(output_dir, file))
+            if "jump" in file:
+                files["jump_output"] = os.path.join(output_dir, file)
+            if "ramp" in file:
+                files["pipe_output"] = os.path.join(output_dir, file)
+            if "fitopt" in file:
+                files["fitopt_output"] = os.path.join(output_dir, file)
 
     logging.info("Removing local files.")
     files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))

@@ -215,6 +215,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
     with open(status_file, "a+") as status_f:
         status_f.write("{}\n".format(jump_output))
         status_f.write("{}\n".format(pipe_output))
+        status_f.write("{}\n".format(pipe_output.replace("0_ramp", "1_ramp")))
         status_f.write("{}\n".format(fitopt_output))
         status_f.write("SUCCEEDED")
     # Done.

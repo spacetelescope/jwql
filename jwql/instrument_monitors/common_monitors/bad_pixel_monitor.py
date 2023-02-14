@@ -943,11 +943,23 @@ class BadPixels():
                     if hasattr(self, 'nints') and self.nints > 1:
                         local_ramp_file = local_ramp_file.replace("0_ramp_fit", "1_ramp_fit")
                     if not os.path.isfile(local_uncal_file.replace("uncal", "jump")):
+                        logging.info("\t\t\tJump file not found")
                         dark_jump_files[index] = None
+                    else:
+                        dark_jump_files[index] = local_uncal_file.replace("uncal", "jump")
                     if not os.path.isfile(local_uncal_file.replace("uncal", "fitopt")):
+                        logging.info("\t\t\tFitopt file not found")
                         dark_fitopt_files[index] = None
+                    else:
+                        dark_fitopt_files[index] = local_uncal_file.replace("uncal", "fitopt")
                     if not os.path.isfile(local_ramp_file):
-                        dark_slope_files[index] = None
+                        if os.path.isfile(local_uncal_file.replace("uncal", "rateints")):
+                            dark_slope_files[index] = local_uncal_file.replace("uncal", "rateints")
+                        else:
+                            logging.info("\t\t\tRate file not found")
+                            dark_slope_files[index] = None
+                    else:
+                        dark_slope_files[index] = local_ramp_file
                 index += 1
 
             index = 0
