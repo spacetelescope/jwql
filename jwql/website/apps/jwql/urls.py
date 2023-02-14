@@ -119,6 +119,10 @@ urlpatterns = [
             api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$',
             api_views.thumbnail_by_rootname, name='thumbnail_by_rootname'),
+    re_path(r'^api/(?P<inst>({}))/looks/$'.format(instruments),
+            api_views.instrument_looks, name='instrument_looks'),
     re_path(r'^api/(?P<inst>({}))/viewed/$'.format(instruments),
             api_views.instrument_viewed, name='instrument_viewed'),
+    re_path(r'^api/(?P<inst>({}))/new/$'.format(instruments),
+            api_views.instrument_new, name='instrument_new'),
 ]
