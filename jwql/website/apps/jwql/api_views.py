@@ -50,7 +50,7 @@ from .data_containers import get_all_proposals
 from .data_containers import get_filenames_by_proposal
 from .data_containers import get_filenames_by_rootname
 from .data_containers import get_instrument_proposals
-from .data_containers import get_instrument_viewed
+from .data_containers import get_instrument_looks
 from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_proposal
@@ -138,8 +138,8 @@ def instrument_proposals(request, inst):
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
-def instrument_viewed(request, inst):
-    """Return a table of viewed information for the given instrument.
+def instrument_looks(request, inst, viewed=None):
+    """Return a table of looks information for the given instrument.
 
     'Viewed' indicates whether an observation is new or has been reviewed
     for QA.  In addition to 'filename', and 'viewed', observation
@@ -152,6 +152,10 @@ def instrument_viewed(request, inst):
         Incoming request from the webpage.
     inst : str
         The JWST instrument of interest.
+    viewed : bool, optional
+        If set to None, all viewed values are returned. If set to
+        True, only viewed data is returned. If set to False, only
+        new data is returned.
 
     Returns
     -------
@@ -165,12 +169,61 @@ def instrument_viewed(request, inst):
                      'exptypes', 'obsstart', 'obsend']
     full_keys = ['root_name', 'viewed'] + optional_keys
 
-    # get all observation viewed status from file info model
+    # get all observation looks from file info model
     # and join with observation descriptors
-    viewed = get_instrument_viewed(inst, keys=optional_keys)
+    looks = get_instrument_looks(inst, keys=optional_keys, viewed=viewed)
+
+    # return results by api key
+    if viewed is None:
+        key = 'looks'
+    elif viewed:
+        key = 'viewed'
+    else:
+        key = 'new'
+
     return JsonResponse({'instrument': inst,
                          'keys': full_keys,
-                         'viewed': viewed}, json_dumps_params={'indent': 2})
+                         key: looks}, json_dumps_params={'indent': 2})
+
+
+def instrument_viewed(request, inst):
+    """Return a table of information on viewed data for the given instrument.
+
+    Calls `instrument_looks` with viewed=True.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+    inst : str
+        The JWST instrument of interest.
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    return instrument_looks(request, inst, viewed=True)
+
+
+def instrument_new(request, inst):
+    """Return a table of information on new data for the given instrument.
+
+    Calls `instrument_looks` with viewed=False.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+    inst : str
+        The JWST instrument of interest.
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    return instrument_looks(request, inst, viewed=False)
 
 
 def preview_images_by_proposal(request, proposal):

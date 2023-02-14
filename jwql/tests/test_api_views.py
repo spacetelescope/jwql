@@ -7,6 +7,7 @@ Authors
 
     - Matthew Bourque
     - Bryan Hilbert
+    - Melanie Clarke
 
 Use
 ---
@@ -40,7 +41,9 @@ urls.append('api/proposals/')  # all_proposals
 # Instrument-specific URLs
 for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
+    urls.append('api/{}/looks/'.format(instrument))  # instrument_looks
     urls.append('api/{}/viewed/'.format(instrument))  # instrument_viewed
+    urls.append('api/{}/new/'.format(instrument))  # instrument_new
 
 # Proposal-specific URLs
 proposals = ['2640', '02733', '1541', '02589']
@@ -90,7 +93,12 @@ def test_api_views(url):
 
     try:
         data = json.loads(url.read().decode())
-        assert len(data[data_type]) > 0
-    except (http.client.IncompleteRead) as e:
+
+        # viewed data depends on local database contents
+        # so may return an empty result
+        if data_type != 'viewed':
+            assert len(data[data_type]) > 0
+
+    except http.client.IncompleteRead as e:
         data = e.partial
         assert len(data) > 0

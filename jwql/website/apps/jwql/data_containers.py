@@ -924,8 +924,8 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_instrument_viewed(instrument, keys=None):
-    """Return a table of viewed information for the given instrument.
+def get_instrument_looks(instrument, keys=None, viewed=None):
+    """Return a table of looks information for the given instrument.
 
     Parameters
     ----------
@@ -933,26 +933,30 @@ def get_instrument_viewed(instrument, keys=None):
         Name of the JWST instrument.
     keys : list of str, optional
         Additional FITS key names for information to return.
+    viewed : bool, optional
+        If set to None, all viewed values are returned. If set to
+        True, only viewed data is returned. If set to False, only
+        new data is returned.
 
     Returns
     -------
-    viewed : list
-        List of viewed information by observation for the given instrument.
+    looks : list
+        List of looks information by observation for the given instrument.
     """
     # standardize input
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
     if keys is None:
         keys = []
 
-    # configure some special keys to avoid table name conflicts
-    special_keys = {'proposal': 'root',
-                    'obsnum': 'observation',
-                    'prop_id': 'proposal'}
-
     # get files by instrument from local model
-    root_file_info = RootFileInfo.objects.filter(instrument=inst)
+    if viewed is None:
+        root_file_info = RootFileInfo.objects.filter(instrument=inst)
+    elif viewed:
+        root_file_info = RootFileInfo.objects.filter(instrument=inst, viewed=True)
+    else:
+        root_file_info = RootFileInfo.objects.filter(instrument=inst, viewed=False)
 
-    viewed = []
+    looks = []
     for root_file in root_file_info:
         # for now, report viewed by root name only.
         # if specific files are needed, use get_filesystem_files
@@ -960,26 +964,23 @@ def get_instrument_viewed(instrument, keys=None):
                   'viewed': root_file.viewed}
         for key in keys:
             try:
-                # override root file default if needed
-                if key in special_keys and special_keys[key] == 'observation':
-                    result[key] = getattr(root_file.obsnum, key)
-                elif key in special_keys and special_keys[key] == 'proposal':
-                    result[key] = getattr(root_file.obsnum.proposal, key)
-                else:
-                    # try  the root file table
-                    result[key] = getattr(root_file, key)
+                # try the root file table
+                value = getattr(root_file, key)
             except AttributeError:
                 try:
                     # try the observation table
-                    result[key] = getattr(root_file.obsnum, key)
+                    value = getattr(root_file.obsnum, key)
                 except AttributeError:
                     try:
                         # try the proposal table
-                        result[key] = getattr(root_file.obsnum.proposal, key)
+                        value = getattr(root_file.obsnum.proposal, key)
                     except AttributeError:
-                        result[key] = ''
-        viewed.append(result)
-    return viewed
+                        value = ''
+            if type(value) not in [str, float, int]:
+                value = str(value)
+            result[key] = value
+        looks.append(result)
+    return looks
 
 
 def get_preview_images_by_proposal(proposal):

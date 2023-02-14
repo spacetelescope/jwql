@@ -174,13 +174,13 @@ def test_get_instrument_proposals():
 @pytest.mark.parametrize('keys', [None, [],
                                   ['proposal', 'obsnum', 'other',
                                    'prop_id', 'obsstart']])
-def test_get_instrument_viewed(keys):
-    """Tests the ``get_instrument_viewed`` function."""
+def test_get_instrument_looks(keys):
+    """Tests the ``get_instrument_looks`` function."""
 
-    viewed = data_containers.get_instrument_viewed('nirspec', keys=keys)
-    assert isinstance(viewed, list)
-    assert len(viewed) > 0
-    first_file = viewed[0]
+    looks = data_containers.get_instrument_looks('nirspec', keys=keys)
+    assert isinstance(looks, list)
+    assert len(looks) > 0
+    first_file = looks[0]
     assert first_file['root_name'] != ''
     assert isinstance(first_file['viewed'], bool)
     if keys is not None:
@@ -188,7 +188,7 @@ def test_get_instrument_viewed(keys):
         for key in keys:
             assert key in first_file
     else:
-        # only root name and viewed by default
+        # only root name and looks by default
         assert len(first_file) == 2
 
 
