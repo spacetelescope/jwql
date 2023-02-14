@@ -399,7 +399,7 @@ def archived_proposals_ajax(request, inst):
         thumb_obs_time.append(max(proposal_obs_times))
 
         # Add category type to list based on proposal number
-        cat_types.append(proposals_by_category[proposal_num])
+        cat_types.append(proposals_by_category[int(proposal_num)])
 
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
