@@ -36,6 +36,7 @@ import logging
 from astropy.io import fits
 from astropy.time import Time
 from bs4 import BeautifulSoup
+from django import setup
 from django.conf import settings
 from django.contrib import messages
 import numpy as np
@@ -50,7 +51,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemo
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS, QUERY_CONFIG_TEMPLATE
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
@@ -70,6 +71,13 @@ if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # These lines are needed in order to use the Django models in a standalone
+    # script (as opposed to code run as a result of a webpage request). If these
+    # lines are not run, the script will crash when attempting to import the
+    # Django models in the line below.
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    setup()
+
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     from jwql.website.apps.jwql.models import RootFileInfo
     check_config_for_key('auth_mast')
@@ -599,6 +607,9 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
     result : dict
         Dictionary of file information
     """
+    # Be sure the instrument name is properly capitalized
+    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+
     if other_columns is None:
         columns = "filename, isRestricted"
     else:
@@ -634,7 +645,7 @@ def get_filenames_by_proposal(proposal):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -663,7 +674,7 @@ def get_filenames_by_rootname(rootname):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -858,45 +869,6 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_preview_images_by_instrument(inst):
-    """Return a list of preview images available in the filesystem for
-    the given instrument.
-
-    Parameters
-    ----------
-    inst : str
-        The instrument of interest (e.g. ``NIRCam``).
-
-    Returns
-    -------
-    preview_images : list
-        A list of preview images available in the filesystem for the
-        given instrument.
-    """
-    # Get list of all preview_images. Text file contains only preview
-    # images for a single instrument.
-    preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
-    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
-
-    # Query MAST for all rootnames for the instrument
-    all_preview_images = []
-    all_proposals = get_instrument_proposals(inst)
-    for prop in all_proposals:
-        prop_result = mast_query_filenames_by_instrument(inst, prop)
-
-        # Parse the results to get the rootnames
-        filenames = [result['filename'].split('.')[0] for result in prop_result]
-
-        if len(filenames) > 0:
-            # Get subset of preview images that match the filenames
-            prop_preview_images = [os.path.basename(item) for item in preview_images if
-                                   os.path.basename(item).split('_integ')[0] in filenames]
-            all_preview_images.extend(prop_preview_images)
-
-    # Return only preview images that match the filenames retrieved from MAST
-    return all_preview_images
-
-
 def get_preview_images_by_proposal(proposal):
     """Return a list of preview images available in the filesystem for
     the given ``proposal``.
@@ -916,7 +888,7 @@ def get_preview_images_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
-    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+    preview_images = [item for item in preview_images if os.path.splitext(item)[0].split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -944,7 +916,7 @@ def get_preview_images_by_rootname(rootname):
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
-    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+    preview_images = [item for item in preview_images if os.path.splitext(item)[0].split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -1056,15 +1028,9 @@ def get_thumbnails_all_instruments(parameters):
 
     Parameters
     ----------
-    parameters: dict
-        A dictionary containing the following keys, some of which are dictionaries:
-            instruments
-            apertures
-            filters
-            detector
-            effexptm_min
-            effexptm_max
-            anomalies
+    parameters: dict of type QUERY_CONFIG_TEMPLATE
+        A dictionary containing keys of QUERY_CONFIG_KEYS, some of which are dictionaries:
+ 
 
     Returns
     -------
@@ -1073,38 +1039,38 @@ def get_thumbnails_all_instruments(parameters):
         given instrument.
     """
 
-    anomalies = parameters['anomalies']
+    anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES]
 
     thumbnails_subset = []
 
-    for inst in parameters['instruments']:
+    for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
         # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper() + inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if ((parameters['apertures'][inst.lower()] == [])
-                and (parameters['detectors'][inst.lower()] == [])
-                and (parameters['filters'][inst.lower()] == [])
-                and (parameters['exposure_types'][inst.lower()] == [])
-                and (parameters['read_patterns'][inst.lower()] == [])):  # noqa: W503
+        if ((parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()] == [])
+                and (parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()] == [])):  # noqa: W503
             params = {"columns": "*", "filters": []}
         else:
             query_filters = []
-            if (parameters['apertures'][inst.lower()] != []):
+            if (parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()] != []):
                 if instrument != "Nircam":
-                    query_filters.append({"paramName": "pps_aper", "values": parameters['apertures'][inst.lower()]})
+                    query_filters.append({"paramName": "pps_aper", "values": parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()]})
                 if instrument == "Nircam":
-                    query_filters.append({"paramName": "apername", "values": parameters['apertures'][inst.lower()]})
-            if (parameters['detectors'][inst.lower()] != []):
-                query_filters.append({"paramName": "detector", "values": parameters['detectors'][inst.lower()]})
-            if (parameters['filters'][inst.lower()] != []):
-                query_filters.append({"paramName": "filter", "values": parameters['filters'][inst.lower()]})
-            if (parameters['exposure_types'][inst.lower()] != []):
-                query_filters.append({"paramName": "exp_type", "values": parameters['exposure_types'][inst.lower()]})
-            if (parameters['read_patterns'][inst.lower()] != []):
-                query_filters.append({"paramName": "readpatt", "values": parameters['read_patterns'][inst.lower()]})
+                    query_filters.append({"paramName": "apername", "values": parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()] != []):
+                query_filters.append({"paramName": "detector", "values": parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()] != []):
+                query_filters.append({"paramName": "filter", "values": parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()] != []):
+                query_filters.append({"paramName": "exp_type", "values": parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()]})
+            if (parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()] != []):
+                query_filters.append({"paramName": "readpatt", "values": parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()]})
             params = {"columns": "*",
                       "filters": query_filters}
 
@@ -1112,11 +1078,12 @@ def get_thumbnails_all_instruments(parameters):
         results = response[0].json()['data']
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
-        inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+        inst_filenames = [filename for filename in inst_filenames if filename.split('_')[-1] not in IGNORED_SUFFIXES]
 
         # Get list of all thumbnails
-        thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
-
+        thumb_inventory = os.path.join(f"{THUMBNAIL_FILESYSTEM}", f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt")
+        thumbnail_inst_list = retrieve_filelist(thumb_inventory)
+        
         # Get subset of thumbnail images that match the filenames
         thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
                                   os.path.basename(item).split('_integ')[0] in inst_filenames]
@@ -1209,9 +1176,11 @@ def get_thumbnails_by_proposal(proposal):
     return thumbnails
 
 
-def get_thumbnails_by_rootname(rootname):
-    """Return a list of preview images available in the filesystem for
-    the given ``rootname``.
+def get_thumbnail_by_rootname(rootname):
+    """Return the most appropriate existing thumbnail basename available in the filesystem for the given ``rootname``.
+    We generate thumbnails only for 'rate' and 'dark' files. 
+    Check if these files exist in the thumbnail filesystem. 
+    In the case where neither rate nor dark thumbnails are present, revert to 'none'
 
     Parameters
     ----------
@@ -1221,9 +1190,8 @@ def get_thumbnails_by_rootname(rootname):
 
     Returns
     -------
-    thumbnails : list
-        A list of preview images available in the filesystem for the
-        given ``rootname``.
+    thumbnail_basename : str
+        A thumbnail_basename available in the filesystem for the given ``rootname``.
     """
 
     proposal = rootname.split('_')[0].split('jw')[-1][0:5]
@@ -1233,8 +1201,16 @@ def get_thumbnails_by_rootname(rootname):
         '{}*'.format(rootname))))
 
     thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+    thumbnail_basename = 'none'
 
-    return thumbnails
+    if len(thumbnails) > 0:
+        preferred = [thumb for thumb in thumbnails if 'rate' in thumb]
+        if len(preferred) == 0:
+            preferred = [thumb for thumb in thumbnails if 'dark' in thumb]
+        if len(preferred) > 0:
+            thumbnail_basename = os.path.basename(preferred[0])
+
+    return thumbnail_basename
 
 
 def log_into_mast(request):
@@ -1498,23 +1474,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]["viewed"] = viewed
         data_dict['file_data'][rootname]["exp_type"] = exp_type
-
-        # We generate thumbnails only for rate and dark files. Check if these files
-        # exist in the thumbnail filesystem. In the case where neither rate nor
-        # dark thumbnails are present, revert to 'none', which will then cause the
-        # "thumbnail not available" fallback image to be used.
-        available_thumbnails = get_thumbnails_by_rootname(rootname)
-
-        if len(available_thumbnails) > 0:
-            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
-            if len(preferred) == 0:
-                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
-            if len(preferred) > 0:
-                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
-            else:
-                data_dict['file_data'][rootname]['thumbnail'] = 'none'
-        else:
-            data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -1562,7 +1522,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
 
 def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exclusive_stop_time_mjd):
-    """Generate a page that provides data necessary to render thumbnails for 
+    """Generate a page that provides data necessary to render thumbnails for
     ``archive_date_range`` template.
 
     Parameters
@@ -1640,22 +1600,7 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
                 data_dict['file_data'][rootname]['available_files'] = available_files
                 data_dict['file_data'][rootname]["viewed"] = viewed
                 data_dict['file_data'][rootname]["exp_type"] = exp_type
-
-                # We generate thumbnails only for rate and dark files. Check if these files
-                # exist in the thumbnail filesystem. In the case where neither rate nor
-                # dark thumbnails are present, revert to 'none', which will then cause the
-                # "thumbnail not available" fallback image to be used.
-                available_thumbnails = get_thumbnails_by_rootname(rootname)
-                if len(available_thumbnails) > 0:
-                    preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
-                    if len(preferred) == 0:
-                        preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
-                    if len(preferred) > 0:
-                        data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
-                    else:
-                        data_dict['file_data'][rootname]['thumbnail'] = 'none'
-                else:
-                    data_dict['file_data'][rootname]['thumbnail'] = 'none'
+                data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
                 try:
                     data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -1726,15 +1671,7 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
         try:
             filename_dict = filename_parser(rootname)
         except ValueError:
-            # Temporary workaround for noncompliant files in filesystem
-            filename_dict = {'activity': rootname[17:19],
-                             'detector': rootname[26:],
-                             'exposure_id': rootname[20:25],
-                             'observation': rootname[7:10],
-                             'parallel_seq_id': rootname[16],
-                             'program_id': rootname[2:7],
-                             'visit': rootname[10:13],
-                             'visit_group': rootname[14:16]}
+            continue
 
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
@@ -1749,9 +1686,15 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
-                                                        filename in available_files]
+        data_dict['file_data'][rootname]['suffixes'] = []
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
+        for filename in available_files:
+            try:
+                suffix = filename_parser(filename)['suffix']
+                data_dict['file_data'][rootname]['suffixes'].append(suffix)
+            except ValueError:
+                continue
+        data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
     # Extract information for sorting with dropdown menus
     try:

@@ -6,6 +6,7 @@ Authors
 -------
 
     - Matthew Bourque
+    - Bryan Hilbert
 
 Use
 ---
@@ -39,27 +40,19 @@ urls.append('api/proposals/')  # all_proposals
 # Instrument-specific URLs
 for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
-    urls.append('api/{}/preview_images/'.format(instrument))  # preview_images_by_instrument
-    urls.append('api/{}/thumbnails/'.format(instrument))  # thumbnails_by_instrument
 
 # Proposal-specific URLs
-proposals = ['86700',  # FGS
-             '98012',  # MIRI
-             '93025',  # NIRCam
-             '00308',  # NIRISS
-             '308',  # NIRISS
-             '96213']  # NIRSpec
+proposals = ['2640', '02733', '1541', '02589']
+
 for proposal in proposals:
     urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
     urls.append('api/{}/preview_images/'.format(proposal))  # preview_images_by_proposal
     urls.append('api/{}/thumbnails/'.format(proposal))  # thumbnails_by_proposal
 
 # Filename-specific URLs
-rootnames = ['jw86600007001_02101_00001_guider2',  # FGS
-             'jw98012001001_02102_00001_mirimage',  # MIRI
-             'jw93025001001_02102_00001_nrca2',  # NIRCam
-             'jw00308001001_02103_00001_nis',  # NIRISS
-             'jw96213001001_02101_00001_nrs1']  # NIRSpec
+rootnames = ['jw02733002001_02101_00001_mirimage',  # MIRI
+             'jw02733001001_02101_00001_nrcb2']  # NIRCam
+
 for rootname in rootnames:
     urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
     urls.append('api/{}/preview_images/'.format(rootname))  # preview_images_by_rootname
@@ -91,10 +84,8 @@ def test_api_views(url):
 
     try:
         url = request.urlopen(url)
-    except error.HTTPError as e:
-        if e.code == 502:
-            pytest.skip("Dev server problem")
-        raise(e)
+    except (error.HTTPError, error.URLError):
+        pytest.skip("Server problem")
 
     try:
         data = json.loads(url.read().decode())

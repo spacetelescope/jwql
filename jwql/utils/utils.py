@@ -503,7 +503,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         if len(filenames_found) > 0:
             filename = os.path.basename(filenames_found[0])
         else:
-            raise FileNotFoundError('{} did not yeild any files in predicted location {}'.format(search, full_subdir))
+            raise FileNotFoundError('{} did not yield any files in predicted location {}'.format(search, full_subdir))
 
     full_path = os.path.join(subdir1, subdir2, filename)
 
@@ -630,19 +630,19 @@ def query_unformat(string):
 def grouper(iterable, chunksize):
     """
     Take a list of items (iterable), and group it into chunks of chunksize, with the
-    last chunk being any remaining items. This allows you to batch-iterate through a 
+    last chunk being any remaining items. This allows you to batch-iterate through a
     potentially very long list without missing any items, and where each individual
-    iteration can involve a much smaller number of files. Particularly useful for 
+    iteration can involve a much smaller number of files. Particularly useful for
     operations that you want to execute in batches, but don't want the batches to be too
     long.
-    
+
     Examples
     --------
-    
+
     grouper([1, 2, 3, 4, 5], 2)
     produces
     (1, 2), (3, 4), (5, )
-    
+
     grouper([1, 2, 3, 4, 5], 6)
     produces
     (1, 2, 3, 4, 5)

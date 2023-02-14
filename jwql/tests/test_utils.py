@@ -289,6 +289,14 @@ FILENAME_PARSER_TEST_DATA = [
       'segment': '002',
       'suffix': 'uncal',
       'visit': '001'}),
+
+    # Test msa file
+    ('jw02560013001_01_msa.fits',
+     {'program_id': '02560',
+      'observation': '013',
+      'visit': '001',
+      'filename_type': 'stage_2_msa',
+      'instrument': 'nirspec'})
 ]
 
 
@@ -370,7 +378,7 @@ def test_filename_parser_whole_filesystem():
     assert not fail, failure_msg
 
 
-def test_filename_parser_nonJWST():
+def test_filename_parser_non_jwst():
     """Attempt to generate a file parameter dictionary from a file
     that is not formatted in the JWST naming convention. Ensure the
     appropriate error is raised.
@@ -383,10 +391,10 @@ def test_filename_parser_nonJWST():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_filesystem_path():
     """Test that a file's location in the filesystem is returned"""
-
-    filename = 'jw96003001001_02201_00001_nrca1_dark.fits'
+    filename = 'jw02733001001_02101_00001_nrcb2_rateints.fits'
     check = filesystem_path(filename)
-    location = os.path.join(get_config()['filesystem'], 'public', 'jw96003', 'jw96003001001', filename)
+    location = os.path.join(get_config()['filesystem'], 'public', 'jw02733',
+                            'jw02733001001', filename)
 
     assert check == location
 

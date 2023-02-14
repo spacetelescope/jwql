@@ -27,7 +27,9 @@ import pytest
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
-from jwql.utils.utils import get_config
+
+if not ON_GITHUB_ACTIONS:
+    from jwql.utils.utils import get_config
 
 
 def test_get_acknowledgements():
@@ -51,7 +53,7 @@ def test_get_all_proposals():
 def test_get_expstart():
     """Tests the ``get_expstart`` function."""
 
-    expstart = data_containers.get_expstart('FGS', 'jw00624008002_06201_00002_guider2')
+    expstart = data_containers.get_expstart('NIRCam', 'jw01068001001_02102_00001_nrcb1')
     assert isinstance(expstart, float)
 
 
@@ -59,7 +61,7 @@ def test_get_expstart():
 def test_get_filenames_by_instrument():
     """Tests the ``get_filenames_by_instrument`` function."""
 
-    filepaths = data_containers.get_filenames_by_instrument('FGS')
+    filepaths = data_containers.get_filenames_by_instrument('NIRCam', '1068')
     assert isinstance(filepaths, list)
     assert len(filepaths) > 0
 
@@ -68,7 +70,7 @@ def test_get_filenames_by_instrument():
 def test_get_filenames_by_proposal():
     """Tests the ``get_filenames_by_proposal`` function."""
 
-    filenames = data_containers.get_filenames_by_proposal('88600')
+    filenames = data_containers.get_filenames_by_proposal('1068')
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -77,7 +79,7 @@ def test_get_filenames_by_proposal():
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
 
-    filenames = data_containers.get_filenames_by_rootname('jw86600008001_02101_00007_guider2')
+    filenames = data_containers.get_filenames_by_rootname('jw01068001001_02102_00001_nrcb1')
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -86,7 +88,7 @@ def test_get_filenames_by_rootname():
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
-    header = data_containers.get_header_info('jw86600008001_02101_00007_guider2_uncal.fits')
+    header = data_containers.get_header_info('jw01068001001_02102_00001_nrcb1', 'uncal')
     assert isinstance(header, dict)
     assert len(header) > 0
 
@@ -95,7 +97,7 @@ def test_get_header_info():
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
 
-    image_info = data_containers.get_image_info('jw86600008001_02101_00007_guider2', False)
+    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1', False)
 
     assert isinstance(image_info, dict)
 
@@ -114,19 +116,10 @@ def test_get_instrument_proposals():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_preview_images_by_instrument():
-    """Tests the ``get_preview_images_by_instrument`` function."""
-
-    preview_images = data_containers.get_preview_images_by_instrument('fgs')
-    assert isinstance(preview_images, list)
-    assert len(preview_images) > 0
-
-
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_preview_images_by_proposal():
     """Tests the ``get_preview_images_by_proposal`` function."""
 
-    preview_images = data_containers.get_preview_images_by_proposal('88600')
+    preview_images = data_containers.get_preview_images_by_proposal('1033')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -135,7 +128,7 @@ def test_get_preview_images_by_proposal():
 def test_get_preview_images_by_rootname():
     """Tests the ``get_preview_images_by_rootname`` function."""
 
-    preview_images = data_containers.get_preview_images_by_rootname('jw86600008001_02101_00007_guider2')
+    preview_images = data_containers.get_preview_images_by_rootname('jw02589001001_02101_00001-seg001_nis')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -144,7 +137,7 @@ def test_get_preview_images_by_rootname():
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
 
-    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw00300', '*.fits'))
+    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw01068', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
     assert isinstance(proposal_info, dict)
@@ -155,37 +148,33 @@ def test_get_proposal_info():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_thumbnails_by_instrument():
-    """Tests the ``get_thumbnails_by_instrument`` function."""
-
-    preview_images = data_containers.get_thumbnails_by_instrument('fgs')
-    assert isinstance(preview_images, list)
-    assert len(preview_images) > 0
-
-
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_thumbnails_by_proposal():
     """Tests the ``get_thumbnails_by_proposal`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_proposal('88600')
+    preview_images = data_containers.get_thumbnails_by_proposal('01033')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_thumbnails_by_rootname():
-    """Tests the ``get_thumbnails_by_rootname`` function."""
+def test_get_thumbnail_by_rootname():
+    """Tests the ``get_thumbnail_by_rootname`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_rootname('jw86600008001_02101_00007_guider2')
-    assert isinstance(preview_images, list)
+    preview_images = data_containers.get_thumbnail_by_rootname('jw02589001001_02101_00001-seg001_nis')
+    assert isinstance(preview_images, str)
     assert len(preview_images) > 0
+    assert preview_images != 'none'
+    preview_images = data_containers.get_thumbnail_by_rootname('invalid_rootname')
+    assert isinstance(preview_images, str)
+    assert len(preview_images) > 0
+    assert preview_images == 'none'
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_thumbnails_ajax():
     """Tests the ``get_thumbnails_ajax`` function."""
 
-    thumbnail_dict = data_containers.thumbnails_ajax('FGS')
+    thumbnail_dict = data_containers.thumbnails_ajax('NIRCam', '1068')
 
     assert isinstance(thumbnail_dict, dict)
 
