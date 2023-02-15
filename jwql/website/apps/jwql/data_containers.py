@@ -944,7 +944,7 @@ def get_instrument_looks(instrument, keys=None, viewed=None):
         List of looks information by observation for the given instrument.
     """
     # standardize input
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
     if keys is None:
         keys = []
 
