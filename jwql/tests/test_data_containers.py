@@ -171,25 +171,35 @@ def test_get_instrument_proposals():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-@pytest.mark.parametrize('keys', [None, [],
-                                  ['proposal', 'obsnum', 'other',
-                                   'prop_id', 'obsstart']])
-def test_get_instrument_looks(keys):
+@pytest.mark.parametrize('keys,viewed',
+                         [(None, True), (None, False), (None, None),
+                          ([], True), ([], False), ([], None),
+                          (['proposal', 'obsnum', 'other',
+                            'prop_id', 'obsstart'], True),
+                          (['proposal', 'obsnum', 'other',
+                            'prop_id', 'obsstart'], False),
+                          (['proposal', 'obsnum', 'other',
+                            'prop_id', 'obsstart'], None)])
+def test_get_instrument_looks(keys, viewed):
     """Tests the ``get_instrument_looks`` function."""
 
-    looks = data_containers.get_instrument_looks('nirspec', keys=keys)
+    looks = data_containers.get_instrument_looks(
+        'nirspec', keys=keys, viewed=viewed)
     assert isinstance(looks, list)
-    assert len(looks) > 0
-    first_file = looks[0]
-    assert first_file['root_name'] != ''
-    assert isinstance(first_file['viewed'], bool)
-    if keys is not None:
-        assert len(first_file) == 2 + len(keys)
-        for key in keys:
-            assert key in first_file
-    else:
-        # only root name and looks by default
-        assert len(first_file) == 2
+
+    # viewed depends on local database, so may or may not have results
+    if not viewed:
+        assert len(looks) > 0
+        first_file = looks[0]
+        assert first_file['root_name'] != ''
+        assert isinstance(first_file['viewed'], bool)
+        if keys is not None:
+            assert len(first_file) == 2 + len(keys)
+            for key in keys:
+                assert key in first_file
+        else:
+            # only root name and looks by default
+            assert len(first_file) == 2
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
