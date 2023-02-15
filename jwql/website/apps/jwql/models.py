@@ -120,7 +120,7 @@ class RootFileInfo(models.Model):
 
 
 class Anomalies(models.Model):
-    """ All Potentially Anomalies that can be associated with a RootFile Info """
+    """ All Potential Anomalies that can be associated with a RootFileInfo """
     # Note: Using one to one relationship.  Cann access Anomalies by 'rootfileinfo_object.anomalies'
     root_file_info = models.OneToOneField(
         RootFileInfo,
