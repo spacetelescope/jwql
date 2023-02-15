@@ -597,6 +597,33 @@ function toggle_viewed(file_root, base_url) {
     });
 }
 
+/**
+ * Download filtered data report
+ * @param {String} inst - The instrument in use
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function download_report(inst, base_url) {
+    var elem = document.getElementById('download_report_button');
+    elem.disabled = true;
+
+    // todo: include all filters
+    // current look filter
+    var look_status = document.getElementById('look_dropdownMenuButton')
+    if (look_status != null) {
+        look = look_status.innerText.toLowerCase();
+    } else {
+        look = 'all';
+    }
+    if (look.includes('all')) {
+        report_url = '/' + inst + '/report/';
+    } else {
+        report_url = '/' + inst + '/report/' + look + '/';
+    }
+
+    // redirect to download content
+    window.location = base_url + report_url;
+    elem.disabled = false;
+}
 
 /**
  * Updates various compnents on the archive page

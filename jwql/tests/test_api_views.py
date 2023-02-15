@@ -42,8 +42,8 @@ urls.append('api/proposals/')  # all_proposals
 for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
     urls.append('api/{}/looks/'.format(instrument))  # instrument_looks
-    urls.append('api/{}/viewed/'.format(instrument))  # instrument_viewed
-    urls.append('api/{}/new/'.format(instrument))  # instrument_new
+    urls.append('api/{}/looks/viewed/'.format(instrument))  # instrument_viewed
+    urls.append('api/{}/looks/new/'.format(instrument))  # instrument_new
 
 # Proposal-specific URLs
 proposals = ['2640', '02733', '1541', '02589']

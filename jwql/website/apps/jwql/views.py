@@ -44,6 +44,7 @@ Dependencies
 from collections import defaultdict
 from copy import deepcopy
 import csv
+import datetime
 import glob
 import logging
 import os
@@ -70,6 +71,7 @@ from .data_containers import get_edb_components
 from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
+from .data_containers import get_instrument_looks
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import random_404_page
 from .data_containers import text_scrape
@@ -563,6 +565,55 @@ def dashboard(request):
                'time_deltas': time_deltas}
 
     return render(request, template, context)
+
+
+def download_report(request, inst, status='all'):
+    """Download data report by look status.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+    inst : str
+        The JWST instrument of interest.
+    status : str, optional
+        If set to None or 'all', all viewed values are returned. If set to
+        'viewed', only viewed data is returned. If set to 'new', only
+        new data is returned.
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # TODO: define more useful keys by instrument in config
+    # currently, optional keys are just the values available
+    # in local models
+    optional_keys = ['proposal', 'obsnum', 'number_of_files',
+                     'exptypes', 'obsstart', 'obsend']
+    full_keys = ['root_name', 'viewed'] + optional_keys
+
+    # get all observation looks from file info model
+    # and join with observation descriptors
+    if status == 'viewed':
+        viewed = True
+    elif status == 'new':
+        viewed = False
+    else:
+        viewed = None
+    looks = get_instrument_looks(inst, keys=optional_keys, viewed=viewed)
+
+    today = datetime.datetime.now().strftime('%Y%m%d')
+    filename = f'{inst}_{status}_{today}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow(full_keys)
+    for row in looks:
+        writer.writerow(row.values())
+
+    return response
 
 
 def engineering_database(request):

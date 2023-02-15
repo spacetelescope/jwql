@@ -27,6 +27,7 @@ Authors
 
     - Matthew Bourque
     - Teagan King
+    - Melanie Clarke
 
 Use
 ---
@@ -138,7 +139,7 @@ def instrument_proposals(request, inst):
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
-def instrument_looks(request, inst, viewed=None):
+def instrument_looks(request, inst, status=None):
     """Return a table of looks information for the given instrument.
 
     'Viewed' indicates whether an observation is new or has been reviewed
@@ -152,15 +153,15 @@ def instrument_looks(request, inst, viewed=None):
         Incoming request from the webpage.
     inst : str
         The JWST instrument of interest.
-    viewed : bool, optional
+    status : str, optional
         If set to None, all viewed values are returned. If set to
-        True, only viewed data is returned. If set to False, only
+        'viewed', only viewed data is returned. If set to 'new', only
         new data is returned.
 
     Returns
     -------
-    JsonResponse object
-        Outgoing response sent to the webpage
+    JsonResponse
+        Outgoing response sent to the webpage, depending on return_type.
     """
     # TODO: define more useful keys by instrument in config
     # currently, optional keys are just the values available
@@ -171,59 +172,19 @@ def instrument_looks(request, inst, viewed=None):
 
     # get all observation looks from file info model
     # and join with observation descriptors
+    viewed = str(status) == 'viewed'
     looks = get_instrument_looks(inst, keys=optional_keys, viewed=viewed)
 
     # return results by api key
-    if viewed is None:
-        key = 'looks'
-    elif viewed:
-        key = 'viewed'
-    else:
-        key = 'new'
+    if status is None:
+        status = 'looks'
 
-    return JsonResponse({'instrument': inst,
-                         'keys': full_keys,
-                         key: looks}, json_dumps_params={'indent': 2})
-
-
-def instrument_viewed(request, inst):
-    """Return a table of information on viewed data for the given instrument.
-
-    Calls `instrument_looks` with viewed=True.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage.
-    inst : str
-        The JWST instrument of interest.
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-    return instrument_looks(request, inst, viewed=True)
-
-
-def instrument_new(request, inst):
-    """Return a table of information on new data for the given instrument.
-
-    Calls `instrument_looks` with viewed=False.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage.
-    inst : str
-        The JWST instrument of interest.
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-    return instrument_looks(request, inst, viewed=False)
+    response = JsonResponse({'instrument': inst,
+                             'keys': full_keys,
+                             'type': status,
+                             status: looks},
+                            json_dumps_params={'indent': 2})
+    return response
 
 
 def preview_images_by_proposal(request, proposal):
