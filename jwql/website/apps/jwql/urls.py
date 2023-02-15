@@ -72,7 +72,7 @@ urlpatterns = [
 
     # Main site views
     path('about/', views.about, name='about'),
-    path('anomaly_query/', views.anomaly_query, name='anomaly_query'),
+    path('jwql_query/', views.jwql_query, name='jwql_query'),
     path('api/', views.api_landing, name='api'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('download_table/<str:tablename>', views.export, name='download_table'),
@@ -111,5 +111,5 @@ urlpatterns = [
     re_path(r'^api/(?P<proposal>[\d]{1,5})/thumbnails/$', api_views.thumbnails_by_proposal, name='preview_images_by_proposal'),
     re_path(r'^api/(?P<rootname>[\w]+)/filenames/$', api_views.filenames_by_rootname, name='filenames_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
-    re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnails_by_rootname, name='thumbnails_by_rootname'),
+    re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnail_by_rootname, name='thumbnail_by_rootname'),
 ]

@@ -76,8 +76,8 @@ class BaseForm(forms.Form):
     resolve_submit = SubmitField('Resolve Target')
 
 
-class AnomalyQueryForm(BaseForm):
-    """Form validation for the anomaly viewing tool"""
+class JwqlQueryForm(BaseForm):
+    """Form validation for the JWQL Query viewing tool"""
 
     # Form submits
     calculate_submit = SubmitField()

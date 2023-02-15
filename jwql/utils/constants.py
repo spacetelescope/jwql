@@ -418,6 +418,36 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
 
+# Keep keys defined via class as they are used many places with potential mispellings
+class QUERY_CONFIG_KEYS:
+    ANOMALIES = "ANOMALIES"
+    APERTURES = "APERTURES"
+    DETECTORS = "DETECTORS"
+    EXP_TIME_MAX = "EXP_TIME_MAX"
+    EXP_TIME_MIN = "EXP_TIME_MIN"
+    EXP_TYPES = "EXP_TYPES"
+    FILTERS = "FILTERS"
+    GRATINGS = "GRATINGS"
+    INSTRUMENTS = "INSTRUMENTS"
+    READ_PATTS = "READ_PATTS"
+    THUMBNAILS = "THUMBNAILS"
+
+
+# Template for parameters to be stored in "query_config" session for query_page
+QUERY_CONFIG_TEMPLATE = {
+    QUERY_CONFIG_KEYS.ANOMALIES: {},
+    QUERY_CONFIG_KEYS.APERTURES: {},
+    QUERY_CONFIG_KEYS.DETECTORS: {},
+    QUERY_CONFIG_KEYS.EXP_TIME_MAX: ['999999999999999'],
+    QUERY_CONFIG_KEYS.EXP_TIME_MIN: ['0'],
+    QUERY_CONFIG_KEYS.EXP_TYPES: {},
+    QUERY_CONFIG_KEYS.FILTERS: {},
+    QUERY_CONFIG_KEYS.GRATINGS: {},
+    QUERY_CONFIG_KEYS.INSTRUMENTS: [],
+    QUERY_CONFIG_KEYS.READ_PATTS: {},
+    QUERY_CONFIG_KEYS.THUMBNAILS: []
+    }
+
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
 RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],

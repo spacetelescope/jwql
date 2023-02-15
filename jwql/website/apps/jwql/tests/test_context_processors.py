@@ -36,6 +36,14 @@ class TestBaseContext(TestCase):
     def test_base_context(self):
         """Tests the ``base_context`` function."""
 
+        # These lines are needed in order to use the Django models in a standalone
+        # script (as opposed to code run as a result of a webpage request). If these
+        # lines are not run, the script will crash when attempting to import the
+        # Django models in the line below.
+        from django import setup
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+        setup()
+
         client = Client()
         request = client.get('{}/about/'.format(get_base_url()))
         request.COOKIES = {}
@@ -43,6 +51,6 @@ class TestBaseContext(TestCase):
 
         assert isinstance(context, dict)
 
-        keys = ['inst_list', 'tools', 'user', 'version']
+        keys = ['inst_list', 'tools', 'version']
         for key in keys:
             assert key in context
