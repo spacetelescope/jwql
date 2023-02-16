@@ -224,7 +224,7 @@ def collect_after_task(**kwargs):
     gc.collect()
 
 
-def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores='all'):
+def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores):
     command = "{} {} {} '{}' {} {} {} {}"
     command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores)
     logging.info("Running {}".format(command))
@@ -313,7 +313,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                 core_fail = True
             logging.error("\t{}".format(line.strip()))
         if core_fail:
-            cores = "10"
+            cores = "half"
             status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
@@ -326,7 +326,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                         core_fail = True
                     logging.error("\t{}".format(line.strip()))
                 if core_fail:
-                    cores = "1"
+                    cores = "none"
                     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
                                             input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
@@ -425,7 +425,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                 core_fail = True
             logging.error("\t{}".format(line.strip()))
         if core_fail:
-            cores = "10"
+            cores = "half"
             status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
@@ -438,7 +438,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                         core_fail = True
                     logging.error("\t{}".format(line.strip()))
                 if core_fail:
-                    cores = "1"
+                    cores = "none"
                     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
                                             input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
