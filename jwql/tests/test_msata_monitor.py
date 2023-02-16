@@ -30,7 +30,7 @@ from bokeh.plotting import figure
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors.msata_monitor import MSATA
 from jwql.database.database_interface import NIRSpecTAQueryHistory
 from jwql.utils.utils import get_config, ensure_dir_exists
-from jwql.utils import monitor_utils
+from jwql.utils import monitor_utils, permissions
 
 
 
@@ -313,9 +313,16 @@ def test_mk_plt_layout():
     ta = MSATA()
     ta.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor/tests')
     ensure_dir_exists(ta.output_dir)
+
     ta.output_file_name = os.path.join(ta.output_dir, "msata_layout.html")
     ta.msata_data = define_testdata()
     script, div = ta.mk_plt_layout()
+
+    # set group write permission for the test file
+    # to make sure others can overwrite it
+    owner = permissions.get_owner_string(ta.output_file_name)
+    permissions.set_permissions(ta.output_file_name,
+                                owner=owner, mode=0o664)
 
     assert type(truth_script) == type(script)
     assert type(truth_div) == type(div)

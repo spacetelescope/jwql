@@ -53,7 +53,7 @@ def test_get_all_proposals():
 def test_get_expstart():
     """Tests the ``get_expstart`` function."""
 
-    expstart = data_containers.get_expstart('NIRCam', 'jw01068001001_02102_00001_nrcb3')
+    expstart = data_containers.get_expstart('NIRCam', 'jw01068001001_02102_00001_nrcb1')
     assert isinstance(expstart, float)
 
 
@@ -79,7 +79,7 @@ def test_get_filenames_by_proposal():
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
 
-    filenames = data_containers.get_filenames_by_rootname('jw01068001001_02102_00001_nrcb3')
+    filenames = data_containers.get_filenames_by_rootname('jw01068001001_02102_00001_nrcb1')
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -88,7 +88,7 @@ def test_get_filenames_by_rootname():
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
-    header = data_containers.get_header_info('jw01068001001_02102_00001_nrcb3', 'uncal')
+    header = data_containers.get_header_info('jw01068001001_02102_00001_nrcb1', 'uncal')
     assert isinstance(header, dict)
     assert len(header) > 0
 
@@ -97,7 +97,7 @@ def test_get_header_info():
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
 
-    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb3', False)
+    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1', False)
 
     assert isinstance(image_info, dict)
 
@@ -119,7 +119,7 @@ def test_get_instrument_proposals():
 def test_get_preview_images_by_proposal():
     """Tests the ``get_preview_images_by_proposal`` function."""
 
-    preview_images = data_containers.get_preview_images_by_proposal('1068')
+    preview_images = data_containers.get_preview_images_by_proposal('1033')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -128,7 +128,7 @@ def test_get_preview_images_by_proposal():
 def test_get_preview_images_by_rootname():
     """Tests the ``get_preview_images_by_rootname`` function."""
 
-    preview_images = data_containers.get_preview_images_by_rootname('jw01068001001_02102_00001_nrcb3')
+    preview_images = data_containers.get_preview_images_by_rootname('jw02589001001_02101_00001-seg001_nis')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -151,18 +151,23 @@ def test_get_proposal_info():
 def test_get_thumbnails_by_proposal():
     """Tests the ``get_thumbnails_by_proposal`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_proposal('01068')
+    preview_images = data_containers.get_thumbnails_by_proposal('01033')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_thumbnails_by_rootname():
-    """Tests the ``get_thumbnails_by_rootname`` function."""
+def test_get_thumbnail_by_rootname():
+    """Tests the ``get_thumbnail_by_rootname`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_rootname('jw01068001001_02102_00001_nrcb3')
-    assert isinstance(preview_images, list)
+    preview_images = data_containers.get_thumbnail_by_rootname('jw02589001001_02101_00001-seg001_nis')
+    assert isinstance(preview_images, str)
     assert len(preview_images) > 0
+    assert preview_images != 'none'
+    preview_images = data_containers.get_thumbnail_by_rootname('invalid_rootname')
+    assert isinstance(preview_images, str)
+    assert len(preview_images) > 0
+    assert preview_images == 'none'
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

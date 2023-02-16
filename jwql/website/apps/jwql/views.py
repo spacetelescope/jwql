@@ -57,9 +57,9 @@ import numpy as np
 import socket
 
 from jwql.database.database_interface import load_connection
-from jwql.utils import anomaly_query_config, monitor_utils
+from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -76,7 +76,7 @@ from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .data_containers import thumbnails_date_range_ajax
-from .forms import AnomalyQueryForm
+from .forms import JwqlQueryForm
 from .forms import FileSearchForm
 if not os.environ.get("READTHEDOCS"):
     from .models import Observation, Proposal, RootFileInfo
@@ -85,10 +85,10 @@ from astropy.time import Time
 import astropy.units as u
 
 
-def anomaly_query(request):
+def jwql_query(request):
     """The anomaly query form page"""
 
-    form = AnomalyQueryForm(request.POST or None)
+    form = JwqlQueryForm(request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
@@ -113,22 +113,25 @@ def anomaly_query(request):
                 all_gratings[instrument] = query_configs[instrument]['gratings']
                 all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
-            anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
-            anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
-            anomaly_query_config.APERTURES_CHOSEN = all_apers
-            anomaly_query_config.FILTERS_CHOSEN = all_filters
-            anomaly_query_config.EXPTIME_MIN = str(form.cleaned_data['exp_time_min'])
-            anomaly_query_config.EXPTIME_MAX = str(form.cleaned_data['exp_time_max'])
-            anomaly_query_config.DETECTORS_CHOSEN = all_detectors
-            anomaly_query_config.EXPTYPES_CHOSEN = all_exptypes
-            anomaly_query_config.READPATTS_CHOSEN = all_readpatts
-            anomaly_query_config.GRATINGS_CHOSEN = all_gratings
+            parameters = QUERY_CONFIG_TEMPLATE.copy()
+            parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
+            parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
+            parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
+            parameters[QUERY_CONFIG_KEYS.FILTERS] = all_filters
+            parameters[QUERY_CONFIG_KEYS.DETECTORS] = all_detectors
+            parameters[QUERY_CONFIG_KEYS.EXP_TYPES] = all_exptypes
+            parameters[QUERY_CONFIG_KEYS.READ_PATTS] = all_readpatts
+            parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
+            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MIN] = str(form.cleaned_data['exp_time_min'])
+            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MAX] = str(form.cleaned_data['exp_time_max'])
 
+            # save the query config settings to a session
+            request.session['query_config'] = parameters
             return redirect('/query_submit')
 
     context = {'form': form,
                'inst': ''}
-    template = 'anomaly_query.html'
+    template = 'jwql_query.html'
 
     return render(request, template, context)
 
@@ -506,19 +509,16 @@ def archive_thumbnails_query_ajax(request):
         Outgoing response sent to the webpage
     """
 
+    parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
     # Ensure the instrument is correctly capitalized
     instruments_list = []
-    for instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
+    for instrument in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
         instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
         instruments_list.append(instrument)
 
-    parameters = anomaly_query_config.PARAMETERS
-
     # when parameters only contains nirspec as instrument, thumbnails still end up being all niriss data
     thumbnails = get_thumbnails_all_instruments(parameters)
-
-    anomaly_query_config.THUMBNAILS = thumbnails
-
+    
     data = thumbnails_query_ajax(thumbnails)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     save_page_navigation_data(request, data)
@@ -827,23 +827,9 @@ def query_submit(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
+    
     template = 'query_submit.html'
-
-    parameters = {}
-    parameters['instruments'] = anomaly_query_config.INSTRUMENTS_CHOSEN
-    parameters['apertures'] = anomaly_query_config.APERTURES_CHOSEN
-    parameters['filters'] = anomaly_query_config.FILTERS_CHOSEN
-    parameters['detectors'] = anomaly_query_config.DETECTORS_CHOSEN
-    parameters['exposure_types'] = anomaly_query_config.EXPTYPES_CHOSEN
-    parameters['read_patterns'] = anomaly_query_config.READPATTS_CHOSEN
-    parameters['gratings'] = anomaly_query_config.GRATINGS_CHOSEN
-    parameters['anomalies'] = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-
-    anomaly_query_config.PARAMETERS = parameters
-
     sort_type = request.session.get('image_sort', 'Ascending')
-
     context = {'inst': '',
                'base_url': get_base_url(),
                'sort': sort_type

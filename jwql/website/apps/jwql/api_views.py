@@ -53,7 +53,7 @@ from .data_containers import get_instrument_proposals
 from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_proposal
-from .data_containers import get_thumbnails_by_rootname
+from .data_containers import get_thumbnail_by_rootname
 
 
 def all_proposals(request):
@@ -200,8 +200,8 @@ def thumbnails_by_proposal(request, proposal):
     return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_by_rootname(request, rootname):
-    """Return a list of available thumbnails in the filesystem for the
+def thumbnail_by_rootname(request, rootname):
+    """Return the best available thumbnail in the filesystem for the
     given ``rootname``.
 
     Parameters
@@ -217,5 +217,5 @@ def thumbnails_by_rootname(request, rootname):
         Outgoing response sent to the webpage
     """
 
-    thumbnails = get_thumbnails_by_rootname(rootname)
-    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
+    thumbnail = get_thumbnail_by_rootname(rootname)
+    return JsonResponse({'thumbnails': thumbnail}, json_dumps_params={'indent': 2})

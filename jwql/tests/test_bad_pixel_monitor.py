@@ -174,13 +174,15 @@ def test_identify_tables():
 def test_locate_rate_files():
     """Test that rate files are found in filesystem"""
 
-    uncal_files = ['jw00300002001_02102_00001_mirimage_uncal.fits', 'jw00300002001_0210a_00001_mirimage_uncal.fits']
+    uncal_files = ['jw02733002001_02101_00001_mirimage_uncal.fits',
+                   'jw02733002001_02101_00002_mirimage_uncal.fits']
     ratefiles, ratefiles2copy = bad_pixel_monitor.locate_rate_files(uncal_files)
 
     rates = [os.path.basename(entry) for entry in ratefiles]
     rates2copy = [os.path.basename(entry) for entry in ratefiles2copy]
 
-    expected = ['jw00300002001_02102_00001_mirimage_rateints.fits', 'jw00300002001_0210a_00001_mirimage_rateints.fits']
+    expected = ['jw02733002001_02101_00001_mirimage_rateints.fits',
+                'jw02733002001_02101_00002_mirimage_rateints.fits']
     assert rates == expected
     assert rates2copy == expected
 
@@ -189,8 +191,8 @@ def test_locate_rate_files():
 def test_locate_uncal_files():
     """Test the filesystem search for uncal files
     """
-    file1 = 'jw00300002001_02102_00001_mirimage_rate.fits'
-    file2 = 'jw00300010001_02102_00001_mirifushort_uncal.fits'
+    file1 = 'jw02733002001_02101_00001_mirimage_rate.fits'
+    file2 = 'jw02733002001_02101_00002_mirimage_uncal.fits'
     query_results = [{'filename': file1},
                      {'filename': file2}]
 
