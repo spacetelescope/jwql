@@ -64,6 +64,7 @@ dependencies:
     - pyvo==1.4
     - redis==4.5.1
     - selenium==4.8.0
+    - stdatamodels==0.4.5
     - stsci_rtd_theme==1.0.0
     - vine==5.0.0
     - git+https://github.com/spacetelescope/jwst_reffiles
