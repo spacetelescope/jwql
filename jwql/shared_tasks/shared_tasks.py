@@ -301,7 +301,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
 
     cores = 'all'
     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file, 
-                            short_name, res_file, cores)
+                            short_name, result_file, cores)
     
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
@@ -315,7 +315,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         if core_fail:
             cores = "10"
             status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
-                                    input_file, short_name, res_file, cores)
+                                    input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
             else:
@@ -328,7 +328,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                 if core_fail:
                     cores = "1"
                     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
-                                            input_file, short_name, res_file, cores)
+                                            input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                     else:
@@ -413,7 +413,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
 
     cores = 'all'
     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file, 
-                            short_name, res_file, cores)
+                            short_name, result_file, cores)
     
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
@@ -427,7 +427,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         if core_fail:
             cores = "10"
             status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
-                                    input_file, short_name, res_file, cores)
+                                    input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
             else:
@@ -440,7 +440,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                 if core_fail:
                     cores = "1"
                     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
-                                            input_file, short_name, res_file, cores)
+                                            input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                     else:
