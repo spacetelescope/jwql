@@ -33,7 +33,7 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 
-def run_pipe(input_file, short_name, work_directory, instrument, outputs):
+def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_cores='all'):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
@@ -62,7 +62,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
                 status_f.write("Running step {}\n".format(step_name))
             kwargs = {}
             if step_name in ['jump', 'rate']:
-                kwargs = {'maximum_cores': 'all'}
+                kwargs = {'maximum_cores': max_cores}
             if steps[step_name]:
                 output_file_name = short_name + "_{}.fits".format(step_name)
                 output_file = os.path.join(work_directory, output_file_name)
@@ -116,7 +116,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs):
     # Done.
 
 
-def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=True, save_fitopt=True):
+def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=True, save_fitopt=True, max_cores='all'):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -170,7 +170,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
 
         model.jump.save_results = True
         model.jump.output_dir = work_directory
-        model.jump.maximum_cores = 'all'
+        model.jump.maximum_cores = max_cores
         jump_output = uncal_file.replace('uncal', 'jump')
 
         # Check to see if the jump version of the requested file is already
@@ -179,7 +179,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
 
         if ramp_fit:
             model.ramp_fit.save_results = True
-            model.ramp_fit.maximum_cores = 'all'
+            model.ramp_fit.maximum_cores = max_cores
             # model.save_results = True
             model.output_dir = work_directory
             # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
@@ -232,6 +232,7 @@ if __name__ == '__main__':
     pipe_help = 'Pipeline type to run (valid values are "jump" and "cal")'
     out_help = 'Comma-separated list of output extensions (for cal only, otherwise just "all")'
     name_help = 'Input file name with no path or extensions'
+    cores_help = 'Maximum cores to use (default "all")'
     parser = argparse.ArgumentParser(description='Run local calibration')
     parser.add_argument('pipe', metavar='PIPE', type=str, help=pipe_help)
     parser.add_argument('outputs', metavar='OUTPUTS', type=str, help=out_help)
@@ -239,6 +240,7 @@ if __name__ == '__main__':
     parser.add_argument('instrument', metavar='INSTRUMENT', type=str, help=ins_help)
     parser.add_argument('input_file', metavar='FILE', type=str, help=file_help)
     parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
+    parser.add_argument('max_cores', metavar='CORES', type=str, help=cores_help, default='all')
 
     with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
         status_file.write("Created argument parser at {}\n".format(time.ctime()))
@@ -281,12 +283,12 @@ if __name__ == '__main__':
         if pipe_type == 'jump':
             with open(status_file, 'a+') as out_file:
                 out_file.write("Running jump pipeline.\n")
-            run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True)
+            run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True, max_cores=args.max_cores)
         elif pipe_type == 'cal':
             with open(status_file, 'a+') as out_file:
                 out_file.write("Running cal pipeline.\n")
             outputs = outputs.split(",")
-            run_pipe(input_file, short_name, working_path, instrument, outputs)
+            run_pipe(input_file, short_name, working_path, instrument, outputs, max_cores=args.max_cores)
     except Exception as e:
         with open(status_file, 'a+') as out_file:
             out_file.write("Exception when starting pipeline.\n")

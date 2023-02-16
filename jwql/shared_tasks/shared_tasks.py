@@ -224,6 +224,29 @@ def collect_after_task(**kwargs):
     gc.collect()
 
 
+def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores='all'):
+    cmd = "{} {} {} '{}' {} {} {} {}"
+    cmd = cmd.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores)
+    logging.info("Running {}".format(cmd))
+    process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
+    with process.stderr:
+        log_subprocess_output(process.stderr)
+    result = process.wait()    
+    logging.info("Subprocess result was {}".format(result))
+
+    if not os.path.isfile(res_file):
+        logging.error("Result file was not created.")
+        with open(os.path.join(cal_dir, "general_status.txt")) as status_file:
+            status = status_file.readlines()
+            for line in status:
+                logging.error(line.strip())
+            return status
+        
+    with open(res, 'r') as inf:
+        status = inf.readlines()
+    return status
+
+
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
 def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
@@ -275,33 +298,41 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     outputs = ",".join(ext_or_exts)
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
     calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in ext_or_exts]
-    
-    msg = "Running {} cal {} {} {} {} {}"
-    logging.info(msg.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name))
-    
-    cmd = "{} cal {} '{}' {} {} {}"
-    cmd = cmd.format(cmd_name, outputs, cal_dir, instrument, input_file, short_name)
-    process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
-    with process.stderr:
-        log_subprocess_output(process.stderr)
-    result = process.wait()    
-    logging.info("Subprocess result was {}".format(result))
 
-    if not os.path.isfile(result_file):
-        logging.error("Result file was not created.")
-        with open(os.path.join(cal_dir, "general_status.txt")) as status_file:
-            for line in status_file.readlines():
-                logging.error(line.strip())
-        
-    with open(result_file, 'r') as inf:
-        status = inf.readlines()
+    cores = 'all'
+    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file, 
+                            short_name, res_file, cores)
     
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
         logging.error("Pipeline subprocess failed.")
+        core_fail = False
         for line in status:
+            if "[Errno 12] Cannot allocate memory" in line:
+                core_fail = True
             logging.error("\t{}".format(line.strip()))
+        if core_fail:
+            cores = "10"
+            status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
+                                    input_file, short_name, res_file, cores)
+            if status[-1].strip() == "SUCCEEDED":
+                logging.info("Subprocess reports successful finish.")
+            else:
+                logging.error("Pipeline subprocess failed.")
+                core_fail = False
+                for line in status:
+                    if "[Errno 12] Cannot allocate memory" in line:
+                        core_fail = True
+                    logging.error("\t{}".format(line.strip()))
+                if core_fail:
+                    cores = "1"
+                    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
+                                            input_file, short_name, res_file, cores)
+                    if status[-1].strip() == "SUCCEEDED":
+                        logging.info("Subprocess reports successful finish.")
+                    else:
+                        logging.error("Pipeline subprocess failed.")
         raise ValueError("Pipeline Failed")
     
     for file in calibrated_files:
@@ -380,29 +411,40 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
-    cmd = "{} jump all '{}' {} {} {}"
-    cmd = cmd.format(cmd_name, cal_dir, instrument, input_file, short_name)
-    process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
-    with process.stderr:
-        log_subprocess_output(process.stderr)
-    result = process.wait()
-    logging.info("Subprocess result was {}".format(result))
-
-    if not os.path.isfile(result_file):
-        logging.error("Result file was not created.")
-        with open(os.path.join(cal_dir, "general_status.txt")) as status_file:
-            for line in status_file.readlines():
-                logging.error(line.strip())
+    cores = 'all'
+    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file, 
+                            short_name, res_file, cores)
     
-    with open(result_file, 'r') as inf:
-        status = inf.readlines()
-
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
         logging.error("Pipeline subprocess failed.")
+        core_fail = False
         for line in status:
+            if "[Errno 12] Cannot allocate memory" in line:
+                core_fail = True
             logging.error("\t{}".format(line.strip()))
+        if core_fail:
+            cores = "10"
+            status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
+                                    input_file, short_name, res_file, cores)
+            if status[-1].strip() == "SUCCEEDED":
+                logging.info("Subprocess reports successful finish.")
+            else:
+                logging.error("Pipeline subprocess failed.")
+                core_fail = False
+                for line in status:
+                    if "[Errno 12] Cannot allocate memory" in line:
+                        core_fail = True
+                    logging.error("\t{}".format(line.strip()))
+                if core_fail:
+                    cores = "1"
+                    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
+                                            input_file, short_name, res_file, cores)
+                    if status[-1].strip() == "SUCCEEDED":
+                        logging.info("Subprocess reports successful finish.")
+                    else:
+                        logging.error("Pipeline subprocess failed.")
         raise ValueError("Pipeline Failed")
 
     files = {"jump_output": None, "pipe_output": None, "fitopt_output": None}
