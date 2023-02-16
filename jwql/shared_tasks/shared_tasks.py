@@ -225,10 +225,10 @@ def collect_after_task(**kwargs):
 
 
 def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores='all'):
-    cmd = "{} {} {} '{}' {} {} {} {}"
-    cmd = cmd.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores)
-    logging.info("Running {}".format(cmd))
-    process = Popen(cmd, shell=True, executable="/bin/bash", stderr=PIPE)
+    command = "{} {} {} '{}' {} {} {} {}"
+    command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores)
+    logging.info("Running {}".format(command))
+    process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)
     with process.stderr:
         log_subprocess_output(process.stderr)
     result = process.wait()    
