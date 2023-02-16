@@ -47,6 +47,7 @@ class Archive(models.Model):
     # …
     # Metadata
     class Meta:
+        app_label = 'jwql'
         ordering = ['instrument']
 
     def __str__(self):
@@ -63,6 +64,7 @@ class Proposal(models.Model):
 
     # Metadata
     class Meta:
+        app_label = 'jwql'
         ordering = ['-prop_id']
         unique_together = ('prop_id', 'archive')
         models.UniqueConstraint(fields=['prop_id', 'archive'], name='unique_instrument_proposal')
@@ -85,6 +87,7 @@ class Observation(models.Model):
     # …
     # Metadata
     class Meta:
+        app_label = 'jwql'
         ordering = ['-obsnum']
         models.UniqueConstraint(fields=['proposal', 'obsnum'], name='unique_proposal_obsnum')
 
@@ -103,6 +106,7 @@ class RootFileInfo(models.Model):
 
     # Metadata
     class Meta:
+        app_label = 'jwql'
         ordering = ['-root_name']
 
     def __str__(self):

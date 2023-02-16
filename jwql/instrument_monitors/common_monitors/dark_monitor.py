@@ -574,8 +574,8 @@ class Dark():
     def overplot_bad_pix(self, pix_type, coords, values):
         """Add a scatter plot of potential new bad pixels to the plot
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         pix_type : str
             Type of bad pixel. "hot", "dead", or "noisy"
 
@@ -1176,7 +1176,7 @@ class Dark():
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
 
-            # If the number of bins is smaller than the number of paramters
+            # If the number of bins is smaller than the number of parameters
             # to be fit, then we need to increase the number of bins
             if len(bin_edges) < 7:
                 logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
