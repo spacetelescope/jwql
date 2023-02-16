@@ -242,7 +242,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
                 logging.error(line.strip())
             return status
         
-    with open(res, 'r') as inf:
+    with open(res_file, 'r') as inf:
         status = inf.readlines()
     return status
 
