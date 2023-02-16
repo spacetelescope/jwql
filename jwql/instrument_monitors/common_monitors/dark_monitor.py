@@ -312,7 +312,7 @@ class Dark():
 
                 # Collect information about the file this image was compared against
                 if baseline_file is not None:
-                    base_parts = baseline_file.split('_')
+                    base_parts = os.path.basename(baseline_file).split('_')
 
                     # Get the starting and ending time from the filename.
                     base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
