@@ -606,27 +606,31 @@ function download_report(inst, base_url) {
     var elem = document.getElementById('download_report_button');
     elem.disabled = true;
 
-    // todo: include all filters
-    // current look filter
-    var look_status = document.getElementById('look_dropdownMenuButton')
-    if (look_status != null) {
-        look = look_status.innerText.toLowerCase();
-    } else {
-        look = 'all';
-    }
-    if (look.includes('all')) {
-        report_url = '/' + inst + '/report/';
-    } else {
-        report_url = '/' + inst + '/report/' + look + '/';
-    }
+    // Get sort value
+    var sort_option = document.getElementById('sort_dropdownMenuButton').innerText;
+    var options = '?sort_as=' + sort_option.toLowerCase();
 
-    // redirect to download content
+    // Get all filter values
+    var filter_div = document.getElementById('thumbnail-filter');
+    var filters = filter_div.getElementsByClassName('dropdown-toggle');
+
+    for (var i=0; i < filters.length; i++) {
+        var name = filters[i].id.split('_dropdownMenuButton')[0];
+        var status = filters[i].innerText.toLowerCase();
+        if (!status.includes('all')) {
+            options += '&' + name + '=' + status;
+        };
+    };
+    var report_url = '/' + inst + '/report' + options;
+    console.log('Redirecting to: ' + report_url);
+
+    // Redirect to download content
     window.location = base_url + report_url;
     elem.disabled = false;
 }
 
 /**
- * Updates various compnents on the archive page
+ * Updates various components on the archive page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */

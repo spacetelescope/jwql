@@ -171,20 +171,30 @@ def test_get_instrument_proposals():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-@pytest.mark.parametrize('keys,viewed',
-                         [(None, True), (None, False), (None, None),
-                          ([], True), ([], False), ([], None),
+@pytest.mark.parametrize('keys,viewed,sort_as,exp_type,cat_type',
+                         [(None, None, None, None, None),
+                          (None, 'viewed', None, None, None),
+                          (None, 'new', None, None, None),
+                          (None, None, None, 'NRS_MSATA', None),
+                          # (None, None, None, None, 'CAL'),  # cat_type not implemented yet
+                          (['obsstart'], False, 'ascending', None, None),
+                          (['obsstart'], False, 'descending', None, None),
+                          (['obsstart'], False, 'recent', None, None),
+                          ([], True, None, None, None),
+                          ([], False, None, None, None),
+                          ([], None, None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], True),
+                            'prop_id', 'obsstart'], True, None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], False),
+                            'prop_id', 'obsstart'], False, None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], None)])
-def test_get_instrument_looks(keys, viewed):
+                            'prop_id', 'obsstart'], None, None, None, None)])
+def test_get_instrument_looks(keys, viewed, sort_as, exp_type, cat_type):
     """Tests the ``get_instrument_looks`` function."""
 
     return_keys, looks = data_containers.get_instrument_looks(
-        'nirspec', additional_keys=keys, viewed=viewed)
+        'nirspec', additional_keys=keys, look=viewed, sort_as=sort_as,
+        exp_type=exp_type, cat_type=cat_type)
     assert isinstance(return_keys, list)
     assert isinstance(looks, list)
 
@@ -199,7 +209,7 @@ def test_get_instrument_looks(keys, viewed):
         assert len(return_keys) >= 1 + len(keys)
 
     # viewed depends on local database, so may or may not have results
-    if not viewed:
+    if not viewed == 'viewed':
         assert len(looks) > 0
         first_file = looks[0]
         assert first_file['root_name'] != ''
@@ -207,6 +217,14 @@ def test_get_instrument_looks(keys, viewed):
         assert len(first_file) == len(return_keys)
         for key in return_keys:
             assert key in first_file
+
+        last_file = looks[-1]
+        if sort_as == 'ascending':
+            assert last_file['root_name'] > first_file['root_name']
+        elif sort_as == 'recent':
+            assert last_file['obsstart'] < first_file['obsstart']
+        else:
+            assert last_file['root_name'] < first_file['root_name']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

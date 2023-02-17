@@ -85,12 +85,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/archive_date_range/$'.format(instruments), views.archive_date_range, name='archive_date_range'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
-
-    re_path(r'^(?P<inst>({}))/report/$'.format(instruments),
-            views.download_report, name='download_report'),
-    re_path(r'^(?P<inst>({}))/report/(?P<status>(viewed|new))/$'.format(instruments),
-            views.download_report, name='download_report_by_status'),
-    
+    re_path(r'^(?P<inst>({}))/report/$'.format(instruments), views.download_report, name='download_report'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w-]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/'.format(instruments), views.explore_image, name='explore_image'),
     re_path(r'^(?P<inst>({}))/(?P<filename>.+)_(?P<filetype>.+)/header/'.format(instruments), views.view_header, name='view_header'),

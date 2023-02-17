@@ -163,17 +163,9 @@ def instrument_looks(request, inst, status=None):
     JsonResponse
         Outgoing response sent to the webpage, depending on return_type.
     """
-    # parse desired look status
-    if status == 'viewed':
-        viewed = True
-    elif status == 'new':
-        viewed = False
-    else:
-        viewed = None
-
     # get all observation looks from file info model
     # and join with observation descriptors
-    keys, looks = get_instrument_looks(inst, viewed=viewed)
+    keys, looks = get_instrument_looks(inst, look=status)
 
     # return results by api key
     if status is None:
