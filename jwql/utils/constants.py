@@ -418,6 +418,7 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
 
+
 # Keep keys defined via class as they are used many places with potential mispellings
 class QUERY_CONFIG_KEYS:
     ANOMALIES = "ANOMALIES"
@@ -467,6 +468,17 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                            'niriss': ['NISRAPID', 'NIS'],
                            'nirspec': ['NRS', 'NRSRAPID', 'NRSIRS2RAPID',
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
+
+
+REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'obsnum', 'number_of_files',
+                                      'exptypes', 'obsstart', 'obsend'],
+                              'miri': ['proposal', 'obsnum', 'number_of_files',
+                                       'exptypes', 'obsstart', 'obsend'],
+                              'nircam': ['proposal', 'obsnum', 'number_of_files',
+                                         'exptypes', 'obsstart', 'obsend'],
+                              'niriss': ['proposal', 'obsnum', 'number_of_files',
+                                         'exptypes', 'obsstart', 'obsend'],
+                              'nirspec': ['exptypes', 'viewed']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 

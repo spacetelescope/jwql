@@ -183,9 +183,20 @@ def test_get_instrument_proposals():
 def test_get_instrument_looks(keys, viewed):
     """Tests the ``get_instrument_looks`` function."""
 
-    looks = data_containers.get_instrument_looks(
-        'nirspec', keys=keys, viewed=viewed)
+    return_keys, looks = data_containers.get_instrument_looks(
+        'nirspec', additional_keys=keys, viewed=viewed)
+    assert isinstance(return_keys, list)
     assert isinstance(looks, list)
+
+    # returned keys always contains at least root name
+    assert len(return_keys) > 1
+    assert 'root_name' in return_keys
+    assert 'viewed' in return_keys
+
+    # they may also contain some keys from the instrument
+    # and any additional keys specified
+    if keys is not None:
+        assert len(return_keys) >= 1 + len(keys)
 
     # viewed depends on local database, so may or may not have results
     if not viewed:
@@ -193,13 +204,9 @@ def test_get_instrument_looks(keys, viewed):
         first_file = looks[0]
         assert first_file['root_name'] != ''
         assert isinstance(first_file['viewed'], bool)
-        if keys is not None:
-            assert len(first_file) == 2 + len(keys)
-            for key in keys:
-                assert key in first_file
-        else:
-            # only root name and looks by default
-            assert len(first_file) == 2
+        assert len(first_file) == len(return_keys)
+        for key in return_keys:
+            assert key in first_file
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

@@ -586,13 +586,6 @@ def download_report(request, inst, status='all'):
     response : HttpResponse object
         Outgoing response sent to the webpage
     """
-    # TODO: define more useful keys by instrument in config
-    # currently, optional keys are just the values available
-    # in local models
-    optional_keys = ['proposal', 'obsnum', 'number_of_files',
-                     'exptypes', 'obsstart', 'obsend']
-    full_keys = ['root_name', 'viewed'] + optional_keys
-
     # get all observation looks from file info model
     # and join with observation descriptors
     if status == 'viewed':
@@ -601,7 +594,7 @@ def download_report(request, inst, status='all'):
         viewed = False
     else:
         viewed = None
-    looks = get_instrument_looks(inst, keys=optional_keys, viewed=viewed)
+    keys, looks = get_instrument_looks(inst, viewed=viewed)
 
     today = datetime.datetime.now().strftime('%Y%m%d')
     filename = f'{inst}_{status}_{today}.csv'
@@ -609,7 +602,7 @@ def download_report(request, inst, status='all'):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
-    writer.writerow(full_keys)
+    writer.writerow(keys)
     for row in looks:
         writer.writerow(row.values())
 
