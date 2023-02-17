@@ -20,6 +20,11 @@ Use
 import os
 
 from astropy.io import fits
+from bokeh.embed import components, file_html
+from bokeh.layouts import layout
+from bokeh.models import ColumnDataSource, Panel, Tabs, Text
+from bokeh.plotting import figure
+from bokeh.resources import CDN
 import datetime
 import numpy as np
 
@@ -31,12 +36,237 @@ from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpe
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.utils.constants import BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filesystem_path
-from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-class BadPixelMonitor(BokehTemplate):
+"""
+class BadPixMonitorData():
+    def __init__(self):
+        pass
+
+
+class BadPixFigure():
+    def __init__(self):
+        pass
+
+class BadPixPlots():
+    #top-level class
+
+    # Get the data from the database
+    m = BadPixMonitorData()
+
+
+    # Create the figures
+    for badpix_type in badpix_types:
+        p = BadPixFigure()
+"""
+
+class BadPixelPlots():
+    """Class for creating the bad pixel plots and figures to be displayed in the web app
+    """
+    def __init__(self, instrument):
+        self.instrument = instrument.lower()
+        #self.apertures = self.get_inst_apers()
+        self.apertures = ['aper1', 'aper2', 'aper3']
+        self.run()
+
+    def modify_bokeh_saved_html(self):
+        """Given an html string produced by Bokeh when saving bad pixel monitor plots,
+        make tweaks such that the page follows the general JWQL page formatting.
+        """
+        lines = self.html.split('\n')
+
+        # List of lines that Bokeh likes to save in the file, but we don't want
+        lines_to_remove = ["<!DOCTYPE html>",
+                           '<html lang="en">',
+                           '  </body>',
+                           '</html>']
+
+        # Our Django-related lines that need to be at the top of the file
+        newlines = ['{% extends "base.html" %}\n', "\n",
+                    "{% block preamble %}\n", "\n",
+                    f"<title>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Monitor- JWQL</title>\n", "\n",
+                    "{% endblock %}\n", "\n",
+                    "{% block content %}\n", "\n",
+                    '  <main role="main" class="container">\n', "\n",
+                    f"  <h1>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Monitor</h1>\n",
+                    "  <hr>\n",
+                    ]
+
+        # More lines that we want to have in the html file, at the bottom
+        endlines = ["\n",
+                    f"    <h1>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Stats Table</h1>\n",
+                    "    <hr>\n", "\n",
+                    """    <a href="{{'/jwqldb/nircam_bad_pixel_stats'}}" name=test_link class="btn btn-primary my-2" type="submit">Bad Pixel Stats</a>\n""", "\n",
+                    "</main>\n", "\n",
+                    "{% endblock %}"
+                    ]
+
+        for line in lines:
+            if line not in lines_to_remove:
+                newlines.append(line + '\n')
+        newlines = newlines + endlines
+
+        self.html = "".join(newlines)
+
+
+    def run(self):
+        aperture_panels = []
+        for aperture in self.apertures:
+            all_plots = {}
+            all_plots['new_dark'] = NewBadPixPlot('darks').plot
+            all_plots['new_flat'] = NewBadPixPlot('flats').plot
+            all_plots['bad_types'] = {}
+            for badtype in ['badtype1', 'badtype2', 'badtype3']:
+                all_plots['bad_types'][badtype] = BadPixTypePlot(badtype).plot
+            plot_layout = badpix_monitor_plot_layout(all_plots)
+
+            # Create a tab for each type of plot
+            aperture_panels.append(Panel(child=plot_layout, title=aperture))
+
+        # Build tabs
+        tabs = Tabs(tabs=aperture_panels)
+
+        # Return tab HTML and JavaScript to web app
+        script, div = components(tabs)
+
+        # Insert into our html template and save
+        template_file = '/Users/hilbert/python_repos/jwql/jwql/website/apps/jwql/templates/bad_pixel_monitor_savefile_basic.html'
+        temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div':div}
+        self.html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
+
+        # Modify the html such that our Django-related lines are kept in place,
+        # which will allow the page to keep the same formatting and styling as
+        # the other web app pages
+        self.modify_bokeh_saved_html()
+
+        # Save html file
+        outdir = os.path.dirname(template_file)
+        #outfile = 'test_badpix_saved_file.html'
+        outfile = f'{self.instrument}_bad_pix_plots.html'
+        outfile = os.path.join(outdir, outfile)
+        with open(outfile, "w") as file:
+            file.write(self.html)
+
+
+class BadPixelData():
+    """Retrieve bad pixel monitor data from the database
+    """
+    def __init__(self):
+        pass
+
+
+class NewBadPixPlot():
+    """Create a plot showing the location of newly discovered bad pixels
+    """
+    def __init__(self, data_type):
+        self.plot = figure(title=data_type, tools='')
+        self.plot.x_range.start = 0
+        self.plot.x_range.end = 1
+        self.plot.y_range.start = 0
+        self.plot.y_range.end = 1
+
+        source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
+        glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+        self.plot.add_glyph(source, glyph)
+
+
+
+class BadPixTypePlot():
+    """Create a plot showing the location of a certain type of bad pixel
+    """
+    def __init__(self, badpix_type):
+        self.plot = figure(title=badpix_type, tools='')
+        self.plot.x_range.start = 0
+        self.plot.x_range.end = 1
+        self.plot.y_range.start = 0
+        self.plot.y_range.end = 1
+
+        source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
+        glyph = Text(x="x", y="y", text="text", angle=0., text_color="red", text_font_size={'value':'20px'})
+        self.plot.add_glyph(source, glyph)
+
+
+
+
+
+
+
+def badpix_monitor_plot_layout(plots):
+    """Arrange a set of plots into a bokeh layout. Generate nested lists for
+    the plot layout for a given aperture. Contents of tabs should be similar
+    for all apertures of a given instrument. Keys of the input plots will
+    control the exact layout.
+
+    Paramters
+    ---------
+    plots : dict
+        Dictionary containing a set of plots for an aperture.
+        Possible keys are 'new_flat' and 'new_dark', which contain the figures
+        showing new bad pixels derived from flats and darks, respectively.
+        The third key is 'bad_types', which should contain a dictionary. The
+        keys of this dictionary are bad pixel types (e.g. 'dead'). Each of
+        these contains the Bokeh figure showing the locations of new bad
+        pixels of that type.
+
+    Returns
+    -------
+    plot_layout : bokeh.layouts.layout
+    """
+    # First the plots showing all bad pixel types derived from a given type of
+    # input (darks or flats). If both plots are present, show them side by side.
+    # Some instruments will only have one of these two (e.g. NIRCam has no
+    # internal lamps, and so will not have flats). In that case, show the single
+    # exsiting plot by itself in the top row.
+    if 'new_dark' in plots and 'new_flat' in plots:
+        new_list = [[plots['new_dark'], plots['new_flat']]]
+    elif 'new_dark' in plots:
+        new_list = [plots['new_dark']]
+    elif 'new_flat' in plots:
+        new_list = [plots['new_flat']]
+
+    # Next create a list of plots where each plot shows one flavor of bad pixel
+    plots_per_row = 2
+    num_bad_types = len(plots['bad_types'])
+    first_col = np.arange(0, num_bad_types, plots_per_row)
+
+    badtype_lists = []
+    keys = list(plots['bad_types'])
+    for i, key in enumerate(keys):
+        if i % plots_per_row == 0:
+            sublist = keys[i: i + plots_per_row]
+            rowplots = []
+            for subkey in sublist:
+                rowplots.append(plots['bad_types'][subkey])
+            badtype_lists.append(rowplots)
+
+    # Combine full frame and subarray aperture lists
+    full_list = new_list + badtype_lists
+
+    # Now create a layout that holds the lists
+    plot_layout = layout(full_list)
+
+    return plot_layout
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""OLD CODE BELOW HERE"""
+"""CAN BE DELETED"""
+
+
+class BadPixelMonitor():
 
     # Combine instrument and aperture into a single property because we
     # do not want to invoke the setter unless both are updated
@@ -379,6 +609,10 @@ class BadPixelMonitor(BokehTemplate):
             self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.text = '{}: {} pixels'.format(self._aperture, bad_pixel_type)
             self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.align = "center"
             self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.text_font_size = "20px"
+
+
+
+
 
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_badpixel_bokeh.py

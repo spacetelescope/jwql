@@ -64,19 +64,30 @@ def bad_pixel_monitor(request, inst):
     """
 
     # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    #inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    tabs_components = bokeh_containers.bad_pixel_monitor_tabs(inst)
+    # Locate the html file for the instrument
+    #html_file = os.path.join(CONFIG["outputs"], "bad_pixel_monitor", f"{inst.lower()}_bad_pix_plots.html")
+    html_file = f"{inst.lower()}_bad_pix_plots.html"
 
-    template = "bad_pixel_monitor.html"
+    # Read in the html file
+    #with open(html_file, "r") as obj:
+    #    html = obj.read()
 
-    context = {
-        'inst': inst,
-        'tabs_components': tabs_components,
-    }
+    #tabs_components = bokeh_containers.bad_pixel_monitor_tabs(inst)
+
+    #template = "bad_pixel_monitor.html"
+
+    #context = {
+    #    'inst': inst,
+    #    'tabs_components': tabs_components,
+    #}
 
     # Return a HTTP response with the template and dictionary of variables
-    return render(request, template, context)
+    #return render(request, template, context)
+
+    #return HttpResponse(html)
+    return render(request, html_file)
 
 
 def bias_monitor(request, inst):

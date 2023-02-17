@@ -432,6 +432,66 @@ class BadPixels():
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
 
+    def create_badpix_plot(self):
+        """Create a Bokeh figure of a single bad pixel figure. For the given
+        detector/aperture and bad pixel type load an image and display. Then scatter markers
+
+        """
+
+    def create_plot_layout(self):
+        """Creat a bokeh figure to hold an image of the detector with
+        bad pixel locations marked on the map. Save the figure as a
+        json file, so that it can be loaded into the bad pixel results
+        html page, and displayed
+
+        There should be one tab for each detector. On each tab, there
+        are plots showing the locations of new bad pixels from darks,
+        and new bad pixels from flats. Then there is a separate plot
+        for each flavor of bad pixel that shows the number of these
+        bad pixels found versus time.
+
+        BUT: nircam has no lamp, so we will never had any bad pix from
+        flats.
+        What other entries would be missing from other instruments?
+        """
+        do we want to create one json file for each detector/aperture?
+        or like the edb monitor, one json file that holds all the
+        plots? The latter case is probably easier. With multiple json
+        files, we would need a custom html file that loads each json file
+        individually. This means we would need a different html file for
+        each instrument.
+
+
+        # example of creating a custom grid layout
+        sliders = column(amp, freq, phase, offset)
+
+        layout([
+            [bollinger],
+            [sliders, plot],
+            [p1, p2, p3],
+            ])
+
+
+
+
+
+
+
+
+        # Wrap the plots in a Panel
+        panel_list.append(Panel(child=grid, title=key))
+
+
+
+        # Save the tabbed plot to a json file - this is from EDB monitor
+        item_text = json.dumps(json_item(tabbed, "tabbed_edb_plot"))
+        basename = f'edb_{self.instrument}_tabbed_plots.json'
+        output_file = os.path.join(self.plot_output_dir, basename)
+        with open(output_file, 'w') as outfile:
+            outfile.write(item_text)
+        logging.info(f'JSON file with tabbed plots saved to {output_file}')
+
+
     def filter_query_results(self, results, datatype):
         """Filter MAST query results. For input flats, keep only those
         with the most common filter/pupil/grating combination. For both
@@ -821,7 +881,7 @@ class BadPixels():
 
                 # Get observation time for all files
                 illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
-            
+
             index = 0
             while index < len(illuminated_raw_files):
                 if illuminated_slope_files[index] is None or illuminated_slope_files[index] == 'None':
@@ -893,7 +953,7 @@ class BadPixels():
                     if not os.path.isfile(local_ramp_file):
                         dark_slope_files[index] = None
                 index += 1
-            
+
             index = 0
             while index < len(dark_raw_files):
                 if dark_jump_files[index] is None or dark_fitopt_files[index] is None or dark_slope_files[index] is None:
@@ -908,7 +968,7 @@ class BadPixels():
             min_dark_time = min(dark_obstimes)
             max_dark_time = max(dark_obstimes)
             mid_dark_time = instrument_properties.mean_time(dark_obstimes)
-        
+
         # Check whether there are still enough files left to meet the threshold
         if illuminated_slope_files is None:
             flat_length = 0
@@ -1004,6 +1064,10 @@ class BadPixels():
             elif bad_type in badpix_types_from_darks:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
+
+            here: create_badpix_plot()
+
+
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 
@@ -1038,6 +1102,7 @@ class BadPixels():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
+        updated_instruments = []
         for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
@@ -1181,6 +1246,7 @@ class BadPixels():
                 # Run the bad pixel monitor
                 if run_flats or run_darks:
                     self.process(flat_uncal_files, flat_rate_files, flat_file_count_threshold, dark_uncal_files, dark_rate_files, dark_file_count_threshold)
+                    updated_instruments.append(self.instrument)
 
                 # Update the query history
                 if dark_uncal_files is None:
@@ -1207,6 +1273,11 @@ class BadPixels():
                              'entry_date': datetime.datetime.now()}
                 self.query_table.__table__.insert().execute(new_entry)
                 logging.info('\tUpdated the query history table')
+
+        # Update the figures to be shown in the web app. Only update figures
+        # for instruments where the monitor ran
+        for instrument in updated_instruments:
+            BadPixelPlots(instrument)
 
         logging.info('Bad Pixel Monitor completed successfully.')
 
