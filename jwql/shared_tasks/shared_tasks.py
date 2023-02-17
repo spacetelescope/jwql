@@ -314,10 +314,12 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
             logging.error("\t{}".format(line.strip()))
         if core_fail:
             cores = "half"
+            managed = False
             status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
+                managed = True
             else:
                 logging.error("Pipeline subprocess failed.")
                 core_fail = False
@@ -331,9 +333,11 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                                             input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
+                        managed = True
                     else:
                         logging.error("Pipeline subprocess failed.")
-        raise ValueError("Pipeline Failed")
+        if not managed:
+            raise ValueError("Pipeline Failed")
     
     for file in calibrated_files:
         if not os.path.isfile(os.path.join(cal_dir, file)):
@@ -419,6 +423,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         logging.info("Subprocess reports successful finish.")
     else:
         logging.error("Pipeline subprocess failed.")
+        managed = False
         core_fail = False
         for line in status:
             if "[Errno 12] Cannot allocate memory" in line:
@@ -430,6 +435,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
+                managed = True
             else:
                 logging.error("Pipeline subprocess failed.")
                 core_fail = False
@@ -443,9 +449,11 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                                             input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
+                        managed = True
                     else:
                         logging.error("Pipeline subprocess failed.")
-        raise ValueError("Pipeline Failed")
+        if not managed:
+            raise ValueError("Pipeline Failed")
 
     files = {"jump_output": None, "pipe_output": None, "fitopt_output": None}
     for line in status[-5:-1]:
