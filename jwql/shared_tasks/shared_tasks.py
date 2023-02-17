@@ -306,6 +306,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
+        managed = False
         logging.error("Pipeline subprocess failed.")
         core_fail = False
         for line in status:
@@ -314,7 +315,6 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
             logging.error("\t{}".format(line.strip()))
         if core_fail:
             cores = "half"
-            managed = False
             status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
