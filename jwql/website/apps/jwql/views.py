@@ -567,7 +567,7 @@ def dashboard(request):
     return render(request, template, context)
 
 
-def download_report(request, inst, status='all'):
+def download_report(request, inst):
     """Download data report by look status.
 
     Parameters
@@ -576,28 +576,23 @@ def download_report(request, inst, status='all'):
         Incoming request from the webpage.
     inst : str
         The JWST instrument of interest.
-    status : str, optional
-        If set to None or 'all', all viewed values are returned. If set to
-        'viewed', only viewed data is returned. If set to 'new', only
-        new data is returned.
 
     Returns
     -------
     response : HttpResponse object
         Outgoing response sent to the webpage
     """
+    # check for filter criteria passed in request
+    kwargs = dict()
+    for filter_name in ['look', 'exp_type', 'cat_type', 'sort_as']:
+        kwargs[filter_name] = request.GET.get(filter_name)
+
     # get all observation looks from file info model
     # and join with observation descriptors
-    if status == 'viewed':
-        viewed = True
-    elif status == 'new':
-        viewed = False
-    else:
-        viewed = None
-    keys, looks = get_instrument_looks(inst, viewed=viewed)
+    keys, looks = get_instrument_looks(inst, **kwargs)
 
     today = datetime.datetime.now().strftime('%Y%m%d')
-    filename = f'{inst}_{status}_{today}.csv'
+    filename = f'{inst}_report_{today}.csv'
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 

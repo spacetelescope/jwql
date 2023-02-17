@@ -926,17 +926,27 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_instrument_looks(instrument, viewed=None, additional_keys=None):
+def get_instrument_looks(instrument, sort_as=None,
+                         look=None, exp_type=None, cat_type=None,
+                         additional_keys=None):
     """Return a table of looks information for the given instrument.
 
     Parameters
     ----------
     instrument : str
         Name of the JWST instrument.
-    viewed : bool, optional
+    sort_as : {'ascending', 'descending', 'recent'}
+        Sorting method for output table. Ascending and descending
+        options refer to root file name; recent sorts by observation
+        start.
+    look : {'new', 'viewed'}, optional
         If set to None, all viewed values are returned. If set to
-        True, only viewed data is returned. If set to False, only
+        'viewed', only viewed data is returned. If set to 'new', only
         new data is returned.
+    exp_type : str, optional
+        Set to filter by exposure type.
+    cat_type : str, optional
+        Set to filter by proposal category.
     additional_keys : list of str, optional
         Additional model attribute names for information to return.
 
@@ -963,13 +973,24 @@ def get_instrument_looks(instrument, viewed=None, additional_keys=None):
             if key not in key_set:
                 keys.append(key)
 
+    # get desired filters
+    filter_kwargs = dict()
+    if look is not None:
+        filter_kwargs['viewed'] = (look == 'viewed')
+    if exp_type is not None:
+        filter_kwargs['obsnum__exptypes__contains'] = exp_type
+    if cat_type is not None:
+        filter_kwargs['obsnum__proposal__cat_type__contains'] = cat_type
+
     # get file info by instrument from local model
-    if viewed is None:
-        root_file_info = RootFileInfo.objects.filter(instrument=inst)
-    elif viewed:
-        root_file_info = RootFileInfo.objects.filter(instrument=inst, viewed=True)
-    else:
-        root_file_info = RootFileInfo.objects.filter(instrument=inst, viewed=False)
+    root_file_info = RootFileInfo.objects.filter(instrument=inst, **filter_kwargs)
+
+    # descending by root file is default;
+    # for other options, sort as desired
+    if sort_as == 'ascending':
+        root_file_info = root_file_info.order_by('root_name')
+    elif sort_as == 'recent':
+        root_file_info = root_file_info.order_by('-obsnum__obsstart')
 
     looks = []
     for root_file in root_file_info:
