@@ -163,24 +163,24 @@ def instrument_looks(request, inst, status=None):
     JsonResponse
         Outgoing response sent to the webpage, depending on return_type.
     """
-    # TODO: define more useful keys by instrument in config
-    # currently, optional keys are just the values available
-    # in local models
-    optional_keys = ['proposal', 'obsnum', 'number_of_files',
-                     'exptypes', 'obsstart', 'obsend']
-    full_keys = ['root_name', 'viewed'] + optional_keys
+    # parse desired look status
+    if status == 'viewed':
+        viewed = True
+    elif status == 'new':
+        viewed = False
+    else:
+        viewed = None
 
     # get all observation looks from file info model
     # and join with observation descriptors
-    viewed = str(status) == 'viewed'
-    looks = get_instrument_looks(inst, keys=optional_keys, viewed=viewed)
+    keys, looks = get_instrument_looks(inst, viewed=viewed)
 
     # return results by api key
     if status is None:
         status = 'looks'
 
     response = JsonResponse({'instrument': inst,
-                             'keys': full_keys,
+                             'keys': keys,
                              'type': status,
                              status: looks},
                             json_dumps_params={'indent': 2})

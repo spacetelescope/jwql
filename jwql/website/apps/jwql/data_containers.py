@@ -51,9 +51,11 @@ from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS, QUERY_CONFIG_TEMPLATE
+from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
@@ -924,31 +926,44 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_instrument_looks(instrument, keys=None, viewed=None):
+def get_instrument_looks(instrument, viewed=None, additional_keys=None):
     """Return a table of looks information for the given instrument.
 
     Parameters
     ----------
     instrument : str
         Name of the JWST instrument.
-    keys : list of str, optional
-        Additional FITS key names for information to return.
     viewed : bool, optional
         If set to None, all viewed values are returned. If set to
         True, only viewed data is returned. If set to False, only
         new data is returned.
+    additional_keys : list of str, optional
+        Additional model attribute names for information to return.
 
     Returns
     -------
-    looks : list
-        List of looks information by observation for the given instrument.
+    keys : list of str
+        Report values returned for the given instrument.
+    looks : list of dict
+        List of looks information by root file for the given instrument.
     """
     # standardize input
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
-    if keys is None:
-        keys = []
 
-    # get files by instrument from local model
+    # required keys
+    keys = ['root_name']
+
+    # optional keys by instrument
+    keys += REPORT_KEYS_PER_INSTRUMENT[inst.lower()]
+
+    # add any additional keys
+    key_set = set(keys)
+    if additional_keys is not None:
+        for key in additional_keys:
+            if key not in key_set:
+                keys.append(key)
+
+    # get file info by instrument from local model
     if viewed is None:
         root_file_info = RootFileInfo.objects.filter(instrument=inst)
     elif viewed:
@@ -958,10 +973,9 @@ def get_instrument_looks(instrument, keys=None, viewed=None):
 
     looks = []
     for root_file in root_file_info:
-        # for now, report viewed by root name only.
+        # for now, report info by root name only.
         # if specific files are needed, use get_filesystem_files
-        result = {'root_name': root_file.root_name,
-                  'viewed': root_file.viewed}
+        result = dict()
         for key in keys:
             try:
                 # try the root file table
@@ -976,11 +990,15 @@ def get_instrument_looks(instrument, keys=None, viewed=None):
                         value = getattr(root_file.obsnum.proposal, key)
                     except AttributeError:
                         value = ''
-            if type(value) not in [str, float, int]:
+
+            # make sure value can be serialized
+            if type(value) not in [str, float, int, bool]:
                 value = str(value)
+
             result[key] = value
         looks.append(result)
-    return looks
+
+    return keys, looks
 
 
 def get_preview_images_by_proposal(proposal):
@@ -1116,7 +1134,7 @@ def get_thumbnails_all_instruments(parameters):
 
     Parameters
     ----------
-    parameters: dict of type QUERY_CONFIG_TEMPLATE
+    parameters: dict
         A dictionary containing keys of QUERY_CONFIG_KEYS, some of which are dictionaries:
  
 
