@@ -730,14 +730,19 @@ class Dark():
                     baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
                 # Check the hot/dead pixel population for changes
+                logging.info("\tFinding new hot/dead pixels")
                 new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
 
                 # Shift the coordinates to be in full frame coordinate system
+                logging.info("\tShifting hot pixels to full frame")
                 new_hot_pix = self.shift_to_full_frame(new_hot_pix)
+                logging.info("\tShifting dead pixels to full frame")
                 new_dead_pix = self.shift_to_full_frame(new_dead_pix)
 
                 # Exclude hot and dead pixels found previously
+                logging.info("\tExcluding previously-known hot pixels")
                 new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
+                logging.info("\tExcluding previously-known dead pixels")
                 new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
                 # Add new hot and dead pixels to the database
