@@ -978,9 +978,11 @@ def get_instrument_looks(instrument, sort_as=None,
     if look is not None:
         filter_kwargs['viewed'] = (look == 'viewed')
     if exp_type is not None:
-        filter_kwargs['obsnum__exptypes__contains'] = exp_type
+        filter_kwargs['obsnum__exptypes__icontains'] = exp_type
     if cat_type is not None:
-        filter_kwargs['obsnum__proposal__cat_type__contains'] = cat_type
+        # filter_kwargs['obsnum__proposal__cat_type__iexact'] = cat_type
+        # not yet implemented in proposal table
+        pass
 
     # get file info by instrument from local model
     root_file_info = RootFileInfo.objects.filter(instrument=inst, **filter_kwargs)
