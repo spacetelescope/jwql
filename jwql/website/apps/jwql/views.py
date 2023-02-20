@@ -16,7 +16,8 @@ Authors
     - Mees Fix
     - Bryan Hilbert
     - Maria Pena-Guerrero
-    - Bryan Hilbert
+    - Bradley Sappington
+    - Melanie Clarke
 
 
 Use
@@ -592,7 +593,7 @@ def download_report(request, inst):
     keys, looks = get_instrument_looks(inst, **kwargs)
 
     today = datetime.datetime.now().strftime('%Y%m%d')
-    filename = f'{inst}_report_{today}.csv'
+    filename = f'{inst.lower()}_report_{today}.csv'
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
