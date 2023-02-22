@@ -102,13 +102,14 @@ class RootFileInfo(models.Model):
     root_name = models.TextField(primary_key=True, max_length=300)
     viewed = models.BooleanField(default=False)
     filter = models.CharField(max_length=7, help_text="Instrument name", default='')
-    aperature = models.CharField(max_length=40, help_text="Aperature", default='')
+    aperture = models.CharField(max_length=40, help_text="Aperture", default='')
     detector = models.CharField(max_length=40, help_text="Detector", default='')
     read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=0)
     read_patt = models.CharField(max_length=40, help_text="Read Pattern", default='')
     grating = models.CharField(max_length=40, help_text="Grating", default='')
     subarray = models.CharField(max_length=40, help_text="Subarray", default='')
     pupil = models.CharField(max_length=40, help_text="Pupil", default='')
+    exp_type = models.CharField(max_length=40, help_text="Exposure Type", default='')
 
     # Metadata
     class Meta:

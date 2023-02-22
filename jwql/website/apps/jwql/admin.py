@@ -41,7 +41,7 @@ class ObservationAdmin(admin.ModelAdmin):
 
 @admin.register(RootFileInfo)
 class RootFileInfoAdmin(admin.ModelAdmin):
-    list_display = ('root_name', 'obsnum', 'proposal', 'instrument', 'viewed', 'filter', 'aperature', 'detector', 'read_patt_num', 'read_patt', 'grating', 'subarray', 'pupil')
+    list_display = ('root_name', 'obsnum', 'proposal', 'instrument', 'viewed', 'filter', 'aperture', 'detector', 'read_patt_num', 'read_patt', 'grating', 'subarray', 'pupil', 'exp_type')
     list_filter = ('viewed', 'instrument', 'proposal', 'obsnum')
 
 
