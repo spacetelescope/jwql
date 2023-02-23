@@ -109,7 +109,7 @@ from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
 
@@ -1061,9 +1061,11 @@ class BadPixels():
             if bad_type in badpix_types_from_flats:
                 self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
+                flat_png = create_png_from_fits(illuminated_slope_files[0], self.output_dir)
             elif bad_type in badpix_types_from_darks:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
+                dark_png = create_png_from_fits(dark_slope_files[0], self.output_dir)
 
             here: create_badpix_plot()
 
