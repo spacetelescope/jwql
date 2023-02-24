@@ -976,7 +976,7 @@ def get_instrument_looks(instrument, sort_as=None,
     # get desired filters
     filter_kwargs = dict()
     if look is not None:
-        filter_kwargs['viewed'] = (look == 'viewed')
+        filter_kwargs['viewed'] = (str(look).lower() == 'viewed')
     if exp_type is not None:
         filter_kwargs['obsnum__exptypes__icontains'] = exp_type
     if cat_type is not None:

@@ -174,19 +174,21 @@ def test_get_instrument_proposals():
 @pytest.mark.parametrize('keys,viewed,sort_as,exp_type,cat_type',
                          [(None, None, None, None, None),
                           (None, 'viewed', None, None, None),
+                          (None, 'Viewed', None, None, None),
                           (None, 'new', None, None, None),
+                          (None, 'New', None, None, None),
                           (None, None, None, 'NRS_MSATA', None),
                           # (None, None, None, None, 'CAL'),  # cat_type not implemented yet
-                          (['obsstart'], False, 'ascending', None, None),
-                          (['obsstart'], False, 'descending', None, None),
-                          (['obsstart'], False, 'recent', None, None),
-                          ([], True, None, None, None),
-                          ([], False, None, None, None),
+                          (['obsstart'], 'new', 'ascending', None, None),
+                          (['obsstart'], 'new', 'descending', None, None),
+                          (['obsstart'], 'new', 'recent', None, None),
+                          ([], 'viewed', None, None, None),
+                          ([], 'new', None, None, None),
                           ([], None, None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], True, None, None, None),
+                            'prop_id', 'obsstart'], 'viewed', None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], False, None, None, None),
+                            'prop_id', 'obsstart'], 'new', None, None, None),
                           (['proposal', 'obsnum', 'other',
                             'prop_id', 'obsstart'], None, None, None, None)])
 def test_get_instrument_looks(keys, viewed, sort_as, exp_type, cat_type):
@@ -209,7 +211,7 @@ def test_get_instrument_looks(keys, viewed, sort_as, exp_type, cat_type):
         assert len(return_keys) >= 1 + len(keys)
 
     # viewed depends on local database, so may or may not have results
-    if not viewed == 'viewed':
+    if not str(viewed).lower() == 'viewed':
         assert len(looks) > 0
         first_file = looks[0]
         assert first_file['root_name'] != ''
