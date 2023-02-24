@@ -73,6 +73,7 @@ from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_instrument_looks
+from .data_containers import get_proposals_by_category
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import random_404_page
 from .data_containers import text_scrape
@@ -358,14 +359,20 @@ def archived_proposals_ajax(request, inst):
     thumb_exp_types = []
     proposal_obs_times = []
     thumb_obs_time = []
+    cat_types = []
 
     # Get a set of all exposure types used in the observations associated with this proposal
     exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
     exp_types = sorted(list(set(exp_types)))
 
+    # Get all proposals based on category type
+    proposals_by_category = get_proposals_by_category(inst)
+    unique_cat_types = list(set(proposals_by_category.values()))
+
     # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
     dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
-                      'exp_type': exp_types}
+                      'exp_type': exp_types,
+                      'cat_type': unique_cat_types}
     thumbnails_dict = {}
 
     for proposal_num in proposal_nums:
@@ -397,12 +404,16 @@ def archived_proposals_ajax(request, inst):
         proposal_obs_times = [observation.obsstart for observation in prop_entries]
         thumb_obs_time.append(max(proposal_obs_times))
 
+        # Add category type to list based on proposal number
+        cat_types.append(proposals_by_category[int(proposal_num)])
+
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
     thumbnails_dict['num_files'] = total_files
     thumbnails_dict['viewed'] = proposal_viewed
     thumbnails_dict['exp_types'] = thumb_exp_types
     thumbnails_dict['obs_time'] = thumb_obs_time
+    thumbnails_dict['cat_types'] = cat_types
 
     context = {'inst': inst,
                'num_proposals': num_proposals,

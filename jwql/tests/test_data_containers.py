@@ -244,6 +244,13 @@ def test_get_preview_images_by_rootname():
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_get_proposals_by_category():
+    """Tests the ``get_proposals_by_category`` function."""
+
+    proposals_by_category = data_containers.get_proposals_by_category('fgs')
+    assert isinstance(proposals_by_category, dict)
+    assert len(proposals_by_category) > 0
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_proposal_info():

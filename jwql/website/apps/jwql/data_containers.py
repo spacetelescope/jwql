@@ -1075,6 +1075,32 @@ def get_preview_images_by_rootname(rootname):
 
     return preview_images
 
+def get_proposals_by_category(instrument):
+    """Return a dictionary of program numbers based on category type
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+    Returns
+    -------
+    category_sorted_dict : dict
+        Dictionary with category as the key and a list of program id's as the value
+    """
+
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns": "program, category",
+              "filters": []}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Get all unique dictionaries
+    unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
+
+    # Make a dictionary of {program: category} to pull from
+    proposals_by_category = {d['program']:d['category'] for d in unique_results}
+
+    return proposals_by_category
 
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
@@ -1587,6 +1613,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
         exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
         exp_types.append(exp_type)
+
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
