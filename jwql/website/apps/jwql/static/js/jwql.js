@@ -364,6 +364,40 @@ function get_number_or_none(element_id) {
     return limit;
 }
 
+
+/**
+ * Group thumbnail display by exposure or file, save group type in session
+ * @param {String} group_type - The group type
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function group_by_thumbnails(group_type, dropdown_keys, num_fileids, base_url) {
+
+    // Update dropdown menu text and update thumbnails for current setting
+    //document.getElementById('group_dropdownMenuButton').innerHTML = group_type;
+    show_only('group', group_type, dropdown_keys, num_fileids, 'thumbnail', base_url);
+
+    // Group the thumbnails accordingly.
+
+    // TODO: actually group thumbnails
+    var thumbs = $('div#thumbnail-array>div');
+    if (group_type == 'Exposure') {
+        console.log('Group by exposure');
+    } else {
+        console.log('Group by file');
+    }
+
+    $.ajax({
+        url: base_url + '/ajax/image_group/',
+        data: {
+            'group_type': group_type
+        },
+        error : function(response) {
+            console.log("session image group update failed");
+        }
+    });
+};
+
+
 /**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
@@ -438,13 +472,20 @@ function search() {
  * @param {Integer} num_fileids - The number of files that are available to display
  * @param {String} thumbnail_class - The class name of the thumbnails that will be filtered.
  */
-function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class, find_substring, base_url) {
+function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class, base_url) {
 
     // Get all filter options from {{dropdown_menus}} variable
     var all_filters = dropdown_keys.split(',');
 
     // Update dropdown menu text
     document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
+
+    // Check for grouping setting for special handling
+    var group_option = document.getElementById('group_dropdownMenuButton')
+    var group = false;
+    if (group_option != null) {
+        group = (group_option.innerText == 'Exposure');
+    }
 
     // Determine the current value for each filter
     var filter_values = [];
@@ -453,29 +494,34 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
         filter_values.push(filter_value);
     }
 
-
     // Find all thumbnail elements
     var thumbnails = document.getElementsByClassName(thumbnail_class);
 
     // Determine whether or not to display each thumbnail
     var num_thumbnails_displayed = 0;
     var list_of_rootnames = "";
+    var groups_shown = new Set();
     for (i = 0; i < thumbnails.length; i++) {
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
-            var filter_attribute = thumbnails[i].getAttribute(all_filters[j])
-            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
-                         || (filter_attribute == filter_values[j])
-                         || (find_substring && filter_attribute.includes(filter_values[j]));
+            var filter_attribute = thumbnails[i].getAttribute(all_filters[j]);
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0)
+                         || (filter_attribute.includes(filter_values[j]));
             criteria.push(criterion);
         };
 
-        // Only display if all filter criteria are met
+        // If data are grouped, check if a thumbnail for the group has already been displayed
+        if (group && groups_shown.has(thumbnails[i].getAttribute('group_root'))) {
+            criteria.push(false);
+        }
+
+        // Only display if all criteria are met
         if (criteria.every(function(r){return r})) {
             thumbnails[i].style.display = "inline-block";
             num_thumbnails_displayed++;
             list_of_rootnames = list_of_rootnames + thumbnails[i].getAttribute("file_root") + '=' + thumbnails[i].getAttribute("exp_start") + ',';
+            if (group) { groups_shown.add(thumbnails[i].getAttribute('group_root')); }
         } else {
             thumbnails[i].style.display = "none";
         }
@@ -820,13 +866,6 @@ function update_wata_page(base_url) {
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
         num_rootnames = num_items;
         dropdown_key_list = Object.keys(data.dropdown_menus);
-        
-        if (filter_type == "exp_type") {
-            // Any filters where there may be a list as a string for the attribute to filter on
-            find_substring = true;
-        } else {
-            find_substring = false;
-        } 
 
         // Build div content
         content += '<div style="display: flex">';
@@ -834,10 +873,10 @@ function update_wata_page(base_url) {
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\',\'' + base_url + '\');">All ' + filter_type + 's</a>';
+        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + base_url + '\');">All ' + filter_type + 's</a>';
 
         for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\',\'' + base_url + '\');">' + filter_options[j] + '</a>';
+            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + base_url + '\');">' + filter_options[j] + '</a>';
         };
 
         content += '</div>';
@@ -847,6 +886,26 @@ function update_wata_page(base_url) {
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
 };
+
+/**
+ * Updates the group-by-exposure div
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
+function update_group_options(data, base_url, num_items, thumbnail_class) {
+
+    var dropdown_key_list = Object.keys(data.dropdown_menus);
+
+    // Build div content
+    content = 'Group by:<br>'
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="group_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_group + '</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'Exposure\', \'' + dropdown_key_list + '\',\'' + num_items + '\',\'' + base_url + '\');">Exposure</a>';
+    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'File\', \'' + dropdown_key_list + '\',\'' + num_items + '\',\'' + base_url + '\');">File</a>';
+    content += '</div></div>';
+    // Add the content to the div
+    $("#group-by-exposure")[0].innerHTML = content;
+};
+
 
 
 /**
@@ -945,10 +1004,10 @@ function update_thumbnail_array(data) {
 
         // Build div content
         if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
@@ -1002,9 +1061,11 @@ function submit_date_range_form(inst, base_url) {
                         update_show_count(num_thumbnails, 'activities');
                         update_thumbnail_array(data);
                         update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+
                         // Do initial sort to match sort button display
                         update_sort_options(data, base_url);
                         sort_by_thumbnails(data.thumbnail_sort, base_url);
+
                         // Replace loading screen with the proposal array div
                         document.getElementById("loading").style.display = "none";
                         document.getElementById("thumbnail-array").style.display = "block";
@@ -1035,11 +1096,11 @@ function submit_date_range_form(inst, base_url) {
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} proposal - The proposal number of interest (e.g. "88660")
  * @param {String} observation - The observation number within the proposal (e.g. "001")
- * @param {List} observation_list - List of all observations in this proposal
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} sort - Sort method string saved in session data image_sort
+ * @param {String} group - Group method string saved in session data image_group
  */
-function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url, sort) {
+function update_thumbnails_per_observation_page(inst, proposal, observation, base_url, sort, group) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
@@ -1049,9 +1110,11 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal, observation);
             update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_group_options(data, base_url, num_thumbnails, 'thumbnail');
             update_sort_options(data, base_url);
 
-            // Do initial sort to match sort button display
+            // Do initial sort and group to match sort button display
+            group_by_thumbnails(group, Object.keys(data.dropdown_menus).toString(), num_thumbnails, base_url);
             sort_by_thumbnails(sort, base_url);
 
             // Replace loading screen with the proposal array div

@@ -1550,6 +1550,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict : dict
         Dictionary of data needed for the ``thumbnails`` template
     """
+    # TODO - tap call in get_rootnames sometimes fails.
+    #  can eliminate, using the existing filenames instead?
 
     # generate the list of all obs of the proposal here, so that the list can be
     # properly packaged up and sent to the js scripts. but to do this, we need to call
@@ -1571,14 +1573,15 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
+
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
     # Initialize dictionary that will contain all needed data
-    data_dict = {}
-    data_dict['inst'] = inst
-    data_dict['file_data'] = {}
-    exp_types = []
+    data_dict = {'inst': inst,
+                 'file_data': dict()}
+    exp_types = set()
+    exp_groups = set()
 
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
@@ -1591,6 +1594,10 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
             if 'detector' not in filename_dict.keys():
                 filename_dict['detector'] = 'Unknown'
+                filename_dict['group_root'] = rootname
+            else:
+                group_root = re.sub(rf"_{filename_dict['detector']}$", '', rootname)
+                filename_dict['group_root'] = group_root
 
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' in filename_dict['filename_type']:
@@ -1605,14 +1612,19 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                              'parallel_seq_id': rootname[16],
                              'program_id': rootname[2:7],
                              'visit': rootname[10:13],
-                             'visit_group': rootname[14:16]}
+                             'visit_group': rootname[14:16],
+                             'group_root': rootname[:26]}
+
+        # todo: the following comprehensions loop over all file names
+        #  several times - should be combined, and maybe make the
+        #  filename loop primary
 
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
         exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
-        exp_types.append(exp_type)
+        exp_types.add(exp_type)
 
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
@@ -1620,15 +1632,17 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             root_file_info = RootFileInfo.objects.get(root_name=rootname)
             viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
         except RootFileInfo.DoesNotExist:
-
             viewed = THUMBNAIL_FILTER_LOOK[0]
+
+        # Add to list of all exposure groups
+        exp_groups.add(filename_dict['group_root'])
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]["viewed"] = viewed
-        data_dict['file_data'][rootname]["exp_type"] = exp_type
+        data_dict['file_data'][rootname]['viewed'] = viewed
+        data_dict['file_data'][rootname]['exp_type'] = exp_type
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
         try:
@@ -1653,12 +1667,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     if proposal is not None:
         dropdown_menus = {'detector': sorted(detectors),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(set(exp_types))}
+                          'exp_type': sorted(exp_types)}
     else:
         dropdown_menus = {'detector': sorted(detectors),
                           'proposal': sorted(proposals),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(set(exp_types))}
+                          'exp_type': sorted(exp_types)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -1670,8 +1684,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     data_dict['file_data'] = sorted_file_data
 
-    # Add list of observation numbers
+    # Add list of observation numbers and group roots
     data_dict['obs_list'] = obs_list
+    data_dict['exp_groups'] = sorted(exp_groups)
 
     return data_dict
 

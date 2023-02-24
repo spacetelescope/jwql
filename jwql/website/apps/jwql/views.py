@@ -42,7 +42,6 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
-from collections import defaultdict
 from copy import deepcopy
 import csv
 import datetime
@@ -449,6 +448,7 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
@@ -492,6 +492,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     obs_list = sorted(list(set(all_obs)))
 
     sort_type = request.session.get('image_sort', 'Ascending')
+    group_type = request.session.get('image_group', 'Exposure')
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
                'inst': inst,
@@ -499,7 +500,8 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
                'obs_list': obs_list,
                'prop': proposal,
                'prop_meta': proposal_meta,
-               'sort': sort_type}
+               'sort': sort_type,
+               'group': group_type}
 
     return render(request, template, context)
 
@@ -843,6 +845,7 @@ def log_view(request):
 
     return render(request, template, context)
 
+
 def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 
@@ -1096,6 +1099,24 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
+def save_image_group_ajax(request):
+    """Save the latest selected group type in the session."""
+    image_group = request.GET['group_type']
+    request.session['image_group'] = image_group
+    context = {'item': request.session['image_group']}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
+def save_image_sort_ajax(request):
+
+    # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
+    image_sort = request.GET['sort_type']
+
+    request.session['image_sort'] = image_sort
+    context = {'item': request.session['image_sort']}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
 def save_page_navigation_data(request, data):
     """
     It saves the data from the current page in the session so that the user can navigate to the next or
@@ -1139,16 +1160,6 @@ def toggle_viewed_ajax(request, file_root):
 
     # Build the context
     context = {'marked_viewed': root_file_info.viewed}
-    return JsonResponse(context, json_dumps_params={'indent': 2})
-
-
-def save_image_sort_ajax(request):
-
-    # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
-    image_sort = request.GET['sort_type']
-
-    request.session['image_sort'] = image_sort
-    context = {'item': request.session['image_sort']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
