@@ -125,10 +125,6 @@ class BadPixelPlots():
 
             # Create plots of the location of new bad pixels
             all_plots = {}
-            #all_plots['new_dark'] = NewBadPixPlot(detector, data.num_files, data.new_bad_pix, data.background_file, 'darks',
-            #                                      data.baseline_file, data.obs_start_time, data.obs_end_time).plot
-            #all_plots['new_flat'] = NewBadPixPlot(detector, data.num_files, data.new_bad_pix, data.background_file, 'flats',
-            #                                      data.baseline_file, data.obs_start_time, data.obs_end_time).plot
             all_plots['new_pix'] = {}
             all_plots['trending'] = {}
             for badtype in data.badtypes:
@@ -148,13 +144,10 @@ class BadPixelPlots():
         script, div = components(tabs)
 
         # Insert into our html template and save
-        template_file = '/Users/hilbert/python_repos/jwql/jwql/website/apps/jwql/templates/bad_pixel_monitor_savefile_basic.html'
+        template_dir = os.path.join(os.path.dirname(__file__), '../templates')
+        template_file = os.path.join(template_dir, 'bad_pixel_monitor_savefile_basic.html')
         temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div':div}
         self.html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
-
-        with open(template_file, 'w') as f:
-            f.writelines(self.html)
-
 
         # Modify the html such that our Django-related lines are kept in place,
         # which will allow the page to keep the same formatting and styling as
@@ -163,7 +156,6 @@ class BadPixelPlots():
 
         # Save html file
         outdir = os.path.dirname(template_file)
-        #outfile = 'test_badpix_saved_file.html'
         outfile = f'{self.instrument}_bad_pix_plots.html'
         outfile = os.path.join(outdir, outfile)
         with open(outfile, "w") as file:
@@ -551,53 +543,19 @@ def badpix_monitor_plot_layout(plots):
     Paramters
     ---------
     plots : dict
-        Dictionary containing a set of plots for an aperture.
-        Possible keys are 'new_flat' and 'new_dark', which contain the figures
-        showing new bad pixels derived from flats and darks, respectively.
-        The third key is 'bad_types', which should contain a dictionary. The
-        keys of this dictionary are bad pixel types (e.g. 'dead'). Each of
-        these contains the Bokeh figure showing the locations of new bad
-        pixels of that type.
+        Nested dictionary containing a set of plots for an aperture.
+        Required keys are 'new_pix' and 'trending'. Each of these contain a
+        dictionary where the keys are the types of bad pixels, and the values
+        are the Bokeh figures. 'new_pix' and 'trending' should contain the
+        same set of keys. 'new_pix' contains the figures showing new bad pixel
+        locations, while 'trending' contains the figures showign the number of
+        bad pixels with time.
 
     Returns
     -------
     plot_layout : bokeh.layouts.layout
+        Layout containing all of the input figures
     """
-
-    """
-    # First the plots showing all bad pixel types derived from a given type of
-    # input (darks or flats). If both plots are present, show them side by side.
-    # Some instruments will only have one of these two (e.g. NIRCam has no
-    # internal lamps, and so will not have flats). In that case, show the single
-    # exsiting plot by itself in the top row.
-    if 'new_dark' in plots and 'new_flat' in plots:
-        new_list = [[plots['new_dark'], plots['new_flat']]]
-    elif 'new_dark' in plots:
-        new_list = [plots['new_dark']]
-    elif 'new_flat' in plots:
-        new_list = [plots['new_flat']]
-
-    # Next create a list of plots where each plot shows one flavor of bad pixel
-    plots_per_row = 2
-    num_bad_types = len(plots['trending'])
-    first_col = np.arange(0, num_bad_types, plots_per_row)
-
-    badtype_lists = []
-    keys = list(plots['bad_types'])
-    for i, key in enumerate(keys):
-        if i % plots_per_row == 0:
-            sublist = keys[i: i + plots_per_row]
-            rowplots = []
-            for subkey in sublist:
-                rowplots.append(plots['bad_types'][subkey])
-            badtype_lists.append(rowplots)
-
-    # Combine full frame and subarray aperture lists
-    full_list = new_list + badtype_lists
-    """
-
-
-
     # Create a list of plots where each plot shows one flavor of bad pixel
     all_plots = []
     for badtype in plots["trending"]:
