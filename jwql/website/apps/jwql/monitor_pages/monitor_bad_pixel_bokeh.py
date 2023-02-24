@@ -40,7 +40,7 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
-from jwql.utils.constants import FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import filesystem_path, get_config, read_png
 
@@ -57,9 +57,12 @@ class BadPixelPlots():
         # Get the relevant database tables
         self.identify_tables()
 
-        #self.apertures = self.get_inst_apers()
-        #self.apertures = ['aper1', 'aper2', 'aper3']
-        self.detectors = get_unique_values_per_column(self.pixel_table, 'detector')
+        #self.detectors = get_unique_values_per_column(self.pixel_table, 'detector')
+
+        self.detectors = sorted(DETECTOR_PER_INSTRUMENT[self.instrument])
+        if self.instrument == 'miri':
+            self.detectors = ['MIRIMAGE']
+
         self.run()
 
     def identify_tables(self):
@@ -82,6 +85,7 @@ class BadPixelPlots():
                            '</html>']
 
         # Our Django-related lines that need to be at the top of the file
+        hstring = """href="{{'/jwqldb/%s_bad_pixel_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Go to JWQLDB page</a>"""
         newlines = ['{% extends "base.html" %}\n', "\n",
                     "{% block preamble %}\n", "\n",
                     f"<title>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Monitor- JWQL</title>\n", "\n",
@@ -90,13 +94,12 @@ class BadPixelPlots():
                     '  <main role="main" class="container">\n', "\n",
                     f"  <h1>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Monitor</h1>\n",
                     "  <hr>\n",
+                    f"  <b>View or Download {JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Stats Table:</b> <a " + hstring,
+                    "  <hr>\n"
                     ]
 
         # More lines that we want to have in the html file, at the bottom
         endlines = ["\n",
-                    f"    <h1>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Stats Table</h1>\n",
-                    "    <hr>\n", "\n",
-                    """    <a href="{{'/jwqldb/nircam_bad_pixel_stats'}}" name=test_link class="btn btn-primary my-2" type="submit">Bad Pixel Stats</a>\n""", "\n",
                     "</main>\n", "\n",
                     "{% endblock %}"
                     ]
@@ -182,13 +185,17 @@ class BadPixelData():
         self.num_files = {}
         self.baseline_file = {}
 
-        #self.identify_tables()
+        # Get a list of the bad pixel types present in the database
+        self.badtypes = get_unique_values_per_column(self.pixel_table, 'type')
+
+        # If the database is empty, return a generic entry showing that fact
+        if len(self.badtypes) == 0:
+            self.badtypes = ['BAD']
 
         # Get data for the plot of new bad pixels
         self.get_most_recent_entry()
 
         # Get data for the trending plots
-        self.badtypes = get_unique_values_per_column(self.pixel_table, 'type')
         for badtype in self.badtypes:
             self.get_trending_data(badtype)
 
@@ -215,26 +222,27 @@ class BadPixelData():
         latest_entries_by_type = query.all()
         session.close()
 
+        # Organize the results
         for row in latest_entries_by_type:
             self.new_bad_pix[row.type] = (row.x_coord, row.y_coord)
             self.background_file[row.type] = row.source_files[0]
             self.obs_start_time[row.type] = row.obs_start_time
-            #self.obs_mid_time[row.type] = row.obs_mid_time
             self.obs_end_time[row.type] = row.obs_end_time
             self.num_files[row.type] = len(row.source_files)
             self.baseline_file[row.type] = row.baseline_file
 
+        # If no data is retrieved from the database at all, add a dummy generic entry
+        if len(self.new_bad_pix.keys()) == 0:
+            self.new_bad_pix[self.badtypes[0]] = ([], [])
+            self.background_file[self.badtypes[0]] = ''
+            self.obs_start_time[self.badtypes[0]] = datetime.datetime.today()
+            self.obs_end_time[self.badtypes[0]] = datetime.datetime.today()
+            self.num_files[self.badtypes[0]] = 0
+            self.baseline_file[self.badtypes[0]] = ''
+
     def get_trending_data(self, badpix_type):
         """
         """
-         # The MIRI imaging detector does not line up with the full frame aperture. Fix that here
-        if self.detector == 'MIRIM':
-            self.detector = 'MIRIMAGE'
-
-        # NIRCam LW detectors use 'LONG' rather than 5 in the pixel_table
-        if '5' in self.detector:
-            self.detector = self.detector.replace('5', 'LONG')
-
         # Query database for all data in the table with a matching detector and bad pixel type
         all_entries_by_type = session.query(self.pixel_table.type, self.pixel_table.detector, func.array_length(self.pixel_table.x_coord, 1),
                                             self.pixel_table.obs_mid_time) \
@@ -250,6 +258,15 @@ class BadPixelData():
                 detector = row[1]
             num_pix.append(row[2])
             times.append(row[3])
+
+        # If there was no data in the database, create an empty entry
+        if len(num_pix) == 0:
+            badtype = badpix_type
+            detector = self.detector
+            num_pix = [0]
+            times = [datetime.datetime.today()]
+
+        # Add results to self.trending_data
         self.trending_data[badpix_type] = (detector, num_pix, times)
 
         # For the given detector, get the latest entry for each bad pixel type, and
@@ -347,7 +364,7 @@ class NewBadPixPlot():
 
         # Plot image
         if image is not None:
-            mapper, nx, ny are not defined yet
+            print('mapper, nx, ny are not defined yet')
             imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
         else:
             # If the background image is not present, manually set the x and y range
@@ -358,7 +375,7 @@ class NewBadPixPlot():
 
         legend_title = f'Compared to baseline file {os.path.basename(self.baseline_file)}'
 
-        # Overplot locations of bad pixels for all bad pixel types
+        # Overplot locations of bad pixels for the bad pixel type
         plot_legend = self.overplot_bad_pix()
 
         legend = Legend(items=[plot_legend],
@@ -372,8 +389,8 @@ class NewBadPixPlot():
         # Now we export as a png and place that into the figure, as a way of reducing the
         # amount of data sent to the browser. This png will be saved and immediately read
         # back in.
-        #if 1 < 0:
-        if len(self.coords[0]) > BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+        #if len(self.coords[0]) > BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+        if 1 < 0:
             output_filename = full_path_background_file.replace('.png', f'_{self.badpix_type}_pix.png')
             self.switch_to_png(output_filename)
             print(f'Switching to png for {self.detector}, {self.badpix_type}, {len(self.coords[0])}')
@@ -389,19 +406,31 @@ class NewBadPixPlot():
         """
         numpix = len(self.coords[0])
 
-        #######TEST - if too many points, cut them way down
-        #if numpix > 2:
-        #    self.coords = (self.coords[0][0:2], self.coords[1][0:2])
-        #    numpix = 2
-        #########TEST - remove before merging
+        print(f'making new badpix plot for {self.badpix_type}. numpix is {numpix}')
 
-
-
-        source = ColumnDataSource(data=dict(pixels_x=self.coords[0],
-                                            pixels_y=self.coords[1],
-                                            values=[self.badpix_type] * numpix
-                                            )
-                                  )
+        # If there are no new bad pixels, insert a fake one, in order to
+        # get the plot to be made
+        if numpix > 0:
+            source = ColumnDataSource(data=dict(pixels_x=self.coords[0],
+                                                pixels_y=self.coords[1],
+                                                values=[self.badpix_type] * numpix
+                                                )
+                                      )
+        else:
+            txt_source = ColumnDataSource(data=dict(x=[self._detlen / 10], y=[self._detlen / 2],
+                                          text=[f'No new {self.badpix_type} pixels found']))
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            self.plot.add_glyph(txt_source, glyph)
+            fakex = np.array([0, self._detlen, self._detlen, 0])
+            fakey = np.array([0, 0, self._detlen, self._detlen])
+            fakex = [int(e) for e in fakex]
+            fakey = [int(e) for e in fakey]
+            print(f'Found no new badpix: {self.badpix_type}')
+            source = ColumnDataSource(data=dict(pixels_x=fakex,
+                                                pixels_y=fakey,
+                                                values=['N/A'] * len(fakex)
+                                                )
+                                      )
 
         # Overplot the bad pixel locations
         badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, color='blue',

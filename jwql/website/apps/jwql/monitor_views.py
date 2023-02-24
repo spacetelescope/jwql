@@ -63,10 +63,13 @@ def bad_pixel_monitor(request, inst):
         Outgoing response sent to the webpage
     """
     # Locate the html file for the instrument
-    html_file = f"{inst.lower()}_bad_pix_plots.html"
-    #html_file = f"bad_pixel_monitor_test_junk.html"
+    template = f"{inst.lower()}_bad_pix_plots.html"
 
-    return render(request, html_file)
+    context = {
+        'inst': inst,
+        }
+
+    return render(request, template, context)
 
 
 def bias_monitor(request, inst):
