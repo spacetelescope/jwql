@@ -23,6 +23,8 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.embed import components, file_html
+from bokeh.io import export_png
+from bokeh.io.export import get_screenshot_as_png
 from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text
 from bokeh.plotting import figure
@@ -37,7 +39,9 @@ from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSB
 from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
-from jwql.utils.constants import BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
+from jwql.utils.constants import FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import filesystem_path, get_config, read_png
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -299,27 +303,10 @@ class NewBadPixPlot():
 
     def create_plot(self):
         """Create the plot by showing background image, and marking the locations
-        of new bad pixels on top
+        of new bad pixels on top. We load a png file of the background image rather
+        than the original fits file in order to reduce the amount of data in the
+        final html file.
         """
-
-        # Use the first background image you come across for the given bad pixel types
-        #background_file = None
-        #start_time = None
-        #end_time = None
-        #baseline_file = None
-        #for bad_type in self.badpix_types:
-        #    if bad_type in self.background_files:
-        #        background_file = self.background_files[bad_type]
-        #        start_time = self.obs_start_time[bad_type]
-        #        end_time = self.obs_end_time[bad_type]
-        #        baseline_file = self.baseline_file[bad_type]
-        #        break
-
-        # Check to see if all of the most recent entries are comparing to the same
-        # baseline file and have the same obs times. If not, we'll still plot all
-
-
-
         # Read in the data, or create an empty array
         png_file = self.background_file.replace('.fits', '.png')
         full_path_background_file = os.path.join(OUTPUT_DIR, 'bad_pixel_monitor/', png_file)
@@ -343,8 +330,16 @@ class NewBadPixPlot():
         #img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
 
         # Create figure
-        self.plot = figure(title=title_text, tools='pan,box_zoom,reset,wheel_zoom,save',
-                           x_axis_label="Pixel Number", y_axis_label="Pixel Number",)
+        # If there are "too many" points then we are going to save the plot as
+        # a png rather than send all the data to the browser. In that case, we
+        # don't want to add any tools to the figure
+        if len(self.coords[0]) <= BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+            tools = 'pan,box_zoom,reset,wheel_zoom,save'
+        else:
+            tools = ''
+
+        self.plot = figure(title=title_text, tools=tools,
+                           x_axis_label="Pixel Number", y_axis_label="Pixel Number")
         self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
         # Create the color mapper that will be used to scale the image
@@ -352,6 +347,7 @@ class NewBadPixPlot():
 
         # Plot image
         if image is not None:
+            mapper, nx, ny are not defined yet
             imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
         else:
             # If the background image is not present, manually set the x and y range
@@ -372,8 +368,15 @@ class NewBadPixPlot():
 
         self.plot.add_layout(legend, 'below')
 
-
-
+        # If there are "too many" points, we have already omitted all of the bokeh tools.
+        # Now we export as a png and place that into the figure, as a way of reducing the
+        # amount of data sent to the browser. This png will be saved and immediately read
+        # back in.
+        #if 1 < 0:
+        if len(self.coords[0]) > BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+            output_filename = full_path_background_file.replace('.png', f'_{self.badpix_type}_pix.png')
+            self.switch_to_png(output_filename)
+            print(f'Switching to png for {self.detector}, {self.badpix_type}, {len(self.coords[0])}')
 
     def overplot_bad_pix(self):
         """Add a scatter plot of potential new bad pixels to the plot
@@ -387,9 +390,9 @@ class NewBadPixPlot():
         numpix = len(self.coords[0])
 
         #######TEST - if too many points, cut them way down
-        if numpix > 2:
-            self.coords = (self.coords[0][0:2], self.coords[1][0:2])
-            numpix = 2
+        #if numpix > 2:
+        #    self.coords = (self.coords[0][0:2], self.coords[1][0:2])
+        #    numpix = 2
         #########TEST - remove before merging
 
 
@@ -401,14 +404,19 @@ class NewBadPixPlot():
                                   )
 
         # Overplot the bad pixel locations
-        badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, color='blue')
+        badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, color='blue',
+                                       fill_alpha=0.75, line_alpha=0.75, radius=0.5)
 
-        # Create hover tools for the bad pixel types
-        hover_tool = HoverTool(tooltips=[(f'{self.badpix_type} (x, y):', '(@pixels_x, @pixels_y)'),
-                                         ],
-                               renderers=[badpixplots])
-        # Add tool to plot
-        self.plot.tools.append(hover_tool)
+        # Create hover tool for the bad pixel type
+        # If there are "too many" points then we are going to save the plot as
+        # a png rather than send all the data to the browser. In that case, we
+        # don't need a hover tool
+        if numpix <= BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+            hover_tool = HoverTool(tooltips=[(f'{self.badpix_type} (x, y):', '(@pixels_x, @pixels_y)'),
+                                             ],
+                                   renderers=[badpixplots])
+            # Add tool to plot
+            self.plot.tools.append(hover_tool)
 
         # Add to the legend
         text = f"{numpix} potential new {self.badpix_type} pix compared to baseline"
@@ -417,6 +425,30 @@ class NewBadPixPlot():
         legend_items = (text, [badpixplots])
         return legend_items
 
+    def switch_to_png(self, filename):
+        """Convert the current Bokeh figure from a figure containing circles to a png
+        representation.
+
+        Parameters
+        ----------
+        filename : str
+            Name of file to save the current figure as a png into
+        """
+        # Save the figure as a png
+        #fig_array = get_screenshot_as_png(self.plot)
+
+        export_png(self.plot, filename=filename)
+        set_permissions(filename)
+
+        # Read in the png and insert into a replacement figure
+        fig_array = read_png(filename)
+
+        ydim, xdim, _ = fig_array.shape
+        dim = max(xdim, ydim)
+        self.plot = figure(x_range=(0, xdim), y_range=(0, ydim), tools='pan,box_zoom,reset,wheel_zoom,save')
+        self.plot.image_rgba(image=[fig_array], x=0, y=0, dw=xdim, dh=ydim)
+        self.plot.xaxis.visible = False
+        self.plot.yaxis.visible = False
 
 
 class BadPixTrendPlot():
