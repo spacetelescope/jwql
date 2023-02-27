@@ -381,15 +381,23 @@ class Dark():
         new_pixels_y : list
             List of y coordinates of new bad pixels
         """
+        
+        if len(badpix[0]) == 0:
+            logging.warning("Now new {} pixels found.".format(pixel_type))
+            return ([], [])
+        
+        logging.info("Excluding {} existing bad pixels {}".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
+        logging.info("\tRunning database query")
         db_entries = session.query(self.pixel_table) \
             .filter(self.pixel_table.type == pixel_type) \
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
+        logging.info("\tCreating list of found pixels")
         already_found = []
         if len(db_entries) != 0:
             for _row in db_entries:
@@ -398,6 +406,7 @@ class Dark():
                 for x, y in zip(x_coords, y_coords):
                     already_found.append((x, y))
 
+        logging.info("\tChecking pixels against found list")
         # Check to see if each pixel already appears in the database for
         # the given bad pixel type
         new_pixels_x = []
@@ -747,18 +756,21 @@ class Dark():
 
                 # Add new hot and dead pixels to the database
                 logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
-                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
                 self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
                 self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
                 # Check for any pixels that are significantly more noisy than
                 # in the baseline stdev image
+                logging.info("\tChecking for noisy pixels")
                 new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
                 # Shift coordinates to be in full_frame coordinate system
+                logging.info("\tShifting noisy pixels to full frame")
                 new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
 
                 # Exclude previously found noisy pixels
+                logging.info("\tExcluding existing bad pixels from noisy pixels")
                 new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
                 # Add new noisy pixels to the database
