@@ -29,8 +29,8 @@ class ArchiveAdmin(admin.ModelAdmin):
 
 @admin.register(Proposal)
 class ProposalAdmin(admin.ModelAdmin):
-    list_display = ('archive', 'prop_id')
-    list_filter = ('archive',)
+    list_display = ('archive', 'prop_id', 'cat_type')
+    list_filter = ('archive', 'cat_type')
 
 
 @admin.register(Observation)
