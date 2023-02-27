@@ -526,7 +526,6 @@
       text-align: left;
       color: white;
       z-index: 2;
-      font-size: 0.75rem;
   }
   
   .thumbnail-staff {
@@ -537,7 +536,21 @@
       display: inline-block;
       margin: 0.1rem;
   }
-  
+
+   /*Format thumbnail groups when active*/
+   .thumbnail-group {
+      display: inline;
+      font-size: 0.75rem;
+  }
+  .thumbnail-group-active {
+      display: block;
+      width: 90%;
+      height: 90%;
+      border: 1px solid #2d353c;
+      box-shadow: 5px 5px #c85108, 10px 10px #bec4d4;
+      position: absolute;
+      font-size: 0.65rem;
+  }
   
   /*Format the version identifier text in bottom corner*/
   #version-div {
@@ -581,4 +594,3 @@
       padding-left:10px;
       line-height:25px;
   }
-  

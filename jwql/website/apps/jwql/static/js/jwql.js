@@ -6,6 +6,7 @@
  * @author Brad Sappington
  * @author Bryan Hilbert
  * @author Maria Pena-Guerrero
+ * @author Melanie Clarke
  */
 
  /**
@@ -175,8 +176,8 @@ function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file
     var img = document.getElementById('thumbnail'+i);
     if (thumb_filename != 'none') {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
-        img.src = jpg_path
-    };
+        img.src = jpg_path;
+    }
 
 };
 
@@ -370,20 +371,34 @@ function get_number_or_none(element_id) {
  * @param {String} group_type - The group type
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function group_by_thumbnails(group_type, dropdown_keys, num_fileids, base_url) {
+function group_by_thumbnails(group_type, base_url) {
 
     // Update dropdown menu text and update thumbnails for current setting
-    //document.getElementById('group_dropdownMenuButton').innerHTML = group_type;
-    show_only('group', group_type, dropdown_keys, num_fileids, 'thumbnail', base_url);
+    show_only('group', group_type, base_url);
 
-    // Group the thumbnails accordingly.
+    // Group divs to update display style
+    var group_divs = document.getElementsByClassName("thumbnail-group");
+    // Thumbnail links to update to group or image pages
+    var thumbnail_links = document.getElementsByClassName("thumbnail-link");
+    // Show count total and type to update
+    var img_total = document.getElementById('img_total');
+    var img_type = document.getElementById('img_type');
+    var group_by = document.getElementById('group_by')
 
-    // TODO: actually group thumbnails
-    var thumbs = $('div#thumbnail-array>div');
     if (group_type == 'Exposure') {
-        console.log('Group by exposure');
+        img_total.innerText = group_by.getAttribute('data-ngroup');
+        img_type.innerText = 'groups';
+        for (var i = 0; i < group_divs.length; i++) {
+            group_divs[i].classList.add('thumbnail-group-active');
+            thumbnail_links[i].href = thumbnail_links[i].getAttribute('data-group-href');
+        }
     } else {
-        console.log('Group by file');
+        img_total.innerText = group_by.getAttribute('data-nfile');
+        img_type.innerText = 'activities';
+        for (var i = 0; i < group_divs.length; i++) {
+            group_divs[i].classList.remove('thumbnail-group-active');
+            thumbnail_links[i].href = thumbnail_links[i].getAttribute('data-image-href');
+        }
     }
 
     $.ajax({
@@ -430,19 +445,17 @@ function search() {
 
     // Find all proposal elements
     var proposals = document.getElementsByClassName("proposal");
-    var n_proposals = document.getElementsByClassName("proposal").length;
 
     // Determine the current search value
     var search_value = document.getElementById("search_box").value;
 
     // Determine whether or not to display each thumbnail
     var num_proposals_displayed = 0;
-    for (i = 0; i < proposals.length; i++) {
+    for (var i = 0; i < proposals.length; i++) {
         // Evaluate if the proposal number matches the search
         var j = i + 1
         var prop_name = document.getElementById("proposal" + j).getAttribute('proposal')
         var prop_num = Number(prop_name)
-
 
         if (prop_name.startsWith(search_value) || prop_num.toString().startsWith(search_value)) {
             proposals[i].style.display = "inline-block";
@@ -460,7 +473,7 @@ function search() {
     };
 
     // Update the count of how many images are being shown
-    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_proposals_displayed + '/' + n_proposals + ' proposals';
+    document.getElementById('img_shown').innerText = num_proposals_displayed;
 };
 
 
@@ -468,11 +481,13 @@ function search() {
  * Limit the displayed thumbnails based on filter criteria
  * @param {String} filter_type - The filter type.
  * @param {Integer} value - The filter value
- * @param {List} dropdown_keys - A list of dropdown menu keys
- * @param {Integer} num_fileids - The number of files that are available to display
- * @param {String} thumbnail_class - The class name of the thumbnails that will be filtered.
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class, base_url) {
+function show_only(filter_type, value, base_url) {
+
+    var filter_div = document.getElementById('filter_by');
+    var dropdown_keys = filter_div.getAttribute('data-dropdown-key-list');
+    var thumbnail_class = filter_div.getAttribute('data-thumbnail-class');
 
     // Get all filter options from {{dropdown_menus}} variable
     var all_filters = dropdown_keys.split(',');
@@ -501,7 +516,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
     var num_thumbnails_displayed = 0;
     var list_of_rootnames = "";
     var groups_shown = new Set();
-    for (i = 0; i < thumbnails.length; i++) {
+    for (var i = 0; i < thumbnails.length; i++) {
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
@@ -536,7 +551,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
     }
 
     // Update the count of how many images are being shown
-    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+    document.getElementById('img_shown').innerText = num_thumbnails_displayed;
     if (num_thumbnails_displayed) {
         // remove trailing ','.
         list_of_rootnames = list_of_rootnames.slice(0, -1);
@@ -688,7 +703,7 @@ function update_archive_page(inst, base_url) {
             // Update the number of proposals displayed
             num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
-            update_filter_options(data, base_url, num_proposals, 'proposal');
+            update_filter_options(data, base_url, 'proposal');
 
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
@@ -854,18 +869,19 @@ function update_wata_page(base_url) {
 /**
  * Updates the thumbnail-filter div with filter options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
- * @param {Integer} num_items - The total number of items that will be filtered upon
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} thumbnail_class - the class name of the thumbnails that will be filtered
  */
- function update_filter_options(data, base_url, num_items, thumbnail_class) {
-    content = 'Filter by:'
+ function update_filter_options(data, base_url, thumbnail_class) {
+    var dropdown_key_list = Object.keys(data.dropdown_menus);
+    content = '<div class="d-inline" id="filter_by" data-dropdown-key-list="'
+              + dropdown_key_list + '" data-thumbnail-class="'
+              + thumbnail_class + '">Filter by:</div>';
 
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
         filter_type = Object.keys(data.dropdown_menus)[i];
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-        num_rootnames = num_items;
-        dropdown_key_list = Object.keys(data.dropdown_menus);
 
         // Build div content
         content += '<div style="display: flex">';
@@ -873,10 +889,10 @@ function update_wata_page(base_url) {
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + base_url + '\');">All ' + filter_type + 's</a>';
+        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + base_url + '\');">All ' + filter_type + 's</a>';
 
         for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + base_url + '\');">' + filter_options[j] + '</a>';
+            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + base_url + '\');">' + filter_options[j] + '</a>';
         };
 
         content += '</div>';
@@ -890,17 +906,18 @@ function update_wata_page(base_url) {
 /**
  * Updates the group-by-exposure div
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function update_group_options(data, base_url, num_items, thumbnail_class) {
-
-    var dropdown_key_list = Object.keys(data.dropdown_menus);
+function update_group_options(data, base_url) {
 
     // Build div content
-    content = 'Group by:<br>'
+    content = '<div class="d-inline" id="group_by" data-ngroup="'
+              + data.exp_groups.length + '" data-nfile="'
+              + Object.keys(data.file_data).length + '">Group by:<br></div>';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="group_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_group + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'Exposure\', \'' + dropdown_key_list + '\',\'' + num_items + '\',\'' + base_url + '\');">Exposure</a>';
-    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'File\', \'' + dropdown_key_list + '\',\'' + num_items + '\',\'' + base_url + '\');">File</a>';
+    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'Exposure\', \'' + base_url + '\');">Exposure</a>';
+    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'File\', \'' + base_url + '\');">File</a>';
     content += '</div></div>';
     // Add the content to the div
     $("#group-by-exposure")[0].innerHTML = content;
@@ -959,7 +976,7 @@ function update_obs_options(data, inst, prop, observation) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
-    content = 'Showing ' + count + '/' + count + ' ' + type;
+    content = 'Showing <div class="d-inline" id="img_shown">' + count + '</div> / <div class="d-inline" id="img_total">' + count + '</div> <div class="d-inline" id="img_type">' + type + '</div>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
@@ -968,6 +985,7 @@ function update_show_count(count, type) {
 /**
  * Updates the thumbnail-sort div with sorting options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
 function update_sort_options(data, base_url) {
 
@@ -992,7 +1010,7 @@ function update_sort_options(data, base_url) {
  */
 function update_thumbnail_array(data) {
 
-      // Add content to the thumbail array div
+    // Add content to the thumbnail array div
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
         
         // Parse out useful variables
@@ -1003,13 +1021,17 @@ function update_thumbnail_array(data) {
         filename_dict = file.filename_dict;
 
         // Build div content
-        if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
-            content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        var instrument;
+        if (data.inst != "all") {
+            instrument = data.inst;
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
-            content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
+            instrument = filename_dict.instrument;
         }
+        content = '<div class="thumbnail" instrument="' + instrument + '" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
+        content += '<div class="thumbnail-group">'
+        content += '<a class="thumbnail-link" href="#" data-image-href="/'
+                   + instrument + '/' + rootname + '/" data-group-href="/'
+                   + instrument + '/exposure/' + filename_dict.group_root +  '">';
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
@@ -1018,7 +1040,7 @@ function update_thumbnail_array(data) {
         content += 'Visit: ' + filename_dict.visit + '<br>';
         content += 'Detector: ' + filename_dict.detector + '<br>';
         content += 'Exp_Start: ' + file.expstart_iso + '<br>';
-        content += '</div></a></div>';
+        content += '</div></a></div></div>';
 
         // Add the content to the div
         $("#thumbnail-array")[0].innerHTML += content;
@@ -1060,7 +1082,7 @@ function submit_date_range_form(inst, base_url) {
                     if (num_thumbnails > 0) {
                         update_show_count(num_thumbnails, 'activities');
                         update_thumbnail_array(data);
-                        update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+                        update_filter_options(data, base_url, 'thumbnail');
 
                         // Do initial sort to match sort button display
                         update_sort_options(data, base_url);
@@ -1109,12 +1131,12 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal, observation);
-            update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
-            update_group_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_filter_options(data, base_url, 'thumbnail');
+            update_group_options(data, base_url);
             update_sort_options(data, base_url);
 
             // Do initial sort and group to match sort button display
-            group_by_thumbnails(group, Object.keys(data.dropdown_menus).toString(), num_thumbnails, base_url);
+            group_by_thumbnails(group, base_url);
             sort_by_thumbnails(sort, base_url);
 
             // Replace loading screen with the proposal array div
@@ -1136,7 +1158,7 @@ function update_thumbnails_query_page(base_url, sort) {
             num_thumbnails = Object.keys(data.file_data).length;
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
-            update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_filter_options(data, base_url, 'thumbnail');
             update_sort_options(data, base_url);
 
             // Do initial sort to match sort button display
