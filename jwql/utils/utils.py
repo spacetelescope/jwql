@@ -126,46 +126,85 @@ def _validate_config(config_file_dict):
 
 
 def create_png_from_fits(filename, outdir):
-        """Create and save a png file of the provided file. The file
-        will be saved with the same filename as the input file, but
-        with fits replaced by png
+    """Create and save a png file of the provided file. The file
+    will be saved with the same filename as the input file, but
+    with fits replaced by png
 
-        Parameters
-        ----------
-        filename : str
-            Fits file to be opened and saved as a png
+    Parameters
+    ----------
+    filename : str
+        Fits file to be opened and saved as a png
 
-        outdir : str
-            Output directory to save the png file to
+    outdir : str
+        Output directory to save the png file to
 
-        Returns
-        -------
-        png_file : str
-            Name of the saved png file
-        """
-        if os.path.isfile(filename):
-            image = fits.getdata(filename)
-            ny, nx = image.shape
-            img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
+    Returns
+    -------
+    png_file : str
+        Name of the saved png file
+    """
+    if os.path.isfile(filename):
+        image = fits.getdata(filename)
+        ny, nx = image.shape
+        img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
 
-            plot = figure(tools='')
-            plot.x_range.range_padding = plot.y_range.range_padding = 0
+        plot = figure(tools='')
+        plot.x_range.range_padding = plot.y_range.range_padding = 0
+        plot.toolbar.logo = None
+        plot.toolbar_location = None
+        plot.min_border = 0
+        plot.xgrid.visible = False
+        plot.ygrid.visible = False
 
-            # Create the color mapper that will be used to scale the image
-            #mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
-            mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        # Create the color mapper that will be used to scale the image
+        #mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
-            # Plot image
-            imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
-                                 color_mapper=mapper, level="image")
+        # Plot image
+        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                             color_mapper=mapper, level="image")
 
-            # Save the plot in a png
-            output_filename = os.path.join(outdir, os.path.basename(filename))
-            export_png(plot, filename=output_filename)
-            permissions.set_permissions(output_filename)
-            return output_filename
-        else:
-            return None
+        # Turn off the axes, in order to make embedding in another figure easier
+        plot.xaxis.visible = False
+        plot.yaxis.visible = False
+
+        # Save the plot in a png
+        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
+        export_png(plot, filename=output_filename)
+        permissions.set_permissions(output_filename)
+        return output_filename
+    else:
+        return None
+
+
+def screenshot_as_png():
+    from bokeh.io.export import get_screenshot_as_png
+    if os.path.isfile(filename):
+        image = fits.getdata(filename)
+        ny, nx = image.shape
+        img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
+
+        plot = figure(tools='')
+        plot.x_range.range_padding = plot.y_range.range_padding = 0
+
+        # Create the color mapper that will be used to scale the image
+        #mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+
+        # Plot image
+        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                             color_mapper=mapper, level="image")
+
+        # Turn off the axes, in order to make embedding in another figure easier
+        plot.xaxis.visible = False
+        plot.yaxis.visible = False
+
+        # Save the plot in a png
+        screenshot = get_screenshot_as_png(plot, height=600, width=600)
+        return screenshot
+    else:
+        return None
+
 
 
 def get_config():
@@ -695,9 +734,14 @@ def read_png(filename):
         rgba_img = Image.open(filename).convert('RGBA')
         xdim, ydim = rgba_img.size
 
-        # Create an array representation for the image `img`, and an 8-bit "4
-        # layer/RGBA" version of it `view`.
+        # Create an array representation for the image, filled with
+        # dummy data to begin with
         img = np.empty((ydim, xdim), dtype=np.uint32)
+
+        # Create a layer/RGBA" version with a set of 4, 8-bit layers.
+        # We will work with the data using 'view', and our changes
+        # will propagate back into the 2D 'img' version, which is
+        # what we will end up returning.
         view = img.view(dtype=np.uint8).reshape((ydim, xdim, 4))
 
         # Copy the RGBA image into view, flipping it so it comes right-side up
@@ -705,7 +749,8 @@ def read_png(filename):
         view[:,:,:] = np.flipud(np.asarray(rgba_img))
     else:
         view = None
-    return view
+    # Return the 2D version
+    return img
 
 
 def grouper(iterable, chunksize):

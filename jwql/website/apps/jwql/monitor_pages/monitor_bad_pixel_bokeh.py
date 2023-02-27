@@ -8,13 +8,12 @@ Author
 Use
 ---
 
-    This module can be used from the command line as such:
+    This module can be used from the command line like this:
 
     ::
 
         from jwql.website.apps.jwql import monitor_pages
-        monitor_template = monitor_pages.BadPixelMonitor('NIRCam', 'NRCA3_FULL')
-        script, div = monitor_template.embed("bad_pixel_time_figure")
+        monitor_pages.BadPixelMonitor('nircam')
 """
 
 import os
@@ -23,10 +22,10 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.embed import components, file_html
-from bokeh.io import export_png
+from bokeh.io import export_png, show
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
@@ -49,7 +48,26 @@ OUTPUT_DIR = get_config()['outputs']
 
 
 class BadPixelPlots():
-    """Class for creating the bad pixel plots and figures to be displayed in the web app
+    """Class for creating the bad pixel monitor plots and figures to be displayed
+    in the web app
+
+    Attributes
+    ----------
+    instrument : str
+        Name of instrument (e.g. 'nircam')
+
+    detectors : list
+        List of detectors corresponding to ```instrument```. One tab will be created
+        for each detector.
+
+    pixel_table : sqlalchemy table
+        Table containing bad pixel information for each detector
+
+    query_table : sqlalchemy table
+        Table containing history of bad pixel monitor runs and files used
+
+    _html : str
+        HTML for the bad pixel monitor page
     """
     def __init__(self, instrument):
         self.instrument = instrument.lower()
@@ -76,7 +94,7 @@ class BadPixelPlots():
         """Given an html string produced by Bokeh when saving bad pixel monitor plots,
         make tweaks such that the page follows the general JWQL page formatting.
         """
-        lines = self.html.split('\n')
+        lines = self._html.split('\n')
 
         # List of lines that Bokeh likes to save in the file, but we don't want
         lines_to_remove = ["<!DOCTYPE html>",
@@ -94,7 +112,7 @@ class BadPixelPlots():
                     '  <main role="main" class="container">\n', "\n",
                     f"  <h1>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Monitor</h1>\n",
                     "  <hr>\n",
-                    f"  <b>View or Download {JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Stats Table:</b> <a " + hstring,
+                    f"  <b>View or Download {JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bad Pixel Stats Table:</b>&emsp; <a " + hstring,
                     "  <hr>\n"
                     ]
 
@@ -109,7 +127,7 @@ class BadPixelPlots():
                 newlines.append(line + '\n')
         newlines = newlines + endlines
 
-        self.html = "".join(newlines)
+        self._html = "".join(newlines)
 
 
     def run(self):
@@ -147,7 +165,7 @@ class BadPixelPlots():
         template_dir = os.path.join(os.path.dirname(__file__), '../templates')
         template_file = os.path.join(template_dir, 'bad_pixel_monitor_savefile_basic.html')
         temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div':div}
-        self.html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
+        self._html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
 
         # Modify the html such that our Django-related lines are kept in place,
         # which will allow the page to keep the same formatting and styling as
@@ -159,11 +177,67 @@ class BadPixelPlots():
         outfile = f'{self.instrument}_bad_pix_plots.html'
         outfile = os.path.join(outdir, outfile)
         with open(outfile, "w") as file:
-            file.write(self.html)
+            file.write(self._html)
 
 
 class BadPixelData():
-    """Retrieve bad pixel monitor data from the database
+    """Class to retrieve and store bad pixel monitor data from the database
+
+    Parameters
+    ----------
+    pixel_table : sqlalchemy table
+        Table containing bad pixel information for each detector
+
+    instrument : str
+        Instrument name, e.g. 'nircam'
+
+    detector : str
+        Detector name, e.g. 'NRCA1'
+
+    Atributes
+    ---------
+    background_file : str
+        Name of one file used to find the current selection of bad pixels
+
+    badtypes : list
+        List of bad pixel types present in ```pixel_table```
+
+    baseline_file : str
+        Name of file containing a previous collection of bad pixels, to be
+        compared against the new collection of bad pixels
+
+    detector : str
+        Detector name, e.g. 'NRCA1'
+
+    instrument : str
+        Instrument name, e.g. 'nircam'
+
+    new_bad_pix : dict
+        Keys are the types of bad pixels (e.g. 'dead'). The value for each key
+        is a 2-tuple. The first element is a list of x coordinates, and the second
+        element is a list of y coordinates, corresponding to the locations of that
+        type of bad pixel.
+
+    num_files : dict
+        Keys are the types of bad pixels (e.g. 'dead'). The value of each is the number
+        of files used when searching for that type of bad pixel.
+
+    obs_end_time : dict
+        Keys are the types of bad pixels (e.g. 'dead'). The value of each is the ending
+        time (datetime instance) of the observations used to find the bad pixels.
+
+    obs_start_time : dict
+        Keys are the types of bad pixels (e.g. 'dead'). The value of each is the starting
+        time (datetime instance) of the observations used to find the bad pixels.
+
+    pixel_table : sqlalchemy table
+        Table containing bad pixel information for each detector
+
+    trending_data : dict
+        Keys are the types of bad pixels (e.g. 'dead'). The value of each is a 3-tuple of
+        data to be used to create the trending plot. The first element is the detector name,
+        the second is a list of the number of bad pixels, and the third is a list of the
+        datetimes associated with the bad pixel numbers.
     """
     def __init__(self, pixel_table, instrument, detector):
         self.pixel_table = pixel_table
@@ -194,10 +268,6 @@ class BadPixelData():
 
     def get_most_recent_entry(self):
         """Get all nedded data from the database tables.
-        Parameters
-        ----------
-        detector : str
-            Name of detector for which data are retrieved (e.g. NRCA1)
         """
         # For the given detector, get the latest entry for each bad pixel type
         subq = (session
@@ -233,7 +303,12 @@ class BadPixelData():
             self.baseline_file[self.badtypes[0]] = ''
 
     def get_trending_data(self, badpix_type):
-        """
+        """Retrieve and organize the data needed to produce the trending plot.
+
+        Parameters
+        ----------
+        badpix_type : str
+            The type of bad pixel to query for, e.g. 'dead'
         """
         # Query database for all data in the table with a matching detector and bad pixel type
         all_entries_by_type = session.query(self.pixel_table.type, self.pixel_table.detector, func.array_length(self.pixel_table.x_coord, 1),
@@ -260,29 +335,79 @@ class BadPixelData():
 
         # Add results to self.trending_data
         self.trending_data[badpix_type] = (detector, num_pix, times)
-
-        # For the given detector, get the latest entry for each bad pixel type, and
-        # return the bad pixel type, detector, and mean dark image file
-        #subq = (session
-        #        .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
-        #        .filter(self.pixel_table.detector == self.detector & self.pixle_table.type == self.type)
-        #        .group_by(self.pixel_table.type)
-        #        .subquery()
-        #        )
-
-        #query = (session.query(self.pixel_table.type, self.pixel_table.detector, self.pixel_table.x_coord.length, self.pixel_table.obs_mid_time)
-        #         .join(subq, self.pixel_table.entry_date == subq.c.max_created)
-        #         )
-
-        #self.most_recent_data = query.all()
         session.close()
 
 
 class NewBadPixPlot():
-    """Create a plot showing the location of newly discovered bad pixels
+    """Class to create a plot showing the location of newly discovered bad pixels of a certain type
 
     Parameters
     ----------
+    detector_name : str
+        Name of detector, e.g. NRCA1
+
+    badpix_type : str
+        Type of bad pixel, e.g. 'dead'
+
+    nfiles : int
+        Number of files used to find the bad pixels
+
+    coords : tuple
+        2-tuple. The first element is a list of x coordinates, and the second
+        element is a list of y coordinates, corresponding to the locations of that
+        type of bad pixel.
+
+    background_file : str
+        Name of one of the files used to find the bad pixels
+
+    baseline_file : str
+        Name of file containing previously identified bad pixels, which were compared to the
+        new collection of bad pixels
+
+    obs_start_time : datetime.datetime
+        Datetime of the beginning of the observations used in the search for the bad pixels
+
+    obs_end_time : datetime.datetime
+        Datetime of the ending of the observations used in the search for the bad pixels
+
+    Attributes
+    ----------
+    background_file : str
+        Name of one of the files used to find the bad pixels
+
+    badpix_type : str
+        Type of bad pixel, e.g. 'dead'
+
+    baseline_file : str
+        Name of file containing previously identified bad pixels, which were compared to the
+        new collection of bad pixels
+
+    coords : tuple
+        2-tuple. The first element is a list of x coordinates, and the second
+        element is a list of y coordinates, corresponding to the locations of that
+        type of bad pixel.
+
+    detector : str
+        Name of detector, e.g. NRCA1
+
+    num_files : int
+        Number of files used to find the bad pixels
+
+    obs_start_time : datetime.datetime
+        Datetime of the beginning of the observations used in the search for the bad pixels
+
+    obs_end_time : datetime.datetime
+        Datetime of the ending of the observations used in the search for the bad pixels
+
+    plot : Bokeh.plotting.figure
+        Figure showing the location of the bad pixels on the detector
+
+    _detlen : int
+        Number of pixels in one row or column of ```detector```
+
+    _use_png : bool
+        Whether or not to create the Bokeh figure using circle glyphs of all bad pixels, or to
+        save the plot of bad pixels as a png and load that (in order to reduce data volume.)
     """
     def __init__(self, detector_name, badpix_type, nfiles, coords, background_file, baseline_file, obs_start_time, obs_end_time):
         self.detector = detector_name
@@ -293,12 +418,6 @@ class NewBadPixPlot():
         self.baseline_file = baseline_file
         self.obs_start_time = obs_start_time
         self.obs_end_time = obs_end_time
-        #if self.data_type == 'darks':
-        #    self.badpix_types = DARKS_BAD_PIXEL_TYPES
-        #elif self.data_type == 'flats':
-        #    self.badpix_types = FLATS_BAD_PIXEL_TYPES
-        #else:
-        #    raise ValueError("Unrecognized data type. Should be 'flats' or 'darks'")
 
         # If no background file is given, we fall back to plotting the bad pixels
         # on top of an empty image. In that case, we need to know how large the
@@ -307,6 +426,12 @@ class NewBadPixPlot():
             self._detlen = 1024
         else:
             self._detlen = 2048
+
+        # If there are "too many" points then we are going to save the plot as
+        # a png rather than send all the data to the browser.\
+        self._use_png = False
+        if len(self.coords[0]) > BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+            self._use_png = True
 
         self.create_plot()
 
@@ -319,45 +444,53 @@ class NewBadPixPlot():
         # Read in the data, or create an empty array
         png_file = self.background_file.replace('.fits', '.png')
         full_path_background_file = os.path.join(OUTPUT_DIR, 'bad_pixel_monitor/', png_file)
+
+        print('Looking for: ', full_path_background_file)
+
         if os.path.isfile(full_path_background_file):
             image = read_png(full_path_background_file)
         else:
-            print(f'Background_file {full_path_background_file} is not a valid file')
-            #image = np.zeros((self._detlen, self._detlen))
             image = None
-            #title_text = f'{self.detector}: New bad pix from {self.data_type}. {self.num_files} files.'
-
-        #start_time = Time(float(self.obs_start_time), format='mjd').tt.datetime.strftime("%m/%d/%Y")
-        #end_time  = Time(float(self.obs_end_time), format='mjd').tt.datetime.strftime("%m/%d/%Y")
 
         start_time = self.obs_start_time.strftime("%m/%d/%Y")
         end_time = self.obs_end_time.strftime("%m/%d/%Y")
 
         title_text = f'{self.detector}: New {self.badpix_type} pix: from {self.num_files} files. {start_time} to {end_time}'
 
-        #ny, nx = image.shape
-        #img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
-
         # Create figure
         # If there are "too many" points then we are going to save the plot as
         # a png rather than send all the data to the browser. In that case, we
         # don't want to add any tools to the figure
-        if len(self.coords[0]) <= BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+        if not self._use_png:
             tools = 'pan,box_zoom,reset,wheel_zoom,save'
+            self.plot = figure(title=title_text, tools=tools,
+                               x_axis_label="Pixel Number", y_axis_label="Pixel Number")
         else:
-            tools = ''
+            self.plot = figure(tools='') #, x_axis_label="Pixel Number", y_axis_label="Pixel Number")
+            self.plot.toolbar.logo = None
+            self.plot.toolbar_location = None
+            self.plot.min_border = 0
+            self.plot.xaxis.visible = False
+            self.plot.yaxis.visible = False
 
-        self.plot = figure(title=title_text, tools=tools,
-                           x_axis_label="Pixel Number", y_axis_label="Pixel Number")
         self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
-
-        # Create the color mapper that will be used to scale the image
-        #mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
         # Plot image
         if image is not None:
             print('mapper, nx, ny are not defined yet')
-            imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
+            ny, nx = image.shape
+            #imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
+
+
+
+            # Shift the figure title slightly right in this case to get it
+            # to align with the axes
+            #self.plot = figure(title=title, x_range=(0, self._detlen), y_range=(0, self._detlen), width=xdim, height=ydim*,
+            #                   tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_label="Pixel Number", y_axis_label="Pixel Number")
+            self.plot.image_rgba(image=[image], x=0, y=0, dw=self._detlen, dh=self._detlen)
+
+
+
         else:
             # If the background image is not present, manually set the x and y range
             self.plot.x_range.start = 0
@@ -370,6 +503,16 @@ class NewBadPixPlot():
         # Overplot locations of bad pixels for the bad pixel type
         plot_legend = self.overplot_bad_pix()
 
+        # If there are "too many" points, we have already omitted all of the bokeh tools.
+        # Now we export as a png and place that into the figure, as a way of reducing the
+        # amount of data sent to the browser. This png will be saved and immediately read
+        # back in.
+        if self._use_png:
+            output_filename = full_path_background_file.replace('.png', f'_{self.badpix_type}_pix.png')
+            self.switch_to_png(output_filename, title_text)
+            print(f'Switching to png for {self.detector}, {self.badpix_type}, {len(self.coords[0])}')
+
+        # Create and add legend to the figure
         legend = Legend(items=[plot_legend],
                         location="center",
                         orientation='vertical',
@@ -377,15 +520,6 @@ class NewBadPixPlot():
 
         self.plot.add_layout(legend, 'below')
 
-        # If there are "too many" points, we have already omitted all of the bokeh tools.
-        # Now we export as a png and place that into the figure, as a way of reducing the
-        # amount of data sent to the browser. This png will be saved and immediately read
-        # back in.
-        #if len(self.coords[0]) > BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
-        if 1 < 0:
-            output_filename = full_path_background_file.replace('.png', f'_{self.badpix_type}_pix.png')
-            self.switch_to_png(output_filename)
-            print(f'Switching to png for {self.detector}, {self.badpix_type}, {len(self.coords[0])}')
 
     def overplot_bad_pix(self):
         """Add a scatter plot of potential new bad pixels to the plot
@@ -398,10 +532,6 @@ class NewBadPixPlot():
         """
         numpix = len(self.coords[0])
 
-        print(f'making new badpix plot for {self.badpix_type}. numpix is {numpix}')
-
-        # If there are no new bad pixels, insert a fake one, in order to
-        # get the plot to be made
         if numpix > 0:
             source = ColumnDataSource(data=dict(pixels_x=self.coords[0],
                                                 pixels_y=self.coords[1],
@@ -409,15 +539,17 @@ class NewBadPixPlot():
                                                 )
                                       )
         else:
+            # If there are no new bad pixels, write text within the figure mentioning that
             txt_source = ColumnDataSource(data=dict(x=[self._detlen / 10], y=[self._detlen / 2],
                                           text=[f'No new {self.badpix_type} pixels found']))
             glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
             self.plot.add_glyph(txt_source, glyph)
+
+            # Insert a fake one, in order to get the plot to be made
             fakex = np.array([0, self._detlen, self._detlen, 0])
             fakey = np.array([0, 0, self._detlen, self._detlen])
             fakex = [int(e) for e in fakex]
             fakey = [int(e) for e in fakey]
-            print(f'Found no new badpix: {self.badpix_type}')
             source = ColumnDataSource(data=dict(pixels_x=fakex,
                                                 pixels_y=fakey,
                                                 values=['N/A'] * len(fakex)
@@ -425,14 +557,14 @@ class NewBadPixPlot():
                                       )
 
         # Overplot the bad pixel locations
-        badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, color='blue',
+        badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, color='#EC04FF',
                                        fill_alpha=0.75, line_alpha=0.75, radius=0.5)
 
         # Create hover tool for the bad pixel type
         # If there are "too many" points then we are going to save the plot as
         # a png rather than send all the data to the browser. In that case, we
         # don't need a hover tool
-        if numpix <= BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT:
+        if not self._use_png:
             hover_tool = HoverTool(tooltips=[(f'{self.badpix_type} (x, y):', '(@pixels_x, @pixels_y)'),
                                              ],
                                    renderers=[badpixplots])
@@ -446,34 +578,73 @@ class NewBadPixPlot():
         legend_items = (text, [badpixplots])
         return legend_items
 
-    def switch_to_png(self, filename):
-        """Convert the current Bokeh figure from a figure containing circles to a png
+    def switch_to_png(self, filename, title):
+        """Convert the current Bokeh figure from a figure containing circle glyphs to a png
         representation.
 
         Parameters
         ----------
         filename : str
             Name of file to save the current figure as a png into
+
+        title : str
+            Title to add to the Figure
         """
         # Save the figure as a png
-        #fig_array = get_screenshot_as_png(self.plot)
+        print('Saving plot as png in: ', filename)
 
         export_png(self.plot, filename=filename)
         set_permissions(filename)
 
         # Read in the png and insert into a replacement figure
         fig_array = read_png(filename)
+        ydim, xdim = fig_array.shape
 
-        ydim, xdim, _ = fig_array.shape
-        dim = max(xdim, ydim)
-        self.plot = figure(x_range=(0, xdim), y_range=(0, ydim), tools='pan,box_zoom,reset,wheel_zoom,save')
-        self.plot.image_rgba(image=[fig_array], x=0, y=0, dw=xdim, dh=ydim)
-        self.plot.xaxis.visible = False
-        self.plot.yaxis.visible = False
+        # Shift the figure title slightly right in this case to get it
+        # to align with the axes
+        self.plot = figure(title=title, x_range=(0, self._detlen), y_range=(0, self._detlen), width=xdim, height=ydim,
+                           tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_label="Pixel Number", y_axis_label="Pixel Number")
+        self.plot.image_rgba(image=[fig_array], x=0, y=0, dw=self._detlen, dh=self._detlen)
+        #self.plot.xaxis.visible = False
+        #self.plot.yaxis.visible = False
+
+        # Now that the data from the png is in the figure, delete the png
+        #os.remove(filename)
 
 
 class BadPixTrendPlot():
-    """Create a plot showing the location of a certain type of bad pixel
+    """Class to create a plot of the number of bad pixels of a certain type versus time
+
+    Parameters
+    ----------
+    detector_name : str
+        Name of the detector, e.g. 'NRCA1'
+
+    badpix_type : str
+        Type of bad pixel, e.g. 'dead'
+
+    entry : tup
+        3-tuple of the data to be plotted. (BadPixelData.trending_data for a certain type
+        of bad pixel). The first element is the detector name, the second is a list of
+        the number of bad pixels, and the third is a list of the datetimes associated
+        with the bad pixel numbers.
+
+    Attributes
+    ----------
+    detector : str
+        Name of the detector, e.g. 'NRCA1'
+
+    badpix_type : str
+        Type of bad pixel, e.g. 'dead'
+
+    num_pix : list
+        List of the number of bad pixels found for a list of times
+
+    plot : Bokeh.plotting.figure
+        Bokeh figure showing a plot of the number of bad pixels versus time
+
+    time : list
+        List of datetimes associated with ```num_pix```
     """
     def __init__(self, detector_name, badpix_type, entry):
         self.detector = detector_name
@@ -505,7 +676,6 @@ class BadPixTrendPlot():
         self.plot = figure(title=f'{self.detector}: New {self.badpix_type} Pixels', tools='pan,box_zoom,reset,wheel_zoom,save',
                            background_fill_color="#fafafa")
 
-        # Plot the "main" amp data along with error bars
         self.plot.scatter(x='time', y='num_pix', fill_color="navy", alpha=0.75, source=source)
 
         hover_tool = HoverTool(tooltips=[('# Pixels:', '@num_pix'),
@@ -566,372 +736,3 @@ def badpix_monitor_plot_layout(plots):
     plot_layout = layout(all_plots)
 
     return plot_layout
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""OLD CODE BELOW HERE"""
-"""CAN BE DELETED"""
-
-
-class BadPixelMonitor():
-
-    # Combine instrument and aperture into a single property because we
-    # do not want to invoke the setter unless both are updated
-    @property
-    def aperture_info(self):
-        return (self._instrument, self._aperture)
-
-    @aperture_info.setter
-    def aperture_info(self, info):
-        self._instrument, self._aperture = info
-        self.pre_init()
-        self.post_init()
-
-    def bad_pixel_history(self, bad_pixel_type):
-        """Use the database to construct information on the total number
-        of a given type of bad pixels over time
-
-        Parameters
-        ----------
-        bad_pixel_type : str
-            The flavor of bad pixel (e.g. 'hot')
-
-        Returns
-        -------
-        num_bad_pixels : numpy.ndarray
-            1D array of the number of bad pixels
-
-        dates : datetime.datetime
-            1D array of dates/times corresponding to num_bad_pixels
-        """
-        # Find all the rows corresponding to the requested type of bad pixel
-        rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
-
-        # Extract the dates and number of bad pixels from each entry
-        dates = [row.obs_mid_time for row in rows]
-        num = [len(row.coordinates[0]) for row in rows]
-
-        # If there are no valid entres in the database, return None
-        if len(dates) == 0:
-            return None, None
-
-        # Sort by date to make sure everything is in chronological order
-        chrono = np.argsort(dates)
-        dates = dates[chrono]
-        num = num[chrono]
-
-        # Sum the number of bad pixels found from the earliest entry up to
-        # each new entry
-        num_bad_pixels = [np.sum(num[0:i]) for i in range(1, len(num) + 1)]
-
-        return num_bad_pixels, dates
-
-    def _badpix_image(self):
-        """Update bokeh objects with sample image data."""
-
-        # Open the mean dark current file and get the data
-        with fits.open(self.image_file) as hdulist:
-            data = hdulist[1].data
-
-        # Grab only one frame
-        ndims = len(data.shape)
-        if ndims == 4:
-            data = data[0, -1, :, :]
-        elif ndims == 3:
-            data = data[-1, :, :]
-        elif ndims == 2:
-            pass
-        else:
-            raise ValueError('Unrecognized number of dimensions in data file: {}'.format(ndims))
-
-        # Update the plot with the data and boundaries
-        y_size, x_size = data.shape
-        self.refs["bkgd_image"].data['image'] = [data]
-        self.refs["stamp_xr"].end = x_size
-        self.refs["stamp_yr"].end = y_size
-        self.refs["bkgd_source"].data['dw'] = [x_size]
-        self.refs["bkgd_source"].data['dh'] = [y_size]
-
-        # Set the image color scale
-        self.refs["log_mapper"].high = 0
-        self.refs["log_mapper"].low = -.2
-
-        # Add a title
-        self.refs['badpix_map_figure'].title.text = '{}: New Bad Pixels'.format(self._aperture)
-        self.refs['badpix_map_figure'].title.align = "center"
-        self.refs['badpix_map_figure'].title.text_font_size = "20px"
-
-    def most_recent_coords(self, bad_pixel_type):
-        """Return the coordinates of the bad pixels in the most recent
-        database entry for the given bad pixel type
-
-        Parameters
-        ----------
-        bad_pixel_type : str
-            The flavor of bad pixel (e.g. 'hot')
-
-        Returns
-        -------
-        coords : tup
-            Tuple containing a list of x coordinates and a list of y
-            coordinates
-        """
-        # Find all the rows corresponding to the requested type of bad pixel
-        rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
-
-        # Extract dates, number of bad pixels, and files used from each entry
-        dates = [row.obs_mid_time for row in rows]
-        coords = [row.coordinates for row in rows]
-        files = [row.source_files[0] for row in rows]
-
-        # If there are no valid entres in the database, return None
-        if len(dates) == 0:
-            return None, None
-
-        # Sort by date to make sure everything is in chronological order
-        chrono = np.argsort(dates)
-        dates = dates[chrono]
-        coords = coords[chrono]
-        files = files[chrono]
-
-        # Keep track of the latest timestamp
-        self.last_timestamp = dates[-1].isoformat()
-
-        # Grab the name of one of the files used when these bad pixels
-        # were identified. We'll use this as an image on top of which
-        # the bad pixels will be noted. Note that these should be
-        # slope files
-        self.image_file = filesystem_path(files[-1])
-
-        # Return the list of coordinates for the most recent entry
-        return coords[-1]
-
-    def pre_init(self):
-        # Start with default values for instrument and aperture because
-        # BokehTemplate's __init__ method does not allow input arguments
-        try:
-            dummy_instrument = self._instrument
-            dummy_aperture = self._aperture
-        except AttributeError:
-            self._instrument = 'NIRCam'
-            self._aperture = 'NRCA1_FULL'
-
-        self._embed = True
-
-        # Fix aperture/detector name discrepency
-        if self._aperture in ['NRCA5_FULL', 'NRCB5_FULL']:
-            self.detector = '{}LONG'.format(self._aperture[0:4])
-        else:
-            self.detector = self._aperture.split('_')[0]
-
-        # App design
-        self.format_string = None
-        self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "badpixel_monitor_interface.yaml")
-
-        # Load data tables
-        self.load_data()
-        self.get_history_data()
-        # For development, while the database tables are empty
-        # self.load_dummy_data()
-
-        # Get dates and coordinates of the most recent entries
-        self.most_recent_data()
-
-        # This shows that for e.g. NRCA2_FULL, the data are what we expect,
-        # but somehow the plot is not showing it!!!!!!!!
-        # if self._aperture != 'NRCA1_FULL':
-        #    raise ValueError(self._aperture, self.latest_bad_from_dark_type, self.latest_bad_from_dark_x, self.latest_bad_from_dark_y)
-
-    def post_init(self):
-        self._update_badpix_v_time()
-        self._update_badpix_loc_plot()
-
-    def get_history_data(self):
-        """Extract data on the history of bad pixel numbers from the
-        database query result
-        """
-        self.bad_history = {}
-        self.bad_latest = {}
-        for bad_pixel_type in BAD_PIXEL_TYPES:
-            matching_rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
-            if len(matching_rows) != 0:
-                real_data = True
-                times = [row.obs_mid_time for row in matching_rows]
-                num = np.array([len(row.x_coord) for row in matching_rows])
-
-                latest_row = times.index(max(times))
-                self.bad_latest[bad_pixel_type] = (max(times), matching_rows[latest_row].x_coord, matching_rows[latest_row].y_coord)
-
-            # If there are no records of a certain type of bad pixel, then
-            # fall back to a default date and 0 bad pixels. Remember that
-            # these plots are always showing the number of NEW bad pixels
-            # that are not included in the current reference file.
-            else:
-                real_data = False
-
-                times = [datetime.datetime(2021, 10, 31), datetime.datetime(2021, 11, 1)]
-                badpix_x = [1000, 999]
-                badpix_y = [1000, 999]
-                num = np.array([0, 0])
-                self.bad_latest[bad_pixel_type] = (max(times), badpix_x, badpix_y)
-
-            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
-            self.bad_history[bad_pixel_type] = (times, num, hover_values)
-
-            # if real_data:
-            #    raise ValueError(bad_pixel_type, self.bad_history[bad_pixel_type])
-
-    def identify_tables(self):
-        """Determine which database tables as associated with
-        a given instrument"""
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
-        self.query_table = eval('{}BadPixelQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}BadPixelStats'.format(mixed_case_name))
-
-    def load_data(self):
-        """Query the database tables to get data"""
-
-        # Determine which database tables are needed based on instrument
-        self.identify_tables()
-
-        # Query database for all data with a matching aperture
-        self.bad_pixel_table = session.query(self.pixel_table) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
-
-        session.close()
-
-    def load_dummy_data(self):
-        """Create dummy data for Bokeh plot development"""
-        import datetime
-
-        # Populate a dictionary with the number of bad pixels vs time for
-        # each type of bad pixel. We can't get the full list of bad pixel
-        # types from the database itself, because if there is a type of bad
-        # pixel with no found instances, then it won't appear in the database
-        # Also populate a dictionary containing the locations of all of the
-        # bad pixels found in the most recent search
-        self.bad_history = {}
-        self.bad_latest = {}
-        for i, bad_pixel_type in enumerate(BAD_PIXEL_TYPES):
-
-            # Comment out while waiting for populated database tables
-            # num, times = self.bad_pixel_history(bad_pixel_type)
-            delta = 10 * i
-
-            # Placeholders while we wait for a populated database
-            days = np.arange(1, 11)
-            times = np.array([datetime.datetime(2020, 8, day, 12, 0, 0) for day in days])
-            num = np.arange(10)
-            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
-
-            self.bad_history[bad_pixel_type] = (times, num, hover_values)
-            self.bad_latest[bad_pixel_type] = (datetime.datetime(1999, 12, 31), [500 + delta, 501 + delta, 502 + delta], [4, 4, 4])
-
-    def most_recent_data(self):
-        """Get the bad pixel type and coordinates associated with the most
-        recent run of the monitor. Note that the most recent date can be
-        different for dark current data vs flat field data
-        """
-        self.latest_bad_from_dark_type = []
-        self.latest_bad_from_dark_x = []
-        self.latest_bad_from_dark_y = []
-        dark_times = [self.bad_latest[bad_pixel_type][0] for bad_pixel_type in DARKS_BAD_PIXEL_TYPES]
-        if len(dark_times) > 0:
-            self.most_recent_dark_date = max(dark_times)
-        else:
-            self.most_recent_dark_date = datetime.datetime(1999, 10, 31)
-
-        for bad_pixel_type in DARKS_BAD_PIXEL_TYPES:
-            if self.bad_latest[bad_pixel_type][0] == self.most_recent_dark_date:
-                self.latest_bad_from_dark_type.extend([bad_pixel_type] * len(self.bad_latest[bad_pixel_type][1]))
-                self.latest_bad_from_dark_x.extend(self.bad_latest[bad_pixel_type][1])
-                self.latest_bad_from_dark_y.extend(self.bad_latest[bad_pixel_type][2])
-
-        self.latest_bad_from_dark_type = np.array(self.latest_bad_from_dark_type)
-        self.latest_bad_from_dark_x = np.array(self.latest_bad_from_dark_x)
-        self.latest_bad_from_dark_y = np.array(self.latest_bad_from_dark_y)
-
-        self.latest_bad_from_flat_type = []
-        self.latest_bad_from_flat_x = []
-        self.latest_bad_from_flat_y = []
-
-        self.latest_bad_from_flat = [[], [], []]
-        flat_times = [self.bad_latest[bad_pixel_type][0] for bad_pixel_type in FLATS_BAD_PIXEL_TYPES]
-        if len(flat_times) > 1:
-            self.most_recent_flat_date = max(flat_times)
-        else:
-            self.most_recent_flat_date = datetime.datetime(1999, 10, 31)
-        for bad_pixel_type in FLATS_BAD_PIXEL_TYPES:
-            if self.bad_latest[bad_pixel_type][0] == self.most_recent_flat_date:
-                self.latest_bad_from_flat_type.extend([bad_pixel_type] * len(self.bad_latest[bad_pixel_type][1]))
-                self.latest_bad_from_flat_x.extend(self.bad_latest[bad_pixel_type][1])
-                self.latest_bad_from_flat_y.extend(self.bad_latest[bad_pixel_type][2])
-
-        self.latest_bad_from_flat_type = np.array(self.latest_bad_from_flat_type)
-        self.latest_bad_from_flat_x = np.array(self.latest_bad_from_flat_x)
-        self.latest_bad_from_flat_y = np.array(self.latest_bad_from_flat_y)
-
-    def _update_badpix_loc_plot(self):
-        """Update the plot properties for the plots showing the locations
-        of new bad pixels"""
-        if 'MIR' in self._aperture:
-            self.refs['dark_position_xrange'].end = 1024
-            self.refs['dark_position_yrange'].end = 1024
-            self.refs['flat_position_xrange'].end = 1024
-            self.refs['flat_position_yrange'].end = 1024
-
-        dark_date = self.most_recent_dark_date.strftime('%d-%b-%Y %H:%m')
-        self.refs['dark_position_figure'].title.text = '{} New Bad Pixels (darks). Obs Time: {}'.format(self._aperture, dark_date)
-        self.refs['dark_position_figure'].title.align = "center"
-        self.refs['dark_position_figure'].title.text_font_size = "15px"
-
-        flat_date = self.most_recent_flat_date.strftime('%d-%b-%Y %H:%m')
-        self.refs['flat_position_figure'].title.text = '{} New Bad Pixels (flats). Obs Time: {}'.format(self._aperture, flat_date)
-        self.refs['flat_position_figure'].title.align = "center"
-        self.refs['flat_position_figure'].title.text_font_size = "15px"
-
-    def _update_badpix_v_time(self):
-        """Update the plot properties for the plots of the number of bad
-        pixels versus time
-        """
-        for bad_pixel_type in BAD_PIXEL_TYPES:
-            bad_pixel_type_lc = bad_pixel_type.lower()
-
-            # Define y ranges of bad pixel v. time plot
-            buffer_size = 0.05 * (max(self.bad_history[bad_pixel_type][1]) - min(self.bad_history[bad_pixel_type][1]))
-            if buffer_size == 0:
-                buffer_size = 1
-            self.refs['{}_history_yrange'.format(bad_pixel_type_lc)].start = min(self.bad_history[bad_pixel_type][1]) - buffer_size
-            self.refs['{}_history_yrange'.format(bad_pixel_type_lc)].end = max(self.bad_history[bad_pixel_type][1]) + buffer_size
-
-            # Define x range of bad_pixel v. time plot
-            horizontal_half_buffer = (max(self.bad_history[bad_pixel_type][0]) - min(self.bad_history[bad_pixel_type][0])) * 0.05
-            if horizontal_half_buffer == 0:
-                horizontal_half_buffer = 1.  # day
-            self.refs['{}_history_xrange'.format(bad_pixel_type_lc)].start = min(self.bad_history[bad_pixel_type][0]) - horizontal_half_buffer
-            self.refs['{}_history_xrange'.format(bad_pixel_type_lc)].end = max(self.bad_history[bad_pixel_type][0]) + horizontal_half_buffer
-
-            # Add a title
-            self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.text = '{}: {} pixels'.format(self._aperture, bad_pixel_type)
-            self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.align = "center"
-            self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.text_font_size = "20px"
-
-
-
-
-
-# Uncomment the line below when testing via the command line:
-# bokeh serve --show monitor_badpixel_bokeh.py
-# BadPixelMonitor()
