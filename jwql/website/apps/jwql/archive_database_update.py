@@ -44,6 +44,7 @@ from jwql.utils.logging_functions import log_info, log_fail  # noqa
 from jwql.utils.monitor_utils import initialize_instrument_monitor  # noqa
 from jwql.utils.constants import MAST_QUERY_LIMIT  # noqa
 from jwql.utils.utils import filename_parser, filesystem_path, get_config  # noqa
+from jwql.website.apps.jwql.data_containers import create_archived_proposals_context  # noqa
 from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument  # noqa
 from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument  # noqa
 
@@ -313,3 +314,4 @@ if __name__ == '__main__':
     instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
     for instrument in instruments:
         get_updates(instrument)
+        create_archived_proposals_context(instrument)
