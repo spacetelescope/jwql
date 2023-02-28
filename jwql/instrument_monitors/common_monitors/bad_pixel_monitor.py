@@ -104,8 +104,8 @@ from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixe
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
+from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES,
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.permissions import set_permissions
@@ -431,66 +431,6 @@ class BadPixels():
                  'baseline_file': baseline_file,
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
-
-    def create_badpix_plot(self):
-        """Create a Bokeh figure of a single bad pixel figure. For the given
-        detector/aperture and bad pixel type load an image and display. Then scatter markers
-
-        """
-
-    def create_plot_layout(self):
-        """Creat a bokeh figure to hold an image of the detector with
-        bad pixel locations marked on the map. Save the figure as a
-        json file, so that it can be loaded into the bad pixel results
-        html page, and displayed
-
-        There should be one tab for each detector. On each tab, there
-        are plots showing the locations of new bad pixels from darks,
-        and new bad pixels from flats. Then there is a separate plot
-        for each flavor of bad pixel that shows the number of these
-        bad pixels found versus time.
-
-        BUT: nircam has no lamp, so we will never had any bad pix from
-        flats.
-        What other entries would be missing from other instruments?
-        """
-        do we want to create one json file for each detector/aperture?
-        or like the edb monitor, one json file that holds all the
-        plots? The latter case is probably easier. With multiple json
-        files, we would need a custom html file that loads each json file
-        individually. This means we would need a different html file for
-        each instrument.
-
-
-        # example of creating a custom grid layout
-        sliders = column(amp, freq, phase, offset)
-
-        layout([
-            [bollinger],
-            [sliders, plot],
-            [p1, p2, p3],
-            ])
-
-
-
-
-
-
-
-
-        # Wrap the plots in a Panel
-        panel_list.append(Panel(child=grid, title=key))
-
-
-
-        # Save the tabbed plot to a json file - this is from EDB monitor
-        item_text = json.dumps(json_item(tabbed, "tabbed_edb_plot"))
-        basename = f'edb_{self.instrument}_tabbed_plots.json'
-        output_file = os.path.join(self.plot_output_dir, basename)
-        with open(output_file, 'w') as outfile:
-            outfile.write(item_text)
-        logging.info(f'JSON file with tabbed plots saved to {output_file}')
-
 
     def filter_query_results(self, results, datatype):
         """Filter MAST query results. For input flats, keep only those
@@ -837,11 +777,9 @@ class BadPixels():
         # Illuminated files - run entirety of calwebb_detector1 for uncal
         # files where corresponding rate file is 'None'
         badpix_types = []
-        badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
-        badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
         if illuminated_raw_files:
-            badpix_types.extend(badpix_types_from_flats)
+            badpix_types.extend(FLATS_BAD_PIXEL_TYPES)
             out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
             in_files = []
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
@@ -903,7 +841,7 @@ class BadPixels():
         dark_obstimes = []
         if dark_raw_files:
             index = 0
-            badpix_types.extend(badpix_types_from_darks)
+            badpix_types.extend(DARKS_BAD_PIXEL_TYPES)
             # In this case we need to run the pipeline on all input files,
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
@@ -1058,18 +996,14 @@ class BadPixels():
             # Add new hot and dead pixels to the database
             logging.info('\tFound {} new {} pixels'.format(len(bad_location_list[0]), bad_type))
 
-            if bad_type in badpix_types_from_flats:
+            if bad_type in FLATS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
                 flat_png = create_png_from_fits(illuminated_slope_files[0], self.output_dir)
-            elif bad_type in badpix_types_from_darks:
+            elif bad_type in DARKS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
                 dark_png = create_png_from_fits(dark_slope_files[0], self.output_dir)
-
-            here: create_badpix_plot()
-
-
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 
@@ -1281,6 +1215,7 @@ class BadPixels():
         for instrument in updated_instruments:
             BadPixelPlots(instrument)
 
+        logging.info(f'Updating web pages for: {updated_instruments}')
         logging.info('Bad Pixel Monitor completed successfully.')
 
 
