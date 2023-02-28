@@ -405,6 +405,8 @@ class Dark():
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
                     already_found.append((x, y))
+        found_x = np.array([x[0] for x in already_found])
+        found_y = np.array([x[1] for x in already_found])
 
         logging.info("\tChecking pixels against found list")
         # Check to see if each pixel already appears in the database for
@@ -412,10 +414,15 @@ class Dark():
         new_pixels_x = []
         new_pixels_y = []
         for x, y in zip(badpix[0], badpix[1]):
-            pixel = (x, y)
-            if pixel not in already_found:
+            ind_x = np.where(found_x == x)
+            ind_y = np.where(found_y == y)
+            if len(np.intersect1d(ind_x[0], ind_y[0])) > 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
+#             pixel = (x, y)
+#             if pixel not in already_found:
+#                 new_pixels_x.append(x)
+#                 new_pixels_y.append(y)
 
         session.close()
         return (new_pixels_x, new_pixels_y)
