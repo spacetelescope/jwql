@@ -386,7 +386,7 @@ class Dark():
             logging.warning("Now new {} pixels found.".format(pixel_type))
             return ([], [])
         
-        logging.info("Excluding {} existing bad pixels {}".format(len(badpix[0]), pixel_type))
+        logging.info("Checking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
@@ -397,7 +397,7 @@ class Dark():
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
-        logging.info("\tCreating list of found pixels")
+        logging.info("\tCreating list of {} existing {} pixels".format(len(db_entries, pixel_type)))
         already_found = []
         if len(db_entries) != 0:
             for _row in db_entries:
@@ -679,10 +679,12 @@ class Dark():
             logging.info('\tWorking on file: {}'.format(filename))
 
             rate_file = filename.replace("dark", "rate")
+            rate_file_name = os.path.basename(rate_file)
+            local_rate_file = os.path.join(self.data_dir, rate_file_name)
 
-            if os.path.isfile(rate_file):
-                logging.info("\t\tFile {} exists, skipping pipeline".format(rate_file))
-                slope_files.append(filename)
+            if os.path.isfile(local_rate_file):
+                logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
+                slope_files.append(local_rate_file)
             else:
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
