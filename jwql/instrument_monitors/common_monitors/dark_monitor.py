@@ -397,7 +397,7 @@ class Dark():
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
-        logging.info("\tCreating list of {} existing {} pixels".format(len(db_entries, pixel_type)))
+        logging.info("\tCreating list of {} existing {} pixels".format(len(db_entries), pixel_type))
         already_found = []
         if len(db_entries) != 0:
             for _row in db_entries:
