@@ -101,9 +101,11 @@
 
                         <!--Show the field forms-->
                         {% for field in form %}
+                            <ul>
                             {% for subwidget in field.subwidgets %}
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
+                            </ul>
                         {% endfor %}
                         <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
                     </form>

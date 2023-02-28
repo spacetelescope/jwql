@@ -334,7 +334,7 @@
   }
   
   /* Get rid of padding around GitHub logo */
-  #github-link {
+  #github-link, #github-link-collapsed {
       padding-bottom: 0px;
       padding-top: 0px;
   }

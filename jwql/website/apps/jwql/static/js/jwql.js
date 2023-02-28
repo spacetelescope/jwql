@@ -444,7 +444,7 @@ function search() {
     for (var i = 0; i < proposals.length; i++) {
         // Evaluate if the proposal number matches the search
         var j = i + 1
-        var prop_name = document.getElementById("proposal" + j).getAttribute('proposal')
+        var prop_name = document.getElementById("proposal" + j).getAttribute('data-proposal')
         var prop_num = Number(prop_name)
 
         if (prop_name.startsWith(search_value) || prop_num.toString().startsWith(search_value)) {
@@ -510,14 +510,14 @@ function show_only(filter_type, value, base_url) {
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
-            var filter_attribute = thumbnails[i].getAttribute(all_filters[j]);
+            var filter_attribute = thumbnails[i].getAttribute('data-' + all_filters[j]);
             var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0)
                          || (filter_attribute.includes(filter_values[j]));
             criteria.push(criterion);
         }
 
         // If data are grouped, check if a thumbnail for the group has already been displayed
-        if (group && groups_shown.has(thumbnails[i].getAttribute('group_root'))) {
+        if (group && groups_shown.has(thumbnails[i].getAttribute('data-group_root'))) {
             criteria.push(false);
         }
 
@@ -525,8 +525,10 @@ function show_only(filter_type, value, base_url) {
         if (criteria.every(function(r){return r})) {
             thumbnails[i].style.display = "inline-block";
             num_thumbnails_displayed++;
-            list_of_rootnames = list_of_rootnames + thumbnails[i].getAttribute("file_root") + '=' + thumbnails[i].getAttribute("exp_start") + ',';
-            if (group) { groups_shown.add(thumbnails[i].getAttribute('group_root')); }
+            list_of_rootnames = list_of_rootnames +
+                                thumbnails[i].getAttribute("data-file_root") +
+                                '=' + thumbnails[i].getAttribute("data-exp_start") + ',';
+            if (group) { groups_shown.add(thumbnails[i].getAttribute('data-group_root')); }
         } else {
             thumbnails[i].style.display = "none";
         }
@@ -577,7 +579,7 @@ function sort_by_proposals(sort_type) {
         tinysort(props, {order:'desc'});
     } else if (sort_type == 'Recent') {
         // Sort by the most recent Observation Start
-        tinysort(props, {order:'desc', attr:'obs_time'});
+        tinysort(props, {order:'desc', attr:'data-obs_time'});
     }
 }
 
@@ -597,14 +599,14 @@ function sort_by_thumbnails(sort_type, base_url) {
 
     var thumbs = $('div#thumbnail-array>div')
     if (sort_type == 'Descending') {
-        tinysort(thumbs, {attr:'file_root', order:'desc'});
+        tinysort(thumbs, {attr:'data-file_root', order:'desc'});
     } else if (sort_type == 'Recent') {
-        tinysort(thumbs, {attr:'exp_start', order:'desc'}, {attr:'file_root', order:'asc'});
+        tinysort(thumbs, {attr:'data-exp_start', order:'desc'}, {attr:'data-file_root', order:'asc'});
     } else if (sort_type == 'Oldest') {
-        tinysort(thumbs, {attr:'exp_start', order:'asc'}, {attr:'file_root', order:'asc'});
+        tinysort(thumbs, {attr:'data-exp_start', order:'asc'}, {attr:'data-file_root', order:'asc'});
     } else {
         // Default to 'Ascending'
-        tinysort(thumbs, {attr:'file_root', order:'asc'});
+        tinysort(thumbs, {attr:'data-file_root', order:'asc'});
     }
     $.ajax({
         url: base_url + '/ajax/image_sort/',
@@ -709,8 +711,11 @@ function update_archive_page(inst, base_url) {
                 var cat_type = data.thumbnails.cat_types[i];
 
                 // Build div content
-                var content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '" cat_type="' + cat_type + '">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                var content = '<div class="proposal text-center" data-look="' + viewed +
+                              '" data-exp_type="' + exp_types + '" data-obs_time="' + obs_time +
+                              '" data-cat_type="' + cat_type + '">';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' +
+                           min_obsnum + '/" id="proposal' + (i + 1) + '" data-proposal="' + prop + '">';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
@@ -866,9 +871,9 @@ function update_wata_page(base_url) {
  */
  function update_filter_options(data, base_url, thumbnail_class) {
     var dropdown_key_list = Object.keys(data.dropdown_menus);
-    var content = '<div class="d-inline" id="filter_by" data-dropdown-key-list="'
-                  + dropdown_key_list + '" data-thumbnail-class="'
-                  + thumbnail_class + '">Filter by:</div>';
+    var content = '<div class="d-inline" id="filter_by" data-dropdown-key-list="' +
+                  dropdown_key_list + '" data-thumbnail-class="' +
+                  thumbnail_class + '">Filter by:</div>';
 
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
@@ -903,9 +908,9 @@ function update_wata_page(base_url) {
 function update_group_options(data, base_url) {
 
     // Build div content
-    var content = '<div class="d-inline" id="group_by" data-ngroup="'
-              + data.exp_groups.length + '" data-nfile="'
-              + Object.keys(data.file_data).length + '">Group by:<br></div>';
+    var content = '<div class="d-inline" id="group_by" data-ngroup="' +
+                  data.exp_groups.length + '" data-nfile="' +
+                  Object.keys(data.file_data).length + '">Group by:<br></div>';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="group_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_group + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
     content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'Exposure\', \'' + base_url + '\');">Exposure</a>';
@@ -1019,15 +1024,20 @@ function update_thumbnail_array(data) {
         } else {
             instrument = filename_dict.instrument;
         }
-        var content = '<div class="thumbnail" instrument="' + instrument
-                      + '" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id
-                      + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root
-                      + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
+        var content = '<div class="thumbnail" data-instrument="' + instrument +
+                      '" data-detector="' + filename_dict.detector + '" data-proposal="' + filename_dict.program_id +
+                      '" data-file_root="' + rootname + '" data-group_root="' + filename_dict.group_root +
+                      '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type + '">';
         content += '<div class="thumbnail-group">'
-        content += '<a class="thumbnail-link" href="#" data-image-href="/'
-                   + instrument + '/' + rootname + '/" data-group-href="/'
-                   + instrument + '/exposure/' + filename_dict.group_root +  '">';
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
+        content += '<a class="thumbnail-link" href="#" data-image-href="/' +
+                   instrument + '/' + rootname + '/" data-group-href="/' +
+                   instrument + '/exposure/' + filename_dict.group_root +  '">';
+        content += '<span class="helper"></span>'
+
+        // Make sure thumbnail img always has a src and alt
+        content += '<img id="thumbnail' + i +
+                   '" src="/static/img/default_thumb.png" ' +
+                   'alt="Thumbnail for file ' + rootname + '">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
