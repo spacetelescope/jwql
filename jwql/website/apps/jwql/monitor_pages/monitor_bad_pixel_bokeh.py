@@ -606,15 +606,13 @@ class NewBadPixPlot():
         fig_array = read_png(filename)
         ydim, xdim = fig_array.shape
 
-        # Shift the figure title slightly right in this case to get it
-        # to align with the axes
+        # Create the figure
         self.plot = figure(title=title, x_range=(0, self._detlen), y_range=(0, self._detlen), width=xdim, height=ydim,
                            tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_label="Pixel Number", y_axis_label="Pixel Number")
         self.plot.image_rgba(image=[fig_array], x=0, y=0, dw=self._detlen, dh=self._detlen)
-        #self.plot.xaxis.visible = False
-        #self.plot.yaxis.visible = False
 
         # Now that the data from the png is in the figure, delete the png
+        # UNCOMMENT THE LINE BELOW FOR PRODUCTION
         #os.remove(filename)
 
 
