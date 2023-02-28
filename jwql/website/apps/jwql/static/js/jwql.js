@@ -30,19 +30,19 @@
     document.getElementById(type).checked = true;
 
     // Clean the input parameters
-    var num_ints = num_ints.replace(/&#39;/g, '"');
-    var num_ints = num_ints.replace(/'/g, '"');
-    var num_ints = JSON.parse(num_ints);
+    num_ints = num_ints.replace(/&#39;/g, '"');
+    num_ints = num_ints.replace(/'/g, '"');
+    num_ints = JSON.parse(num_ints);
 
     // Get the available integration jpg numbers
-    var available_ints = available_ints.replace(/&#39;/g, '"');
-    var available_ints = available_ints.replace(/'/g, '"');
-    var available_ints = JSON.parse(available_ints)[type];
+    available_ints = available_ints.replace(/&#39;/g, '"');
+    available_ints = available_ints.replace(/'/g, '"');
+    available_ints = JSON.parse(available_ints)[type];
 
     // Get the total number of integrations
-    var total_ints = total_ints.replace(/&#39;/g, '"');
-    var total_ints = total_ints.replace(/'/g, '"');
-    var total_ints = JSON.parse(total_ints);
+    total_ints = total_ints.replace(/&#39;/g, '"');
+    total_ints = total_ints.replace(/'/g, '"');
+    total_ints = JSON.parse(total_ints);
 
     // Propogate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
@@ -83,7 +83,7 @@
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
 
-};
+}
 
 
  /**
@@ -103,19 +103,20 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
     // Figure out the current image and integration
     var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
     var integration = Number(suffix[suffix.length - 1].replace('.jpg','').replace('integ',''))
-    var suffix = suffix[suffix.length - 2];
+    suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
 
     // Find the total number of integrations for the current image
-    var num_ints = num_ints.replace(/'/g, '"');
-    var num_ints = JSON.parse(num_ints)[suffix];
+    num_ints = num_ints.replace(/'/g, '"');
+    num_ints = JSON.parse(num_ints)[suffix];
 
     // Get the available integration jpg numbers and the current integration index
-    var available_ints = available_ints.replace(/'/g, '"');
-    var available_ints = JSON.parse(available_ints)[suffix];
+    available_ints = available_ints.replace(/'/g, '"');
+    available_ints = JSON.parse(available_ints)[suffix];
     var current_index = available_ints.indexOf(integration);
 
     // Get the desired integration value
+    var new_integration;
     switch (method) {
         case "button":
             if ((integration == num_ints - 1 && direction == 'right')||
@@ -160,7 +161,7 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
     // Update the slider values
     document.getElementById("slider_range").value = new_integration + 1
     document.getElementById("slider_val").innerHTML = new_integration + 1
-};
+}
 
 
 /**
@@ -179,7 +180,7 @@ function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file
         img.src = jpg_path;
     }
 
-};
+}
 
 
 /**
@@ -192,6 +193,7 @@ function determine_page_title(instrument, proposal) {
     var url = document.URL;
     var url_split = url.split('/');
     var url_title = url_split[url_split.length - 2];
+    var final_title;
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal
     } else if (url_title == 'unlooked') {
@@ -203,9 +205,9 @@ function determine_page_title(instrument, proposal) {
         document.getElementById('title').innerHTML = final_title;
         if (document.title != final_title) {
             document.title = final_title;
-        };
-    };
-};
+        }
+    }
+}
 
 /**
  * Determine whether the page is archive or unlooked
@@ -218,7 +220,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
     var url = document.URL;
     var url_split = url.split('/');
     var url_title = url_split[url_split.length - 3];
-    var url_end = url_split[url_split.length - 1];
+    var final_title;
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
     } else if (url_title == 'unlooked') {
@@ -232,9 +234,9 @@ function determine_page_title_obs(instrument, proposal, observation) {
         document.getElementById('title').innerHTML = final_title;
         if (document.title != final_title) {
             document.title = final_title;
-        };
-    };
-};
+        }
+    }
+}
 
 /**
  * adds/removes disabled_section class and clears value
@@ -259,16 +261,16 @@ function determine_page_title_obs(instrument, proposal, observation) {
 function explore_image_update_enable_options(integrations, groups) {
     
     // Check nr of integrations and groups of currently selected extension
-    ext_name = get_radio_button_value("extension");
+    var ext_name = get_radio_button_value("extension");
 
     // Clean the input parameters and get our integrations/groups for this extension
     var calc_difference = false;
-    var integrations = integrations.replace(/&#39;/g, '"');
-    var integrations = integrations.replace(/'/g, '"');
-    var integrations = JSON.parse(integrations)[ext_name];
-    var groups = groups.replace(/&#39;/g, '"');
-    var groups = groups.replace(/'/g, '"');
-    var groups = JSON.parse(groups)[ext_name];
+    integrations = integrations.replace(/&#39;/g, '"');
+    integrations = integrations.replace(/'/g, '"');
+    integrations = JSON.parse(integrations)[ext_name];
+    groups = groups.replace(/&#39;/g, '"');
+    groups = groups.replace(/'/g, '"');
+    groups = JSON.parse(groups)[ext_name];
     
     // Zero base our calculations
     integrations -= 1
@@ -345,7 +347,7 @@ function getCookie(name) {
 function get_radio_button_value(element_name) {
     var element = document.getElementsByName(element_name);
 
-    for(i = 0; i < element.length; i++) {
+    for(var i = 0; i < element.length; i++) {
         if(element[i].checked) {
             return element[i].value;
         }
@@ -388,14 +390,14 @@ function group_by_thumbnails(group_type, base_url) {
     if (group_type == 'Exposure') {
         img_total.innerText = group_by.getAttribute('data-ngroup');
         img_type.innerText = 'groups';
-        for (var i = 0; i < group_divs.length; i++) {
+        for (let i = 0; i < group_divs.length; i++) {
             group_divs[i].classList.add('thumbnail-group-active');
             thumbnail_links[i].href = thumbnail_links[i].getAttribute('data-group-href');
         }
     } else {
         img_total.innerText = group_by.getAttribute('data-nfile');
         img_type.innerText = 'activities';
-        for (var i = 0; i < group_divs.length; i++) {
+        for (let i = 0; i < group_divs.length; i++) {
             group_divs[i].classList.remove('thumbnail-group-active');
             thumbnail_links[i].href = thumbnail_links[i].getAttribute('data-image-href');
         }
@@ -410,7 +412,7 @@ function group_by_thumbnails(group_type, base_url) {
             console.log("session image group update failed");
         }
     });
-};
+}
 
 
 /**
@@ -424,18 +426,6 @@ function image_error(image, makeThumbnail=false) {
     }
     return true;
 }
-
-
-/**
- * Parse a JSON string containing a Bokeh plot
- * @param {String} element - json-formatted string
- */
-function parse_plot_json(element) {
-    // Determine if the URL is 'archive' or 'unlooked'
-    var formatted = Object;
-    formatted = JSON.parse(element)
-};
-
 
 
 /**
@@ -463,18 +453,18 @@ function search() {
         } else {
             proposals[i].style.display = "none";
         }
-    };
+    }
 
     // If there are no proposals to display, tell the user
     if (num_proposals_displayed == 0) {
         document.getElementById('no_proposals_msg').style.display = 'inline-block';
     } else {
         document.getElementById('no_proposals_msg').style.display = 'none';
-    };
+    }
 
     // Update the count of how many images are being shown
     document.getElementById('img_shown').innerText = num_proposals_displayed;
-};
+}
 
 
 /**
@@ -504,7 +494,7 @@ function show_only(filter_type, value, base_url) {
 
     // Determine the current value for each filter
     var filter_values = [];
-    for (j = 0; j < all_filters.length; j++) {
+    for (var j = 0; j < all_filters.length; j++) {
         var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
         filter_values.push(filter_value);
     }
@@ -524,7 +514,7 @@ function show_only(filter_type, value, base_url) {
             var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0)
                          || (filter_attribute.includes(filter_values[j]));
             criteria.push(criterion);
-        };
+        }
 
         // If data are grouped, check if a thumbnail for the group has already been displayed
         if (group && groups_shown.has(thumbnails[i].getAttribute('group_root'))) {
@@ -540,14 +530,14 @@ function show_only(filter_type, value, base_url) {
         } else {
             thumbnails[i].style.display = "none";
         }
-    };
+    }
     if (document.getElementById('no_thumbnails_msg') != null) {
         // If there are no thumbnails to display, tell the user
         if (num_thumbnails_displayed == 0) {
             document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
         } else {
             document.getElementById('no_thumbnails_msg').style.display = 'none';
-        };
+        }
     }
 
     // Update the count of how many images are being shown
@@ -568,7 +558,7 @@ function show_only(filter_type, value, base_url) {
             }
         });
     }
-};
+}
 
 
 /**
@@ -589,7 +579,7 @@ function sort_by_proposals(sort_type) {
         // Sort by the most recent Observation Start
         tinysort(props, {order:'desc', attr:'obs_time'});
     }
-};
+}
 
 
 /**
@@ -625,7 +615,7 @@ function sort_by_thumbnails(sort_type, base_url) {
             console.log("session image sort update failed");
         }
     });
-};
+}
 
 
 /**
@@ -680,8 +670,8 @@ function download_report(inst, base_url) {
         var status = filters[i].innerText.toLowerCase();
         if (!status.includes('all')) {
             options += '&' + name + '=' + status;
-        };
-    };
+        }
+    }
     var report_url = '/' + inst + '/report' + options;
     console.log('Redirecting to: ' + report_url);
 
@@ -701,7 +691,7 @@ function update_archive_page(inst, base_url) {
         success: function(data){
 
             // Update the number of proposals displayed
-            num_proposals = data.thumbnails.proposals.length;
+            var num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
             update_filter_options(data, base_url, 'proposal');
 
@@ -709,17 +699,17 @@ function update_archive_page(inst, base_url) {
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
 
                 // Parse out useful variables
-                prop = data.thumbnails.proposals[i];
-                min_obsnum = data.min_obsnum[i];
-                thumb = data.thumbnails.thumbnail_paths[i];
-                n = data.thumbnails.num_files[i];
-                viewed = data.thumbnails.viewed[i];
-                exp_types = data.thumbnails.exp_types[i];
-                obs_time = data.thumbnails.obs_time[i];
-                cat_type = data.thumbnails.cat_types[i];
+                var prop = data.thumbnails.proposals[i];
+                var min_obsnum = data.min_obsnum[i];
+                var thumb = data.thumbnails.thumbnail_paths[i];
+                var n = data.thumbnails.num_files[i];
+                var viewed = data.thumbnails.viewed[i];
+                var exp_types = data.thumbnails.exp_types[i];
+                var obs_time = data.thumbnails.obs_time[i];
+                var cat_type = data.thumbnails.cat_types[i];
 
                 // Build div content
-                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '" cat_type="' + cat_type + '">';
+                var content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '" cat_type="' + cat_type + '">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
@@ -735,9 +725,9 @@ function update_archive_page(inst, base_url) {
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("proposal-array").style.display = "block";
-            };
+            }
     }});
-};
+}
 
 
 /**
@@ -751,7 +741,7 @@ function update_msata_page(base_url) {
         success: function(data){
 
             // Build div content
-            content = data["div"];
+            var content = data["div"];
             content += data["script"];
 
             /* Add the content to the div
@@ -769,7 +759,7 @@ function update_msata_page(base_url) {
             document.getElementById('msata_fail').style.display = "inline-block";
         }
     });
-};
+}
 
 
 /**
@@ -783,7 +773,7 @@ function update_wata_page(base_url) {
         success: function(data){
 
             // Build div content
-            content = data["div"];
+            var content = data["div"];
             content += data["script"];
 
             /* Add the content to the div
@@ -801,7 +791,7 @@ function update_wata_page(base_url) {
             document.getElementById('wata_fail').style.display = "inline-block";
         }
     });
-};
+}
 
 
 /**
@@ -815,21 +805,23 @@ function update_wata_page(base_url) {
  function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
 
     /* if they exist set up the optional parameters before the ajax call*/
-    optional_params = "";
+    var optional_params = "";
     if(do_opt_args) {
         // Reset loading
         document.getElementById("loading").style.display = "inline-block";
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
-        calc_difference = document.getElementById("calcDifference").checked;
+        var calc_difference = document.getElementById("calcDifference").checked;
 
         // Get the arguments to update
-        scaling = get_radio_button_value("scaling");
-        low_lim = get_number_or_none("low_lim");
-        high_lim = get_number_or_none("high_lim");
-        ext_name = get_radio_button_value("extension");
-        int1_nr = get_number_or_none("integration1");
-        grp1_nr = get_number_or_none("group1");
+        var scaling = get_radio_button_value("scaling");
+        var low_lim = get_number_or_none("low_lim");
+        var high_lim = get_number_or_none("high_lim");
+        var ext_name = get_radio_button_value("extension");
+        var int1_nr = get_number_or_none("integration1");
+        var grp1_nr = get_number_or_none("group1");
+        var int2_nr;
+        var grp2_nr;
         if (calc_difference) {
             int2_nr = get_number_or_none("integration2");
             grp2_nr = get_number_or_none("group2");
@@ -845,7 +837,7 @@ function update_wata_page(base_url) {
         success: function(data){
 
             // Build div content
-            content = data["div"];
+            var content = data["div"];
             content += data["script"];
 
             /* Add the content to the div
@@ -863,7 +855,7 @@ function update_wata_page(base_url) {
             document.getElementById('explore_image_fail').style.display = "inline-block";
         }
     });
-};
+}
 
 
 /**
@@ -874,14 +866,14 @@ function update_wata_page(base_url) {
  */
  function update_filter_options(data, base_url, thumbnail_class) {
     var dropdown_key_list = Object.keys(data.dropdown_menus);
-    content = '<div class="d-inline" id="filter_by" data-dropdown-key-list="'
-              + dropdown_key_list + '" data-thumbnail-class="'
-              + thumbnail_class + '">Filter by:</div>';
+    var content = '<div class="d-inline" id="filter_by" data-dropdown-key-list="'
+                  + dropdown_key_list + '" data-thumbnail-class="'
+                  + thumbnail_class + '">Filter by:</div>';
 
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
-        filter_type = Object.keys(data.dropdown_menus)[i];
-        filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
+        var filter_type = Object.keys(data.dropdown_menus)[i];
+        var filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
 
         // Build div content
         content += '<div style="display: flex">';
@@ -893,15 +885,15 @@ function update_wata_page(base_url) {
 
         for (var j = 0; j < filter_options.length; j++) {
             content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + base_url + '\');">' + filter_options[j] + '</a>';
-        };
+        }
 
         content += '</div>';
         content += '</div></div>';
-    };
+    }
 
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the group-by-exposure div
@@ -911,7 +903,7 @@ function update_wata_page(base_url) {
 function update_group_options(data, base_url) {
 
     // Build div content
-    content = '<div class="d-inline" id="group_by" data-ngroup="'
+    var content = '<div class="d-inline" id="group_by" data-ngroup="'
               + data.exp_groups.length + '" data-nfile="'
               + Object.keys(data.file_data).length + '">Group by:<br></div>';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="group_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_group + '</button>';
@@ -921,7 +913,7 @@ function update_group_options(data, base_url) {
     content += '</div></div>';
     // Add the content to the div
     $("#group-by-exposure")[0].innerHTML = content;
-};
+}
 
 
 
@@ -938,7 +930,7 @@ function update_header_display(extension, num_extensions) {
         var header_table = document.getElementById("header-table-extension" + i);
         header_name.style.display = 'none';
         header_table.style.display = 'none';
-    };
+    }
 
     // Display the header selected
     var header_name_to_show = document.getElementById("header-display-name-extension" + extension);
@@ -946,7 +938,7 @@ function update_header_display(extension, num_extensions) {
     header_name_to_show.style.display = 'inline';
     header_table_to_show.style.display = 'inline';
 
-};
+}
 
 /**
  * Updates the obs-list div with observation number options
@@ -957,7 +949,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_obs_options(data, inst, prop, observation) {
     // Build div content
-    content = 'Available observations:';
+    var content = 'Available observations:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs' + observation + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -968,7 +960,7 @@ function update_obs_options(data, inst, prop, observation) {
 
     // Add the content to the div
     $("#obs-list")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the img_show_count component
@@ -976,11 +968,11 @@ function update_obs_options(data, inst, prop, observation) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
-    content = 'Showing <div class="d-inline" id="img_shown">' + count + '</div> / <div class="d-inline" id="img_total">' + count + '</div> <div class="d-inline" id="img_type">' + type + '</div>';
+    var content = 'Showing <div class="d-inline" id="img_shown">' + count + '</div> / <div class="d-inline" id="img_total">' + count + '</div> <div class="d-inline" id="img_type">' + type + '</div>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the thumbnail-sort div with sorting options
@@ -990,7 +982,7 @@ function update_show_count(count, type) {
 function update_sort_options(data, base_url) {
 
     // Build div content
-    content = 'Sort by:';
+    var content = 'Sort by:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_sort + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -1002,7 +994,7 @@ function update_sort_options(data, base_url) {
 
     // Add the content to the div
     $("#thumbnail-sort")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the thumbnail-array div with interactive images of thumbnails
@@ -1014,11 +1006,11 @@ function update_thumbnail_array(data) {
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
         
         // Parse out useful variables
-        rootname = Object.keys(data.file_data)[i];
-        file = data.file_data[rootname];
-        viewed = file.viewed;
-        exp_type = file.exp_type;
-        filename_dict = file.filename_dict;
+        var rootname = Object.keys(data.file_data)[i];
+        var file = data.file_data[rootname];
+        var viewed = file.viewed;
+        var exp_type = file.exp_type;
+        var filename_dict = file.filename_dict;
 
         // Build div content
         var instrument;
@@ -1027,7 +1019,10 @@ function update_thumbnail_array(data) {
         } else {
             instrument = filename_dict.instrument;
         }
-        content = '<div class="thumbnail" instrument="' + instrument + '" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
+        var content = '<div class="thumbnail" instrument="' + instrument
+                      + '" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id
+                      + '" file_root="' + rootname + '" group_root="' + filename_dict.group_root
+                      + '" exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
         content += '<div class="thumbnail-group">'
         content += '<a class="thumbnail-link" href="#" data-image-href="/'
                    + instrument + '/' + rootname + '/" data-group-href="/'
@@ -1047,13 +1042,18 @@ function update_thumbnail_array(data) {
 
         // Add the appropriate image to the thumbnail
         determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
-    };
-};
+    }
+}
 
+/**
+ * Read and submit the form for archive date ranges.
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
 function submit_date_range_form(inst, base_url) {
 
-    start_date = document.getElementById("start_date_range").value;
-    stop_date = document.getElementById("stop_date_range").value;
+    var start_date = document.getElementById("start_date_range").value;
+    var stop_date = document.getElementById("stop_date_range").value;
 
     if (!start_date) {
         alert("You must enter a Start Date/Time");
@@ -1069,7 +1069,7 @@ function submit_date_range_form(inst, base_url) {
             url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
             success: function(data){
                 var show_thumbs = true;
-                num_thumbnails = Object.keys(data.file_data).length;
+                var num_thumbnails = Object.keys(data.file_data).length;
                 // verify we want to continue with results
                 if (num_thumbnails > 1000) {
                     show_thumbs = false;
@@ -1110,11 +1110,11 @@ function submit_date_range_form(inst, base_url) {
             }
         });
     }
-};
+}
 
 
 /**
- * Updates various compnents on the thumbnails page
+ * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} proposal - The proposal number of interest (e.g. "88660")
  * @param {String} observation - The observation number within the proposal (e.g. "001")
@@ -1127,7 +1127,7 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
             // Perform various updates to divs
-            num_thumbnails = Object.keys(data.file_data).length;
+            var num_thumbnails = Object.keys(data.file_data).length;
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal, observation);
@@ -1143,7 +1143,7 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
         }});
-};
+}
 
 /**
  * Updates various components on the thumbnails anomaly query page
@@ -1155,7 +1155,7 @@ function update_thumbnails_query_page(base_url, sort) {
         url: base_url + '/ajax/query_submit/',
         success: function(data){
             // Perform various updates to divs
-            num_thumbnails = Object.keys(data.file_data).length;
+            var num_thumbnails = Object.keys(data.file_data).length;
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data, base_url, 'thumbnail');
@@ -1168,7 +1168,7 @@ function update_thumbnails_query_page(base_url, sort) {
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
         }});
-};
+}
 
 function update_viewed_button(viewed) {
     var elem = document.getElementById("viewed");
@@ -1190,4 +1190,4 @@ function version_url(version_string) {
     a_line += version_string;
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
-};
+}
