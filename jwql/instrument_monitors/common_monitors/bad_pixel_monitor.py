@@ -104,7 +104,7 @@ from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixe
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
-from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES,
+from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
