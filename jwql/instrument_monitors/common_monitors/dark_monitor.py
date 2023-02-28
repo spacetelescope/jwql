@@ -383,21 +383,20 @@ class Dark():
         """
         
         if len(badpix[0]) == 0:
-            logging.warning("Now new {} pixels found.".format(pixel_type))
+            logging.warning("\tNo new {} pixels to check.".format(pixel_type))
             return ([], [])
         
-        logging.info("Checking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
+        logging.info("\tChecking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
-        logging.info("\tRunning database query")
+        logging.info("\t\tRunning database query")
         db_entries = session.query(self.pixel_table) \
             .filter(self.pixel_table.type == pixel_type) \
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
-        logging.info("\tCreating list of {} existing {} pixels".format(len(db_entries), pixel_type))
         already_found = []
         if len(db_entries) != 0:
             for _row in db_entries:
@@ -408,7 +407,8 @@ class Dark():
         found_x = np.array([x[0] for x in already_found])
         found_y = np.array([x[1] for x in already_found])
 
-        logging.info("\tChecking pixels against found list")
+        msg = "\t\tChecking pixels against list of {} existing {} pixels"
+        logging.info(msg.format(len(found_x), pixel_type))
         # Check to see if each pixel already appears in the database for
         # the given bad pixel type
         new_pixels_x = []
@@ -419,6 +419,8 @@ class Dark():
             if len(np.intersect1d(ind_x[0], ind_y[0])) > 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
+        
+        logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
 #             pixel = (x, y)
 #             if pixel not in already_found:
 #                 new_pixels_x.append(x)
