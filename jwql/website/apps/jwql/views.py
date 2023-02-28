@@ -333,7 +333,7 @@ def archived_proposals_ajax(request, inst):
         Outgoing response sent to the webpage
     """
     # Read in the json file created by data_containers.create_archived_proposals_context
-    # as use as the context
+    # and use as the context
     output_dir = get_config()['outputs']
     context_file = os.path.join(output_dir, 'archive_page', f'{inst}_archive_context.json')
 
