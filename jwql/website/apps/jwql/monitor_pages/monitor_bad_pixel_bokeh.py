@@ -477,7 +477,6 @@ class NewBadPixPlot():
 
         # Plot image
         if image is not None:
-            print('mapper, nx, ny are not defined yet')
             ny, nx = image.shape
             #imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
 
@@ -487,7 +486,7 @@ class NewBadPixPlot():
             # to align with the axes
             #self.plot = figure(title=title, x_range=(0, self._detlen), y_range=(0, self._detlen), width=xdim, height=ydim*,
             #                   tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_label="Pixel Number", y_axis_label="Pixel Number")
-            self.plot.image_rgba(image=[image], x=0, y=0, dw=self._detlen, dh=self._detlen)
+            self.plot.image_rgba(image=[image], x=0, y=0, dw=self._detlen, dh=self._detlen, alpha=0.5)
 
 
 
@@ -557,8 +556,15 @@ class NewBadPixPlot():
                                       )
 
         # Overplot the bad pixel locations
-        badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, color='#EC04FF',
-                                       fill_alpha=0.75, line_alpha=0.75, radius=0.5)
+        # If we have very few bad pixels to plot, increase the size of the circles, in order to make
+        # it easier to find them on the plot
+        radius = 0.5
+        if len(self.coords[0]) < 50:
+            radius = 1.0
+        pink = '#EC04FF'
+        green = '#07FF1F'
+        badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, fill_color=pink, line_color=pink,
+                                       fill_alpha=1.0, line_alpha=1.0, radius=radius)
 
         # Create hover tool for the bad pixel type
         # If there are "too many" points then we are going to save the plot as
