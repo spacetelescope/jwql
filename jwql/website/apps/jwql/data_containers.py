@@ -52,7 +52,7 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS
@@ -199,6 +199,63 @@ def get_all_proposals():
     all_proposals = [prop[2:] for prop in proprietary_proposals + public_proposals if 'jw' in prop]
     proposals = sorted(list(set(all_proposals)), reverse=True)
     return proposals
+
+
+def get_available_suffixes(all_suffixes, return_untracked=True):
+    """
+    Put available suffixes in a consistent order.
+
+    Any suffixes not recognized are returned at the end of the suffix
+    list, in random order.
+
+    Parameters
+    ----------
+    all_suffixes : list of str
+        List of all data product suffixes found for a given file root.
+    return_untracked : bool, optional
+        If set, a set of untracked suffixes is also returned, for
+        logging or diagnostic purposes.
+
+    Returns
+    -------
+    suffixes : list of str
+        All available unique suffixes in standard order.
+    untracked_suffixes : set of str, optional
+        Any suffixes that were not recognized.
+    """
+    #  Check if any of the
+    # suffixes are not in the list that specifies order.
+    suffixes = []
+    untracked_suffixes = set(all_suffixes)
+    for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
+        if 'crf' not in poss_suffix:
+            if (poss_suffix in all_suffixes
+                    and poss_suffix not in suffixes):
+                suffixes.append(poss_suffix)
+                untracked_suffixes.remove(poss_suffix)
+        else:
+            # EXPOSURE_PAGE_SUFFIX_ORDER contains crf and crfints,
+            # but the actual suffixes in the data will be e.g. o001_crf,
+            # and there may be more than one crf file in the list of suffixes.
+            # So in this case, we strip the e.g. o001 from the
+            # suffixes and check which list elements match.
+            for image_suffix in all_suffixes:
+                if (image_suffix.endswith(poss_suffix)
+                        and image_suffix not in suffixes):
+                    suffixes.append(image_suffix)
+                    untracked_suffixes.remove(image_suffix)
+
+    # If the data contain any suffixes that are not in the list
+    # that specifies the order to use, add them to the end of the
+    # suffixes list. Their order will be random since they are not in
+    # EXPOSURE_PAGE_SUFFIX_ORDER.
+    if len(untracked_suffixes) > 0:
+        suffixes.extend(untracked_suffixes)
+
+    if return_untracked:
+        return suffixes, untracked_suffixes
+    else:
+        return suffixes
 
 
 def get_current_flagged_anomalies(rootname, instrument):
@@ -800,7 +857,7 @@ def get_header_info(filename, filetype):
     return header_info
 
 
-def get_image_info(file_root, rewrite):
+def get_image_info(file_root):
     """Build and return a dictionary containing information for a given
     ``file_root``.
 
@@ -809,9 +866,6 @@ def get_image_info(file_root, rewrite):
     file_root : str
         The rootname of the file of interest (e.g.
         ``jw86600008001_02101_00007_guider2``).
-    rewrite : bool
-        ``True`` if the corresponding JPEG needs to be rewritten,
-        ``False`` if not.
 
     Returns
     -------
@@ -858,11 +912,6 @@ def get_image_info(file_root, rewrite):
         # Determine JPEG file location
         jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
-
-        # Check that a jpg does not already exist. If it does (and rewrite=False),
-        # just call the existing jpg file
-        if os.path.exists(jpg_filepath) and not rewrite:
-            pass
 
         # Record how many integrations have been saved as preview images per filetype
         jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
@@ -1075,6 +1124,7 @@ def get_preview_images_by_rootname(rootname):
 
     return preview_images
 
+
 def get_proposals_by_category(instrument):
     """Return a dictionary of program numbers based on category type
     Parameters
@@ -1101,6 +1151,7 @@ def get_proposals_by_category(instrument):
     proposals_by_category = {d['program']:d['category'] for d in unique_results}
 
     return proposals_by_category
+
 
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information

@@ -60,11 +60,12 @@ import socket
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import get_acknowledgements
+from .data_containers import get_available_suffixes
 from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
@@ -946,7 +947,7 @@ def view_header(request, inst, filename, filetype):
     return render(request, template, context)
 
 
-def explore_image(request, inst, file_root, filetype, rewrite=False):
+def explore_image(request, inst, file_root, filetype):
     """Generate the header view page
 
     Parameters
@@ -959,8 +960,6 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
         FITS file_root of selected image in filesystem
     filetype : str
         Type of file (e.g. ``uncal``)
-    rewrite : bool, optional
-        Regenerate if bokeh image already exists?
 
     Returns
     -------
@@ -977,7 +976,7 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
 
     fits_file = file_root + '_' + filetype + '.fits'
     # Get image info containing all paths to fits files
-    image_info_list = get_image_info(file_root, rewrite)
+    image_info_list = get_image_info(file_root)
     # Find index of our fits file
     fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
     # get full path of fits file to open and extract extension info
@@ -1015,7 +1014,7 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None, rewrite=False):
+def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -1037,8 +1036,6 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         Signal value to use as the upper limit of the displayed image. If "None", it will be calculated using the ZScale function
     ext_name : str
         Extension to implement in interactive preview image ("SCI", "DQ", "GROUPDQ", "PIXELDQ", "ERR"...)
-    rewrite : bool, optional
-        Regenerate if bokeh image already exists?
 
     Returns
     -------
@@ -1049,7 +1046,7 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get image info containing all paths to fits files
-    image_info_list = get_image_info(file_root, rewrite)
+    image_info_list = get_image_info(file_root)
 
     # Save fits file name to use for bokeh image
     fits_file = file_root + '_' + filetype + '.fits'
@@ -1163,19 +1160,18 @@ def toggle_viewed_ajax(request, file_root):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def view_image(request, inst, file_root, rewrite=False):
-    """Generate the image view page
+def view_exposure(request, inst, group_root):
+    """Generate the exposure view page.
 
     Parameters
     ----------
     request : HttpRequest object
-        Incoming request from the webpage
+        Incoming request from the webpage.
     inst : str
-        Name of JWST instrument
-    file_root : str
-        FITS filename of selected image in filesystem
-    rewrite : bool, optional
-        Regenerate the jpg preview of `file` if it already exists?
+        Name of JWST instrument.
+    group_root : str
+        Exposure group, matching file root names up to but not
+        including the detector.
 
     Returns
     -------
@@ -1187,80 +1183,127 @@ def view_image(request, inst, file_root, rewrite=False):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_image.html'
-    image_info = get_image_info(file_root, rewrite)
+    image_info = get_image_info(group_root)
 
-    # Put suffixes in a consistent order. Check if any of the
-    # suffixes are not in the list that specifies order.
-    # Reorder the list of filenames to match the reordered list
-    # of suffixes.
-    suffixes = []
-    all_files = []
-    untracked_suffixes = deepcopy(image_info['suffixes'])
-    untracked_files = deepcopy(image_info['all_files'])
-    for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
-        if 'crf' not in poss_suffix:
-            if poss_suffix in image_info['suffixes']:
-                suffixes.append(poss_suffix)
-                loc = image_info['suffixes'].index(poss_suffix)
-                all_files.append(image_info['all_files'][loc])
-                untracked_suffixes.remove(poss_suffix)
-                untracked_files.remove(image_info['all_files'][loc])
-        else:
-            # EXPOSURE_PAGE_SUFFIX_ORDER contains crf and crfints, but the actual suffixes
-            # in the data will be e.g. o001_crf, and there may be more than one crf file
-            # in the list of suffixes. So in this case, we strip the e.g. o001 from the
-            # suffixes and check which list elements match.
-            suff_arr = np.array(image_info['suffixes'])
-            files_arr = np.array(image_info['all_files'])
-            splits = np.array([ele.split('_')[-1] for ele in image_info['suffixes']])
-            if splits.size > 0:
-                idxs = np.where(splits == poss_suffix)[0]
-            else:
-                idxs = []
-            if len(idxs) > 0:
-                suff_entries = list(suff_arr[idxs])
-                file_entries = list(files_arr[idxs])
-                suffixes.extend(suff_entries)
-                all_files.extend(file_entries)
+    # TODO: get file roots/detectors from image info
+    #  and check available ints handling
+    print(image_info)
 
-                untracked_splits = np.array([ele.split('_')[-1] for ele in untracked_suffixes])
-                untracked_idxs = np.where(untracked_splits == poss_suffix)[0]
-                untracked_suffixes = list(np.delete(untracked_suffixes, untracked_idxs))
-                untracked_files = list(np.delete(untracked_files, untracked_idxs))
+    # Get available suffixes in a consistent order.
+    suffixes = get_available_suffixes(image_info['suffixes'],
+                                      return_untracked=False)
 
-    # If the data contain any suffixes that are not in the list that specifies the order
-    # to use, make a note in the log (so that they can be added to EXPOSURE_PAGE_SUFFIX_ORDER)
-    # later. Then add them to the end of the suffixes list. Their order will be random since
-    # they are not in EXPOSURE_PAGE_SUFFIX_ORDER.
-    if len(untracked_suffixes) > 0:
-        module = os.path.basename(__file__).strip('.py')
-        start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
-        logging.warning((f'In view_image(), for {inst}, {file_root}, the following suffixes are present in the data, '
-                         f'but not in EXPOSURE_PAGE_SUFFIX_ORDER in constants.py: {untracked_suffixes} '
-                         'Please add them, so that they will appear in a consistent order on the webpage.'))
-        suffixes.extend(untracked_suffixes)
-        all_files.extend(untracked_files)
+    # Get the anomaly submission form
+    form = get_anomaly_form(request, inst, group_root)
 
-    form = get_anomaly_form(request, inst, file_root)
+    prop_id = group_root[2:7]
 
-    prop_id = file_root[2:7]
-
-    # if we get to this page without any navigation data (i.e. direct link), just use the file_root with no expstart time
+    # if we get to this page without any navigation data (i.e. direct link),
+    # just use the group_root with no expstart time
     # navigate_data is dict of format rootname:expstart
-    navigation_data = request.session.get('navigation_data', {file_root: 0})
+    navigation_data = request.session.get('navigation_data', {group_root: 0})
 
     # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
     sort_type = request.session.get('image_sort', 'Ascending')
     if sort_type in ['Descending']:
-        file_root_list = sorted(navigation_data, reverse=True)
+        group_root_list = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
         navigation_data = dict(sorted(navigation_data.items()))
         navigation_data = dict(sorted(navigation_data.items(), key=operator.itemgetter(1), reverse=True))
-        file_root_list = list(navigation_data.keys())
+        group_root_list = list(navigation_data.keys())
     elif sort_type in ['Oldest']:
         navigation_data = dict(sorted(navigation_data.items()))
         navigation_data = dict(sorted(navigation_data.items(), key=operator.itemgetter(1)))
+        group_root_list = list(navigation_data.keys())
+    else:
+        group_root_list = sorted(navigation_data)
+
+    # Get our current views RootFileInfo model and send our "viewed/new" information
+    root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
+    viewed = all([rf.viewed for rf in root_file_info])
+
+    # Build the context
+    context = {'base_url': get_base_url(),
+               'file_root_list': group_root_list,
+               'inst': inst,
+               'prop_id': prop_id,
+               'obsnum': group_root[7:10],
+               'file_root': group_root,
+               'suffixes': suffixes,
+               'num_ints': image_info['num_ints'],
+               'available_ints': image_info['available_ints'],
+               'total_ints': image_info['total_ints'],
+               'form': form,
+               'marked_viewed': viewed}
+
+    return render(request, template, context)
+
+
+def view_image(request, inst, file_root):
+    """Generate the image view page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    file_root : str
+        FITS filename of selected image in filesystem
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    template = 'view_image.html'
+    image_info = get_image_info(file_root)
+
+    # Put suffixes in a consistent order. Check if any of the
+    # suffixes are not in the list that specifies order.
+    suffixes, untracked_suffixes = get_available_suffixes(
+        image_info['suffixes'], return_untracked=True)
+
+    if len(untracked_suffixes) > 0:
+        module = os.path.basename(__file__).strip('.py')
+        monitor_utils.initialize_instrument_monitor(module)
+        logging.warning((f'In view_image(), for {inst}, {file_root}, '
+                         f'the following suffixes are present in the data, '
+                         f'but not in EXPOSURE_PAGE_SUFFIX_ORDER in '
+                         f'constants.py: {untracked_suffixes} '
+                         'Please add them, so that they will appear in a '
+                         'consistent order on the webpage.'))
+
+    form = get_anomaly_form(request, inst, file_root)
+
+    prop_id = file_root[2:7]
+
+    # if we get to this page without any navigation data (i.e. direct link),
+    # just use the file_root with no expstart time
+    # navigate_data is dict of format rootname:expstart
+    navigation_data = request.session.get('navigation_data', {file_root: 0})
+
+    # For time based sorting options, sort to "Recent" first to create
+    # sorting consistency when times are the same.
+    # This is consistent with how Tinysort is utilized in
+    # jwql.js->sort_by_thumbnails
+    sort_type = request.session.get('image_sort', 'Ascending')
+    if sort_type in ['Descending']:
+        file_root_list = sorted(navigation_data, reverse=True)
+    elif sort_type in ['Recent']:
+        navigation_data = dict(sorted(navigation_data.items()))
+        navigation_data = dict(sorted(navigation_data.items(),
+                                      key=operator.itemgetter(1), reverse=True))
+        file_root_list = list(navigation_data.keys())
+    elif sort_type in ['Oldest']:
+        navigation_data = dict(sorted(navigation_data.items()))
+        navigation_data = dict(sorted(navigation_data.items(),
+                                      key=operator.itemgetter(1)))
         file_root_list = list(navigation_data.keys())
     else:
         file_root_list = sorted(navigation_data)
@@ -1275,8 +1318,6 @@ def view_image(request, inst, file_root, rewrite=False):
                'prop_id': prop_id,
                'obsnum': file_root[7:10],
                'file_root': file_root,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': all_files,
                'suffixes': suffixes,
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],

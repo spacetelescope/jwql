@@ -152,7 +152,7 @@ def test_get_header_info():
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
 
-    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1', False)
+    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1')
 
     assert isinstance(image_info, dict)
 
