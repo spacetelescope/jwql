@@ -55,10 +55,9 @@
         var detector = detector_list[i];
 
         // Update the filename lists
-        var fits_filename = group_root + '_' + detector + '_' + type + '.fits';
         var filename_option = document.getElementById(detector + "_filename");
         filename_option.value = inst + '/' + group_root + '_' + detector + '_' + type;
-        filename_option.textContent = fits_filename;
+        filename_option.textContent = group_root + '_' + detector + '_' + type;
 
         // Show the appropriate image
         var img = document.getElementById("image_viewer_" + detector);
@@ -707,7 +706,8 @@ function sort_by_thumbnails(sort_type, base_url) {
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
 function toggle_viewed(file_root, base_url) {
-    // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
+    // Toggle the button immediately so user isn't confused
+    // (ajax result will confirm choice or fix on failure)
     var elem = document.getElementById("viewed");
     update_viewed_button(elem.value == "New" ? true : false);
     elem.disabled=true;
@@ -728,6 +728,38 @@ function toggle_viewed(file_root, base_url) {
         }
     });
 }
+
+
+/**
+ * Set the viewed status for a group of files.
+ * Ajax call to update RootFileInfo model with toggled value
+ *
+ * @param {String} group_root - The rootname of the exposure group
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function toggle_viewed_group(group_root, base_url) {
+    // Toggle the button immediately so user isn't confused
+    var elem = document.getElementById("viewed");
+    update_viewed_button(elem.value == "New" ? true : false);
+    elem.disabled=true;
+
+    // Ajax Call to update RootFileInfo model with "viewed" info
+    $.ajax({
+        url: base_url + '/ajax/viewed_group/' + group_root + '/' + elem.value,
+        success: function(data){
+            // Update button with actual value (paranoia update, should not yield visible change)
+            update_viewed_button(data["marked_viewed"]);
+            elem.disabled=false;
+        },
+        error : function(response) {
+            // If update fails put button back to original state
+            update_viewed_button(elem.value == "New" ? false : true);
+            elem.disabled=false;
+
+        }
+    });
+}
+
 
 /**
  * Download filtered data report
@@ -1259,6 +1291,20 @@ function update_thumbnails_query_page(base_url, sort) {
         }});
 }
 
+
+/**
+ * Construct the URL for viewing/exploring a selected image on the exposure page
+ */
+function update_view_explore_link() {
+    var types = ['header', 'explore_image'];
+    for (var i = 0; i < types.length; i++) {
+        var type = types[i];
+        var selected = document.getElementById('fits_file_select').value;
+        document.getElementById(type).href = '/' + selected + '/' + type + '/';
+    }
+}
+
+
 function update_viewed_button(viewed) {
     var elem = document.getElementById("viewed");
     if (viewed) {
@@ -1279,20 +1325,4 @@ function version_url(version_string) {
     a_line += version_string;
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
-}
-
-
-/**
- * Construct the URL for viewing/exploring a selected image on the exposure page
- */
-function update_view_explore_link() {
-    var types = ['header', 'explore_image'];
-    for (var i = 0; i < types.length; i++) {
-        var type = types[i];
-        button = document.getElementById(type);
-        selected = document.getElementById('fits_file_select');
-        href = '/' + selected.value + '/' + type + '/';
-        console.log(href);
-        button.href = href;
-    }
 }

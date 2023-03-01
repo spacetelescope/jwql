@@ -1136,6 +1136,40 @@ def save_page_navigation_data(request, data):
     return
 
 
+def set_viewed_ajax(request, group_root, status):
+    """Update the model's "viewed" field for a group of files
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    group_root : str
+        Group root name, matching filename roots up to
+        but not including the detector.
+    status : {'new', 'viewed'}
+        Value to set: 'new' for viewed=False, 'viewed' for viewed=True.
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    viewed = (str(status).strip().lower() == 'viewed')
+
+    root_file_info = RootFileInfo.objects.filter(
+        root_name__startswith=group_root)
+    for root_file in root_file_info:
+        root_file.viewed = viewed
+        root_file.save()
+
+    #  check actual status as set
+    marked_viewed = all([rf.viewed for rf in root_file_info])
+
+    # Build the context
+    context = {'marked_viewed': marked_viewed}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
 def toggle_viewed_ajax(request, file_root):
     """Update the model's "mark_viewed" field and save in the database
 
