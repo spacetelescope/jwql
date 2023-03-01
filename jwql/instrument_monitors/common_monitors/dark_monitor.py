@@ -416,7 +416,7 @@ class Dark():
         for x, y in zip(badpix[0], badpix[1]):
             ind_x = np.where(found_x == x)
             ind_y = np.where(found_y == y)
-            if len(np.intersect1d(ind_x[0], ind_y[0])) > 0:
+            if len(np.intersect1d(ind_x[0], ind_y[0])) == 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
         
