@@ -17,12 +17,12 @@ standard deviation images are saved to a fits file, the name of which
 is entered into the ``<Instrument>DarkCurrent`` database table.
 
 The mean slope image is then normalized by an existing baseline slope
-image. New hot pixels are identified as those with normalized signal
-rates above a ``hot_threshold`` value. Similarly, pixels with
-normalized signal rates below a ``dead_threshold`` are flagged as new
-dead pixels.
+image, from the previous run of the monitor. New hot pixels are identified
+as those with normalized signal rates above a ``hot_threshold`` value.
+Similarly, pixels with normalized signal rates below a ``dead_threshold``
+are flagged as new dead pixels.
 
-The standard deviation slope image is normalized by a baseline
+The standard deviation slope image is also normalized by a baseline
 (historical) standard deviation image. Pixels with normalized values
 above a noise threshold are flagged as newly noisy pixels.
 
@@ -37,6 +37,26 @@ also fit to the histogram from the entire detector.
 
 The histogram itself as well as the best-fit Gaussian and double
 Gaussian parameters are saved to the DarkDarkCurrent database table.
+
+Currently, there are three outputs from the dark monitor that are shown
+in the JWQL web app. First, the dark current histogram is plotted, along
+with a corresponding cumulative distribution function (CDF). The Gaussian
+fits are not currently shown.
+
+Secondly, a trending plot of the mean dark current versus time is shown,
+where the mean value is the sigma-clipped mean across the detector in
+the mean slope image. Error bars on the plot show the sigma-clipped
+standard deviation across the detector.
+
+Finally, the mean slope image is shown. Any new potential hot, dead, and
+noisy pixels that were identified are also shown on the mean slope image,
+in order to give an idea of where these pixels are located on the detector.
+To keep the image from becoming too busy, this is only done if the number
+of potential new bad pixels is under 1000. If more pixels that this are
+identified, that number is reported in the plot, but the pixels are not
+marked on the image.
+
+
 
 
 Author
@@ -574,8 +594,8 @@ class Dark():
     def overplot_bad_pix(self, pix_type, coords, values):
         """Add a scatter plot of potential new bad pixels to the plot
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         pix_type : str
             Type of bad pixel. "hot", "dead", or "noisy"
 
@@ -1176,7 +1196,7 @@ class Dark():
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
 
-            # If the number of bins is smaller than the number of paramters
+            # If the number of bins is smaller than the number of parameters
             # to be fit, then we need to increase the number of bins
             if len(bin_edges) < 7:
                 logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')

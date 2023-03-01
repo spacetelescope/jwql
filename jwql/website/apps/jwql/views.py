@@ -1191,7 +1191,10 @@ def view_image(request, inst, file_root, rewrite=False):
             suff_arr = np.array(image_info['suffixes'])
             files_arr = np.array(image_info['all_files'])
             splits = np.array([ele.split('_')[-1] for ele in image_info['suffixes']])
-            idxs = np.where(splits == poss_suffix)[0]
+            if splits.size > 0:
+                idxs = np.where(splits == poss_suffix)[0]
+            else:
+                idxs = []
             if len(idxs) > 0:
                 suff_entries = list(suff_arr[idxs])
                 file_entries = list(files_arr[idxs])
