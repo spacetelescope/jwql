@@ -371,7 +371,22 @@ def filename_parser(filename):
         r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
         r"_(?P<exposure_id>\d+)"\
         r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
-        r"_(?P<detector>\w+)"
+        r"_(?P<detector>((?!_)[\w])+)"
+
+    # Time series filenames for stage 2c
+    # e.g. "jw00733003001_02101_00002-seg001_nrs1_o001_crfints.fits"
+    time_series_2c = \
+        r"jw" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})"\
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})"\
+        r"_(?P<visit_group>\d{" + f"{FILE_VISIT_GRP_LEN}" + "})"\
+        r"(?P<parallel_seq_id>\d{" + f"{FILE_PARALLEL_SEQ_ID_LEN}" + "})"\
+        r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
+        r"_(?P<exposure_id>\d+)"\
+        r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
+        r"_(?P<detector>((?!_)[\w])+)"\
+        r"_(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"
 
     # Guider filenames
     # e.g. "jw00729011001_gs-id_1_image_cal.fits" or
@@ -405,6 +420,7 @@ def filename_parser(filename):
         stage_3_target_id_epoch,
         stage_3_source_id_epoch,
         time_series,
+        time_series_2c,
         guider,
         guider_segment]
 
@@ -417,6 +433,7 @@ def filename_parser(filename):
         'stage_3_target_id_epoch',
         'stage_3_source_id_epoch',
         'time_series',
+        'time_series_2c',
         'guider',
         'guider_segment'
     ]

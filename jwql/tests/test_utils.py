@@ -194,6 +194,22 @@ FILENAME_PARSER_TEST_DATA = [
       'visit': '001',
       'visit_group': '02'}),
 
+    # Test full time series filename for stage 2c
+    ('jw00733003001_02101_00002-seg001_nrs1_o001_crfints.fits',
+     {'ac_id': 'o001',
+      'activity': '01',
+      'detector': 'nrs1',
+      'exposure_id': '00002',
+      'filename_type': 'time_series_2c',
+      'instrument': 'nirspec',
+      'observation': '003',
+      'parallel_seq_id': '1',
+      'program_id': '00733',
+      'segment': '001',
+      'suffix': 'crfints',
+      'visit': '001',
+      'visit_group': '02'}),
+
     # Test root time series filename
     ('jw00733003001_02101_00002-seg001_nrs1',
      {'activity': '01',
