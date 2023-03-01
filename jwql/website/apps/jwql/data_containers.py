@@ -881,15 +881,22 @@ def get_image_info(file_root):
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
     image_info['total_ints'] = {}
+    image_info['detectors'] = set()
 
-    # Find all of the matching files
+    # Find all the matching files
     proposal_dir = file_root[:7]
     observation_dir = file_root[:13]
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+    filenames = glob.glob(
+        os.path.join(FILESYSTEM_DIR, 'public', proposal_dir,
+                     observation_dir, '{}*.fits'.format(file_root)))
+    filenames.extend(glob.glob(
+        os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir,
+                     observation_dir, '{}*.fits'.format(file_root))))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames
+                 if os.path.splitext(filename)[0].split('_')[-1]
+                 not in IGNORED_SUFFIXES]
     image_info['all_files'] = filenames
 
     # Determine the jpg directory
@@ -898,8 +905,10 @@ def get_image_info(file_root):
 
     for filename in image_info['all_files']:
 
+        parsed_fn = filename_parser(filename)
+
         # Get suffix information
-        suffix = filename_parser(filename)['suffix']
+        suffix = parsed_fn['suffix']
 
         # For crf or crfints suffixes, we need to also include the association value
         # in the suffix, so that preview images can be found later.
@@ -926,6 +935,9 @@ def get_image_info(file_root):
             image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
         else:
             image_info['total_ints'][suffix] = 1
+
+        # Record the detector used
+        image_info['detectors'].add(parsed_fn.get('detector', 'Unknown'))
 
     return image_info
 
@@ -1666,7 +1678,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                              'visit_group': rootname[14:16],
                              'group_root': rootname[:26]}
 
-        # todo: the following comprehensions loop over all file names
+        # TODO: the following comprehensions loop over all file names
         #  several times - should be combined, and maybe make the
         #  filename loop primary
 

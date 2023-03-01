@@ -1182,12 +1182,11 @@ def view_exposure(request, inst, group_root):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'view_image.html'
+    template = 'view_exposure.html'
     image_info = get_image_info(group_root)
 
-    # TODO: get file roots/detectors from image info
-    #  and check available ints handling
-    print(image_info)
+    # Get the proposal id from the group root name
+    prop_id = group_root[2:7]
 
     # Get available suffixes in a consistent order.
     suffixes = get_available_suffixes(image_info['suffixes'],
@@ -1195,8 +1194,6 @@ def view_exposure(request, inst, group_root):
 
     # Get the anomaly submission form
     form = get_anomaly_form(request, inst, group_root)
-
-    prop_id = group_root[2:7]
 
     # if we get to this page without any navigation data (i.e. direct link),
     # just use the group_root with no expstart time
@@ -1225,15 +1222,16 @@ def view_exposure(request, inst, group_root):
 
     # Build the context
     context = {'base_url': get_base_url(),
-               'file_root_list': group_root_list,
+               'group_root_list': group_root_list,
                'inst': inst,
                'prop_id': prop_id,
                'obsnum': group_root[7:10],
-               'file_root': group_root,
+               'group_root': group_root,
                'suffixes': suffixes,
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
+               'detectors': sorted(image_info['detectors']),
                'form': form,
                'marked_viewed': viewed}
 

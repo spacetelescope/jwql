@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>View {{ inst }} Exposure - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<!-- Show exposure group name -->
+    	<h3>Exposure {{ group_root }}</h3>
+
+    	<!-- Specify the attributes of what is currently being shown -->
+    	<div class="d-flex flex-row">
+    		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
+    		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
+    		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
+            <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{group_root}}", "{{base_url}}");'>
+    	</div>
+
+    	<!-- Allow the user to change the file type that is being displayed -->
+    	View File Type:
+    	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
+	      	<span class="help-tip mx-1">i</span>
+	    </a><br>
+	    <form class="my-2">
+	    	{% for suffix in suffixes %}
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}"
+                       onclick='change_all_filetypes("{{suffix}}", "{{group_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}", "{{detectors|join(",")}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    	{% endfor %}
+		</form>
+		<br>
+
+		<!-- Buttons for viewing header, exploring image -->
+        <div class="row">
+            <a id="header" href="#" role="button" class="btn btn-primary mx-2" type="button">View Header</a>
+            <a id="explore_image" href="#" role="button" class="btn btn-primary mx-2" type="button">Explore Image</a>
+            <div class="mx-2 my-2">for</div>
+            <select name="fits_file_select" id="fits_file_select" onchange="update_view_explore_link();">
+                {% for detector in detectors %}
+                    <option id="{{ detector }}_filename" value="{{ inst }}/{{ group_root }}_{{ detector }}">{{ group_root }}_{{ detector }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="row">
+            <!-- Display the image and integration buttons/slider -->
+    	    <div class="col-xl-9 text-center">
+                {% for detector in detectors %}
+                    <span class="image_preview">
+                        <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
+                            <img id="image_viewer_{{ detector }}"
+                                 src='{{ static("") }}preview_images/{{ group_root[:7] }}/{{ group_root }}_{{ detector }}_cal_integ0.jpg'
+                                 onerror="image_error(this, true);"
+                                 alt='{{ group_root }}_{{ detector }}_cal_integ0.jpg'
+                                 title="Preview image for {{ group_root }}, detector {{ detector }}">
+                        </a>
+                    </span>
+                {% endfor %}
+
+                <div class="int_changer">
+                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{group_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
+                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{group_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
+                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{group_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
+                    <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
+                </div>
+
+                <div class="previous-next-buttons">
+                    <span class="step-links">
+                        {% if group_root in group_root_list %}
+                            {% set index = group_root_list.index(group_root) %}
+                            {% if index != 0 %}
+                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ group_root_list[index-1] }}/" style="float: left;">< Previous</a>
+                            {% endif %}
+
+                            {% if index != group_root_list|length - 1 %}
+                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ group_root_list[index+1] }}/" style="float: right;">Next ></a>
+                            {% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Display the anomaly form -->
+            <div class="col-xl-3 text-left">
+                <!--Load the file search form from the view-->
+                <div class="anomaly_form">
+                    <h5>Submit Anomaly</h5>
+                    <form action="" method="post">
+                        <!--Show any errors from a previous form submission-->
+                        {% if form.errors %}
+                            <fieldset>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </fieldset>
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                        <!--Show the field forms-->
+                        {% for field in form %}
+                            <ul>
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                            </ul>
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if marked_viewed %}
+            <script>update_viewed_button(true)</script>
+        {% else %}
+            <script>update_viewed_button(false)</script>
+        {% endif %}
+        <!-- Determine which filetype should be shown on load -->
+        {% if 'rate' in suffixes %}
+            <script>change_all_filetypes('rate', '{{group_root}}', '{{num_ints}}', '{{available_ints}}', '{{total_ints}}', '{{inst}}', "{{ detectors|join(',') }}");</script>
+        {% elif 'dark' in suffixes %}
+            <script>change_all_filetypes('dark', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}', "{{ detectors|join(',') }}");</script>
+        {% elif 'uncal' in suffixes %}
+            <script>change_all_filetypes('uncal', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}', "{{ detectors|join(',') }}");</script>
+        {% elif suffixes|length == 1 %}
+            <script>change_all_filetypes('{{suffixes.0}}', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}, "{{ detectors|join(',') }}";</script>
+        {% else %}
+            <a>Unable to show image for: {{suffixes}}</a>
+        {% endif %}
+
+    </main>
+
+{% endblock %}

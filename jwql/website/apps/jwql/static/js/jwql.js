@@ -9,6 +9,87 @@
  * @author Melanie Clarke
  */
 
+
+ /**
+ * Change the filetype for all displayed images
+ * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
+ * @param {String} group_root - The rootname of the file group
+ * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
+ *                          values are the number of integrations with an associated
+ *                          preview image for that suffix
+ * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the integration numbers of the available
+ *                                jpgs for that suffix
+ * @param {Dict} total_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the total number of integrations for that
+ *                                filetype.
+ * @param {String} inst - The instrument for the given file
+ */
+ function change_all_filetypes(type, group_root, num_ints, available_ints, total_ints, inst, detectors) {
+
+    // Change the radio button to check the right filetype
+    document.getElementById(type).checked = true;
+
+    // Clean the input parameters
+    num_ints = num_ints.replace(/&#39;/g, '"');
+    num_ints = num_ints.replace(/'/g, '"');
+    num_ints = JSON.parse(num_ints);
+
+    // Get the available integration jpg numbers
+    available_ints = available_ints.replace(/&#39;/g, '"');
+    available_ints = available_ints.replace(/'/g, '"');
+    available_ints = JSON.parse(available_ints)[type];
+
+    // Get the total number of integrations
+    total_ints = total_ints.replace(/&#39;/g, '"');
+    total_ints = total_ints.replace(/'/g, '"');
+    total_ints = JSON.parse(total_ints);
+
+    // Update the APT parameters
+    document.getElementById("proposal").innerHTML = group_root.slice(2,7);
+    document.getElementById("obs_id").innerHTML = group_root.slice(7,10);
+    document.getElementById("visit_id").innerHTML = group_root.slice(10,13);
+
+    var detector_list = detectors.split(',');
+    for (let i = 0; i < detector_list.length; i++) {
+        var detector = detector_list[i];
+
+        // Update the filename lists
+        var fits_filename = group_root + '_' + detector + '_' + type + '.fits';
+        var filename_option = document.getElementById(detector + "_filename");
+        filename_option.value = inst + '/' + group_root + '_' + detector + '_' + type;
+        filename_option.textContent = fits_filename;
+
+        // Show the appropriate image
+        var img = document.getElementById("image_viewer_" + detector);
+        var jpg_filepath = '/static/preview_images/' + group_root.slice(0,7) +
+                           '/' + group_root + '_' + detector + '_' + type + '_integ0.jpg';
+        img.src = jpg_filepath;
+        img.alt = jpg_filepath;
+        // if previous image had error, remove error sizing
+        img.classList.remove("thumbnail");
+    }
+
+    // Reset the slider values
+    document.getElementById("slider_range").value = 1;
+    document.getElementById("slider_range").max = num_ints[type];
+    document.getElementById("slider_val").innerHTML = 1;
+    document.getElementById("total_ints").innerHTML = total_ints[type];
+
+    // Update the integration changing buttons
+    if (num_ints[type] > 1) {
+        document.getElementById("int_after").disabled = false;
+    } else {
+        document.getElementById("int_after").disabled = true;
+    }
+    // Disable the "left" button, since this will be showing integ0
+    document.getElementById("int_before").disabled = true;
+
+    // Update the view/explore links for the new file type
+    update_view_explore_link();
+}
+
+
  /**
  * Change the filetype of the displayed image
  * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
@@ -44,7 +125,7 @@
     total_ints = total_ints.replace(/'/g, '"');
     total_ints = JSON.parse(total_ints);
 
-    // Propogate the text fields showing the filename and APT parameters
+    // Propagate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
     document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
@@ -74,9 +155,7 @@
         document.getElementById("int_after").disabled = true;
     }
 
-    // Update the image download and header links
-    // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
-    // document.getElementById("download_jpg").href = jpg_filepath;
+    // Update the image exploration and header links
     document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
     document.getElementById("explore_image").href = '/' + inst + '/' + file_root + '_' + type + '/explore_image/';
 
@@ -973,7 +1052,7 @@ function update_obs_options(data, inst, prop, observation) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
-    var content = 'Showing <div class="d-inline" id="img_shown">' + count + '</div> / <div class="d-inline" id="img_total">' + count + '</div> <div class="d-inline" id="img_type">' + type + '</div>';
+    var content = 'Showing <a id="img_shown">' + count + '</a> / <a id="img_total">' + count + '</a> <a id="img_type">' + type + '</a>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
@@ -1200,4 +1279,20 @@ function version_url(version_string) {
     a_line += version_string;
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
+}
+
+
+/**
+ * Construct the URL for viewing/exploring a selected image on the exposure page
+ */
+function update_view_explore_link() {
+    var types = ['header', 'explore_image'];
+    for (var i = 0; i < types.length; i++) {
+        var type = types[i];
+        button = document.getElementById(type);
+        selected = document.getElementById('fits_file_select');
+        href = '/' + selected.value + '/' + type + '/';
+        console.log(href);
+        button.href = href;
+    }
 }

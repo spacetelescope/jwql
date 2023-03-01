@@ -28,7 +28,7 @@
     	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
-	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
+	    <form class="my-2">
 	    	{% for suffix in suffixes %}
 	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
