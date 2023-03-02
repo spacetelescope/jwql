@@ -587,8 +587,7 @@ def get_filenames_by_instrument(instrument, proposal, observation_id=None, restr
 
 
 def mast_query_by_rootname(instrument, rootname):
-    """Query MAST for all columns given an instrument and rootname. Return the json
-    response from MAST.
+    """Query MAST for all columns given an instrument and rootname. Return the dict of the 'data' column
 
     Parameters
     ----------
