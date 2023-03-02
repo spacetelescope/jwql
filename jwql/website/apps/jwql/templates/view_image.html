@@ -24,7 +24,7 @@
     	JPG Filename: <a id="jpg_filename"></a><br><br>
 
     	<!-- Allow the user to change the file type that is being displayed -->
-    	View File Type:
+    	<a id="view_file_type" data-current-suffix="">View File Type:</a>
     	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
@@ -47,7 +47,7 @@
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
-    		    	<img id="image_viewer"
+    		    	<img class="image_preview_viewer" id="image_viewer"
                          src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg'
                          onerror="image_error(this, true);"
                          alt='{{ file_root }}_cal_integ0.jpg'

@@ -30,6 +30,9 @@
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
 
+    // Store the currently displayed suffix
+    document.getElementById("view_file_type").setAttribute('data-current-suffix', type);
+
     // Clean the input parameters
     num_ints = num_ints.replace(/&#39;/g, '"');
     num_ints = num_ints.replace(/'/g, '"');
@@ -109,6 +112,9 @@
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
 
+    // Store the currently displayed suffix
+    document.getElementById("view_file_type").setAttribute('data-current-suffix', type);
+
     // Clean the input parameters
     num_ints = num_ints.replace(/&#39;/g, '"');
     num_ints = num_ints.replace(/'/g, '"');
@@ -176,12 +182,11 @@
  * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
  *                             Only relevant if method is "button".
  */
-function change_int(file_root, num_ints, available_ints, method, direction = 'right') {
+function change_int(file_root, num_ints, available_ints, method, direction='right') {
 
     // Figure out the current image and integration
-    var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
-    var integration = Number(suffix[suffix.length - 1].replace('.jpg','').replace('integ',''))
-    suffix = suffix[suffix.length - 2];
+    var suffix = document.getElementById("view_file_type").getAttribute('data-current-suffix');
+    var integration = Number(document.getElementById("slider_val").innerText) - 1;
     var program = file_root.slice(0,7);
 
     // Find the total number of integrations for the current image
@@ -195,19 +200,23 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
 
     // Get the desired integration value
     var new_integration;
+    var new_value;
     switch (method) {
         case "button":
             if ((integration == num_ints - 1 && direction == 'right')||
                 (integration == 0 && direction == 'left')) {
                 return;
             } else if (direction == 'right') {
-                new_integration = available_ints[current_index + 1]
+                new_value = current_index + 1;
+                new_integration = available_ints[new_value];
             } else if (direction == 'left') {
-                new_integration = available_ints[current_index - 1]
+                new_value = current_index - 1;
+                new_integration = available_ints[new_value];
             }
             break;
         case "slider":
-            new_integration = available_ints[document.getElementById("slider_range").value - 1];
+            new_value = document.getElementById("slider_range").value - 1;
+            new_integration = available_ints[new_value];
             break;
     }
 
@@ -223,22 +232,30 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
         document.getElementById("int_before").disabled = false;
     }
 
-    // Update the JPG filename
-    var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
-    var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
-    document.getElementById("jpg_filename").innerHTML = jpg_filename;
+    var img_viewers = document.getElementsByClassName("image_preview_viewer");
+    for (let i = 0; i < img_viewers.length; i++) {
+        var img = img_viewers[i];
 
-    // Show the appropriate image
-    var img = document.getElementById("image_viewer")
-    img.src = jpg_filepath;
-    img.alt = jpg_filepath;
+        var jpg_filename;
+        var detector = img.getAttribute('data-detector');
+        if (detector != null) {
+            // exposure view
+           jpg_filename = file_root + '_' + detector + '_' + suffix + '_integ' + new_integration + '.jpg';
+        } else {
+           // image view
+           jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg';
+           document.getElementById("jpg_filename").innerHTML = jpg_filename;
+        }
 
-    // Update the jpg download link
-    // document.getElementById("download_jpg").href = jpg_filepath;
+        // Show the appropriate image
+        var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename;
+        img.src = jpg_filepath;
+        img.alt = jpg_filepath;
+    }
 
     // Update the slider values
-    document.getElementById("slider_range").value = new_integration + 1
-    document.getElementById("slider_val").innerHTML = new_integration + 1
+    document.getElementById("slider_range").value = new_value + 1;
+    document.getElementById("slider_val").innerHTML = new_integration + 1;
 }
 
 

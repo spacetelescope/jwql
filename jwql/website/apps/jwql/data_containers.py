@@ -923,16 +923,22 @@ def get_image_info(file_root):
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
         # Record how many integrations have been saved as preview images per filetype
-        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
-        image_info['num_ints'][suffix] = len(jpgs)
-        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
+        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}*_{}_integ*.jpg'.format(file_root, suffix)))
+        image_info['available_ints'][suffix] = sorted(set([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs]))
+        image_info['num_ints'][suffix] = len(image_info['available_ints'][suffix])
         image_info['all_jpegs'].append(jpg_filepath)
 
-        # Record how many integrations exist per filetype. crf needs to be treated
-        # separately because the suffix includes the association number, which can't
-        # be predicted for a given program.
-        if ((suffix not in SUFFIXES_WITH_AVERAGED_INTS) and (suffix[-3:] != 'crf')):
-            image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
+        # Record how many integrations exist per filetype.
+        if suffix not in SUFFIXES_WITH_AVERAGED_INTS:
+            # time series segments need special handling
+            header = fits.getheader(filename)
+            nint = header['NINTS']
+            if 'time_series' in parsed_fn['filename_type']:
+                intstart = header.get('INTSTART', 1)
+                intend = header.get('INTEND', nint)
+                image_info['total_ints'][suffix] = intend - intstart + 1
+            else:
+                image_info['total_ints'][suffix] = nint
         else:
             image_info['total_ints'][suffix] = 1
 

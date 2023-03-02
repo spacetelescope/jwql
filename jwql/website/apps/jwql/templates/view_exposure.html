@@ -21,7 +21,7 @@
     	</div>
 
     	<!-- Allow the user to change the file type that is being displayed -->
-    	View File Type:
+    	<a id="view_file_type" data-current-suffix="">View File Type:</a>
     	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
@@ -51,11 +51,12 @@
                 {% for detector in detectors %}
                     <span class="image_preview">
                         <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
-                            <img id="image_viewer_{{ detector }}"
+                            <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
                                  src='{{ static("") }}preview_images/{{ group_root[:7] }}/{{ group_root }}_{{ detector }}_cal_integ0.jpg'
                                  onerror="image_error(this, true);"
                                  alt='{{ group_root }}_{{ detector }}_cal_integ0.jpg'
-                                 title="Preview image for {{ group_root }}, detector {{ detector }}">
+                                 title="Preview image for {{ group_root }}, detector {{ detector }}"
+                                 data-detector="{{ detector }}">
                         </a>
                     </span>
                 {% endfor %}
