@@ -1,21 +1,21 @@
 # This file describes a conda environment that can be to install jwql
 #
 # Run the following command to set up this environment:
-# $ conda env create -f environment_python_3_8.yml
+# $ conda env create -f environment_python_3_10.yml
 #
 # The environment name can be overridden with the following command:
-# $ conda env create -n <custom name> -f environment_python_3_8.yml
+# $ conda env create -n <custom name> -f environment_python_3_10.yml
 #
 # Run the following command to activate the environment:
-# $ source activate jwql-3.8
+# $ source activate jwql-3.10
 #
 # To deactivate the environment run the following command:
 # $ source deactivate
 #
 # To remove the environment entirely, run the following command:
-# $ conda env remove -n jwql-3.8
+# $ conda env remove -n jwql-3.10
 
-name: jwql-3.8
+name: jwql-3.10
 
 channels:
   - conda-forge
@@ -44,7 +44,7 @@ dependencies:
   - psycopg2=2.9.3
   - pytest=7.2.1
   - pytest-cov=4.0.0
-  - python=3.8.16
+  - python=3.10.9
   - pyyaml=6.0
   - redis
   - scipy=1.9.3

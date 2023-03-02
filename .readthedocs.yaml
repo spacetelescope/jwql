@@ -15,7 +15,7 @@ build:
     python: "3.9"
   jobs:
     post_install:
-      - pip install sqlalchemy==1.4.43
+      - pip install sqlalchemy==1.4.46
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
