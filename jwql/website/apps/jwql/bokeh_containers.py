@@ -521,8 +521,8 @@ def standard_monitor_plot_layout(instrument, plots):
     aperture list. This function assumes that there are plots for all full
     frame apertures present.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     instrument : str
         Name of the instrument that the plots are for
 
