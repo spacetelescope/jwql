@@ -606,6 +606,7 @@ def mast_query_by_rootname(instrument, rootname):
     if '-seg' in rootname:
         root_split = rootname.split('-')
         file_set_name = root_split[0]
+        root_split = rootname.split('_')
         detector = root_split[-1]
     else:
         root_split = rootname.split('_')
