@@ -83,7 +83,7 @@ from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
