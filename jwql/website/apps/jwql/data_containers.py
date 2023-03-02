@@ -586,6 +586,50 @@ def get_filenames_by_instrument(instrument, proposal, observation_id=None, restr
     return filenames
 
 
+def mast_query_by_rootname(instrument, rootname):
+    """Query MAST for all columns given an instrument and rootname. Return the json
+    response from MAST.
+
+    Parameters
+    ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
+    rootname : str
+        The Rootname of Interest
+
+    Returns
+    -------
+    result : dict
+        Dictionary of rootname data
+    """
+
+    query_filters = []
+    if '-seg' in rootname:
+        root_split = rootname.split('-')
+        file_set_name = root_split[0]
+        detector = root_split[-1]
+    else:
+        root_split = rootname.split('_')
+        file_set_name = '_'.join(root_split[:-1])
+        detector = root_split[-1]
+
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+
+    query_filters.append({'paramName': 'fileSetName', 'values': [file_set_name]})
+    query_filters.append({'paramName': 'detector', 'values': [detector.upper()]})
+    params = {'columns': '*',
+              'filters': query_filters}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    retval = {}
+    if result['data'] == []:
+        print("WARNING: no data for {}".format(rootname))
+    else:
+        retval = result['data'][0]
+    return retval
+
+
+
 def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=None, other_columns=None):
     """Query MAST for filenames for the given instrument. Return the json
     response from MAST.
