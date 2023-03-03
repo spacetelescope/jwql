@@ -764,20 +764,21 @@ function toggle_viewed(file_root, base_url) {
 function toggle_viewed_group(group_root, base_url) {
     // Toggle the button immediately so user isn't confused
     var elem = document.getElementById("viewed");
-    update_viewed_button(elem.value == "New" ? true : false);
+    var to_viewed = elem.value.includes('New');
+    update_viewed_button(to_viewed, true);
     elem.disabled=true;
 
     // Ajax Call to update RootFileInfo model with "viewed" info
     $.ajax({
-        url: base_url + '/ajax/viewed_group/' + group_root + '/' + elem.value,
+        url: base_url + '/ajax/viewed_group/' + group_root + '/' + (to_viewed ? 'viewed' : 'new'),
         success: function(data){
             // Update button with actual value (paranoia update, should not yield visible change)
-            update_viewed_button(data["marked_viewed"]);
+            update_viewed_button(data["marked_viewed"], true);
             elem.disabled=false;
         },
         error : function(response) {
             // If update fails put button back to original state
-            update_viewed_button(elem.value == "New" ? false : true);
+            update_viewed_button(!to_viewed, true);
             elem.disabled=false;
 
         }
@@ -1333,14 +1334,22 @@ function update_view_explore_link() {
 }
 
 
-function update_viewed_button(viewed) {
+function update_viewed_button(viewed, group=false) {
     var elem = document.getElementById("viewed");
     if (viewed) {
         elem.classList.add("btn-outline-primary")
-        elem.value = "Viewed";
+        if (group) {
+            elem.value = "Viewed Group";
+        } else {
+            elem.value = "Viewed";
+        }
     } else {
         elem.classList.remove("btn-outline-primary")
-        elem.value = "New";
+        if (group) {
+            elem.value = "New Group";
+        } else {
+            elem.value = "New";
+        }
     }
 }
 

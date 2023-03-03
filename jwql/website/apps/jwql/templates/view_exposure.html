@@ -86,7 +86,7 @@
             <div class="col-xl-3 text-left">
                 <!--Load the file search form from the view-->
                 <div class="anomaly_form">
-                    <h5>Submit Anomaly</h5>
+                    <h5>Submit Anomaly for Group</h5>
                     <form action="" method="post">
                         <!--Show any errors from a previous form submission-->
                         {% if form.errors %}
@@ -119,9 +119,9 @@
         </div>
 
         {% if marked_viewed %}
-            <script>update_viewed_button(true)</script>
+            <script>update_viewed_button(true, true)</script>
         {% else %}
-            <script>update_viewed_button(false)</script>
+            <script>update_viewed_button(false, true)</script>
         {% endif %}
         <!-- Determine which filetype should be shown on load -->
         {% if 'rate' in suffixes %}
