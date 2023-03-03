@@ -8,6 +8,7 @@ Authors
 -------
 
     - Bryan Hilbert
+    - Bradley Sappington
 
 Use
 ---
@@ -276,8 +277,8 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
 
     # Update the proposal instance with the thumbnail path
     prop_instance.thumbnail_path = thumbnail
-    prop_instance.cat_type = proposal_category
-    prop_instance.save(update_fields=['thumbnail_path', 'cat_type'])
+    prop_instance.category = proposal_category
+    prop_instance.save(update_fields=['thumbnail_path', 'category'])
 
     # Now that the Archive and Proposal instances are sorted, get or create the
     # Observation instance
@@ -319,6 +320,7 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
     for file in obsfiles:
         defaults_dict = mast_query_by_rootname(instrument, file)
         try:
+            # NOTE: If implementing a new field, add to this dict and run script with 'update' flag
             defaults = dict(filter=defaults_dict.get('filter', ''),
                             detector=defaults_dict.get('detector', ''),
                             exp_type=defaults_dict.get('exp_type', ''),
@@ -327,7 +329,8 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
                             read_patt_num=defaults_dict.get('patt_num', 0),
                             aperture=defaults_dict.get('apername', ''),
                             subarray=defaults_dict.get('subarray', ''),
-                            pupil=defaults_dict.get('pupil', ''))
+                            pupil=defaults_dict.get('pupil', ''),
+                            expstart=defaults_dict.get('expstart', 0.0))
             if update:
                 root_file_info_instance, rfi_created = RootFileInfo.objects.update_or_create(root_name=file,
                                                                                              instrument=instrument,

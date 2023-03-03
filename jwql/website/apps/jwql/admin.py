@@ -29,8 +29,8 @@ class ArchiveAdmin(admin.ModelAdmin):
 
 @admin.register(Proposal)
 class ProposalAdmin(admin.ModelAdmin):
-    list_display = ('archive', 'prop_id', 'cat_type')
-    list_filter = ('archive', 'cat_type')
+    list_display = ('archive', 'prop_id', 'category')
+    list_filter = ('archive', 'category')
 
 
 @admin.register(Observation)
@@ -41,8 +41,8 @@ class ObservationAdmin(admin.ModelAdmin):
 
 @admin.register(RootFileInfo)
 class RootFileInfoAdmin(admin.ModelAdmin):
-    list_display = ('root_name', 'obsnum', 'proposal', 'instrument', 'viewed', 'filter', 'aperture', 'detector', 'read_patt_num', 'read_patt', 'grating', 'subarray', 'pupil', 'exp_type')
-    list_filter = ('viewed', 'instrument', 'proposal', 'obsnum')
+    list_display = ('root_name', 'obsnum', 'proposal', 'instrument', 'viewed', 'filter', 'aperture', 'detector', 'read_patt_num', 'read_patt', 'grating', 'subarray', 'pupil', 'exp_type', 'expstart')
+    list_filter = ('viewed', 'instrument', 'proposal')
 
 
 @admin.register(Anomalies)
