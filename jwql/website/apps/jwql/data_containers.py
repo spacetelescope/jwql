@@ -151,6 +151,77 @@ def build_table(tablename):
     return table_meta_data
 
 
+def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
+                      look=None, exp_type=None, cat_type=None, detector=None):
+    """Retrieve and filter root file table entries.
+
+    Parameters
+    ----------
+    instrument : str, optional
+        Name of the JWST instrument.
+    proposal : str, optional
+        Proposal to match.
+    obsnum : str, optional
+        Observation number to match.
+    sort_as : {'ascending', 'descending', 'recent', 'oldest'}, optional
+        Sorting method for output table. Ascending and descending
+        options refer to root file name; recent and oldest sort by observation
+        start.
+    look : {'new', 'viewed'}, optional
+        If set to None, all viewed values are returned. If set to
+        'viewed', only viewed data is returned. If set to 'new', only
+        new data is returned.
+    exp_type : str, optional
+        Set to filter by exposure type.
+    cat_type : str, optional
+        Set to filter by proposal category.
+    detector : str, optional
+        Set to filter by detector name.
+
+    Returns
+    -------
+    root_file_info : QuerySet
+        List of RootFileInfo entries matching input criteria.
+    """
+    # standardize input
+
+    # TODO: update when more fields are available
+    # get desired filters
+    filter_kwargs = dict()
+    if instrument is not None and str(instrument).strip().lower() != 'all':
+        inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+        filter_kwargs['instrument'] = inst
+    if proposal is not None and str(proposal).strip().lower() != 'all':
+        filter_kwargs['proposal'] = proposal.lstrip('0')
+    if obsnum is not None and str(obsnum).strip().lower() != 'all':
+        filter_kwargs['obsnum__obsnum'] = obsnum
+    if look is not None and str(look).strip().lower() != 'all':
+        filter_kwargs['viewed'] = (str(look).lower() == 'viewed')
+    if exp_type is not None and str(exp_type).strip().lower() != 'all':
+        filter_kwargs['obsnum__exptypes__icontains'] = exp_type
+    if cat_type is not None and str(cat_type).strip().lower() != 'all':
+        # filter_kwargs['obsnum__proposal__cat_type__iexact'] = cat_type
+        # not yet implemented in proposal table
+        pass
+    if detector is not None and str(detector).strip().lower() != 'all':
+        filter_kwargs['root_name__icontains'] = detector
+
+    # get file info by instrument from local model
+    root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
+
+    # descending by root file is default;
+    # for other options, sort as desired
+    sort_as = str(sort_as).strip().lower()
+    if sort_as == 'ascending':
+        root_file_info = root_file_info.order_by('root_name')
+    elif sort_as == 'recent':
+        root_file_info = root_file_info.order_by('-obsnum__obsstart', 'root_name')
+    elif sort_as == 'oldest':
+        root_file_info = root_file_info.order_by('obsnum__obsstart', 'root_name')
+
+    return root_file_info
+
+
 def get_acknowledgements():
     """Returns a list of individuals who are acknowledged on the
     ``about`` page.
@@ -1040,26 +1111,10 @@ def get_instrument_looks(instrument, sort_as=None,
             if key not in key_set:
                 keys.append(key)
 
-    # get desired filters
-    filter_kwargs = dict()
-    if look is not None:
-        filter_kwargs['viewed'] = (str(look).lower() == 'viewed')
-    if exp_type is not None:
-        filter_kwargs['obsnum__exptypes__icontains'] = exp_type
-    if cat_type is not None:
-        # filter_kwargs['obsnum__proposal__cat_type__iexact'] = cat_type
-        # not yet implemented in proposal table
-        pass
-
-    # get file info by instrument from local model
-    root_file_info = RootFileInfo.objects.filter(instrument=inst, **filter_kwargs)
-
-    # descending by root file is default;
-    # for other options, sort as desired
-    if sort_as == 'ascending':
-        root_file_info = root_file_info.order_by('root_name')
-    elif sort_as == 'recent':
-        root_file_info = root_file_info.order_by('-obsnum__obsstart')
+    # get filtered file info
+    root_file_info = filter_root_files(
+        instrument=instrument, sort_as=sort_as, look=look,
+        exp_type=exp_type, cat_type=cat_type)
 
     looks = []
     for root_file in root_file_info:
@@ -1660,14 +1715,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         try:
             filename_dict = filename_parser(rootname)
 
-            # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
-            if 'detector' not in filename_dict.keys():
-                filename_dict['detector'] = 'Unknown'
-                filename_dict['group_root'] = rootname
-            else:
-                group_root = re.sub(rf"_{filename_dict['detector']}$", '', rootname)
-                filename_dict['group_root'] = group_root
-
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' in filename_dict['filename_type']:
                 continue
@@ -1781,10 +1828,11 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-    data_dict = {}
-    data_dict['inst'] = inst
-    data_dict['file_data'] = {}
-    exp_types = []
+    data_dict = {'inst': inst,
+                 'file_data': dict()}
+    exp_types = set()
+    exp_groups = set()
+
     # Get the available files for the instrument
     for observation in observations:
         obs_num = observation.obsnum
@@ -1797,10 +1845,6 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
             # Parse filename
             try:
                 filename_dict = filename_parser(rootname)
-
-                # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
-                if 'detector' not in filename_dict.keys():
-                    filename_dict['detector'] = 'Unknown'
 
                 # Weed out file types that are not supported by generate_preview_images
                 if 'stage_3' in filename_dict['filename_type']:
@@ -1815,7 +1859,8 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
                                  'parallel_seq_id': rootname[16],
                                  'program_id': rootname[2:7],
                                  'visit': rootname[10:13],
-                                 'visit_group': rootname[14:16]}
+                                 'visit_group': rootname[14:16],
+                                 'group_root': rootname[:26]}
 
             # Get list of available filenames and exposure start times. All files with a given
             # rootname will have the same exposure start time, so just keep the first.
@@ -1823,15 +1868,17 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
             exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
             if exp_start >= inclusive_start_time_mjd and exp_start < exclusive_stop_time_mjd:
                 exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
-                exp_types.append(exp_type)
+                exp_types.add(exp_type)
                 # Viewed is stored by rootname in the Model db.  Save it with the data_dict
                 # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
                 try:
                     root_file_info = RootFileInfo.objects.get(root_name=rootname)
                     viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
                 except RootFileInfo.DoesNotExist:
-
                     viewed = THUMBNAIL_FILTER_LOOK[0]
+
+                # Add to list of all exposure groups
+                exp_groups.add(filename_dict['group_root'])
 
                 # Add data to dictionary
                 data_dict['file_data'][rootname] = {}
@@ -1868,12 +1915,13 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
 
-
     # Order dictionary by descending expstart time.
     sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
                                    key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 
     data_dict['file_data'] = sorted_file_data
+    data_dict['exp_groups'] = sorted(exp_groups)
+
     return data_dict
 
 
@@ -1894,15 +1942,16 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
     # Initialize dictionary that will contain all needed data
-    data_dict = {}
-    # dummy variable for view_image when thumbnail is selected
-    data_dict['inst'] = "all"
-    data_dict['file_data'] = {}
+    data_dict = {'inst': 'all',
+                 'file_data': dict()}
+    exp_groups = set()
+
     # Gather data for each rootname
     for rootname in rootnames:
         # fit expected format for get_filenames_by_rootname()
+        split_name = rootname.split("_")
         try:
-            rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
+            rootname = split_name[0] + '_' + split_name[1] + '_' + split_name[2] + '_' + split_name[3]
         except IndexError:
             continue
 
@@ -1911,6 +1960,9 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
             filename_dict = filename_parser(rootname)
         except ValueError:
             continue
+
+        # Add to list of all exposure groups
+        exp_groups.add(filename_dict['group_root'])
 
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
@@ -1960,5 +2012,6 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
+    data_dict['exp_groups'] = sorted(exp_groups)
 
     return data_dict

@@ -279,7 +279,12 @@ def filename_parser(filename):
     """
 
     filename = os.path.basename(filename)
-    file_root_name = (len(filename.split('.')) < 2)
+    split_filename = filename.split('.')
+    file_root_name = (len(split_filename) < 2)
+    if file_root_name:
+        root_name = filename
+    else:
+        root_name = split_filename[0]
 
     # Stage 1 and 2 filenames
     # e.g. "jw80500012009_01101_00012_nrcalong_uncal.fits"
@@ -473,6 +478,17 @@ def filename_parser(filename):
                 ]
             elif name_match == 'stage_2_msa':
                 filename_dict['instrument'] = 'nirspec'
+
+        # Also add detector, root name, and group root name
+        root_name = re.sub(rf"_{filename_dict.get('suffix', '')}$", '', root_name)
+        root_name = re.sub(rf"_{filename_dict.get('ac_id', '')}$", '', root_name)
+        filename_dict['file_root'] = root_name
+        if 'detector' not in filename_dict.keys():
+            filename_dict['detector'] = 'Unknown'
+            filename_dict['group_root'] = root_name
+        else:
+            group_root = re.sub(rf"_{filename_dict['detector']}$", '', root_name)
+            filename_dict['group_root'] = group_root
 
     # Raise error if unable to parse the filename
     except AttributeError:

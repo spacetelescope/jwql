@@ -52,9 +52,7 @@
                     <span class="image_preview">
                         <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
                             <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
-                                 src='{{ static("") }}preview_images/{{ group_root[:7] }}/{{ group_root }}_{{ detector }}_cal_integ0.jpg'
                                  onerror="image_error(this, true);"
-                                 alt='{{ group_root }}_{{ detector }}_cal_integ0.jpg'
                                  title="Preview image for {{ group_root }}, detector {{ detector }}"
                                  data-detector="{{ detector }}">
                         </a>
@@ -73,11 +71,11 @@
                         {% if group_root in group_root_list %}
                             {% set index = group_root_list.index(group_root) %}
                             {% if index != 0 %}
-                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ group_root_list[index-1] }}/" style="float: left;">< Previous</a>
+                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/exposure/{{ group_root_list[index-1] }}/" style="float: left;">< Previous</a>
                             {% endif %}
 
                             {% if index != group_root_list|length - 1 %}
-                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ group_root_list[index+1] }}/" style="float: right;">Next ></a>
+                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/exposure/{{ group_root_list[index+1] }}/" style="float: right;">Next ></a>
                             {% endif %}
                         {% endif %}
                     </span>

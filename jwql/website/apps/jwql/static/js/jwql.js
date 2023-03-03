@@ -612,18 +612,25 @@ function show_only(filter_type, value, base_url) {
         }
 
         // If data are grouped, check if a thumbnail for the group has already been displayed
+        var show_group = true;
         if (group && groups_shown.has(thumbnails[i].getAttribute('data-group_root'))) {
-            criteria.push(false);
+            show_group = false;
         }
 
         // Only display if all criteria are met
         if (criteria.every(function(r){return r})) {
-            thumbnails[i].style.display = "inline-block";
-            num_thumbnails_displayed++;
+            // if group has already been shown, do not show thumbnail,
+            // but do store the file root for navigation
+            if (show_group) {
+                thumbnails[i].style.display = "inline-block";
+                num_thumbnails_displayed++;
+                if (group) { groups_shown.add(thumbnails[i].getAttribute('data-group_root')); }
+            } else {
+                thumbnails[i].style.display = "none";
+            }
             list_of_rootnames = list_of_rootnames +
                                 thumbnails[i].getAttribute("data-file_root") +
                                 '=' + thumbnails[i].getAttribute("data-exp_start") + ',';
-            if (group) { groups_shown.add(thumbnails[i].getAttribute('data-group_root')); }
         } else {
             thumbnails[i].style.display = "none";
         }
@@ -1188,7 +1195,7 @@ function update_thumbnail_array(data) {
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function submit_date_range_form(inst, base_url) {
+function submit_date_range_form(inst, base_url, group) {
 
     var start_date = document.getElementById("start_date_range").value;
     var stop_date = document.getElementById("stop_date_range").value;
@@ -1221,9 +1228,11 @@ function submit_date_range_form(inst, base_url) {
                         update_show_count(num_thumbnails, 'activities');
                         update_thumbnail_array(data);
                         update_filter_options(data, base_url, 'thumbnail');
-
-                        // Do initial sort to match sort button display
+                        update_group_options(data, base_url);
                         update_sort_options(data, base_url);
+
+                        // Do initial sort and group to match sort button display
+                        group_by_thumbnails(group, base_url);
                         sort_by_thumbnails(data.thumbnail_sort, base_url);
 
                         // Replace loading screen with the proposal array div
@@ -1288,7 +1297,7 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} sort - Sort method string saved in session data image_sort
  */
-function update_thumbnails_query_page(base_url, sort) {
+function update_thumbnails_query_page(base_url, sort, group) {
     $.ajax({
         url: base_url + '/ajax/query_submit/',
         success: function(data){
@@ -1297,9 +1306,11 @@ function update_thumbnails_query_page(base_url, sort) {
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data, base_url, 'thumbnail');
+            update_group_options(data, base_url);
             update_sort_options(data, base_url);
 
-            // Do initial sort to match sort button display
+            // Do initial sort and group to match sort button display
+            group_by_thumbnails(group, base_url);
             sort_by_thumbnails(sort, base_url);
 
             // Replace loading screen with the proposal array div
