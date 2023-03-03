@@ -184,7 +184,9 @@ class InstrumentAnomalySubmitForm(forms.Form):
     def __init__(self, *args, **kwargs):
         instrument = kwargs.pop('instrument')
         super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
-        self.fields['anomaly_choices'] = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
+        self.fields['anomaly_choices'] = forms.MultipleChoiceField(
+            choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument],
+            widget=forms.CheckboxSelectMultiple(), required=False)
         self.instrument = instrument
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
@@ -202,7 +204,6 @@ class InstrumentAnomalySubmitForm(forms.Form):
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
         """
-
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
