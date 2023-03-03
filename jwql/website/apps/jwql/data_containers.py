@@ -51,7 +51,7 @@ from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
@@ -329,7 +329,7 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
         return suffixes
 
 
-def get_current_flagged_anomalies(rootname, instrument):
+def get_current_flagged_anomalies(rootname, instrument, n_match=1):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
 
@@ -345,18 +345,16 @@ def get_current_flagged_anomalies(rootname, instrument):
         A list of currently flagged anomalies for the given ``rootname``
         (e.g. ``['snowball', 'crosstalk']``)
     """
+    table = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
+    query = di.session.query(table).filter(table.rootname.startswith(rootname)).order_by(table.flag_date.desc())
 
-    table_dict = {}
-    table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
-
-    table = table_dict[instrument.lower()]
-    query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
-
-    all_records = query.data_frame
+    all_records = query.data_frame.groupby('rootname').first()
+    current_anomalies = []
     if not all_records.empty:
-        current_anomalies = [col for col, val in np.sum(all_records, axis=0).items() if val]
-    else:
-        current_anomalies = []
+        for col, val in all_records.sum(axis=0, numeric_only=True).items():
+            # ignore rootname, flag_date, etc
+            if val == n_match and col in ANOMALIES_PER_INSTRUMENT:
+                current_anomalies.append(col)
 
     return current_anomalies
 
@@ -371,24 +369,30 @@ def get_anomaly_form(request, inst, file_root):
     inst : str
         Name of JWST instrument
     file_root : str
-        FITS filename of selected image in filesystem
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
 
     Returns
     -------
     InstrumentAnomalySubmitForm object
         form object to be sent with context to template
     """
+    # Check for group root name
+    file_root_info = RootFileInfo.objects.filter(root_name__startswith=file_root)
+    file_roots = [rf.root_name for rf in file_root_info]
+
     # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+    current_anomalies = get_current_flagged_anomalies(file_root, inst, n_match=len(file_roots))
 
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
     # If this is a POST request and the form is filled out, process the form data
-    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
-        anomaly_choices = dict(request.POST)['anomaly_choices']
+    if request.method == 'POST':
+        anomaly_choices = dict(request.POST).get('anomaly_choices', [])
         if form.is_valid():
-            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+            for file_root in file_roots:
+                form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
             messages.success(request, "Anomaly submitted successfully")
         else:
             messages.error(request, "Failed to submit anomaly")
