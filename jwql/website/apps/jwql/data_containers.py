@@ -27,6 +27,7 @@ Use
 import copy
 from collections import OrderedDict
 import glob
+import json
 from operator import getitem
 import os
 import re
@@ -53,6 +54,7 @@ from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTF
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS, QUERY_CONFIG_TEMPLATE
 from jwql.utils.credentials import get_mast_token
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
@@ -79,7 +81,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     setup()
 
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
-    from jwql.website.apps.jwql.models import RootFileInfo
+    from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
@@ -93,6 +95,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     FILESYSTEM_DIR = configs['filesystem']
     PREVIEW_IMAGE_FILESYSTEM = configs['preview_image_filesystem']
     THUMBNAIL_FILESYSTEM = configs['thumbnail_filesystem']
+    OUTPUT_DIR = configs['outputs']
 
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
@@ -145,6 +148,100 @@ def build_table(tablename):
 
     session.close()
     return table_meta_data
+
+
+def create_archived_proposals_context(inst):
+    """Generate and save a json file containing the information needed
+    to create an instrument's archive page.
+
+    Parameters
+    ----------
+    inst : str
+        Name of JWST instrument
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Get a list of Observation entries for the given instrument
+    all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
+
+    # Get a list of proposal numbers.
+    prop_objects = Proposal.objects.filter(archive__instrument=inst)
+    proposal_nums = [entry.prop_id for entry in prop_objects]
+
+    # Put proposals into descending order
+    proposal_nums.sort(reverse=True)
+
+    # Total number of proposals for the instrument
+    num_proposals = len(proposal_nums)
+
+    thumbnail_paths = []
+    min_obsnums = []
+    total_files = []
+    proposal_viewed = []
+    proposal_exp_types = []
+    thumb_exp_types = []
+    proposal_obs_times = []
+    thumb_obs_time = []
+
+    # Get a set of all exposure types used in the observations associated with this proposal
+    exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
+    exp_types = sorted(list(set(exp_types)))
+
+    # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
+    dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
+                      'exp_type': exp_types}
+    thumbnails_dict = {}
+
+    for proposal_num in proposal_nums:
+        # For each proposal number, get all entries
+        prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
+
+        # All entries will have the same thumbnail_path, so just grab the first
+        thumbnail_paths.append(prop_entries[0].proposal.thumbnail_path)
+
+        # Extract the observation numbers from each entry and find the minimum
+        prop_obsnums = [entry.obsnum for entry in prop_entries]
+        min_obsnums.append(min(prop_obsnums))
+
+        # Sum the file count from all observations to get the total file count for
+        # the proposal
+        prop_filecount = [entry.number_of_files for entry in prop_entries]
+        total_files.append(sum(prop_filecount))
+
+        # In order to know if a proposal contains all observations that are entirely viewed, check for at least one existing viewed=False in RootFileInfo
+        unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
+        proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
+
+        # Store comma separated list of exp_types associated with each proposal
+        proposal_exp_types = [exposure_type for observation in prop_entries for exposure_type in observation.exptypes.split(',')]
+        proposal_exp_types = list(set(proposal_exp_types))
+        thumb_exp_types.append(','.join(proposal_exp_types))
+
+        # Get Most recent observation start time
+        proposal_obs_times = [observation.obsstart for observation in prop_entries]
+        thumb_obs_time.append(max(proposal_obs_times))
+
+    thumbnails_dict['proposals'] = proposal_nums
+    thumbnails_dict['thumbnail_paths'] = thumbnail_paths
+    thumbnails_dict['num_files'] = total_files
+    thumbnails_dict['viewed'] = proposal_viewed
+    thumbnails_dict['exp_types'] = thumb_exp_types
+    thumbnails_dict['obs_time'] = thumb_obs_time
+
+    context = {'inst': inst,
+               'num_proposals': num_proposals,
+               'min_obsnum': min_obsnums,
+               'thumbnails': thumbnails_dict,
+               'dropdown_menus': dropdown_menus}
+
+    json_object = json.dumps(context, indent = 4)
+
+    # Writing to json file
+    outfilename = os.path.join(OUTPUT_DIR, 'archive_page', f'{inst}_archive_context.json')
+    with open(outfilename, "w") as outfile:
+        outfile.write(json_object)
+    set_permissions(outfilename)
 
 
 def get_acknowledgements():
@@ -1048,7 +1145,7 @@ def get_thumbnails_all_instruments(parameters):
     ----------
     parameters: dict of type QUERY_CONFIG_TEMPLATE
         A dictionary containing keys of QUERY_CONFIG_KEYS, some of which are dictionaries:
- 
+
 
     Returns
     -------
@@ -1101,7 +1198,7 @@ def get_thumbnails_all_instruments(parameters):
         # Get list of all thumbnails
         thumb_inventory = os.path.join(f"{THUMBNAIL_FILESYSTEM}", f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt")
         thumbnail_inst_list = retrieve_filelist(thumb_inventory)
-        
+
         # Get subset of thumbnail images that match the filenames
         thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
                                   os.path.basename(item).split('_integ')[0] in inst_filenames]
@@ -1196,8 +1293,8 @@ def get_thumbnails_by_proposal(proposal):
 
 def get_thumbnail_by_rootname(rootname):
     """Return the most appropriate existing thumbnail basename available in the filesystem for the given ``rootname``.
-    We generate thumbnails only for 'rate' and 'dark' files. 
-    Check if these files exist in the thumbnail filesystem. 
+    We generate thumbnails only for 'rate' and 'dark' files.
+    Check if these files exist in the thumbnail filesystem.
     In the case where neither rate nor dark thumbnails are present, revert to 'none'
 
     Parameters
