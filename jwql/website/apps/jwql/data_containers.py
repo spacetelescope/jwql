@@ -341,7 +341,7 @@ def get_current_flagged_anomalies(rootname, instrument, n_match=1):
 
     Returns
     -------
-    current_anomalies : list
+    current_anomalies : list of str
         A list of currently flagged anomalies for the given ``rootname``
         (e.g. ``['snowball', 'crosstalk']``)
     """
@@ -392,7 +392,17 @@ def get_anomaly_form(request, inst, file_root):
         anomaly_choices = dict(request.POST).get('anomaly_choices', [])
         if form.is_valid():
             for file_root in file_roots:
-                form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+                # for a group form submit, add any individual anomalies
+                # not in the original group set
+                if len(file_roots) > 1:
+                    file_current = get_current_flagged_anomalies(file_root, inst)
+                    choices = anomaly_choices.copy()
+                    for choice in file_current:
+                        if choice not in current_anomalies:
+                            choices.append(choice)
+                else:
+                    choices = anomaly_choices
+                form.update_anomaly_table(file_root, 'unknown', choices)
             messages.success(request, "Anomaly submitted successfully")
         else:
             messages.error(request, "Failed to submit anomaly")
