@@ -1838,9 +1838,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict : dict
         Dictionary of data needed for the ``thumbnails`` template
     """
-    # TODO - tap call in get_rootnames sometimes fails.
-    #  can eliminate, using the existing filenames instead?
-
     # generate the list of all obs of the proposal here, so that the list can be
     # properly packaged up and sent to the js scripts. but to do this, we need to call
     # get_rootnames_for_instrument_proposal, which is largely repeating the work done by
@@ -1895,15 +1892,17 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                              'visit_group': rootname[14:16],
                              'group_root': rootname[:26]}
 
-        # TODO: the following comprehensions loop over all file names
-        #  several times - should be combined, and maybe make the
-        #  filename loop primary
-
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
-        available_files = [item for item in filenames if rootname in item]
-        exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
-        exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
+        available_files = []
+        exp_start = None
+        exp_type = None
+        for i, item in enumerate(filenames):
+            if rootname in item:
+                available_files.append(item)
+                if exp_start is None:
+                    exp_start = columns['expstart'][i]
+                    exp_type = columns['exp_type'][i]
         exp_types.add(exp_type)
 
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
@@ -2028,10 +2027,17 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
 
             # Get list of available filenames and exposure start times. All files with a given
             # rootname will have the same exposure start time, so just keep the first.
-            available_files = [item for item in filenames if rootname in item]
-            exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
+            available_files = []
+            exp_start = None
+            exp_type = None
+            for i, item in enumerate(filenames):
+                if rootname in item:
+                    available_files.append(item)
+                    if exp_start is None:
+                        exp_start = columns['expstart'][i]
+                        exp_type = columns['exp_type'][i]
+
             if exp_start >= inclusive_start_time_mjd and exp_start < exclusive_stop_time_mjd:
-                exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
                 exp_types.add(exp_type)
                 # Viewed is stored by rootname in the Model db.  Save it with the data_dict
                 # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
