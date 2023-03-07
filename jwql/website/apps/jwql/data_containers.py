@@ -871,8 +871,13 @@ def mast_query_by_rootname(instrument, rootname):
     query_filters.append({'paramName': 'detector', 'values': [detector.upper()]})
     params = {'columns': '*',
               'filters': query_filters}
-    response = Mast.service_request_async(service, params)
-    result = response[0].json()
+    try:
+        response = Mast.service_request_async(service, params)
+        result = response[0].json()
+    except Exception as e:
+        logging.error("Mast.service_request_async- {} - {}".format(file_set_name, e))
+        result['data'] = []
+
     retval = {}
     if result['data'] == []:
         print("WARNING: no data for {}".format(rootname))
