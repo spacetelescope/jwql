@@ -470,15 +470,20 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 
-REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'obsnum', 'exptypes',
-                                      'obsstart', 'obsend', 'viewed'],
-                              'miri': ['proposal', 'obsnum', 'exptypes',
-                                       'obsstart', 'obsend', 'viewed'],
-                              'nircam': ['proposal', 'obsnum', 'exptypes',
-                                         'obsstart', 'obsend', 'viewed'],
-                              'niriss': ['proposal', 'obsnum', 'exptypes',
-                                         'obsstart', 'obsend', 'viewed'],
-                              'nirspec': ['exptypes', 'viewed']}
+REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'obsnum', 'exp_type',
+                                      'expstart', 'filter', 'aperture',
+                                      'detector', 'subarray', 'viewed'],
+                              'miri': ['proposal', 'obsnum', 'exp_type',
+                                       'expstart', 'filter', 'aperture',
+                                       'detector', 'subarray', 'viewed'],
+                              'nircam': ['proposal', 'obsnum', 'exp_type',
+                                         'expstart', 'filter', 'aperture',
+                                         'detector', 'subarray', 'viewed'],
+                              'niriss': ['proposal', 'obsnum', 'exp_type',
+                                         'expstart', 'filter', 'aperture',
+                                         'detector', 'subarray', 'viewed'],
+                              'nirspec': ['exp_type', 'filter', 'grating',
+                                          'read_patt_num', 'viewed']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 

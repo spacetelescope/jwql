@@ -179,18 +179,18 @@ def test_get_instrument_proposals():
                           (None, 'New', None, None, None),
                           (None, None, None, 'NRS_MSATA', None),
                           # (None, None, None, None, 'CAL'),  # cat_type not implemented yet
-                          (['obsstart'], 'new', 'ascending', None, None),
-                          (['obsstart'], 'new', 'descending', None, None),
-                          (['obsstart'], 'new', 'recent', None, None),
+                          (['expstart'], 'new', 'ascending', None, None),
+                          (['expstart'], 'new', 'descending', None, None),
+                          (['expstart'], 'new', 'recent', None, None),
                           ([], 'viewed', None, None, None),
                           ([], 'new', None, None, None),
                           ([], None, None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], 'viewed', None, None, None),
+                            'prop_id', 'expstart'], 'viewed', None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], 'new', None, None, None),
+                            'prop_id', 'expstart'], 'new', None, None, None),
                           (['proposal', 'obsnum', 'other',
-                            'prop_id', 'obsstart'], None, None, None, None)])
+                            'prop_id', 'expstart'], None, None, None, None)])
 def test_get_instrument_looks(keys, viewed, sort_as, exp_type, cat_type):
     """Tests the ``get_instrument_looks`` function."""
 
@@ -224,7 +224,7 @@ def test_get_instrument_looks(keys, viewed, sort_as, exp_type, cat_type):
         if sort_as == 'ascending':
             assert last_file['root_name'] > first_file['root_name']
         elif sort_as == 'recent':
-            assert last_file['obsstart'] < first_file['obsstart']
+            assert last_file['expstart'] < first_file['expstart']
         else:
             assert last_file['root_name'] < first_file['root_name']
 
