@@ -18,7 +18,23 @@
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
             <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed_group("{{group_root}}", "{{base_url}}");'>
-    	</div>
+
+            <!-- Display the navigation buttons -->
+            <div class="previous-next-buttons">
+                <span class="step-links">
+                    {% if group_root in group_root_list %}
+                        {% set index = group_root_list.index(group_root) %}
+                        {% if index != 0 %}
+                            <a role="button" class="btn btn-primary ml-4 mr-2" type="submit" href="{{ base_url }}/{{ inst }}/exposure/{{ group_root_list[index-1] }}/" style="float: left;">< Previous</a>
+                        {% endif %}
+
+                        {% if index != group_root_list|length - 1 %}
+                            <a role="button" class="btn btn-primary mx-2" type="submit" href="{{ base_url }}/{{ inst }}/exposure/{{ group_root_list[index+1] }}/" style="float: right;">Next ></a>
+                        {% endif %}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
 
     	<!-- Allow the user to change the file type that is being displayed -->
     	<a id="view_file_type" data-current-suffix="">View File Type:</a>
@@ -46,42 +62,87 @@
         </div>
 
         <div class="row">
-            <!-- Display the image and integration buttons/slider -->
-    	    <div class="col-xl-9 text-center">
-                {% for detector in detectors %}
-                    <span class="image_preview">
-                        <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
-                            <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
-                                 onerror="image_error(this, true);"
-                                 title="Preview image for {{ group_root }}, detector {{ detector }}"
-                                 data-detector="{{ detector }}">
-                        </a>
-                    </span>
-                {% endfor %}
-
+            <div class="col-xl-9 text-left">
+                <!-- Display the integration buttons/slider -->
                 <div class="int_changer">
                     <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{group_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
                     <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{group_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
                     <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{group_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
                     <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
                 </div>
-
-                <div class="previous-next-buttons">
-                    <span class="step-links">
-                        {% if group_root in group_root_list %}
-                            {% set index = group_root_list.index(group_root) %}
-                            {% if index != 0 %}
-                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/exposure/{{ group_root_list[index-1] }}/" style="float: left;">< Previous</a>
-                            {% endif %}
-
-                            {% if index != group_root_list|length - 1 %}
-                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/exposure/{{ group_root_list[index+1] }}/" style="float: right;">Next ></a>
-                            {% endif %}
-                        {% endif %}
-                    </span>
-                </div>
             </div>
+        </div>
+        {% if inst == 'NIRCam' %}
+        <div class="row">
+            <!-- Display NIRCam short detectors in columns, 1st row -->
+                {% for detector1 in ['nrca2', 'nrca4', 'nrcb3', 'nrcb1'] %}
+                    {% if detector1 in detectors %}
+                    <div class="col">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector1 }}/">
+                                <img class="image_preview_viewer" id="image_viewer_{{ detector1 }}"
+                                     onerror="image_error(this, true);"
+                                     title="Preview image for {{ group_root }}, detector {{ detector1 }}"
+                                     data-detector="{{ detector1 }}" style="width:100%">
+                            </a>
+                        </span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+        </div>
+        <div class="row">
+            <!-- Display NIRCam short detectors in columns, 2nd row -->
+                {% for detector2 in ['nrca1', 'nrca3', 'nrcb4', 'nrcb2'] %}
+                    {% if detector2 in detectors %}
+                    <div class="col">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector2 }}/">
+                                <img class="image_preview_viewer" id="image_viewer_{{ detector2 }}"
+                                     onerror="image_error(this, true);"
+                                     title="Preview image for {{ group_root }}, detector {{ detector2 }}"
+                                     data-detector="{{ detector2 }}" style="width:100%">
+                            </a>
+                        </span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+        </div>
+        <div class="row">
+            <!-- Display NIRCam long detectors in columns -->
+                {% for detector3 in ['nrcalong', 'nrcblong'] %}
+                    {% if detector3 in detectors %}
+                    <div class="col">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector3 }}/">
+                                <img class="image_preview_viewer" id="image_viewer_{{ detector3 }}"
+                                     onerror="image_error(this, true);"
+                                     title="Preview image for {{ group_root }}, detector {{ detector3 }}"
+                                     data-detector="{{ detector3 }}" style="width:100%">
+                            </a>
+                        </span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+        </div>
+        {% else %}
+        <div class="row">
+            <!-- Display non-NIRCam detectors in columns -->
+                {% for detector in detectors %}
+                    <div class="col">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
+                                <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
+                                     onerror="image_error(this, true);"
+                                     title="Preview image for {{ group_root }}, detector {{ detector }}"
+                                     data-detector="{{ detector }}" style="width:100%">
+                            </a>
+                        </span>
+                    </div>
+                {% endfor %}
+        </div>
+        {% endif %}
 
+        <div class="row">
             <!-- Display the anomaly form -->
             <div class="col-xl-3 text-left">
                 <!--Load the file search form from the view-->
