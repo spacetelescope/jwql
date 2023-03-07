@@ -144,8 +144,8 @@ def instrument_looks(request, inst, status=None):
 
     'Viewed' indicates whether an observation is new or has been reviewed
     for QA.  In addition to 'filename', and 'viewed', observation
-    descriptors included in the table are currently 'proposal', 'obsnum',
-    'number_of_files', 'exptypes', 'obsstart', 'obsend'.
+    descriptors from the Django models may be added to the table. Keys
+    are specified by instrument in the REPORT_KEYS_PER_INSTRUMENT constant.
 
     Parameters
     ----------

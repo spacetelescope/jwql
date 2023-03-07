@@ -168,8 +168,8 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
         Observation number to match.
     sort_as : {'ascending', 'descending', 'recent', 'oldest'}, optional
         Sorting method for output table. Ascending and descending
-        options refer to root file name; recent and oldest sort by observation
-        start.
+        options refer to root file name; recent and oldest sort by exposure
+        start time.
     look : {'new', 'viewed'}, optional
         If set to None, all viewed values are returned. If set to
         'viewed', only viewed data is returned. If set to 'new', only
@@ -188,7 +188,6 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
     """
     # standardize input
 
-    # TODO: update when more fields are available
     # get desired filters
     filter_kwargs = dict()
     if instrument is not None and str(instrument).strip().lower() != 'all':
@@ -201,13 +200,11 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
     if look is not None and str(look).strip().lower() != 'all':
         filter_kwargs['viewed'] = (str(look).lower() == 'viewed')
     if exp_type is not None and str(exp_type).strip().lower() != 'all':
-        filter_kwargs['obsnum__exptypes__icontains'] = exp_type
+        filter_kwargs['exp_type__iexact'] = exp_type
     if cat_type is not None and str(cat_type).strip().lower() != 'all':
-        # filter_kwargs['obsnum__proposal__cat_type__iexact'] = cat_type
-        # not yet implemented in proposal table
-        pass
+        filter_kwargs['obsnum__proposal__category__iexact'] = cat_type
     if detector is not None and str(detector).strip().lower() != 'all':
-        filter_kwargs['root_name__icontains'] = detector
+        filter_kwargs['detector__iexact'] = detector
 
     # get file info by instrument from local model
     root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
@@ -218,9 +215,9 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
     if sort_as == 'ascending':
         root_file_info = root_file_info.order_by('root_name')
     elif sort_as == 'recent':
-        root_file_info = root_file_info.order_by('-obsnum__obsstart', 'root_name')
+        root_file_info = root_file_info.order_by('-expstart', 'root_name')
     elif sort_as == 'oldest':
-        root_file_info = root_file_info.order_by('obsnum__obsstart', 'root_name')
+        root_file_info = root_file_info.order_by('expstart', 'root_name')
 
     return root_file_info
 
@@ -262,11 +259,11 @@ def create_archived_proposals_context(inst):
 
     # Get a set of all exposure types used in the observations associated with this proposal
     exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
-    exp_types = sorted(list(set(exp_types)))
+    exp_types = sorted(set(exp_types))
 
     # Get all proposals based on category type
     proposals_by_category = get_proposals_by_category(inst)
-    unique_cat_types = list(set(proposals_by_category.values()))
+    unique_cat_types = sorted(set(proposals_by_category.values()))
 
     # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
     dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
@@ -290,7 +287,9 @@ def create_archived_proposals_context(inst):
         prop_filecount = [entry.number_of_files for entry in prop_entries]
         total_files.append(sum(prop_filecount))
 
-        # In order to know if a proposal contains all observations that are entirely viewed, check for at least one existing viewed=False in RootFileInfo
+        # In order to know if a proposal contains all observations that
+        # are entirely viewed, check for at least one existing
+        # viewed=False in RootFileInfo
         unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
         proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
 
