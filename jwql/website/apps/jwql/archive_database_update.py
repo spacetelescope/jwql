@@ -40,6 +40,8 @@ import sys
 import numpy as np
 import django
 
+from jwql.utils.protect_module import lock_module
+
 # These lines are needed in order to use the Django models in a standalone
 # script (as opposed to code run as a result of a webpage request). If these
 # lines are not run, the script will crash when attempting to import the
@@ -84,10 +86,8 @@ def get_updates(update_database, inst):
     # Get list of all files for the given instrument
     for proposal in all_proposals:
         # Get lists of all public and proprietary files for the program
-        logging.info(f'Working on proposal {proposal}')
         filenames_public, metadata_public, filenames_proprietary, metadata_proprietary = get_all_possible_filenames_for_proposal(inst, proposal)
         # Find the location in the filesystem for all files
-        logging.info('Getting all filenames and locating in the filesystem')
         filepaths_public = files_in_filesystem(filenames_public, 'public')
         filepaths_proprietary = files_in_filesystem(filenames_proprietary, 'proprietary')
         filenames = filepaths_public + filepaths_proprietary
@@ -109,7 +109,6 @@ def get_updates(update_database, inst):
             if 'stage_3' not in filename_dict['filename_type']:
                 rootnames.append(rootname)
 
-        logging.info(f'Identified {len(rootnames)} files for the proposal.')
         if len(filenames) > 0:
 
             # Gather information about the proposals for the given instrument
@@ -144,7 +143,6 @@ def get_updates(update_database, inst):
                 obsfiles = [f for f in rootnames if propobs in f]
 
                 # Update the appropriate database table
-                logging.info(f'Updating database for {inst}, Proposal {proposal}, Observation {obsnum}')
                 update_database_table(update_database, inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], obsfiles,
                                       exp_types, starting_date, latest_date, proposal_category)
 
@@ -266,15 +264,11 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
     archive_instance, archive_created = Archive.objects.get_or_create(instrument=instrument)
     if archive_created:
         logging.info(f'No existing entries for Archive: {instrument}. Creating.')
-    else:
-        logging.info('Existing Archive entry found.')
 
     # Check to see if the required Proposal entry exists, and create it if it doesn't
     prop_instance, prop_created = Proposal.objects.get_or_create(prop_id=prop, archive=archive_instance)
     if prop_created:
         logging.info(f'No existing entries for Proposal: {prop}. Creating.')
-    else:
-        logging.info('Existing Proposal entry found.')
 
     # Update the proposal instance with the thumbnail path
     prop_instance.thumbnail_path = thumbnail
@@ -303,9 +297,6 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
                       'Updating number of files, start/end dates, and exp_type list'))
         obs_instance.exptypes = ','.join(types)
     else:
-        logging.info(f'Existing Observation entry found, containing exptypes: {obs_instance.exptypes}.')
-        logging.info((f'Found existing entry for instrument {instrument}, Proposal {prop}, Observation {obs}, '
-                      f'containing exptypes: {obs_instance.exptypes} Updating number of files, start/end dates, and exp_type list'))
         if obs_instance.exptypes == '':
             obs_instance.exptypes = ','.join(types)
         else:
@@ -319,38 +310,56 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
     # Get all unsaved root names in the Observation to store in the database
     nr_files_created = 0
     for file in obsfiles:
-        defaults_dict = mast_query_by_rootname(instrument, file)
         try:
-            # NOTE: If implementing a new field, add to this dict and run script with 'update' flag
-            defaults = dict(filter=defaults_dict.get('filter', ''),
-                            detector=defaults_dict.get('detector', ''),
-                            exp_type=defaults_dict.get('exp_type', ''),
-                            read_patt=defaults_dict.get('readpatt', ''),
-                            grating=defaults_dict.get('grating', ''),
-                            read_patt_num=defaults_dict.get('patt_num', 0),
-                            aperture=defaults_dict.get('apername', ''),
-                            subarray=defaults_dict.get('subarray', ''),
-                            pupil=defaults_dict.get('pupil', ''),
-                            expstart=defaults_dict.get('expstart', 0.0))
-            if update:
-                root_file_info_instance, rfi_created = RootFileInfo.objects.update_or_create(root_name=file,
-                                                                                             instrument=instrument,
-                                                                                             obsnum=obs_instance,
-                                                                                             proposal=prop,
-                                                                                             defaults=defaults)
-            else:
-                root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
-                                                                                          instrument=instrument,
-                                                                                          obsnum=obs_instance,
-                                                                                          proposal=prop,
-                                                                                          defaults=defaults)
+            root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
+                                                                                      instrument=instrument,
+                                                                                      obsnum=obs_instance,
+                                                                                      proposal=prop)
+            if update or rfi_created:
+                # Updating defaults only on update or creation to prevent call to mast_query_by_rootname on every file name.
+                defaults_dict = mast_query_by_rootname(instrument, file)
+
+                # NOTE: If implementing a new field, add to this dict and run script with 'update' flag
+                defaults = dict(filter=defaults_dict.get('filter', ''),
+                                detector=defaults_dict.get('detector', ''),
+                                exp_type=defaults_dict.get('exp_type', ''),
+                                read_patt=defaults_dict.get('readpatt', ''),
+                                grating=defaults_dict.get('grating', ''),
+                                read_patt_num=defaults_dict.get('patt_num', 0),
+                                aperture=defaults_dict.get('apername', ''),
+                                subarray=defaults_dict.get('subarray', ''),
+                                pupil=defaults_dict.get('pupil', ''),
+                                expstart=defaults_dict.get('expstart', 0.0))
+
+                for key, value in defaults.items():
+                    setattr(root_file_info_instance, key, value)
+                root_file_info_instance.save()
             if rfi_created:
                 nr_files_created += 1
-                root_file_info_instance.save()
         except Exception as e:
             logging.warning(f'\tError {e} was raised')
             logging.warning(f'\tError with root_name: {file} inst: {instrument} obsnum: {obs_instance} proposal: {prop}')
-    logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
+    if nr_files_created > 0:
+        logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
+
+
+
+@lock_module
+def protected_code(update_database):
+    """Protected code ensures only 1 instance of module will run at any given time
+
+    Parameters
+    ----------
+    update_database : bool
+        If True, any existing rootfileinfo models are overwritten
+    """
+    module = os.path.basename(__file__).strip('.py')
+    start_time, log_file = initialize_instrument_monitor(module)
+
+    instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
+    for instrument in instruments:
+        get_updates(update_database, instrument)
+        create_archived_proposals_context(instrument)
 
 
 if __name__ == '__main__':
@@ -359,11 +368,4 @@ if __name__ == '__main__':
     for i in range(1, len(sys.argv)):
         if sys.argv[i].lower() == 'update':
             update_database = True
-
-    module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
-
-    instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
-    for instrument in instruments:
-        get_updates(update_database, instrument)
-        create_archived_proposals_context(instrument)
+    protected_code(update_database)
