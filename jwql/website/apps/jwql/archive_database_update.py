@@ -84,10 +84,8 @@ def get_updates(update_database, inst):
     # Get list of all files for the given instrument
     for proposal in all_proposals:
         # Get lists of all public and proprietary files for the program
-        logging.info(f'Working on proposal {proposal}')
         filenames_public, metadata_public, filenames_proprietary, metadata_proprietary = get_all_possible_filenames_for_proposal(inst, proposal)
         # Find the location in the filesystem for all files
-        logging.info('Getting all filenames and locating in the filesystem')
         filepaths_public = files_in_filesystem(filenames_public, 'public')
         filepaths_proprietary = files_in_filesystem(filenames_proprietary, 'proprietary')
         filenames = filepaths_public + filepaths_proprietary
@@ -109,7 +107,6 @@ def get_updates(update_database, inst):
             if 'stage_3' not in filename_dict['filename_type']:
                 rootnames.append(rootname)
 
-        logging.info(f'Identified {len(rootnames)} files for the proposal.')
         if len(filenames) > 0:
 
             # Gather information about the proposals for the given instrument
@@ -144,7 +141,6 @@ def get_updates(update_database, inst):
                 obsfiles = [f for f in rootnames if propobs in f]
 
                 # Update the appropriate database table
-                logging.info(f'Updating database for {inst}, Proposal {proposal}, Observation {obsnum}')
                 update_database_table(update_database, inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], obsfiles,
                                       exp_types, starting_date, latest_date, proposal_category)
 
@@ -266,15 +262,11 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
     archive_instance, archive_created = Archive.objects.get_or_create(instrument=instrument)
     if archive_created:
         logging.info(f'No existing entries for Archive: {instrument}. Creating.')
-    else:
-        logging.info('Existing Archive entry found.')
 
     # Check to see if the required Proposal entry exists, and create it if it doesn't
     prop_instance, prop_created = Proposal.objects.get_or_create(prop_id=prop, archive=archive_instance)
     if prop_created:
         logging.info(f'No existing entries for Proposal: {prop}. Creating.')
-    else:
-        logging.info('Existing Proposal entry found.')
 
     # Update the proposal instance with the thumbnail path
     prop_instance.thumbnail_path = thumbnail
@@ -303,9 +295,6 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
                       'Updating number of files, start/end dates, and exp_type list'))
         obs_instance.exptypes = ','.join(types)
     else:
-        logging.info(f'Existing Observation entry found, containing exptypes: {obs_instance.exptypes}.')
-        logging.info((f'Found existing entry for instrument {instrument}, Proposal {prop}, Observation {obs}, '
-                      f'containing exptypes: {obs_instance.exptypes} Updating number of files, start/end dates, and exp_type list'))
         if obs_instance.exptypes == '':
             obs_instance.exptypes = ','.join(types)
         else:
@@ -348,7 +337,8 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
         except Exception as e:
             logging.warning(f'\tError {e} was raised')
             logging.warning(f'\tError with root_name: {file} inst: {instrument} obsnum: {obs_instance} proposal: {prop}')
-    logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
+    if nr_files_created > 0:
+        logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
 
 
 if __name__ == '__main__':
