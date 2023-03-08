@@ -319,34 +319,32 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
     # Get all unsaved root names in the Observation to store in the database
     nr_files_created = 0
     for file in obsfiles:
-        defaults_dict = mast_query_by_rootname(instrument, file)
         try:
-            # NOTE: If implementing a new field, add to this dict and run script with 'update' flag
-            defaults = dict(filter=defaults_dict.get('filter', ''),
-                            detector=defaults_dict.get('detector', ''),
-                            exp_type=defaults_dict.get('exp_type', ''),
-                            read_patt=defaults_dict.get('readpatt', ''),
-                            grating=defaults_dict.get('grating', ''),
-                            read_patt_num=defaults_dict.get('patt_num', 0),
-                            aperture=defaults_dict.get('apername', ''),
-                            subarray=defaults_dict.get('subarray', ''),
-                            pupil=defaults_dict.get('pupil', ''),
-                            expstart=defaults_dict.get('expstart', 0.0))
-            if update:
-                root_file_info_instance, rfi_created = RootFileInfo.objects.update_or_create(root_name=file,
-                                                                                             instrument=instrument,
-                                                                                             obsnum=obs_instance,
-                                                                                             proposal=prop,
-                                                                                             defaults=defaults)
-            else:
-                root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
-                                                                                          instrument=instrument,
-                                                                                          obsnum=obs_instance,
-                                                                                          proposal=prop,
-                                                                                          defaults=defaults)
+            root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
+                                                                                      instrument=instrument,
+                                                                                      obsnum=obs_instance,
+                                                                                      proposal=prop)
+            if update or rfi_created:
+                # Updating defaults only on update or creation to prevent call to mast_query_by_rootname on every file name.
+                defaults_dict = mast_query_by_rootname(instrument, file)
+
+                # NOTE: If implementing a new field, add to this dict and run script with 'update' flag
+                defaults = dict(filter=defaults_dict.get('filter', ''),
+                                detector=defaults_dict.get('detector', ''),
+                                exp_type=defaults_dict.get('exp_type', ''),
+                                read_patt=defaults_dict.get('readpatt', ''),
+                                grating=defaults_dict.get('grating', ''),
+                                read_patt_num=defaults_dict.get('patt_num', 0),
+                                aperture=defaults_dict.get('apername', ''),
+                                subarray=defaults_dict.get('subarray', ''),
+                                pupil=defaults_dict.get('pupil', ''),
+                                expstart=defaults_dict.get('expstart', 0.0))
+
+                for key, value in defaults.items():
+                    setattr(root_file_info_instance, key, value)
+                root_file_info_instance.save()
             if rfi_created:
                 nr_files_created += 1
-                root_file_info_instance.save()
         except Exception as e:
             logging.warning(f'\tError {e} was raised')
             logging.warning(f'\tError with root_name: {file} inst: {instrument} obsnum: {obs_instance} proposal: {prop}')
