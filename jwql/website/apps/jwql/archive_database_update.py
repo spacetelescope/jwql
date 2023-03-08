@@ -40,6 +40,8 @@ import sys
 import numpy as np
 import django
 
+from jwql.utils.protect_module import lock_module
+
 # These lines are needed in order to use the Django models in a standalone
 # script (as opposed to code run as a result of a webpage request). If these
 # lines are not run, the script will crash when attempting to import the
@@ -341,13 +343,16 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
         logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
 
 
-if __name__ == '__main__':
 
-    update_database = False
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i].lower() == 'update':
-            update_database = True
+@lock_module
+def protected_code(update_database):
+    """Protected code ensures only 1 instance of module will run at any given time
 
+    Parameters
+    ----------
+    update_database : bool
+        If True, any existing rootfileinfo models are overwritten
+    """
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
@@ -355,3 +360,12 @@ if __name__ == '__main__':
     for instrument in instruments:
         get_updates(update_database, instrument)
         create_archived_proposals_context(instrument)
+
+
+if __name__ == '__main__':
+
+    update_database = False
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i].lower() == 'update':
+            update_database = True
+    protected_code(update_database)
