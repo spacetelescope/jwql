@@ -765,6 +765,16 @@ def expand_for_i2d(array, xdim, ydim):
 
 def nan_to_zero(image):
     """Set any pixels with a value of NaN to zero
+
+    Parameters
+    ----------
+    image : numpy.ndarray
+        Array from which NaNs will be removed
+
+    Returns
+    -------
+    image : numpy.ndarray
+        Input array with NaNs changed to zero
     """
     nan = np.isnan(image)
     image[nan] = 0
