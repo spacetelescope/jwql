@@ -470,16 +470,16 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 
-REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'obsnum', 'exp_type',
+REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'exp_type',
                                       'expstart', 'filter', 'aperture',
                                       'detector', 'subarray', 'viewed'],
-                              'miri': ['proposal', 'obsnum', 'exp_type',
+                              'miri': ['proposal', 'exp_type',
                                        'expstart', 'filter', 'aperture',
                                        'detector', 'subarray', 'viewed'],
-                              'nircam': ['proposal', 'obsnum', 'exp_type',
+                              'nircam': ['proposal', 'exp_type',
                                          'expstart', 'filter', 'aperture',
                                          'detector', 'subarray', 'viewed'],
-                              'niriss': ['proposal', 'obsnum', 'exp_type',
+                              'niriss': ['proposal', 'exp_type',
                                          'expstart', 'filter', 'aperture',
                                          'detector', 'subarray', 'viewed'],
                               'nirspec': ['exp_type', 'filter', 'grating',

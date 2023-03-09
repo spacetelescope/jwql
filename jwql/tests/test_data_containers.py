@@ -24,6 +24,7 @@ Use
 """
 
 import glob
+import json
 import os
 
 import pytest
@@ -34,6 +35,70 @@ from jwql.website.apps.jwql import data_containers
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
+
+
+@pytest.mark.parametrize('filter_keys',
+                         [{'instrument': 'NIRSpec', 'proposal': '2589',
+                           'obsnum': '006', 'look': 'All'},
+                          {'instrument': 'NIRCam', 'detector': 'NRCBLONG',
+                           'proposal': '2733', 'obsnum': '001'},
+                          {'instrument': 'MIRI', 'exp_type': 'MIR_IMAGE',
+                           'proposal': '1524', 'obsnum': '015'},
+                          {'instrument': 'FGS', 'cat_type': 'COM',
+                           'proposal': '1155'}
+                          ])
+def test_filter_root_files(filter_keys):
+    rfi = data_containers.filter_root_files(**filter_keys)
+    assert len(rfi) > 0
+    assert len(rfi) < 100
+
+    for key, value in filter_keys.items():
+        if str(value).strip().lower() == 'all':
+            continue
+        elif key in ['cat_type', 'obsnum']:
+            # values returned are foreign keys
+            continue
+        else:
+            rf_test = [str(rf[key]) == str(value) for rf in rfi]
+        assert all(rf_test)
+
+
+def test_filter_root_files_sorting():
+    filter_keys = {'instrument': 'NIRSpec', 'proposal': '2589',
+                   'obsnum': '006'}
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Ascending')
+    assert len(rfi) > 3
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['root_name'] > rfi[i]['root_name']
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Descending')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['root_name'] < rfi[i]['root_name']
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Recent')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['expstart'] <= rfi[i]['expstart']
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Oldest')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['expstart'] >= rfi[i]['expstart']
+
+
+def test_create_archived_proposals_context(tmp_path, mocker):
+    # write to a temporary directory
+    mocker.patch.object(data_containers, 'OUTPUT_DIR', str(tmp_path))
+    archive_dir = tmp_path / 'archive_page'
+    os.mkdir(archive_dir)
+
+    data_containers.create_archived_proposals_context('nirspec')
+    context_file = str(archive_dir / 'NIRSpec_archive_context.json')
+    assert os.path.isfile(context_file)
+
+    with open(context_file, 'r') as obj:
+        context = json.load(obj)
+    assert context['inst'] == 'NIRSpec'
+    assert context['num_proposals'] > 0
 
 
 def test_get_acknowledgements():
