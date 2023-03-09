@@ -64,10 +64,11 @@ def test_filter_root_files(filter_keys):
     for key, value in filter_keys.items():
         if str(value).strip().lower() == 'all':
             continue
-        if key == 'cat_type':
-            rf_test = [rf.obsnum.proposal.category == value for rf in rfi]
+        elif key in ['cat_type', 'obsnum']:
+            # values returned are foreign keys
+            continue
         else:
-            rf_test = [str(getattr(rf, key)) == str(value) for rf in rfi]
+            rf_test = [str(rf[key]) == str(value) for rf in rfi]
         assert all(rf_test)
 
 
@@ -78,19 +79,19 @@ def test_filter_root_files_sorting():
     rfi = data_containers.filter_root_files(**filter_keys, sort_as='Ascending')
     assert len(rfi) > 3
     for i, rf in enumerate(rfi[1:]):
-        assert rf.root_name > rfi[i].root_name
+        assert rf['root_name'] > rfi[i]['root_name']
 
     rfi = data_containers.filter_root_files(**filter_keys, sort_as='Descending')
     for i, rf in enumerate(rfi[1:]):
-        assert rf.root_name < rfi[i].root_name
+        assert rf['root_name'] < rfi[i]['root_name']
 
     rfi = data_containers.filter_root_files(**filter_keys, sort_as='Recent')
     for i, rf in enumerate(rfi[1:]):
-        assert rf.expstart <= rfi[i].expstart
+        assert rf['expstart'] <= rfi[i]['expstart']
 
     rfi = data_containers.filter_root_files(**filter_keys, sort_as='Oldest')
     for i, rf in enumerate(rfi[1:]):
-        assert rf.expstart >= rfi[i].expstart
+        assert rf['expstart'] >= rfi[i]['expstart']
 
 
 def test_create_archived_proposals_context(tmp_path, mocker):

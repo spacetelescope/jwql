@@ -219,7 +219,7 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
     elif sort_as == 'oldest':
         root_file_info = root_file_info.order_by('expstart', 'root_name')
 
-    return root_file_info
+    return root_file_info.values()
 
 
 def create_archived_proposals_context(inst):
@@ -1291,23 +1291,13 @@ def get_instrument_looks(instrument, sort_as=None,
 
     looks = []
     for root_file in root_file_info:
-        # for now, report info by root name only.
-        # if specific files are needed, use get_filesystem_files
         result = dict()
         for key in keys:
             try:
                 # try the root file table
-                value = getattr(root_file, key)
-            except AttributeError:
-                try:
-                    # try the observation table
-                    value = getattr(root_file.obsnum, key)
-                except AttributeError:
-                    try:
-                        # try the proposal table
-                        value = getattr(root_file.obsnum.proposal, key)
-                    except AttributeError:
-                        value = ''
+                value = root_file[key]
+            except KeyError:
+                value = ''
 
             # make sure value can be serialized
             if type(value) not in [str, float, int, bool]:
