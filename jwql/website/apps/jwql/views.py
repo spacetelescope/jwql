@@ -73,7 +73,6 @@ from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_instrument_looks
-from .data_containers import get_proposals_by_category
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import random_404_page
 from .data_containers import text_scrape
