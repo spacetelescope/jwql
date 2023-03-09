@@ -73,7 +73,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 
 # Determine if the code is being run as part of a Readthedocs build
 ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
@@ -764,7 +764,9 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, proposal, observation_id=None, restriction='all', query_file=None, query_response=None, other_columns=None):
+def get_filenames_by_instrument(instrument, proposal, observation_id=None,
+                                restriction='all', query_file=None,
+                                query_response=None, other_columns=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -800,7 +802,9 @@ def get_filenames_by_instrument(instrument, proposal, observation_id=None, restr
         e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     if not query_file and not query_response:
-        result = mast_query_filenames_by_instrument(instrument, proposal, observation_id=observation_id, other_columns=other_columns)
+        result = mast_query_filenames_by_instrument(
+            instrument, proposal, observation_id=observation_id,
+            other_columns=other_columns)
 
     elif query_response:
         result = query_response
@@ -1770,6 +1774,11 @@ def text_scrape(prop_id):
         program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
 
         links = html.findAll('a')
+
+        # check for server timeout: may return empty html
+        if len(links) == 0:
+            return program_meta
+
         proposal_type = links[0].contents[0]
 
         program_meta['prop_type'] = proposal_type

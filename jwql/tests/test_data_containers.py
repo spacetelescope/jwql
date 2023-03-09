@@ -24,16 +24,89 @@ Use
 """
 
 import glob
+import json
 import os
 
+import numpy as np
+import pandas as pd
 import pytest
 
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
+from jwql.tests.resources import MockAnomalyQuery, MockSessionFileAnomaly, MockSessionGroupAnomaly
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
+
+
+def test_build_table():
+    tab = data_containers.build_table('filesystem_general')
+    assert isinstance(tab, pd.DataFrame)
+    assert len(tab['date']) > 0
+
+
+@pytest.mark.parametrize('filter_keys',
+                         [{'instrument': 'NIRSpec', 'proposal': '2589',
+                           'obsnum': '006', 'look': 'All'},
+                          {'instrument': 'NIRCam', 'detector': 'NRCBLONG',
+                           'proposal': '2733', 'obsnum': '001'},
+                          {'instrument': 'MIRI', 'exp_type': 'MIR_IMAGE',
+                           'proposal': '1524', 'obsnum': '015'},
+                          {'instrument': 'FGS', 'cat_type': 'COM',
+                           'proposal': '1155'}
+                          ])
+def test_filter_root_files(filter_keys):
+    rfi = data_containers.filter_root_files(**filter_keys)
+    assert len(rfi) > 0
+    assert len(rfi) < 100
+
+    for key, value in filter_keys.items():
+        if str(value).strip().lower() == 'all':
+            continue
+        if key == 'cat_type':
+            rf_test = [rf.obsnum.proposal.category == value for rf in rfi]
+        else:
+            rf_test = [str(getattr(rf, key)) == str(value) for rf in rfi]
+        assert all(rf_test)
+
+
+def test_filter_root_files_sorting():
+    filter_keys = {'instrument': 'NIRSpec', 'proposal': '2589',
+                   'obsnum': '006'}
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Ascending')
+    assert len(rfi) > 3
+    for i, rf in enumerate(rfi[1:]):
+        assert rf.root_name > rfi[i].root_name
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Descending')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf.root_name < rfi[i].root_name
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Recent')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf.expstart <= rfi[i].expstart
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Oldest')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf.expstart >= rfi[i].expstart
+
+
+def test_create_archived_proposals_context(tmp_path, mocker):
+    # write to a temporary directory
+    mocker.patch.object(data_containers, 'OUTPUT_DIR', str(tmp_path))
+    archive_dir = tmp_path / 'archive_page'
+    os.mkdir(archive_dir)
+
+    data_containers.create_archived_proposals_context('nirspec')
+    context_file = str(archive_dir / 'NIRSpec_archive_context.json')
+    assert os.path.isfile(context_file)
+
+    with open(context_file, 'r') as obj:
+        context = json.load(obj)
+    assert context['inst'] == 'NIRSpec'
+    assert context['num_proposals'] > 0
 
 
 def test_get_acknowledgements():
@@ -53,18 +126,64 @@ def test_get_all_proposals():
     assert len(proposals) > 0
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.parametrize('untracked,input_suffixes,expected',
+                         [(True, [], ([], set())),
+                          (True, ['rate', 'uncal', 'bad'],
+                           (['uncal', 'rate', 'bad'], {'bad'})),
+                          (False, ['rate', 'uncal', 'bad'],
+                           ['uncal', 'rate', 'bad']),
+                          (True, ['rate', 'uncal', 'bad',
+                                  'o006_crfints', 'o001_crf'],
+                           (['uncal', 'rate', 'o001_crf',
+                             'o006_crfints', 'bad'], {'bad'})),
+                          (False, ['rate', 'uncal', 'bad',
+                                   'o006_crfints', 'o001_crf'],
+                           ['uncal', 'rate', 'o001_crf',
+                            'o006_crfints', 'bad']),
+                          ])
+def test_get_available_suffixes(untracked, input_suffixes, expected):
+    result = data_containers.get_available_suffixes(
+        input_suffixes, return_untracked=untracked)
+    assert result == expected
+
+
+def test_get_current_flagged_anomalies(mocker):
+    # get a sample query group with 2 files
+    rootname = 'jw02589006001_04101_00001-seg001'
+    instrument = 'NIRSpec'
+
+    # mock a single shared anomaly type
+    mocker.patch.object(data_containers.di, 'session', MockSessionGroupAnomaly())
+
+    result = data_containers.get_current_flagged_anomalies(
+        rootname, instrument, n_match=2)
+    assert result == ['persistence']
+
+    # get a sample query for 1 file
+    rootname = 'jw02589006001_04101_00001-seg001_nrs1'
+
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session', MockSessionFileAnomaly())
+
+    result = data_containers.get_current_flagged_anomalies(
+        rootname, instrument, n_match=1)
+    assert result == ['persistence', 'crosstalk']
+
+
 def test_get_expstart():
     """Tests the ``get_expstart`` function."""
-
-    expstart = data_containers.get_expstart('NIRCam', 'jw01068001001_02102_00001_nrcb1')
+    expstart = data_containers.get_expstart('NIRCam',
+                                            'jw01068001001_02102_00001_nrcb1')
     assert isinstance(expstart, float)
 
+    # if mast query failed, it will return 0
+    # otherwise, it should have a known value for this file
+    assert np.isclose(expstart, 59714, atol=1)
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+
 def test_get_filenames_by_instrument():
     """Tests the ``get_filenames_by_instrument`` function."""
-
+    # queries MAST; should not need central storage
     filepaths = data_containers.get_filenames_by_instrument('NIRCam', '1068')
     assert isinstance(filepaths, list)
     assert len(filepaths) > 0
@@ -148,10 +267,10 @@ def test_get_header_info():
     assert len(header) > 0
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
-
+    # requires filesystem for full info, but this basic test
+    # should pass without central storage
     image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1')
 
     assert isinstance(image_info, dict)
@@ -161,16 +280,14 @@ def test_get_image_info():
         assert key in image_info
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_instrument_proposals():
     """Tests the ``get_instrument_proposals`` function."""
-
+    # queries MAST, no need for central storage
     proposals = data_containers.get_instrument_proposals('Fgs')
     assert isinstance(proposals, list)
     assert len(proposals) > 0
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('keys,viewed,sort_as,exp_type,cat_type',
                          [(None, None, None, None, None),
                           (None, 'viewed', None, None, None),
@@ -246,18 +363,18 @@ def test_get_preview_images_by_rootname():
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+
 def test_get_proposals_by_category():
     """Tests the ``get_proposals_by_category`` function."""
-
+    # MAST query, no need for central storage
     proposals_by_category = data_containers.get_proposals_by_category('fgs')
     assert isinstance(proposals_by_category, dict)
     assert len(proposals_by_category) > 0
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
-
+    # requires filesystem for full results, but basic test should pass without
     filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw01068', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
@@ -271,7 +388,6 @@ def test_get_proposal_info():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_thumbnails_by_proposal():
     """Tests the ``get_thumbnails_by_proposal`` function."""
-
     preview_images = data_containers.get_thumbnails_by_proposal('01033')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
@@ -333,7 +449,6 @@ def test_mast_query_by_rootname():
                     subarray=dict_stuff.get('subarray', ''),
                     pupil=dict_stuff.get('pupil', ''))
     assert isinstance(defaults, dict)
-
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
