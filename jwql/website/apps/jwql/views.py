@@ -44,6 +44,7 @@ Dependencies
 from collections import defaultdict
 from copy import deepcopy
 import csv
+import json
 import glob
 import logging
 import os
@@ -70,7 +71,6 @@ from .data_containers import get_edb_components
 from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
-from .data_containers import get_proposals_by_category
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import random_404_page
 from .data_containers import text_scrape
@@ -182,12 +182,12 @@ def api_landing(request):
 def save_page_navigation_data_ajax(request):
     """
     Takes a bracketless string of rootnames and expstarts, and saves it as a session dictionary
-    
+
     Parameters
     ----------
     request: HttpRequest object
         Incoming request from the webpage
-    
+
 
     Returns
     -------
@@ -203,7 +203,7 @@ def save_page_navigation_data_ajax(request):
         request.session['navigation_data'] = rootname_expstarts
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-    
+
 
 def archive_date_range(request, inst):
     """Generate the page for date range images
@@ -269,7 +269,7 @@ def archive_date_range_ajax(request, inst, start_date, stop_date):
     end_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsend__gte=inclusive_start_time.mjd)
     all_entries_ending_in_range = end_after_start.filter(obsend__lt=exclusive_stop_time.mjd)
 
-    # Get a queryset of all observations SPANNING (starting before and ending after) our date range.  Bump our window out a few days to catch hypothetical 
+    # Get a queryset of all observations SPANNING (starting before and ending after) our date range.  Bump our window out a few days to catch hypothetical
     # observations that last over 24 hours.  The larger the window the more time the query takes so keeping it tight.
     two_days_before_start_time = Time(start_date) - (2 * u.day)
     two_days_after_end_time = Time(stop_date) + (3 * u.day)
@@ -279,13 +279,13 @@ def archive_date_range_ajax(request, inst, start_date, stop_date):
     obs_beginning = [observation for observation in all_entries_beginning_in_range]
     obs_ending = [observation for observation in all_entries_ending_in_range]
     obs_spanning = [observation for observation in all_entries_spanning_range]
-    
+
     # Create a single list of all pertinent observations
     all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
     # Get all thumbnails that occurred within the time frame for these observations
     data = thumbnails_date_range_ajax(inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
     data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
-    
+
     # Create Dictionary of Rootnames with expstart
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
@@ -332,91 +332,13 @@ def archived_proposals_ajax(request, inst):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    # Read in the json file created by data_containers.create_archived_proposals_context
+    # and use as the context
+    output_dir = get_config()['outputs']
+    context_file = os.path.join(output_dir, 'archive_page', f'{inst}_archive_context.json')
 
-    # Get a list of Observation entries for the given instrument
-    all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
-
-    # Get a list of proposal numbers.
-    prop_objects = Proposal.objects.filter(archive__instrument=inst)
-    proposal_nums = [entry.prop_id for entry in prop_objects]
-
-    # Put proposals into descending order
-    proposal_nums.sort(reverse=True)
-
-    # Total number of proposals for the instrument
-    num_proposals = len(proposal_nums)
-
-    thumbnail_paths = []
-    min_obsnums = []
-    total_files = []
-    proposal_viewed = []
-    proposal_exp_types = []
-    thumb_exp_types = []
-    proposal_obs_times = []
-    thumb_obs_time = []
-    cat_types = []
-
-    # Get a set of all exposure types used in the observations associated with this proposal
-    exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
-    exp_types = sorted(list(set(exp_types)))
-
-    # Get all proposals based on category type
-    proposals_by_category = get_proposals_by_category(inst)
-    unique_cat_types = list(set(proposals_by_category.values()))
-
-    # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
-    dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
-                      'exp_type': exp_types,
-                      'cat_type': unique_cat_types}
-    thumbnails_dict = {}
-
-    for proposal_num in proposal_nums:
-        # For each proposal number, get all entries
-        prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
-
-        # All entries will have the same thumbnail_path, so just grab the first
-        thumbnail_paths.append(prop_entries[0].proposal.thumbnail_path)
-
-        # Extract the observation numbers from each entry and find the minimum
-        prop_obsnums = [entry.obsnum for entry in prop_entries]
-        min_obsnums.append(min(prop_obsnums))
-
-        # Sum the file count from all observations to get the total file count for
-        # the proposal
-        prop_filecount = [entry.number_of_files for entry in prop_entries]
-        total_files.append(sum(prop_filecount))
-
-        # In order to know if a proposal contains all observations that are entirely viewed, check for at least one existing viewed=False in RootFileInfo
-        unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
-        proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
-
-        # Store comma separated list of exp_types associated with each proposal
-        proposal_exp_types = [exposure_type for observation in prop_entries for exposure_type in observation.exptypes.split(',')]
-        proposal_exp_types = list(set(proposal_exp_types))
-        thumb_exp_types.append(','.join(proposal_exp_types))
-
-        # Get Most recent observation start time
-        proposal_obs_times = [observation.obsstart for observation in prop_entries]
-        thumb_obs_time.append(max(proposal_obs_times))
-
-        # Add category type to list based on proposal number
-        cat_types.append(proposals_by_category[int(proposal_num)])
-
-    thumbnails_dict['proposals'] = proposal_nums
-    thumbnails_dict['thumbnail_paths'] = thumbnail_paths
-    thumbnails_dict['num_files'] = total_files
-    thumbnails_dict['viewed'] = proposal_viewed
-    thumbnails_dict['exp_types'] = thumb_exp_types
-    thumbnails_dict['obs_time'] = thumb_obs_time
-    thumbnails_dict['cat_types'] = cat_types
-
-    context = {'inst': inst,
-               'num_proposals': num_proposals,
-               'min_obsnum': min_obsnums,
-               'thumbnails': thumbnails_dict,
-               'dropdown_menus': dropdown_menus}
+    with open(context_file, 'r') as obj:
+        context = json.load(obj)
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -529,7 +451,7 @@ def archive_thumbnails_query_ajax(request):
 
     # when parameters only contains nirspec as instrument, thumbnails still end up being all niriss data
     thumbnails = get_thumbnails_all_instruments(parameters)
-    
+
     data = thumbnails_query_ajax(thumbnails)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     save_page_navigation_data(request, data)
@@ -838,7 +760,7 @@ def query_submit(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    
+
     template = 'query_submit.html'
     sort_type = request.session.get('image_sort', 'Ascending')
     context = {'inst': '',
@@ -1059,9 +981,9 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
 def save_page_navigation_data(request, data):
     """
     It saves the data from the current page in the session so that the user can navigate to the next or
-    previous page.  Our current sort options are Ascending/Descending, and Recent/Oldest so we need to 
+    previous page.  Our current sort options are Ascending/Descending, and Recent/Oldest so we need to
     preserve 'rootname' and 'expstart'.
-    
+
     Parameters
     ----------
     request: HttpRequest object
@@ -1162,7 +1084,10 @@ def view_image(request, inst, file_root, rewrite=False):
             suff_arr = np.array(image_info['suffixes'])
             files_arr = np.array(image_info['all_files'])
             splits = np.array([ele.split('_')[-1] for ele in image_info['suffixes']])
-            idxs = np.where(splits == poss_suffix)[0]
+            if splits.size > 0:
+                idxs = np.where(splits == poss_suffix)[0]
+            else:
+                idxs = []
             if len(idxs) > 0:
                 suff_entries = list(suff_arr[idxs])
                 file_entries = list(files_arr[idxs])
