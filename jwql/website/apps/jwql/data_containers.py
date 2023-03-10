@@ -163,7 +163,7 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
     instrument : str, optional
         Name of the JWST instrument.
     proposal : str, optional
-        Proposal to match.
+        Proposal to match. Used as a 'starts with' filter.
     obsnum : str, optional
         Observation number to match.
     sort_as : {'ascending', 'descending', 'recent', 'oldest'}, optional
@@ -194,7 +194,7 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
         inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
         filter_kwargs['instrument'] = inst
     if proposal is not None and str(proposal).strip().lower() != 'all':
-        filter_kwargs['proposal'] = proposal.lstrip('0')
+        filter_kwargs['proposal__startswith'] = proposal.lstrip('0')
     if obsnum is not None and str(obsnum).strip().lower() != 'all':
         filter_kwargs['obsnum__obsnum'] = obsnum
     if look is not None and str(look).strip().lower() != 'all':
@@ -1237,7 +1237,7 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_instrument_looks(instrument, sort_as=None,
+def get_instrument_looks(instrument, sort_as=None, proposal=None,
                          look=None, exp_type=None, cat_type=None,
                          additional_keys=None):
     """Return a table of looks information for the given instrument.
@@ -1250,6 +1250,8 @@ def get_instrument_looks(instrument, sort_as=None,
         Sorting method for output table. Ascending and descending
         options refer to root file name; recent sorts by observation
         start.
+    proposal : str, optional
+        Proposal to match.  Used as a 'starts with' filter.
     look : {'new', 'viewed'}, optional
         If set to None, all viewed values are returned. If set to
         'viewed', only viewed data is returned. If set to 'new', only
@@ -1287,7 +1289,7 @@ def get_instrument_looks(instrument, sort_as=None,
     # get filtered file info
     root_file_info = filter_root_files(
         instrument=instrument, sort_as=sort_as, look=look,
-        exp_type=exp_type, cat_type=cat_type)
+        exp_type=exp_type, cat_type=cat_type, proposal=proposal)
 
     looks = []
     for root_file in root_file_info:

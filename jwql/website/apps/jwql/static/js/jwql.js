@@ -799,6 +799,12 @@ function download_report(inst, base_url) {
     var sort_option = document.getElementById('sort_dropdownMenuButton').innerText;
     var options = '?sort_as=' + sort_option.toLowerCase();
 
+    // Get search value - use as proposal.startswith
+    var search_value = document.getElementById("search_box").value;
+    if (search_value != '') {
+        options += '&proposal=' + search_value;
+    }
+
     // Get all filter values
     var filter_div = document.getElementById('thumbnail-filter');
     var filters = filter_div.getElementsByClassName('dropdown-toggle');
