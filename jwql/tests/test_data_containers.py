@@ -34,7 +34,7 @@ import pytest
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
-from jwql.tests.resources import MockAnomalyQuery, MockSessionFileAnomaly, MockSessionGroupAnomaly
+from jwql.tests.resources import MockSessionFileAnomaly, MockSessionGroupAnomaly
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
@@ -46,6 +46,7 @@ def test_build_table():
     assert len(tab['date']) > 0
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 @pytest.mark.parametrize('filter_keys',
                          [{'instrument': 'NIRSpec', 'proposal': '2589',
                            'obsnum': '006', 'look': 'All'},
@@ -72,6 +73,7 @@ def test_filter_root_files(filter_keys):
         assert all(rf_test)
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_filter_root_files_sorting():
     filter_keys = {'instrument': 'NIRSpec', 'proposal': '2589',
                    'obsnum': '006'}
@@ -94,6 +96,7 @@ def test_filter_root_files_sorting():
         assert rf['expstart'] >= rfi[i]['expstart']
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_create_archived_proposals_context(tmp_path, mocker):
     # write to a temporary directory
     mocker.patch.object(data_containers, 'OUTPUT_DIR', str(tmp_path))
@@ -268,10 +271,9 @@ def test_get_header_info():
     assert len(header) > 0
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
-    # requires filesystem for full info, but this basic test
-    # should pass without central storage
     image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1')
 
     assert isinstance(image_info, dict)
@@ -289,6 +291,7 @@ def test_get_instrument_proposals():
     assert len(proposals) > 0
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 @pytest.mark.parametrize('keys,viewed,sort_as,exp_type,cat_type',
                          [(None, None, None, None, None),
                           (None, 'viewed', None, None, None),
@@ -373,9 +376,9 @@ def test_get_proposals_by_category():
     assert len(proposals_by_category) > 0
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
-    # requires filesystem for full results, but basic test should pass without
     filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw01068', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
