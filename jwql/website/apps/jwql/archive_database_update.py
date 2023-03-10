@@ -8,6 +8,7 @@ Authors
 -------
 
     - Bryan Hilbert
+    - Bradley Sappington
 
 Use
 ---
@@ -19,6 +20,13 @@ Use
         instrument = 'nircam'
         get_updates(insturument)
 
+        this module can be run from command line to add new elements to the django database
+        $ python archive_database_update.py
+
+        This module can use the 'update' argument to update every rootfileinfo data model with the most complete information from MAST
+        $ python archive_database_update.py update
+
+
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
@@ -27,9 +35,12 @@ Dependencies
 
 import logging
 import os
+import sys
 
 import numpy as np
 import django
+
+from jwql.utils.protect_module import lock_module
 
 # These lines are needed in order to use the Django models in a standalone
 # script (as opposed to code run as a result of a webpage request). If these
@@ -46,18 +57,21 @@ from jwql.utils.constants import MAST_QUERY_LIMIT  # noqa
 from jwql.utils.utils import filename_parser, filesystem_path, get_config  # noqa
 from jwql.website.apps.jwql.data_containers import create_archived_proposals_context  # noqa
 from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument  # noqa
-from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument  # noqa
+from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument, mast_query_by_rootname  # noqa
 
 FILESYSTEM = get_config()['filesystem']
 
-
 @log_info
 @log_fail
-def get_updates(inst):
+def get_updates(update_database, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
     ----------
+    update_database : bool
+        true: run updates on existing rootfilename entries
+        false: only create new entries
+    
     inst : str
         Name of JWST instrument
     """
@@ -72,14 +86,18 @@ def get_updates(inst):
     # Get list of all files for the given instrument
     for proposal in all_proposals:
         # Get lists of all public and proprietary files for the program
-        logging.info(f'Working on proposal {proposal}')
         filenames_public, metadata_public, filenames_proprietary, metadata_proprietary = get_all_possible_filenames_for_proposal(inst, proposal)
-
         # Find the location in the filesystem for all files
-        logging.info('Getting all filenames and locating in the filesystem')
         filepaths_public = files_in_filesystem(filenames_public, 'public')
         filepaths_proprietary = files_in_filesystem(filenames_proprietary, 'proprietary')
         filenames = filepaths_public + filepaths_proprietary
+
+        # There is one and only one category for the proposal, so just take the first.
+        proposal_category = ''
+        if len(metadata_public['category']):
+            proposal_category = metadata_public['category'][0]
+        elif len(metadata_proprietary['category']):
+            proposal_category = metadata_proprietary['category'][0]
 
         # Get set of unique rootnames
         all_rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
@@ -91,7 +109,6 @@ def get_updates(inst):
             if 'stage_3' not in filename_dict['filename_type']:
                 rootnames.append(rootname)
 
-        logging.info(f'Identified {len(rootnames)} files for the proposal.')
         if len(filenames) > 0:
 
             # Gather information about the proposals for the given instrument
@@ -126,9 +143,8 @@ def get_updates(inst):
                 obsfiles = [f for f in rootnames if propobs in f]
 
                 # Update the appropriate database table
-                logging.info(f'Updating database for {inst}, Proposal {proposal}, Observation {obsnum}')
-                update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], obsfiles,
-                                      exp_types, starting_date, latest_date)
+                update_database_table(update_database, inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], obsfiles,
+                                      exp_types, starting_date, latest_date, proposal_category)
 
 
 def get_all_possible_filenames_for_proposal(instrument, proposal_num):
@@ -159,7 +175,7 @@ def get_all_possible_filenames_for_proposal(instrument, proposal_num):
         e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     filename_query = mast_query_filenames_by_instrument(instrument, proposal_num,
-                                                        other_columns=['exp_type', 'observtn', 'expstart', 'expend'])
+                                                        other_columns=['exp_type', 'observtn', 'expstart', 'expend', 'category'])
 
     # Check the number of files returned by the MAST query. MAST has a limit of 50,000 rows in
     # the returned result. If we hit that limit, then we are most likely not getting back all of
@@ -170,10 +186,10 @@ def get_all_possible_filenames_for_proposal(instrument, proposal_num):
 
     public, public_meta = get_filenames_by_instrument(instrument, proposal_num, restriction='public',
                                                       query_response=filename_query,
-                                                      other_columns=['exp_type', 'observtn', 'expstart', 'expend'])
+                                                      other_columns=['exp_type', 'observtn', 'expstart', 'expend', 'category'])
     proprietary, proprietary_meta = get_filenames_by_instrument(instrument, proposal_num, restriction='proprietary',
                                                                 query_response=filename_query,
-                                                                other_columns=['exp_type', 'observtn', 'expstart', 'expend'])
+                                                                other_columns=['exp_type', 'observtn', 'expstart', 'expend', 'category'])
     return public, public_meta, proprietary, proprietary_meta
 
 
@@ -207,11 +223,15 @@ def files_in_filesystem(files, permission_type):
     return filenames
 
 
-def update_database_table(instrument, prop, obs, thumbnail, obsfiles, types, startdate, enddate):
+def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, types, startdate, enddate, proposal_category):
     """Update the database tables that contain info about proposals and observations, via Django models.
 
     Parameters
     ----------
+    update : bool
+        true: run updates on existing rootfilename entries
+        false: only create new entries
+
     instrument : str
         Instrument name
 
@@ -235,25 +255,25 @@ def update_database_table(instrument, prop, obs, thumbnail, obsfiles, types, sta
 
     enddate : float
         Date of the ending of the observation in MJD
+
+    proposal_category : str
+        category name
     """
 
     # Check to see if the required Archive entry exists, and create it if it doesn't
     archive_instance, archive_created = Archive.objects.get_or_create(instrument=instrument)
     if archive_created:
         logging.info(f'No existing entries for Archive: {instrument}. Creating.')
-    else:
-        logging.info('Existing Archive entry found.')
 
     # Check to see if the required Proposal entry exists, and create it if it doesn't
     prop_instance, prop_created = Proposal.objects.get_or_create(prop_id=prop, archive=archive_instance)
     if prop_created:
         logging.info(f'No existing entries for Proposal: {prop}. Creating.')
-    else:
-        logging.info('Existing Proposal entry found.')
 
     # Update the proposal instance with the thumbnail path
     prop_instance.thumbnail_path = thumbnail
-    prop_instance.save(update_fields=['thumbnail_path'])
+    prop_instance.category = proposal_category
+    prop_instance.save(update_fields=['thumbnail_path', 'category'])
 
     # Now that the Archive and Proposal instances are sorted, get or create the
     # Observation instance
@@ -277,9 +297,6 @@ def update_database_table(instrument, prop, obs, thumbnail, obsfiles, types, sta
                       'Updating number of files, start/end dates, and exp_type list'))
         obs_instance.exptypes = ','.join(types)
     else:
-        logging.info(f'Existing Observation entry found, containing exptypes: {obs_instance.exptypes}.')
-        logging.info((f'Found existing entry for instrument {instrument}, Proposal {prop}, Observation {obs}, '
-                      f'containing exptypes: {obs_instance.exptypes} Updating number of files, start/end dates, and exp_type list'))
         if obs_instance.exptypes == '':
             obs_instance.exptypes = ','.join(types)
         else:
@@ -298,20 +315,57 @@ def update_database_table(instrument, prop, obs, thumbnail, obsfiles, types, sta
                                                                                       instrument=instrument,
                                                                                       obsnum=obs_instance,
                                                                                       proposal=prop)
+            if update or rfi_created:
+                # Updating defaults only on update or creation to prevent call to mast_query_by_rootname on every file name.
+                defaults_dict = mast_query_by_rootname(instrument, file)
+
+                # NOTE: If implementing a new field, add to this dict and run script with 'update' flag
+                defaults = dict(filter=defaults_dict.get('filter', ''),
+                                detector=defaults_dict.get('detector', ''),
+                                exp_type=defaults_dict.get('exp_type', ''),
+                                read_patt=defaults_dict.get('readpatt', ''),
+                                grating=defaults_dict.get('grating', ''),
+                                read_patt_num=defaults_dict.get('patt_num', 0),
+                                aperture=defaults_dict.get('apername', ''),
+                                subarray=defaults_dict.get('subarray', ''),
+                                pupil=defaults_dict.get('pupil', ''),
+                                expstart=defaults_dict.get('expstart', 0.0))
+
+                for key, value in defaults.items():
+                    setattr(root_file_info_instance, key, value)
+                root_file_info_instance.save()
             if rfi_created:
                 nr_files_created += 1
-                root_file_info_instance.save()
         except Exception as e:
             logging.warning(f'\tError {e} was raised')
             logging.warning(f'\tError with root_name: {file} inst: {instrument} obsnum: {obs_instance} proposal: {prop}')
-    logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
+    if nr_files_created > 0:
+        logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
 
 
-if __name__ == '__main__':
+
+@lock_module
+def protected_code(update_database):
+    """Protected code ensures only 1 instance of module will run at any given time
+
+    Parameters
+    ----------
+    update_database : bool
+        If True, any existing rootfileinfo models are overwritten
+    """
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
     instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
     for instrument in instruments:
-        get_updates(instrument)
+        get_updates(update_database, instrument)
         create_archived_proposals_context(instrument)
+
+
+if __name__ == '__main__':
+
+    update_database = False
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i].lower() == 'update':
+            update_database = True
+    protected_code(update_database)
