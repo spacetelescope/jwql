@@ -1747,6 +1747,7 @@ def text_scrape(prop_id):
     url = 'http://www.stsci.edu/cgi-bin/get-proposal-info?id=' + str(prop_id) + '&submit=Go&observatory=JWST'
     html = BeautifulSoup(requests.get(url).text, 'lxml')
     not_available = "not available via this interface" in html.text
+    not_available |= "temporarily unable" in html.text
 
     program_meta = {}
     program_meta['prop_id'] = prop_id
@@ -1764,10 +1765,6 @@ def text_scrape(prop_id):
         program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
 
         links = html.findAll('a')
-
-        # check for server timeout: may return empty html
-        if len(links) == 0:
-            return program_meta
 
         proposal_type = links[0].contents[0]
 
