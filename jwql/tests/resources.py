@@ -44,3 +44,32 @@ class MockSessionFileAnomaly(object):
     """Mock a SQLAlchemy session for an anomaly query on a file."""
     def query(self, table):
         return MockAnomalyQuery(group_record=False)
+
+
+class MockMessages(object):
+    """Mock Django messages for requests."""
+    def __init__(self):
+        self.messages = []
+
+    def add(self, level, message, extra_tags):
+        self.messages.append(message)
+
+
+class MockGetRequest(object):
+    """Mock a Django HTTP GET request."""
+    def __init__(self):
+        self.method = 'GET'
+        self.session = dict()
+        self.GET = dict()
+        self.POST = dict()
+        self._messages = MockMessages()
+
+
+class MockPostRequest(object):
+    """Mock a Django HTTP POST request."""
+    def __init__(self):
+        self.method = 'POST'
+        self.session = dict()
+        self.GET = dict()
+        self.POST = dict()
+        self._messages = MockMessages()

@@ -34,7 +34,10 @@ import pytest
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
-from jwql.tests.resources import MockSessionFileAnomaly, MockSessionGroupAnomaly
+from jwql.tests.resources import (
+    MockSessionFileAnomaly, MockSessionGroupAnomaly,
+    MockGetRequest, MockPostRequest)
+from jwql.utils import constants
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
@@ -136,12 +139,14 @@ def test_get_all_proposals():
                            (['uncal', 'rate', 'bad'], {'bad'})),
                           (False, ['rate', 'uncal', 'bad'],
                            ['uncal', 'rate', 'bad']),
-                          (True, ['rate', 'uncal', 'bad',
-                                  'o006_crfints', 'o001_crf'],
+                          (True,
+                           ['rate', 'uncal', 'bad',
+                           'o006_crfints', 'o001_crf'],
                            (['uncal', 'rate', 'o001_crf',
                              'o006_crfints', 'bad'], {'bad'})),
-                          (False, ['rate', 'uncal', 'bad',
-                                   'o006_crfints', 'o001_crf'],
+                          (False,
+                           ['rate', 'uncal', 'bad',
+                           'o006_crfints', 'o001_crf'],
                            ['uncal', 'rate', 'o001_crf',
                             'o006_crfints', 'bad']),
                           ])
@@ -174,15 +179,143 @@ def test_get_current_flagged_anomalies(mocker):
     assert result == ['persistence', 'crosstalk']
 
 
-def test_get_expstart():
+def test_get_anomaly_form_get(mocker):
+    request = MockGetRequest()
+    inst = 'NIRSpec'
+    file_root = 'jw02589006001_04101_00001-seg001_nrs1'
+
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session',
+                        MockSessionFileAnomaly())
+
+    form = data_containers.get_anomaly_form(request, inst, file_root)
+
+    # form should contain all anomaly options and two should be checked
+    html = str(form)
+    for anomaly in constants.ANOMALY_CHOICES_NIRSPEC:
+        assert anomaly[1] in html
+    assert html.count('checked') == 2
+
+
+def test_get_anomaly_form_post(mocker):
+    request = MockPostRequest()
+    inst = 'NIRSpec'
+    file_root = 'jw02589006001_04101_00001-seg001_nrs1'
+
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session',
+                        MockSessionFileAnomaly())
+
+    # post a different selection: others are deselected
+    request.POST['anomaly_choices'] = ['optical_short']
+
+    # mock form validity and update functions
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=True)
+    update_mock = mocker.patch.object(
+        data_containers.InstrumentAnomalySubmitForm, 'update_anomaly_table')
+
+    form = data_containers.get_anomaly_form(request, inst, file_root)
+
+    # form should contain all anomaly options and only
+    # the chosen one should be checked
+    html = str(form)
+    for anomaly in constants.ANOMALY_CHOICES_NIRSPEC:
+        assert anomaly[1] in html
+    assert html.count('checked') == 1
+
+    # message should indicate success, update should have been called
+    assert 'Anomaly submitted successfully' in request._messages.messages
+    assert update_mock.call_count == 1
+
+    # mock invalid form
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=False)
+    data_containers.get_anomaly_form(request, inst, file_root)
+
+    # messages indicate failure, update is not called again
+    assert 'Failed to submit anomaly' in request._messages.messages
+    assert update_mock.call_count == 1
+
+
+def test_get_anomaly_form_post_group(mocker):
+    request = MockPostRequest()
+    inst = 'NIRSpec'
+    file_root = 'jw02589006001_04101_00001-seg001'
+
+    # mock anomalies for the group
+    mocker.patch.object(data_containers.di, 'session',
+                        MockSessionGroupAnomaly())
+
+    # post a different selection: others are deselected,
+    # unless they belong only to the file, not to the group
+    # as a whole
+    request.POST['anomaly_choices'] = ['optical_short']
+
+    # mock form validity and update functions
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=True)
+    update_mock = mocker.patch.object(
+        data_containers.InstrumentAnomalySubmitForm, 'update_anomaly_table')
+
+    form = data_containers.get_anomaly_form(request, inst, file_root)
+
+    # form should contain all anomaly options and only
+    # the chosen one should be checked
+    html = str(form)
+    for anomaly in constants.ANOMALY_CHOICES_NIRSPEC:
+        assert anomaly[1] in html
+    assert html.count('checked') == 1
+
+    # message should indicate success, update should have been
+    # called for both files
+    assert 'Anomaly submitted successfully' in request._messages.messages
+    assert update_mock.call_count == 2
+
+    # mock invalid form
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=False)
+    data_containers.get_anomaly_form(request, inst, file_root)
+
+    # messages indicate failure, update is not called again
+    assert 'Failed to submit anomaly' in request._messages.messages
+    assert update_mock.call_count == 2
+
+
+def test_get_dashboard_components():
+    request = MockPostRequest()
+
+    # empty POST
+    dash = data_containers.get_dashboard_components(request)
+    assert dash.delta_t is None
+
+    # POST contains time delta
+    request.POST['time_delta_value'] = True
+
+    # all time = None
+    request.POST['timedelta'] = 'All Time'
+    dash = data_containers.get_dashboard_components(request)
+    assert dash.delta_t is None
+
+    # specific value
+    request.POST['timedelta'] = '1 Day'
+    dash = data_containers.get_dashboard_components(request)
+    assert dash.delta_t == pd.DateOffset(days=1)
+
+
+@pytest.mark.parametrize('inst,fileroot,value',
+                         [('NIRCam',
+                           'jw01068001001_02102_00001_nrcb1', 59714),
+                          ('NIRSpec',
+                           'jw02589006001_04101_00001-seg002_nrs2', 59777),
+                          ('NIRSpec', 'bad_filename', 0)])
+def test_get_expstart(inst, fileroot, value):
     """Tests the ``get_expstart`` function."""
-    expstart = data_containers.get_expstart('NIRCam',
-                                            'jw01068001001_02102_00001_nrcb1')
-    assert isinstance(expstart, float)
+    expstart = data_containers.get_expstart(inst, fileroot)
 
     # if mast query failed, it will return 0
     # otherwise, it should have a known value for this file
-    assert np.isclose(expstart, 59714, atol=1)
+    assert np.isclose(expstart, value, atol=1)
 
 
 def test_get_filenames_by_instrument():

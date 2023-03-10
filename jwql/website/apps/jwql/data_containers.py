@@ -517,15 +517,12 @@ def get_anomaly_form(request, inst, file_root):
 
 
 def get_dashboard_components(request):
-    """Build and return dictionaries containing components and html
-    needed for the dashboard.
+    """Build and return a Dashboard class.
 
     Returns
     -------
-    dashboard_components : dict
-        A dictionary containing components needed for the dashboard.
-    dashboard_html : dict
-        A dictionary containing full HTML needed for the dashboard.
+    dashboard_components : GeneralDashboard
+        The dashboard.
     """
 
     from jwql.website.apps.jwql.bokeh_dashboard import GeneralDashboard
