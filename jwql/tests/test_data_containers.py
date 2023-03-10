@@ -37,6 +37,7 @@ if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('filter_keys',
                          [{'instrument': 'NIRSpec', 'proposal': '2589',
                            'obsnum': '006', 'look': 'All'},
@@ -63,6 +64,7 @@ def test_filter_root_files(filter_keys):
         assert all(rf_test)
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_filter_root_files_sorting():
     filter_keys = {'instrument': 'NIRSpec', 'proposal': '2589',
                    'obsnum': '006'}
@@ -83,22 +85,6 @@ def test_filter_root_files_sorting():
     rfi = data_containers.filter_root_files(**filter_keys, sort_as='Oldest')
     for i, rf in enumerate(rfi[1:]):
         assert rf['expstart'] >= rfi[i]['expstart']
-
-
-def test_create_archived_proposals_context(tmp_path, mocker):
-    # write to a temporary directory
-    mocker.patch.object(data_containers, 'OUTPUT_DIR', str(tmp_path))
-    archive_dir = tmp_path / 'archive_page'
-    os.mkdir(archive_dir)
-
-    data_containers.create_archived_proposals_context('nirspec')
-    context_file = str(archive_dir / 'NIRSpec_archive_context.json')
-    assert os.path.isfile(context_file)
-
-    with open(context_file, 'r') as obj:
-        context = json.load(obj)
-    assert context['inst'] == 'NIRSpec'
-    assert context['num_proposals'] > 0
 
 
 def test_get_acknowledgements():
