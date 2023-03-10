@@ -518,7 +518,7 @@ def download_report(request, inst):
     """
     # check for filter criteria passed in request
     kwargs = dict()
-    for filter_name in ['look', 'exp_type', 'cat_type', 'sort_as']:
+    for filter_name in ['look', 'exp_type', 'cat_type', 'proposal', 'sort_as']:
         kwargs[filter_name] = request.GET.get(filter_name)
 
     # get all observation looks from file info model

@@ -163,7 +163,7 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
     instrument : str, optional
         Name of the JWST instrument.
     proposal : str, optional
-        Proposal to match.
+        Proposal to match. Used as a 'starts with' filter.
     obsnum : str, optional
         Observation number to match.
     sort_as : {'ascending', 'descending', 'recent', 'oldest'}, optional
@@ -194,7 +194,7 @@ def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
         inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
         filter_kwargs['instrument'] = inst
     if proposal is not None and str(proposal).strip().lower() != 'all':
-        filter_kwargs['proposal'] = proposal.lstrip('0')
+        filter_kwargs['proposal__startswith'] = proposal.lstrip('0')
     if obsnum is not None and str(obsnum).strip().lower() != 'all':
         filter_kwargs['obsnum__obsnum'] = obsnum
     if look is not None and str(look).strip().lower() != 'all':
@@ -1152,7 +1152,7 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_instrument_looks(instrument, sort_as=None,
+def get_instrument_looks(instrument, sort_as=None, proposal=None,
                          look=None, exp_type=None, cat_type=None,
                          additional_keys=None):
     """Return a table of looks information for the given instrument.
@@ -1165,6 +1165,8 @@ def get_instrument_looks(instrument, sort_as=None,
         Sorting method for output table. Ascending and descending
         options refer to root file name; recent sorts by observation
         start.
+    proposal : str, optional
+        Proposal to match.  Used as a 'starts with' filter.
     look : {'new', 'viewed'}, optional
         If set to None, all viewed values are returned. If set to
         'viewed', only viewed data is returned. If set to 'new', only
@@ -1199,26 +1201,10 @@ def get_instrument_looks(instrument, sort_as=None,
             if key not in key_set:
                 keys.append(key)
 
-    # get desired filters
-    filter_kwargs = dict()
-    if look is not None:
-        filter_kwargs['viewed'] = (str(look).lower() == 'viewed')
-    if exp_type is not None:
-        filter_kwargs['obsnum__exptypes__icontains'] = exp_type
-    if cat_type is not None:
-        # filter_kwargs['obsnum__proposal__cat_type__iexact'] = cat_type
-        # not yet implemented in proposal table
-        pass
-
-    # get file info by instrument from local model
-    root_file_info = RootFileInfo.objects.filter(instrument=inst, **filter_kwargs)
-
-    # descending by root file is default;
-    # for other options, sort as desired
-    if sort_as == 'ascending':
-        root_file_info = root_file_info.order_by('root_name')
-    elif sort_as == 'recent':
-        root_file_info = root_file_info.order_by('-obsnum__obsstart')
+    # get filtered file info
+    root_file_info = filter_root_files(
+        instrument=instrument, sort_as=sort_as, look=look,
+        exp_type=exp_type, cat_type=cat_type, proposal=proposal)
 
     looks = []
     for root_file in root_file_info:
