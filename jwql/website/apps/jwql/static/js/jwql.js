@@ -68,8 +68,10 @@
                            '/' + group_root + '_' + detector + '_' + type + '_integ0.jpg';
         img.src = jpg_filepath;
         img.alt = jpg_filepath;
-        // if previous image had error, remove error sizing
-        img.classList.remove("thumbnail");
+
+        // if previous image/file had error, un-hide it
+        img.style.display = "inline-block";
+        filename_option.disabled = false;
     }
 
     // Reset the slider values
@@ -507,6 +509,26 @@ function group_by_thumbnails(group_type, base_url) {
             console.log("session image group update failed");
         }
     });
+}
+
+
+/**
+ * If an image is not found, replace with temporary image sized to thumbnail
+ */
+function hide_file(image) {
+    // Hide the image
+    image.src = "/static/img/imagenotfound.png";
+    image.style.display = "none";
+
+    // Disable the associated filename
+    var detector = image.getAttribute('data-detector');
+    var filename_option = document.getElementById(detector + "_filename");
+    filename_option.disabled = true;
+
+    // Update the view/explore links if needed
+    update_view_explore_link();
+
+    return true;
 }
 
 
@@ -1334,8 +1356,18 @@ function update_view_explore_link() {
     var types = ['header', 'explore_image'];
     for (var i = 0; i < types.length; i++) {
         var type = types[i];
-        var selected = document.getElementById('fits_file_select').value;
-        document.getElementById(type).href = '/' + selected + '/' + type + '/';
+        var file_selected = document.getElementById('fits_file_select');
+        var link_button = document.getElementById(type);
+
+        // Disable the button if the file isn't available
+        if (file_selected.options[file_selected.selectedIndex].disabled) {
+            link_button.href = '#';
+            link_button.classList.add('disabled_button');
+        } else {
+            // Update the link to the current setting
+            link_button.href = '/' + file_selected.value + '/' + type + '/';
+            link_button.classList.remove('disabled_button');
+        }
     }
 }
 

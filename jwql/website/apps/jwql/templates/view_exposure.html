@@ -132,7 +132,7 @@
                         <span class="image_preview">
                             <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
-                                     onerror="image_error(this, true);"
+                                     onerror="hide_file(this, true);"
                                      title="Preview image for {{ group_root }}, detector {{ detector }}"
                                      data-detector="{{ detector }}" style="width:100%">
                             </a>
