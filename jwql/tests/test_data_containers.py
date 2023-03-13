@@ -43,6 +43,7 @@ if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_build_table():
     tab = data_containers.build_table('filesystem_general')
     assert isinstance(tab, pd.DataFrame)
@@ -179,6 +180,7 @@ def test_get_current_flagged_anomalies(mocker):
     assert result == ['persistence', 'crosstalk']
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_anomaly_form_get(mocker):
     request = MockGetRequest()
     inst = 'NIRSpec'
@@ -197,6 +199,7 @@ def test_get_anomaly_form_get(mocker):
     assert html.count('checked') == 2
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_anomaly_form_post(mocker):
     request = MockPostRequest()
     inst = 'NIRSpec'
@@ -238,6 +241,7 @@ def test_get_anomaly_form_post(mocker):
     assert update_mock.call_count == 1
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_anomaly_form_post_group(mocker):
     request = MockPostRequest()
     inst = 'NIRSpec'
