@@ -69,10 +69,8 @@
         img.src = jpg_filepath;
         img.alt = jpg_filepath;
 
-        // if previous image/file had error, un-hide it
-        img.style.display = "inline-block";
-        filename_option.disabled = false;
-        document.getElementById(detector + "_view").style.display = "inline-block";
+        // Show/hide the viewer as appropriate
+        show_viewer(detector, jpg_filepath);
     }
 
     // Reset the slider values
@@ -244,10 +242,6 @@ function change_int(file_root, num_ints, available_ints, method, direction='righ
         if (detector != null) {
             // exposure view
            jpg_filename = file_root + '_' + detector + '_' + suffix + '_integ' + new_integration + '.jpg';
-           // if previous image/file had error, un-hide it
-           img.style.display = "inline-block";
-           document.getElementById(detector + "_view").style.display = "inline-block";
-           document.getElementById(detector + "_filename").disabled = false;
         } else {
            // image view
            jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg';
@@ -260,6 +254,11 @@ function change_int(file_root, num_ints, available_ints, method, direction='righ
         var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename;
         img.src = jpg_filepath;
         img.alt = jpg_filepath;
+
+        // Show/hide the viewer as appropriate for the image
+        if (detector != null) {
+            show_viewer(detector, jpg_filepath);
+        }
     }
 
     // Update the slider values
@@ -520,26 +519,51 @@ function group_by_thumbnails(group_type, base_url) {
 
 
 /**
- * If an image is not found, replace with temporary image sized to thumbnail
+ * Hide an image viewer
  */
-function hide_file(image) {
-    // Hide the image
-    image.src = "/static/img/imagenotfound.png";
-    image.style.display = "none";
+function hide_file(detector) {
+    var img = document.getElementById("image_viewer_" + detector);
+    var div = document.getElementById(detector + "_view");
+    var filename = document.getElementById(detector + "_filename");
 
-    // Also hide the div it's in
-    var detector = image.getAttribute('data-detector');
-    document.getElementById(detector + "_view").style.display = "none";
+    // Hide the image and div
+    img.style.display = "none";
+    div.style.display = "none";
 
     // Disable the associated filename
-    document.getElementById(detector + "_filename").disabled = true;
+    filename.disabled = true;
 
-    // Update the view/explore links if needed
+    // Update the view/explore link as needed
     update_view_explore_link();
-
-    return true;
 }
 
+/**
+ * Show an image viewer
+ */
+function unhide_file(detector) {
+    var img = document.getElementById("image_viewer_" + detector);
+    var div = document.getElementById(detector + "_view");
+    var filename = document.getElementById(detector + "_filename");
+
+    // Show the image and div
+    img.style.display = "inline-block";
+    div.style.display = "inline-block";
+
+    // Enable the associated filename
+    filename.disabled = false;
+
+    // Update the view/explore link as needed
+    update_view_explore_link();
+}
+
+
+/**
+ * Check for a detector image and show or hide its viewer accordingly.
+ */
+function show_viewer(detector, jpg_filepath) {
+    $.get(jpg_filepath, function() {unhide_file(detector);})
+    .fail(function() {hide_file(detector)});
+}
 
 /**
  * If an image is not found, replace with temporary image sized to thumbnail
