@@ -1182,7 +1182,15 @@ def get_image_info(file_root):
                 # so do data cubes:
                 # get max ints from data shape in first extension
                 sci_header = fits.getheader(filename, ext=1)
-                image_info['total_ints'][suffix] = sci_header.get('NAXIS3', nint)
+                n_frame = sci_header.get('NAXIS3', nint)
+
+                # for groups with multiple cubes (e.g. miri with ifu
+                # short and long), make sure we keep the highest total
+                if 'suffix' in image_info['total_ints']:
+                    if n_frame > image_info['total_ints'][suffix]:
+                        image_info['total_ints'][suffix] = n_frame
+                else:
+                    image_info['total_ints'][suffix] = n_frame
             else:
                 image_info['total_ints'][suffix] = nint
         else:
