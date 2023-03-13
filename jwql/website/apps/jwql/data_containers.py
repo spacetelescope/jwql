@@ -183,14 +183,20 @@ def create_archived_proposals_context(inst):
     thumb_exp_types = []
     proposal_obs_times = []
     thumb_obs_time = []
+    cat_types = []
 
     # Get a set of all exposure types used in the observations associated with this proposal
     exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
-    exp_types = sorted(list(set(exp_types)))
+    exp_types = sorted(set(exp_types))
+
+    # Get all proposals based on category type
+    proposals_by_category = get_proposals_by_category(inst)
+    unique_cat_types = sorted(set(proposals_by_category.values()))
 
     # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
     dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
-                      'exp_type': exp_types}
+                      'exp_type': exp_types,
+                      'cat_type': unique_cat_types}
     thumbnails_dict = {}
 
     for proposal_num in proposal_nums:
@@ -222,12 +228,16 @@ def create_archived_proposals_context(inst):
         proposal_obs_times = [observation.obsstart for observation in prop_entries]
         thumb_obs_time.append(max(proposal_obs_times))
 
+        # Add category type to list based on proposal number
+        cat_types.append(proposals_by_category[int(proposal_num)])
+
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
     thumbnails_dict['num_files'] = total_files
     thumbnails_dict['viewed'] = proposal_viewed
     thumbnails_dict['exp_types'] = thumb_exp_types
     thumbnails_dict['obs_time'] = thumb_obs_time
+    thumbnails_dict['cat_types'] = cat_types
 
     context = {'inst': inst,
                'num_proposals': num_proposals,
@@ -1017,6 +1027,32 @@ def get_preview_images_by_rootname(rootname):
 
     return preview_images
 
+def get_proposals_by_category(instrument):
+    """Return a dictionary of program numbers based on category type
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+    Returns
+    -------
+    category_sorted_dict : dict
+        Dictionary with category as the key and a list of program id's as the value
+    """
+
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns": "program, category",
+              "filters": []}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Get all unique dictionaries
+    unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
+
+    # Make a dictionary of {program: category} to pull from
+    proposals_by_category = {d['program']:d['category'] for d in unique_results}
+
+    return proposals_by_category
 
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
@@ -1529,6 +1565,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
         exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
         exp_types.append(exp_type)
+
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
