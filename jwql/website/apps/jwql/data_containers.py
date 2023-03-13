@@ -1171,13 +1171,18 @@ def get_image_info(file_root):
 
         # Record how many integrations exist per filetype.
         if suffix not in SUFFIXES_WITH_AVERAGED_INTS:
-            # time series segments need special handling
             header = fits.getheader(filename)
             nint = header['NINTS']
             if 'time_series' in parsed_fn['filename_type']:
+                # time series segments need special handling
                 intstart = header.get('INTSTART', 1)
                 intend = header.get('INTEND', nint)
                 image_info['total_ints'][suffix] = intend - intstart + 1
+            elif image_info['num_ints'][suffix] > nint:
+                # so do data cubes:
+                # get max ints from data shape in first extension
+                sci_header = fits.getheader(filename, ext=1)
+                image_info['total_ints'][suffix] = sci_header.get('NAXIS3', nint)
             else:
                 image_info['total_ints'][suffix] = nint
         else:

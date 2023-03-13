@@ -244,10 +244,16 @@ function change_int(file_root, num_ints, available_ints, method, direction='righ
         if (detector != null) {
             // exposure view
            jpg_filename = file_root + '_' + detector + '_' + suffix + '_integ' + new_integration + '.jpg';
+           // if previous image/file had error, un-hide it
+           img.style.display = "inline-block";
+           document.getElementById(detector + "_view").style.display = "inline-block";
+           document.getElementById(detector + "_filename").disabled = false;
         } else {
            // image view
            jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg';
            document.getElementById("jpg_filename").innerHTML = jpg_filename;
+           // if previous image had error, remove error sizing
+           img.classList.remove("thumbnail");
         }
 
         // Show the appropriate image
