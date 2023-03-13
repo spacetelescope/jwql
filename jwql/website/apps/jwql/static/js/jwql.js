@@ -72,6 +72,7 @@
         // if previous image/file had error, un-hide it
         img.style.display = "inline-block";
         filename_option.disabled = false;
+        document.getElementById(detector + "_view").style.display = "inline-block";
     }
 
     // Reset the slider values
@@ -520,10 +521,12 @@ function hide_file(image) {
     image.src = "/static/img/imagenotfound.png";
     image.style.display = "none";
 
-    // Disable the associated filename
+    // Also hide the div it's in
     var detector = image.getAttribute('data-detector');
-    var filename_option = document.getElementById(detector + "_filename");
-    filename_option.disabled = true;
+    document.getElementById(detector + "_view").style.display = "none";
+
+    // Disable the associated filename
+    document.getElementById(detector + "_filename").disabled = true;
 
     // Update the view/explore links if needed
     update_view_explore_link();

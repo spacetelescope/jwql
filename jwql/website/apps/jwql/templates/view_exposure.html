@@ -77,7 +77,7 @@
             <!-- Display NIRCam short detectors in columns, 1st row -->
                 {% for detector1 in ['nrca2', 'nrca4', 'nrcb3', 'nrcb1'] %}
                     {% if detector1 in detectors %}
-                    <div class="col">
+                    <div class="col" id="{{ detector1 }}_view">
                         <span class="image_preview">
                             <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector1 }}/">
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector1 }}"
@@ -94,7 +94,7 @@
             <!-- Display NIRCam short detectors in columns, 2nd row -->
                 {% for detector2 in ['nrca1', 'nrca3', 'nrcb4', 'nrcb2'] %}
                     {% if detector2 in detectors %}
-                    <div class="col">
+                    <div class="col" id="{{ detector2 }}_view">
                         <span class="image_preview">
                             <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector2 }}/">
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector2 }}"
@@ -111,7 +111,7 @@
             <!-- Display NIRCam long detectors in columns -->
                 {% for detector3 in ['nrcalong', 'nrcblong'] %}
                     {% if detector3 in detectors %}
-                    <div class="col">
+                    <div class="col" id="{{ detector3 }}_view">
                         <span class="image_preview">
                             <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector3 }}/">
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector3 }}"
@@ -128,7 +128,7 @@
         <div class="row">
             <!-- Display non-NIRCam detectors in columns -->
                 {% for detector in detectors %}
-                    <div class="col">
+                    <div class="col" id="{{ detector }}_view">
                         <span class="image_preview">
                             <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
