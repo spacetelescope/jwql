@@ -1196,7 +1196,10 @@ def view_exposure(request, inst, group_root):
     # pick out group names from matching root files
     group_root_list = []
     for rootname in matching_rootfiles:
-        other_group_root = filename_parser(rootname)['group_root']
+        try:
+            other_group_root = filename_parser(rootname)['group_root']
+        except ValueError:
+            continue
         if other_group_root not in group_root_list:
             group_root_list.append(other_group_root)
 
