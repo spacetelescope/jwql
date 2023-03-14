@@ -71,39 +71,42 @@ def get_instrument(file_name):
 if __name__ == "__main__":
     config = get_config()
     p = Path(config['test_data'])
+    
+    for file in p.rglob("*uncal.fits"):
+        print("Testing cal pipeline")
+        with TemporaryDirectory() as working_dir:
+            try:
+                print("Running in {}".format(working_dir))
+                file_name = os.path.basename(file)
+                if "gs-" in file_name:
+                    print("\tSkipping guide star file {}".format(file_name))
+                    continue
+                print("\tCopying {}".format(file))
+                copy_files([file], working_dir)
+                cal_file = os.path.join(working_dir, file_name)
+                print("\t\tCalibrating {}".format(cal_file))
+                instrument = get_instrument(file_name)
+                outputs = run_pipeline(cal_file, "uncal", "all", instrument)
+                print("\t\tDone {}".format(file))
+            except Exception as e:
+                print("ERROR: {}".format(e))
 
-    # Test the standard pipeline task
-    print("Testing cal pipeline")
-    with TemporaryDirectory() as working_dir:
-        print("Running in {}".format(working_dir))
-        for file in p.rglob("*uncal.fits"):
-            file_name = os.path.basename(file)
-            if "gs-" in file_name:
-                print("\tSkipping guide star file {}".format(file_name))
-                continue
-            print("\tCopying {}".format(file))
-            copy_files([file], working_dir)
-            cal_file = os.path.join(working_dir, file_name)
-            print("\t\tCalibrating {}".format(cal_file))
-            instrument = get_instrument(file_name)
-            outputs = run_pipeline(cal_file, "uncal", "all", instrument)
-            print("\t\tDone {}".format(file))
-
-    # Test the jump pipeline task
-    print("Testing jump pipeline")
-    with TemporaryDirectory() as working_dir:
-        print("Running in {}".format(working_dir))
-        for file in p.rglob("*uncal.fits"):
-            file_name = os.path.basename(file)
-            if "gs-" in file_name:
-                print("\tSkipping guide star file {}".format(file_name))
-                continue
-            print("\tCopying {}".format(file))
-            copy_files([file], working_dir)
-            cal_file = os.path.join(working_dir, file_name)
-            print("\t\tCalibrating {}".format(cal_file))
-            instrument = get_instrument(file_name)
-            outputs = run_pipeline(cal_file, "uncal", "all", instrument, jump_pipe=True)
-            print("\t\tDone {}".format(file))
+        print("Testing jump pipeline")
+        with TemporaryDirectory() as working_dir:
+            try:
+                print("Running in {}".format(working_dir))
+                file_name = os.path.basename(file)
+                if "gs-" in file_name:
+                    print("\tSkipping guide star file {}".format(file_name))
+                    continue
+                print("\tCopying {}".format(file))
+                copy_files([file], working_dir)
+                cal_file = os.path.join(working_dir, file_name)
+                print("\t\tCalibrating {}".format(cal_file))
+                instrument = get_instrument(file_name)
+                outputs = run_pipeline(cal_file, "uncal", "all", instrument, jump_pipe=True)
+                print("\t\tDone {}".format(file))
+            except Exception as e:
+                print("ERROR: {}".format(e))
     
     print("Done test")
