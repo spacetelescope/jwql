@@ -297,7 +297,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     cmd_name = os.path.join(current_dir, "run_pipeline.py")
     outputs = ",".join(ext_or_exts)
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
-    if ext_or_exts == "all":
+    if "all" in ext_or_exts:
         logging.info("All outputs requested")
         out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
                     "persistence", "dark_current", "jump", "rate", "group_scale",
