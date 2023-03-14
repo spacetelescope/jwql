@@ -300,8 +300,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     if "all" in ext_or_exts:
         logging.info("All outputs requested")
         out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
-                    "persistence", "dark_current", "jump", "rate", "group_scale",
-                    "firstframe", "lastframe", "rscd"]
+                    "persistence", "dark_current", "jump", "rate"]
         calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in out_exts]
         logging.info("Requesting {}".format(calibrated_files))
     else:
