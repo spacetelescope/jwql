@@ -2,12 +2,6 @@
 utils
 *****
 
-anomaly_query_config.py
------------------------
-.. automodule:: jwql.utils.anomaly_query_config
-    :members:
-    :undoc-members:
-
 calculations.py
 ---------------
 .. automodule:: jwql.utils.calculations

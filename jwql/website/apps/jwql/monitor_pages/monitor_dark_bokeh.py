@@ -624,7 +624,7 @@ class DarkMonitorPlots():
         self._stdev = np.array([e.stdev for e in self.db.stats_data])
         self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data])
         self._stats_mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.stats_data])
-        self._stats_numfiles = np.array([e.source_files for e in self.db.stats_data])
+        self._stats_numfiles = np.array([len(e.source_files) for e in self.db.stats_data])
 
 
 class DarkTrendPlot():

@@ -1014,8 +1014,8 @@ class EdbMnemonic:
         may be unexpected. Also add a plot of the mean value over time and in a second figure, a plot of
         the devaition from the mean.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         use_median : bool
             If True, plot the median rather than the mean, as well as the deviation from the
             median rather than from the mean

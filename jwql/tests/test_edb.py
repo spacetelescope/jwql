@@ -262,7 +262,9 @@ def test_multiplication():
                                        'AllPoints': 1}]}
 
     prod = mnemonic1 * mnemonic2
-    assert all(prod.data["euvalues"].data == np.array([75.0, 75.0, 165.0, 171.0, 171.0, 171.0, 171.0, 26.333333333333336, 24.0]))
+    assert np.allclose(prod.data["euvalues"].data,
+                       np.array([75.0, 75.0, 165.0, 171.0, 171.0, 171.0,
+                                 171.0, 26.333333333333336, 24.0]))
     assert all(prod.data["dates"].data == mnemonic1.data["dates"][1:])
     assert all(prod.blocks == [0, 2, 7, 9])
     assert prod.info['unit'] == 'W'
