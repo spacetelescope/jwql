@@ -82,8 +82,8 @@ def transfer_anomalies():
             try:
                 del(anomaly_dict['id'])
                 del(anomaly_dict['root_file_info'])
-                anomalies, anomaly_created = Anomalies.objects.get_or_create(root_file_info=root_file_info_instance,
-                                                                             defaults=anomaly_dict)
+                anomalies, anomaly_created = Anomalies.objects.update_or_create(root_file_info=root_file_info_instance,
+                                                                                defaults=anomaly_dict)
                 if anomaly_created:
                     updated += 1
             except Exception as e:
