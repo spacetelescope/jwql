@@ -621,8 +621,8 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
     rootnames : list
         List of rootnames for the given instrument and proposal number
     """
-    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
+    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}%' and prpID='{int(proposal)}'")
     prop_table = tap_results.to_table()
     rootnames = prop_table['observationID'].data
     return rootnames.compressed()

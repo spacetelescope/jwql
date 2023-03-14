@@ -132,6 +132,13 @@ def test_get_preview_images_by_rootname():
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_get_proposals_by_category():
+    """Tests the ``get_proposals_by_category`` function."""
+
+    proposals_by_category = data_containers.get_proposals_by_category('fgs')
+    assert isinstance(proposals_by_category, dict)
+    assert len(proposals_by_category) > 0
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_proposal_info():
@@ -168,6 +175,51 @@ def test_get_thumbnail_by_rootname():
     assert isinstance(preview_images, str)
     assert len(preview_images) > 0
     assert preview_images == 'none'
+
+
+def test_mast_query_by_rootname():
+    """Tests the ``mast_query_by_rootname`` function."""
+    instrument = 'NIRCam'
+    rootname1 = 'jw02767002001_02103_00005_nrcb4'
+    dict_stuff = data_containers.mast_query_by_rootname(instrument, rootname1)
+    defaults = dict(filter=dict_stuff.get('filter', ''),
+                    detector=dict_stuff.get('detector', ''),
+                    exp_type=dict_stuff.get('exp_type', ''),
+                    read_pat=dict_stuff.get('readpatt', ''),
+                    grating=dict_stuff.get('grating', ''),
+                    patt_num=dict_stuff.get('patt_num', 0),
+                    aperture=dict_stuff.get('apername', ''),
+                    subarray=dict_stuff.get('subarray', ''),
+                    pupil=dict_stuff.get('pupil', ''))
+    assert isinstance(defaults, dict)
+
+    rootname2 = 'jw02084001001_04103_00001-seg003_nrca3'
+    dict_stuff = data_containers.mast_query_by_rootname(instrument, rootname2)
+    defaults = dict(filter=dict_stuff.get('filter', ''),
+                    detector=dict_stuff.get('detector', ''),
+                    exp_type=dict_stuff.get('exp_type', ''),
+                    read_pat=dict_stuff.get('readpatt', ''),
+                    grating=dict_stuff.get('grating', ''),
+                    patt_num=dict_stuff.get('patt_num', 0),
+                    aperture=dict_stuff.get('apername', ''),
+                    subarray=dict_stuff.get('subarray', ''),
+                    pupil=dict_stuff.get('pupil', ''))
+    assert isinstance(defaults, dict)
+
+    instrument2 = 'FGS'
+    rootname3 = 'jw01029003001_06201_00001_guider2'
+    dict_stuff = data_containers.mast_query_by_rootname(instrument2, rootname3)
+    defaults = dict(filter=dict_stuff.get('filter', ''),
+                    detector=dict_stuff.get('detector', ''),
+                    exp_type=dict_stuff.get('exp_type', ''),
+                    read_pat=dict_stuff.get('readpatt', ''),
+                    grating=dict_stuff.get('grating', ''),
+                    patt_num=dict_stuff.get('patt_num', 0),
+                    aperture=dict_stuff.get('apername', ''),
+                    subarray=dict_stuff.get('subarray', ''),
+                    pupil=dict_stuff.get('pupil', ''))
+    assert isinstance(defaults, dict)
+
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
