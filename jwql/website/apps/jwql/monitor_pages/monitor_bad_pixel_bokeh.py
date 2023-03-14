@@ -23,7 +23,6 @@ from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.embed import components, file_html
 from bokeh.io import export_png, show
-from bokeh.io.export import get_screenshot_as_png
 from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
 from bokeh.plotting import figure
@@ -445,8 +444,6 @@ class NewBadPixPlot():
         png_file = self.background_file.replace('.fits', '.png')
         full_path_background_file = os.path.join(OUTPUT_DIR, 'bad_pixel_monitor/', png_file)
 
-        print('Looking for: ', full_path_background_file)
-
         if os.path.isfile(full_path_background_file):
             image = read_png(full_path_background_file)
         else:
@@ -509,7 +506,6 @@ class NewBadPixPlot():
         if self._use_png:
             output_filename = full_path_background_file.replace('.png', f'_{self.badpix_type}_pix.png')
             self.switch_to_png(output_filename, title_text)
-            print(f'Switching to png for {self.detector}, {self.badpix_type}, {len(self.coords[0])}')
 
         # Create and add legend to the figure
         legend = Legend(items=[plot_legend],
@@ -597,8 +593,6 @@ class NewBadPixPlot():
             Title to add to the Figure
         """
         # Save the figure as a png
-        print('Saving plot as png in: ', filename)
-
         export_png(self.plot, filename=filename)
         set_permissions(filename)
 
@@ -612,8 +606,7 @@ class NewBadPixPlot():
         self.plot.image_rgba(image=[fig_array], x=0, y=0, dw=self._detlen, dh=self._detlen)
 
         # Now that the data from the png is in the figure, delete the png
-        # UNCOMMENT THE LINE BELOW FOR PRODUCTION
-        #os.remove(filename)
+        os.remove(filename)
 
 
 class BadPixTrendPlot():

@@ -177,36 +177,6 @@ def create_png_from_fits(filename, outdir):
         return None
 
 
-def screenshot_as_png():
-    from bokeh.io.export import get_screenshot_as_png
-    if os.path.isfile(filename):
-        image = fits.getdata(filename)
-        ny, nx = image.shape
-        img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
-
-        plot = figure(tools='')
-        plot.x_range.range_padding = plot.y_range.range_padding = 0
-
-        # Create the color mapper that will be used to scale the image
-        #mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
-        mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
-
-        # Plot image
-        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
-                             color_mapper=mapper, level="image")
-
-        # Turn off the axes, in order to make embedding in another figure easier
-        plot.xaxis.visible = False
-        plot.yaxis.visible = False
-
-        # Save the plot in a png
-        screenshot = get_screenshot_as_png(plot, height=600, width=600)
-        return screenshot
-    else:
-        return None
-
-
-
 def get_config():
     """Return a dictionary that holds the contents of the ``jwql``
     config file.
