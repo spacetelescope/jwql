@@ -148,7 +148,7 @@ celery_app.conf.update(worker_max_tasks_per_child=1)
 celery_app.conf.update(worker_prefetch_multiplier=1)
 celery_app.conf.update(task_acks_late=True)
 celery_app.conf.update(worker_concurrency=1)
-celery_app.conf.broker_transport_options = {'visibility_timeout': 86400}
+celery_app.conf.broker_transport_options = {'visibility_timeout': 14400}
 
 
 def only_one(function=None, key="", timeout=None):

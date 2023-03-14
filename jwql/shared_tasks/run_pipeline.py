@@ -222,7 +222,10 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
 
 
 if __name__ == '__main__':
-    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "w") as status_file:
+    status_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
+    general_status_file = os.path.join(status_dir, "general_status.txt")
+
+    with open(general_status_file, "w") as status_file:
         status_file.write("Started at {}\n".format(time.ctime()))
         status_file.write("\targv={}\n".format(sys.argv))
 
@@ -242,18 +245,18 @@ if __name__ == '__main__':
     parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
     parser.add_argument('max_cores', metavar='CORES', type=str, help=cores_help)
 
-    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+    with open(general_status_file, "a+") as status_file:
         status_file.write("Created argument parser at {}\n".format(time.ctime()))
 
     try:
         args = parser.parse_args()
     except Exception as e:
-        with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+        with open(general_status_file, "a+") as status_file:
             status_file.write("Error parsing arguments.\n")
             status_file.write("{}".format(e))
         raise e
 
-    with open("/internal/data1/outputs/ops/calibrated_data/general_status.txt", "a+") as status_file:
+    with open(general_status_file, "a+") as status_file:
         status_file.write("Finished parsing args at {}\n".format(time.ctime()))
     
     input_file = args.input_file
