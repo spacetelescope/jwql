@@ -301,13 +301,14 @@ class GeneralDashboard:
         if not pd.isnull(self.delta_t):
             data = data[(data['start_time'] >= self.date - self.delta_t) & (data['start_time'] <= self.date)]
 
+        # Sort the data by start_time before translating into strings
+        data.sort_values(by='start_time', ascending=False, inplace=True)
+
+        # Now translate times to strings
         data['start_time'] = data['start_time'].map(lambda x: x.strftime('%m-%d-%Y %H:%M:%S'))
         data['end_time'] = data['end_time'].map(lambda x: x.strftime('%m-%d-%Y %H:%M:%S'))
-        # data = data.drop(columns='affected_tables')
-        table_values = data.sort_values(by='start_time', ascending=False).values
-        table_columns = data.columns.values
 
-        return table_columns, table_values
+        return data.columns.values, data.values
 
     def make_panel(self, x_value, top, instrument, title, x_axis_label):
         """Make tab panel for tablulated figure.
