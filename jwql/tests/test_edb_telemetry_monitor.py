@@ -178,8 +178,8 @@ def test_find_all_changes():
     inst.query_results[dependency[0]["name"]] = EdbMnemonic("CURRENT", start_time, end_time, current_data, meta, info)
 
     vals = inst.find_all_changes(temperature, dependency)
-    assert vals.mean == [359.07]
-    assert vals.median == [360.0]
+    assert np.isclose(vals.mean[0], 359.07)
+    assert np.isclose(vals.median[0], 360.0)
     assert np.isclose(vals.stdev[0], 6.9818407314976785)
 
 
