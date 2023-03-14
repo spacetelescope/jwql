@@ -298,9 +298,15 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     outputs = ",".join(ext_or_exts)
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
     if ext_or_exts == "all":
-        ext_or_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
-                       "persistence", "dark_current", "jump", "rate"]
-    calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in ext_or_exts]
+        logging.info("All outputs requested")
+        out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
+                    "persistence", "dark_current", "jump", "rate", "group_scale",
+                    "firstframe", "lastframe", "rscd"]
+        calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in out_exts]
+        logging.info("Requesting {}".format(calibrated_files))
+    else:
+        calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in ext_or_exts]
+        logging.info("Requesting {}".format(calibrated_files))
 
     cores = 'all'
     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file, 
@@ -343,6 +349,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
             raise ValueError("Pipeline Failed")
     
     for file in calibrated_files:
+        logging.info("Checking for output {}".format(file))
         if not os.path.isfile(os.path.join(cal_dir, file)):
             logging.error("ERROR: {} not found".format(file))
             raise FileNotFoundError(file)
