@@ -50,7 +50,9 @@ from jwql.website.apps.jwql.models import RootFileInfo, Anomalies
 @log_info
 @log_fail
 def transfer_anomalies():
-    
+    """Update the the Django anomalies model with all information in the existing postgres database.
+
+    """
     instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
     for instrument in instruments:
         # Get the anomalies for this instrument
