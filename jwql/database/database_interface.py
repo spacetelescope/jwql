@@ -374,6 +374,28 @@ def get_monitor_table_constraints(data_dict, table_name):
     return data_dict
 
 
+def get_unique_values_per_column(table, column_name):
+    """Return a list of the unique values from a particular column in the
+    given table.
+
+    Parameters
+    ----------
+    table : sqlalchemy.orm.decl_api.DeclarativeMeta
+        SQL table to be searched. (e.g. table = eval('NIRCamDarkPixelStats'))
+
+    column_name : str
+        Column name within the table to query
+
+    Returns
+    -------
+    distinct_colvals : list
+        List of unique values in the given column
+    """
+    colvals = session.query(eval(f'table.{column_name}')).distinct()
+    distinct_colvals = [eval(f'x.{column_name}') for x in colvals]
+    return sorted(distinct_colvals)
+
+
 def monitor_orm_factory(class_name):
     """Create a ``SQLAlchemy`` ORM Class for a ``jwql`` instrument
     monitor.
