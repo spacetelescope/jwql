@@ -462,9 +462,10 @@ def get_current_flagged_anomalies(rootname, instrument, n_match=1):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g.
-        ``jw86600008001_02101_00001_guider2/``).  May be a file
-        rootname or an exposure group root.
+        The rootname of interest.  May be a file rootname
+        (e.g. ``jw86600008001_02101_00001_guider2``) or an exposure
+        group root (e.g. ``jw86600008001_02101_00001``). The rootname
+        is matched as a starts-with filter on the anomaly database.
     instrument : str
         The instrument corresponding to the file.
     n_match : int

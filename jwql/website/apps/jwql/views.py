@@ -1039,7 +1039,18 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
 
 
 def save_image_group_ajax(request):
-    """Save the latest selected group type in the session."""
+    """Save the latest selected group type in the session.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming request.
+
+    Returns
+    -------
+    JsonResponse
+        Object containing the group value as set in the session (key: 'item').
+    """
     image_group = request.GET['group_type']
     request.session['image_group'] = image_group
     context = {'item': request.session['image_group']}
@@ -1047,7 +1058,18 @@ def save_image_group_ajax(request):
 
 
 def save_image_sort_ajax(request):
+    """Save the latest selected sort type in the session.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming request.
+
+    Returns
+    -------
+    JsonResponse
+        Object containing the sort value as set in the session (key: 'item').
+    """
     # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
     image_sort = request.GET['sort_type']
 
