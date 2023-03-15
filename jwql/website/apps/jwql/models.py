@@ -162,6 +162,7 @@ class Anomalies(models.Model):
     other = models.BooleanField(default=False)
 
     class Meta:
+        app_label = 'jwql'
         ordering = ['-root_file_info']
 
     def __str__(self):
