@@ -38,7 +38,7 @@ from jwql.database.database_interface import NIRSpecDarkPixelStats, NIRSpecDarkD
 from jwql.database.database_interface import FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, read_png
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = get_config()['outputs']
@@ -235,18 +235,7 @@ class DarkImagePlot():
         """
         if self.dark_image_picture is not None:
             if os.path.isfile(self.dark_image_picture):
-
-                rgba_img = Image.open(self.dark_image_picture).convert('RGBA')
-                xdim, ydim = rgba_img.size
-
-                # Create an array representation for the image `img`, and an 8-bit "4
-                # layer/RGBA" version of it `view`.
-                img = np.empty((ydim, xdim), dtype=np.uint32)
-                view = img.view(dtype=np.uint8).reshape((ydim, xdim, 4))
-
-                # Copy the RGBA image into view, flipping it so it comes right-side up
-                # with a lower-left origin
-                view[:,:,:] = np.flipud(np.asarray(rgba_img))
+                view = read_png(self.dark_image_picture)
 
                 # Display the 32-bit RGBA image
                 dim = max(xdim, ydim)

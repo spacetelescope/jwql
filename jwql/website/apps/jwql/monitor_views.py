@@ -62,20 +62,13 @@ def bad_pixel_monitor(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    tabs_components = bokeh_containers.bad_pixel_monitor_tabs(inst)
-
-    template = "bad_pixel_monitor.html"
+    # Locate the html file for the instrument
+    template = f"{inst.lower()}_bad_pix_plots.html"
 
     context = {
         'inst': inst,
-        'tabs_components': tabs_components,
-    }
+        }
 
-    # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 

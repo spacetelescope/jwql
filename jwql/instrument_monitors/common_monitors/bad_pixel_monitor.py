@@ -104,12 +104,12 @@ from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixe
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
+from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
 
@@ -777,11 +777,9 @@ class BadPixels():
         # Illuminated files - run entirety of calwebb_detector1 for uncal
         # files where corresponding rate file is 'None'
         badpix_types = []
-        badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
-        badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
         if illuminated_raw_files:
-            badpix_types.extend(badpix_types_from_flats)
+            badpix_types.extend(FLATS_BAD_PIXEL_TYPES)
             out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
             in_files = []
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
@@ -821,7 +819,7 @@ class BadPixels():
 
                 # Get observation time for all files
                 illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
-            
+
             index = 0
             while index < len(illuminated_raw_files):
                 if illuminated_slope_files[index] is None or illuminated_slope_files[index] == 'None':
@@ -843,7 +841,7 @@ class BadPixels():
         dark_obstimes = []
         if dark_raw_files:
             index = 0
-            badpix_types.extend(badpix_types_from_darks)
+            badpix_types.extend(DARKS_BAD_PIXEL_TYPES)
             # In this case we need to run the pipeline on all input files,
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
@@ -893,7 +891,7 @@ class BadPixels():
                     if not os.path.isfile(local_ramp_file):
                         dark_slope_files[index] = None
                 index += 1
-            
+
             index = 0
             while index < len(dark_raw_files):
                 if dark_jump_files[index] is None or dark_fitopt_files[index] is None or dark_slope_files[index] is None:
@@ -908,7 +906,7 @@ class BadPixels():
             min_dark_time = min(dark_obstimes)
             max_dark_time = max(dark_obstimes)
             mid_dark_time = instrument_properties.mean_time(dark_obstimes)
-        
+
         # Check whether there are still enough files left to meet the threshold
         if illuminated_slope_files is None:
             flat_length = 0
@@ -998,12 +996,14 @@ class BadPixels():
             # Add new hot and dead pixels to the database
             logging.info('\tFound {} new {} pixels'.format(len(bad_location_list[0]), bad_type))
 
-            if bad_type in badpix_types_from_flats:
+            if bad_type in FLATS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
-            elif bad_type in badpix_types_from_darks:
+                flat_png = create_png_from_fits(illuminated_slope_files[0], self.output_dir)
+            elif bad_type in DARKS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
+                dark_png = create_png_from_fits(dark_slope_files[0], self.output_dir)
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 
@@ -1038,6 +1038,7 @@ class BadPixels():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
+        updated_instruments = []
         for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
@@ -1181,6 +1182,7 @@ class BadPixels():
                 # Run the bad pixel monitor
                 if run_flats or run_darks:
                     self.process(flat_uncal_files, flat_rate_files, flat_file_count_threshold, dark_uncal_files, dark_rate_files, dark_file_count_threshold)
+                    updated_instruments.append(self.instrument)
 
                 # Update the query history
                 if dark_uncal_files is None:
@@ -1208,6 +1210,12 @@ class BadPixels():
                 self.query_table.__table__.insert().execute(new_entry)
                 logging.info('\tUpdated the query history table')
 
+        # Update the figures to be shown in the web app. Only update figures
+        # for instruments where the monitor ran
+        for instrument in updated_instruments:
+            BadPixelPlots(instrument)
+
+        logging.info(f'Updating web pages for: {updated_instruments}')
         logging.info('Bad Pixel Monitor completed successfully.')
 
 

@@ -38,6 +38,14 @@ import shutil
 import http
 import jsonschema
 
+from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
+from bokeh.io import export_png
+from bokeh.models import LinearColorMapper, LogColorMapper
+from bokeh.plotting import figure
+import numpy as np
+from PIL import Image
+
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
                                  FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
@@ -115,6 +123,58 @@ def _validate_config(config_file_dict):
             'Provided config.json does not match the '
             'required JSON schema: {}'.format(e.message)
         )
+
+
+def create_png_from_fits(filename, outdir):
+    """Create and save a png file of the provided file. The file
+    will be saved with the same filename as the input file, but
+    with fits replaced by png
+
+    Parameters
+    ----------
+    filename : str
+        Fits file to be opened and saved as a png
+
+    outdir : str
+        Output directory to save the png file to
+
+    Returns
+    -------
+    png_file : str
+        Name of the saved png file
+    """
+    if os.path.isfile(filename):
+        image = fits.getdata(filename)
+        ny, nx = image.shape
+        img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
+
+        plot = figure(tools='')
+        plot.x_range.range_padding = plot.y_range.range_padding = 0
+        plot.toolbar.logo = None
+        plot.toolbar_location = None
+        plot.min_border = 0
+        plot.xgrid.visible = False
+        plot.ygrid.visible = False
+
+        # Create the color mapper that will be used to scale the image
+        #mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+
+        # Plot image
+        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                             color_mapper=mapper, level="image")
+
+        # Turn off the axes, in order to make embedding in another figure easier
+        plot.xaxis.visible = False
+        plot.yaxis.visible = False
+
+        # Save the plot in a png
+        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
+        export_png(plot, filename=output_filename)
+        permissions.set_permissions(output_filename)
+        return output_filename
+    else:
+        return None
 
 
 def get_config():
@@ -658,6 +718,42 @@ def query_unformat(string):
     unsplit_string = string.replace(" ", "_")
 
     return unsplit_string
+
+
+def read_png(filename):
+    """Open the given png file and return as a 3D numpy array
+
+    Parameters
+    ----------
+    filename : str
+        png file to be opened
+
+    Returns
+    -------
+    data : numpy.ndarray
+        3D array representation of the data in the png file
+    """
+    if os.path.isfile(filename):
+        rgba_img = Image.open(filename).convert('RGBA')
+        xdim, ydim = rgba_img.size
+
+        # Create an array representation for the image, filled with
+        # dummy data to begin with
+        img = np.empty((ydim, xdim), dtype=np.uint32)
+
+        # Create a layer/RGBA" version with a set of 4, 8-bit layers.
+        # We will work with the data using 'view', and our changes
+        # will propagate back into the 2D 'img' version, which is
+        # what we will end up returning.
+        view = img.view(dtype=np.uint8).reshape((ydim, xdim, 4))
+
+        # Copy the RGBA image into view, flipping it so it comes right-side up
+        # with a lower-left origin
+        view[:,:,:] = np.flipud(np.asarray(rgba_img))
+    else:
+        view = None
+    # Return the 2D version
+    return img
 
 
 def grouper(iterable, chunksize):
