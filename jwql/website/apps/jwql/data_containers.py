@@ -439,11 +439,37 @@ def get_current_flagged_anomalies(rootname, instrument, n_match=1):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
 
+    This function may be used to retrieve the current anomalies
+    for single files or sets of files in an exposure group. Group
+    anomalies are determined by comparing current anomaly settings
+    within the group to the ``n_match`` parameter.
+
+    For single files, ``n_match`` should be set to 1: any anomaly present for
+    the file is a current anomaly.  For groups of files, ``n_match`` should be
+    set to the total number of files in the group.  In this case, an
+    anomaly is returned as a current anomaly for the group only if it
+    is marked for every file in the group, i.e. there are ``n_match``
+    True values for that anomaly.
+
+    Note that the anomaly database may store multiple entries for
+    a rootfile, but only the last entry is considered current. Also
+    note that not every rootfile has an entry in the database: it only
+    appears if an anomaly has been marked for it at some point. The
+    ``n_match`` parameter is required as an argument for groups because
+    there is no way to determine from the anomaly table how many files
+    belong to a group.
+
     Parameters
     ----------
     rootname : str
         The rootname of interest (e.g.
-        ``jw86600008001_02101_00001_guider2/``)
+        ``jw86600008001_02101_00001_guider2/``).  May be a file
+        rootname or an exposure group root.
+    instrument : str
+        The instrument corresponding to the file.
+    n_match : int
+        The number of root files that must match in order to report
+        an anomaly as current.
 
     Returns
     -------
