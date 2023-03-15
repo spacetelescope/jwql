@@ -143,6 +143,12 @@ BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH
 DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
 FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
 
+# The maximum number of bad pixels allowed on a bad pixel monitor plot. If there
+# are more than this number of bad pixels identified for a particular type of
+# bad pixel, then the figure is saved as a png rather than an interactive plot,
+# in order to reduce the amount of data sent to the browser.
+BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT = 15000
+
 # Possible exposure types for dark current data
 DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'niriss': ['NIS_DARK'],

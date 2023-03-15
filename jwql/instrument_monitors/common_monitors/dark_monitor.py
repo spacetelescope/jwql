@@ -103,7 +103,7 @@ from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -265,11 +265,6 @@ class Dark():
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
 
-
-        # FOR TESTING
-        mean_slope_dir = '/Volumes/jwst_ins/jwql/temp_dark_mon'
-
-
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
         logging.info("Name of mean slope image: {}".format(output_filename))
@@ -337,7 +332,7 @@ class Dark():
 
                 # Collect information about the file this image was compared against
                 if baseline_file is not None:
-                    base_parts = baseline_file.split('_')
+                    base_parts = os.path.basename(baseline_file).split('_')
 
                     # Get the starting and ending time from the filename.
                     base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
@@ -406,10 +401,17 @@ class Dark():
         new_pixels_y : list
             List of y coordinates of new bad pixels
         """
+        
+        if len(badpix[0]) == 0:
+            logging.warning("\tNo new {} pixels to check.".format(pixel_type))
+            return ([], [])
+        
+        logging.info("\tChecking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
+        logging.info("\t\tRunning database query")
         db_entries = session.query(self.pixel_table) \
             .filter(self.pixel_table.type == pixel_type) \
             .filter(self.pixel_table.detector == self.detector) \
@@ -422,16 +424,27 @@ class Dark():
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
                     already_found.append((x, y))
+        found_x = np.array([x[0] for x in already_found])
+        found_y = np.array([x[1] for x in already_found])
 
+        msg = "\t\tChecking pixels against list of {} existing {} pixels"
+        logging.info(msg.format(len(found_x), pixel_type))
         # Check to see if each pixel already appears in the database for
         # the given bad pixel type
         new_pixels_x = []
         new_pixels_y = []
         for x, y in zip(badpix[0], badpix[1]):
-            pixel = (x, y)
-            if pixel not in already_found:
+            ind_x = np.where(found_x == x)
+            ind_y = np.where(found_y == y)
+            if len(np.intersect1d(ind_x[0], ind_y[0])) == 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
+        
+        logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
+#             pixel = (x, y)
+#             if pixel not in already_found:
+#                 new_pixels_x.append(x)
+#                 new_pixels_y.append(y)
 
         session.close()
         return (new_pixels_x, new_pixels_y)
@@ -688,10 +701,12 @@ class Dark():
             logging.info('\tWorking on file: {}'.format(filename))
 
             rate_file = filename.replace("dark", "rate")
+            rate_file_name = os.path.basename(rate_file)
+            local_rate_file = os.path.join(self.data_dir, rate_file_name)
 
-            if os.path.isfile(rate_file):
-                logging.info("\t\tFile {} exists, skipping pipeline".format(rate_file))
-                slope_files.append(filename)
+            if os.path.isfile(local_rate_file):
+                logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
+                slope_files.append(local_rate_file)
             else:
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
@@ -755,36 +770,47 @@ class Dark():
                     baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
                 # Check the hot/dead pixel population for changes
+                logging.info("\tFinding new hot/dead pixels")
                 new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
 
                 # Shift the coordinates to be in full frame coordinate system
+                logging.info("\tShifting hot pixels to full frame")
                 new_hot_pix = self.shift_to_full_frame(new_hot_pix)
-                new_dead_pix = self.shift_to_full_frame(new_dead_pix)
 
                 # Exclude hot and dead pixels found previously
+                logging.info("\tExcluding previously-known hot pixels")
                 new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
-                new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
                 # Add new hot and dead pixels to the database
                 logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
-                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
                 self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+
+                # Same thing for dead pixels
+                logging.info("\tShifting dead pixels to full frame")
+                new_dead_pix = self.shift_to_full_frame(new_dead_pix)
+                logging.info("\tExcluding previously-known dead pixels")
+                new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
+                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
                 self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
                 # Check for any pixels that are significantly more noisy than
                 # in the baseline stdev image
+                logging.info("\tChecking for noisy pixels")
                 new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
                 # Shift coordinates to be in full_frame coordinate system
+                logging.info("\tShifting noisy pixels to full frame")
                 new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
 
                 # Exclude previously found noisy pixels
+                logging.info("\tExcluding existing bad pixels from noisy pixels")
                 new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
                 # Add new noisy pixels to the database
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-
+            
+            logging.info("Creating Mean Slope Image {}".format(slope_image))
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
                                           noisyxy=new_noisy_pixels, baseline_file=baseline_file)
