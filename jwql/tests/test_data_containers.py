@@ -7,6 +7,10 @@ Authors
 -------
 
     - Matthew Bourque
+    - Mees Fix
+    - Bryan Hilbert
+    - Bradley Sappington
+    - Melanie Clarke
 
 Use
 ---
@@ -20,6 +24,7 @@ Use
 """
 
 import glob
+import json
 import os
 
 import pytest
@@ -30,6 +35,56 @@ from jwql.website.apps.jwql import data_containers
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.parametrize('filter_keys',
+                         [{'instrument': 'NIRSpec', 'proposal': '2589',
+                           'obsnum': '006', 'look': 'All'},
+                          {'instrument': 'NIRCam', 'detector': 'NRCBLONG',
+                           'proposal': '2733', 'obsnum': '001'},
+                          {'instrument': 'MIRI', 'exp_type': 'MIR_IMAGE',
+                           'proposal': '1524', 'obsnum': '015'},
+                          {'instrument': 'FGS', 'cat_type': 'COM',
+                           'proposal': '1155'}
+                          ])
+def test_filter_root_files(filter_keys):
+    rfi = data_containers.filter_root_files(**filter_keys)
+    assert len(rfi) > 0
+    assert len(rfi) < 100
+
+    for key, value in filter_keys.items():
+        if str(value).strip().lower() == 'all':
+            continue
+        elif key in ['cat_type', 'obsnum']:
+            # values returned are foreign keys
+            continue
+        else:
+            rf_test = [str(rf[key]) == str(value) for rf in rfi]
+        assert all(rf_test)
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_filter_root_files_sorting():
+    filter_keys = {'instrument': 'NIRSpec', 'proposal': '2589',
+                   'obsnum': '006'}
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Ascending')
+    assert len(rfi) > 3
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['root_name'] > rfi[i]['root_name']
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Descending')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['root_name'] < rfi[i]['root_name']
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Recent')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['expstart'] <= rfi[i]['expstart']
+
+    rfi = data_containers.filter_root_files(**filter_keys, sort_as='Oldest')
+    for i, rf in enumerate(rfi[1:]):
+        assert rf['expstart'] >= rfi[i]['expstart']
 
 
 def test_get_acknowledgements():
@@ -69,8 +124,8 @@ def test_get_filenames_by_instrument():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_proposal():
     """Tests the ``get_filenames_by_proposal`` function."""
-
-    filenames = data_containers.get_filenames_by_proposal('1068')
+    pid = '2589'
+    filenames = data_containers.get_filenames_by_proposal(pid)
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -78,10 +133,61 @@ def test_get_filenames_by_proposal():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
-
-    filenames = data_containers.get_filenames_by_rootname('jw01068001001_02102_00001_nrcb1')
+    rname = 'jw02589006001_04101_00001-seg002_nrs2'
+    filenames = data_containers.get_filenames_by_rootname(rname)
     assert isinstance(filenames, list)
     assert len(filenames) > 0
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.parametrize('pid,rname,success',
+                         [('2589', None, True),
+                          (None, 'jw02589006001_04101_00001-seg002_nrs2', True),
+                          ('2589', 'jw02589006001_04101_00001-seg002_nrs2', True),
+                          (None, None, False)])
+def test_get_filesystem_filenames(pid, rname, success):
+    """Tests the ``get_filesystem_filenames`` function."""
+    filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, rootname=rname)
+    assert isinstance(filenames, list)
+    if not success:
+        assert len(filenames) == 0
+    else:
+        assert len(filenames) > 0
+
+        # check specific file_types
+        fits_files = [f for f in filenames if f.endswith('.fits')]
+        assert len(fits_files) < len(filenames)
+
+        fits_filenames = data_containers.get_filesystem_filenames(
+            proposal=pid, rootname=rname, file_types=['fits'])
+        assert isinstance(fits_filenames, list)
+        assert len(fits_filenames) > 0
+        assert len(fits_filenames) == len(fits_files)
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_get_filesystem_filenames_options():
+    """Tests the ``get_filesystem_filenames`` function."""
+    pid = '2589'
+
+    # basenames only
+    filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, full_path=False, file_types=['fits'])
+    assert not os.path.isfile(filenames[0])
+
+    # full path
+    filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, full_path=True, file_types=['fits'])
+    assert os.path.isfile(filenames[0])
+
+    # sorted
+    sorted_filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, sort_names=True, file_types=['fits'])
+    unsorted_filenames = data_containers.get_filesystem_filenames(
+        proposal=pid, sort_names=False, file_types=['fits'])
+    assert sorted_filenames != unsorted_filenames
+    assert sorted_filenames == sorted(unsorted_filenames)
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -113,6 +219,65 @@ def test_get_instrument_proposals():
     proposals = data_containers.get_instrument_proposals('Fgs')
     assert isinstance(proposals, list)
     assert len(proposals) > 0
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.parametrize('keys,viewed,sort_as,exp_type,cat_type',
+                         [(None, None, None, None, None),
+                          (None, 'viewed', None, None, None),
+                          (None, 'Viewed', None, None, None),
+                          (None, 'new', None, None, None),
+                          (None, 'New', None, None, None),
+                          (None, None, None, 'NRS_MSATA', None),
+                          # (None, None, None, None, 'CAL'),  # cat_type not implemented yet
+                          (['expstart'], 'new', 'ascending', None, None),
+                          (['expstart'], 'new', 'descending', None, None),
+                          (['expstart'], 'new', 'recent', None, None),
+                          ([], 'viewed', None, None, None),
+                          ([], 'new', None, None, None),
+                          ([], None, None, None, None),
+                          (['proposal', 'obsnum', 'other',
+                            'prop_id', 'expstart'], 'viewed', None, None, None),
+                          (['proposal', 'obsnum', 'other',
+                            'prop_id', 'expstart'], 'new', None, None, None),
+                          (['proposal', 'obsnum', 'other',
+                            'prop_id', 'expstart'], None, None, None, None)])
+def test_get_instrument_looks(keys, viewed, sort_as, exp_type, cat_type):
+    """Tests the ``get_instrument_looks`` function."""
+
+    return_keys, looks = data_containers.get_instrument_looks(
+        'nirspec', additional_keys=keys, look=viewed, sort_as=sort_as,
+        exp_type=exp_type, cat_type=cat_type)
+    assert isinstance(return_keys, list)
+    assert isinstance(looks, list)
+
+    # returned keys always contains at least root name
+    assert len(return_keys) > 1
+    assert 'root_name' in return_keys
+    assert 'viewed' in return_keys
+
+    # they may also contain some keys from the instrument
+    # and any additional keys specified
+    if keys is not None:
+        assert len(return_keys) >= 1 + len(keys)
+
+    # viewed depends on local database, so may or may not have results
+    if not str(viewed).lower() == 'viewed':
+        assert len(looks) > 0
+        first_file = looks[0]
+        assert first_file['root_name'] != ''
+        assert isinstance(first_file['viewed'], bool)
+        assert len(first_file) == len(return_keys)
+        for key in return_keys:
+            assert key in first_file
+
+        last_file = looks[-1]
+        if sort_as == 'ascending':
+            assert last_file['root_name'] > first_file['root_name']
+        elif sort_as == 'recent':
+            assert last_file['expstart'] < first_file['expstart']
+        else:
+            assert last_file['root_name'] < first_file['root_name']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

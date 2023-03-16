@@ -597,9 +597,46 @@ function toggle_viewed(file_root, base_url) {
     });
 }
 
+/**
+ * Download filtered data report
+ * @param {String} inst - The instrument in use
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function download_report(inst, base_url) {
+    var elem = document.getElementById('download_report_button');
+    elem.disabled = true;
+
+    // Get sort value
+    var sort_option = document.getElementById('sort_dropdownMenuButton').innerText;
+    var options = '?sort_as=' + sort_option.toLowerCase();
+
+    // Get search value - use as proposal.startswith
+    var search_value = document.getElementById("search_box").value;
+    if (search_value != '') {
+        options += '&proposal=' + search_value;
+    }
+
+    // Get all filter values
+    var filter_div = document.getElementById('thumbnail-filter');
+    var filters = filter_div.getElementsByClassName('dropdown-toggle');
+
+    for (var i=0; i < filters.length; i++) {
+        var name = filters[i].id.split('_dropdownMenuButton')[0];
+        var status = filters[i].innerText.toLowerCase();
+        if (!status.includes('all')) {
+            options += '&' + name + '=' + status;
+        };
+    };
+    var report_url = '/' + inst + '/report' + options;
+    console.log('Redirecting to: ' + report_url);
+
+    // Redirect to download content
+    window.location = base_url + report_url;
+    elem.disabled = false;
+}
 
 /**
- * Updates various compnents on the archive page
+ * Updates various components on the archive page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */

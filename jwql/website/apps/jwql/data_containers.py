@@ -13,6 +13,8 @@ Authors
     - Teagan King
     - Bryan Hilbert
     - Maria Pena-Guerrero
+    - Bradley Sappington
+    - Melanie Clarke
 
 Use
 ---
@@ -50,9 +52,11 @@ from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS, QUERY_CONFIG_TEMPLATE
+from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
@@ -150,6 +154,74 @@ def build_table(tablename):
     return table_meta_data
 
 
+def filter_root_files(instrument=None, proposal=None, obsnum=None, sort_as=None,
+                      look=None, exp_type=None, cat_type=None, detector=None):
+    """Retrieve and filter root file table entries.
+
+    Parameters
+    ----------
+    instrument : str, optional
+        Name of the JWST instrument.
+    proposal : str, optional
+        Proposal to match. Used as a 'starts with' filter.
+    obsnum : str, optional
+        Observation number to match.
+    sort_as : {'ascending', 'descending', 'recent', 'oldest'}, optional
+        Sorting method for output table. Ascending and descending
+        options refer to root file name; recent and oldest sort by exposure
+        start time.
+    look : {'new', 'viewed'}, optional
+        If set to None, all viewed values are returned. If set to
+        'viewed', only viewed data is returned. If set to 'new', only
+        new data is returned.
+    exp_type : str, optional
+        Set to filter by exposure type.
+    cat_type : str, optional
+        Set to filter by proposal category.
+    detector : str, optional
+        Set to filter by detector name.
+
+    Returns
+    -------
+    root_file_info : QuerySet
+        List of RootFileInfo entries matching input criteria.
+    """
+    # standardize input
+
+    # get desired filters
+    filter_kwargs = dict()
+    if instrument is not None and str(instrument).strip().lower() != 'all':
+        inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+        filter_kwargs['instrument'] = inst
+    if proposal is not None and str(proposal).strip().lower() != 'all':
+        filter_kwargs['proposal__startswith'] = proposal.lstrip('0')
+    if obsnum is not None and str(obsnum).strip().lower() != 'all':
+        filter_kwargs['obsnum__obsnum'] = obsnum
+    if look is not None and str(look).strip().lower() != 'all':
+        filter_kwargs['viewed'] = (str(look).lower() == 'viewed')
+    if exp_type is not None and str(exp_type).strip().lower() != 'all':
+        filter_kwargs['exp_type__iexact'] = exp_type
+    if cat_type is not None and str(cat_type).strip().lower() != 'all':
+        filter_kwargs['obsnum__proposal__category__iexact'] = cat_type
+    if detector is not None and str(detector).strip().lower() != 'all':
+        filter_kwargs['detector__iexact'] = detector
+
+    # get file info by instrument from local model
+    root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
+
+    # descending by root file is default;
+    # for other options, sort as desired
+    sort_as = str(sort_as).strip().lower()
+    if sort_as == 'ascending':
+        root_file_info = root_file_info.order_by('root_name')
+    elif sort_as == 'recent':
+        root_file_info = root_file_info.order_by('-expstart', 'root_name')
+    elif sort_as == 'oldest':
+        root_file_info = root_file_info.order_by('expstart', 'root_name')
+
+    return root_file_info.values()
+
+
 def create_archived_proposals_context(inst):
     """Generate and save a json file containing the information needed
     to create an instrument's archive page.
@@ -215,7 +287,9 @@ def create_archived_proposals_context(inst):
         prop_filecount = [entry.number_of_files for entry in prop_entries]
         total_files.append(sum(prop_filecount))
 
-        # In order to know if a proposal contains all observations that are entirely viewed, check for at least one existing viewed=False in RootFileInfo
+        # In order to know if a proposal contains all observations that
+        # are entirely viewed, check for at least one existing
+        # viewed=False in RootFileInfo
         unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
         proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
 
@@ -639,7 +713,7 @@ def get_filenames_by_instrument(instrument, proposal, observation_id=None, restr
         filenames in this file will be used rather than calling mask_query_filenames_by_instrument.
         This can save a significant amount of time when the number of files is large.
     query_response : dict
-        Dictionary with "data" key ontaining a list of filenames. This is assumed to
+        Dictionary with "data" key containing a list of filenames. This is assumed to
         essentially be the returned value from a call to mast_query_filenames_by_instrument.
         If this is provided, the call to that function is skipped, which can save a
         significant amount of time.
@@ -754,7 +828,7 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
         Proposal ID number to use to filter the results
     observation_id : str
         Observation ID number to use to filter the results. If None, all files for the ``proposal_id`` are
-        retreived
+        retrieved
     other_columns : list
         List of other columns to return from the MAST query
 
@@ -781,6 +855,79 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
     return result
 
 
+def get_filesystem_filenames(proposal=None, rootname=None,
+                             file_types=None, full_path=False,
+                             sort_names=True):
+    """Return a list of filenames on the filesystem.
+
+    One of proposal or rootname must be specified. If both are
+    specified, only proposal is used.
+
+    Parameters
+    ----------
+    proposal : str, optional
+        The one- to five-digit proposal number (e.g. ``88600``).
+    rootname : str, optional
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
+    file_types : list of str, optional
+        If provided, only matching file extension types will be
+        returned (e.g. ['fits', 'jpg']).
+    full_path : bool, optional
+        If set, the full path to the file will be returned instead
+        of the basename.
+    sort_names : bool, optional
+        If set, the returned files are sorted.
+
+    Returns
+    -------
+    filenames : list
+        A list of filenames associated with the given ``rootname``.
+    """
+    if proposal is not None:
+        proposal_string = '{:05d}'.format(int(proposal))
+        filenames = glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'public',
+                         'jw{}'.format(proposal_string), '*/*'))
+        filenames.extend(glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'proprietary',
+                         'jw{}'.format(proposal_string), '*/*')))
+    elif rootname is not None:
+        proposal_dir = rootname[0:7]
+        observation_dir = rootname.split('_')[0]
+        filenames = glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'public', proposal_dir,
+                         observation_dir, '{}*'.format(rootname)))
+        filenames.extend(glob.glob(
+            os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir,
+                         observation_dir, '{}*'.format(rootname))))
+    else:
+        logging.warning("Must provide either proposal or rootname; "
+                        "no files returned.")
+        filenames = []
+
+    # check suffix and file type
+    good_filenames = []
+    for filename in filenames:
+        split_file = os.path.splitext(filename)
+
+        # certain suffixes are always ignored
+        test_suffix = split_file[0].split('_')[-1]
+        if test_suffix not in IGNORED_SUFFIXES:
+
+            # check against additional file type requirement
+            test_type = split_file[-1].lstrip('.')
+            if file_types is None or test_type in file_types:
+                if full_path:
+                    good_filenames.append(filename)
+                else:
+                    good_filenames.append(os.path.basename(filename))
+
+    if sort_names:
+        good_filenames.sort()
+    return good_filenames
+
+
 def get_filenames_by_proposal(proposal):
     """Return a list of filenames that are available in the filesystem
     for the given ``proposal``.
@@ -795,16 +942,7 @@ def get_filenames_by_proposal(proposal):
     filenames : list
         A list of filenames associated with the given ``proposal``.
     """
-
-    proposal_string = '{:05d}'.format(int(proposal))
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
-
-    # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
-    filenames = sorted([os.path.basename(filename) for filename in filenames])
-
-    return filenames
+    return get_filesystem_filenames(proposal=proposal)
 
 
 def get_filenames_by_rootname(rootname):
@@ -822,18 +960,7 @@ def get_filenames_by_rootname(rootname):
     filenames : list
         A list of filenames associated with the given ``rootname``.
     """
-
-    proposal_dir = rootname[0:7]
-    observation_dir = rootname.split('_')[0]
-
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
-
-    # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
-    filenames = sorted([os.path.basename(filename) for filename in filenames])
-
-    return filenames
+    return get_filesystem_filenames(rootname=rootname)
 
 
 def get_header_info(filename, filetype):
@@ -1025,6 +1152,80 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
+def get_instrument_looks(instrument, sort_as=None, proposal=None,
+                         look=None, exp_type=None, cat_type=None,
+                         additional_keys=None):
+    """Return a table of looks information for the given instrument.
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument.
+    sort_as : {'ascending', 'descending', 'recent'}
+        Sorting method for output table. Ascending and descending
+        options refer to root file name; recent sorts by observation
+        start.
+    proposal : str, optional
+        Proposal to match.  Used as a 'starts with' filter.
+    look : {'new', 'viewed'}, optional
+        If set to None, all viewed values are returned. If set to
+        'viewed', only viewed data is returned. If set to 'new', only
+        new data is returned.
+    exp_type : str, optional
+        Set to filter by exposure type.
+    cat_type : str, optional
+        Set to filter by proposal category.
+    additional_keys : list of str, optional
+        Additional model attribute names for information to return.
+
+    Returns
+    -------
+    keys : list of str
+        Report values returned for the given instrument.
+    looks : list of dict
+        List of looks information by root file for the given instrument.
+    """
+    # standardize input
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+
+    # required keys
+    keys = ['root_name']
+
+    # optional keys by instrument
+    keys += REPORT_KEYS_PER_INSTRUMENT[inst.lower()]
+
+    # add any additional keys
+    key_set = set(keys)
+    if additional_keys is not None:
+        for key in additional_keys:
+            if key not in key_set:
+                keys.append(key)
+
+    # get filtered file info
+    root_file_info = filter_root_files(
+        instrument=instrument, sort_as=sort_as, look=look,
+        exp_type=exp_type, cat_type=cat_type, proposal=proposal)
+
+    looks = []
+    for root_file in root_file_info:
+        result = dict()
+        for key in keys:
+            try:
+                # try the root file table
+                value = root_file[key]
+            except KeyError:
+                value = ''
+
+            # make sure value can be serialized
+            if type(value) not in [str, float, int, bool]:
+                value = str(value)
+
+            result[key] = value
+        looks.append(result)
+
+    return keys, looks
+
+
 def get_preview_images_by_proposal(proposal):
     """Return a list of preview images available in the filesystem for
     the given ``proposal``.
@@ -1184,7 +1385,7 @@ def get_thumbnails_all_instruments(parameters):
 
     Parameters
     ----------
-    parameters: dict of type QUERY_CONFIG_TEMPLATE
+    parameters: dict
         A dictionary containing keys of QUERY_CONFIG_KEYS, some of which are dictionaries:
 
 

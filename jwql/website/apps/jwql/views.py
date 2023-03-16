@@ -16,7 +16,8 @@ Authors
     - Mees Fix
     - Bryan Hilbert
     - Maria Pena-Guerrero
-    - Bryan Hilbert
+    - Bradley Sappington
+    - Melanie Clarke
 
 
 Use
@@ -44,6 +45,7 @@ Dependencies
 from collections import defaultdict
 from copy import deepcopy
 import csv
+import datetime
 import json
 import glob
 import logging
@@ -71,6 +73,7 @@ from .data_containers import get_edb_components
 from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
+from .data_containers import get_instrument_looks
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import random_404_page
 from .data_containers import text_scrape
@@ -496,6 +499,43 @@ def dashboard(request):
                'time_deltas': time_deltas}
 
     return render(request, template, context)
+
+
+def download_report(request, inst):
+    """Download data report by look status.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+    inst : str
+        The JWST instrument of interest.
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # check for filter criteria passed in request
+    kwargs = dict()
+    for filter_name in ['look', 'exp_type', 'cat_type', 'proposal', 'sort_as']:
+        kwargs[filter_name] = request.GET.get(filter_name)
+
+    # get all observation looks from file info model
+    # and join with observation descriptors
+    keys, looks = get_instrument_looks(inst, **kwargs)
+
+    today = datetime.datetime.now().strftime('%Y%m%d')
+    filename = f'{inst.lower()}_report_{today}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow(keys)
+    for row in looks:
+        writer.writerow(row.values())
+
+    return response
 
 
 def engineering_database(request):
