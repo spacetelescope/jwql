@@ -53,9 +53,9 @@
     		    </span>
 
                 <div class="int_changer">
-                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
-                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
-                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
+                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_integration("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
+                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_integration("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
+                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_integration("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
                     <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
                 </div>
 

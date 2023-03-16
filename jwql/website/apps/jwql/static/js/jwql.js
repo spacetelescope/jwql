@@ -34,24 +34,22 @@
     document.getElementById("view_file_type").setAttribute('data-current-suffix', type);
 
     // Clean the input parameters
-    num_ints = num_ints.replace(/&#39;/g, '"');
-    num_ints = num_ints.replace(/'/g, '"');
+    num_ints = clean_input_parameter(num_ints);
     num_ints = JSON.parse(num_ints);
 
     // Get the available integration jpg numbers
-    available_ints = available_ints.replace(/&#39;/g, '"');
-    available_ints = available_ints.replace(/'/g, '"');
+    available_ints = clean_input_parameter(available_ints);
     available_ints = JSON.parse(available_ints)[type];
 
     // Get the total number of integrations
-    total_ints = total_ints.replace(/&#39;/g, '"');
-    total_ints = total_ints.replace(/'/g, '"');
+    total_ints = clean_input_parameter(total_ints);
     total_ints = JSON.parse(total_ints);
 
     // Update the APT parameters
-    document.getElementById("proposal").innerHTML = group_root.slice(2,7);
-    document.getElementById("obs_id").innerHTML = group_root.slice(7,10);
-    document.getElementById("visit_id").innerHTML = group_root.slice(10,13);
+    var parsed_name = parse_filename(group_root);
+    document.getElementById("proposal").innerHTML = parsed_name.proposal;
+    document.getElementById("obs_id").innerHTML = parsed_name.obs_id;
+    document.getElementById("visit_id").innerHTML = parsed_name.visit_id;
 
     var detector_list = detectors.split(',');
     for (let i = 0; i < detector_list.length; i++) {
@@ -64,7 +62,7 @@
 
         // Show the appropriate image
         var img = document.getElementById("image_viewer_" + detector);
-        var jpg_filepath = '/static/preview_images/' + group_root.slice(0,7) +
+        var jpg_filepath = '/static/preview_images/' + parsed_name.program +
                            '/' + group_root + '_' + detector + '_' + type + '_integ0.jpg';
         img.src = jpg_filepath;
         img.alt = jpg_filepath;
@@ -74,19 +72,7 @@
     }
 
     // Reset the slider values
-    document.getElementById("slider_range").value = 1;
-    document.getElementById("slider_range").max = num_ints[type];
-    document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = total_ints[type];
-
-    // Update the integration changing buttons
-    if (num_ints[type] > 1) {
-        document.getElementById("int_after").disabled = false;
-    } else {
-        document.getElementById("int_after").disabled = true;
-    }
-    // Disable the "left" button, since this will be showing integ0
-    document.getElementById("int_before").disabled = true;
+    reset_integration_slider(num_ints[type], total_ints[type])
 
     // Update the view/explore links for the new file type
     update_view_explore_link();
@@ -117,57 +103,42 @@
     document.getElementById("view_file_type").setAttribute('data-current-suffix', type);
 
     // Clean the input parameters
-    num_ints = num_ints.replace(/&#39;/g, '"');
-    num_ints = num_ints.replace(/'/g, '"');
+    num_ints = clean_input_parameter(num_ints);
     num_ints = JSON.parse(num_ints);
 
     // Get the available integration jpg numbers
-    available_ints = available_ints.replace(/&#39;/g, '"');
-    available_ints = available_ints.replace(/'/g, '"');
+    available_ints = clean_input_parameter(available_ints);
     available_ints = JSON.parse(available_ints)[type];
 
     // Get the total number of integrations
-    total_ints = total_ints.replace(/&#39;/g, '"');
-    total_ints = total_ints.replace(/'/g, '"');
+    total_ints = clean_input_parameter(total_ints);
     total_ints = JSON.parse(total_ints);
 
     // Propagate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
+    var parsed_name = parse_filename(file_root);
+
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
     document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
-    document.getElementById("proposal").innerHTML = file_root.slice(2,7);
-    document.getElementById("obs_id").innerHTML = file_root.slice(7,10);
-    document.getElementById("visit_id").innerHTML = file_root.slice(10,13);
+    document.getElementById("proposal").innerHTML = parsed_name.proposal;
+    document.getElementById("obs_id").innerHTML = parsed_name.obs_id;
+    document.getElementById("visit_id").innerHTML = parsed_name.visit_id;
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
     // Show the appropriate image
     var img = document.getElementById("image_viewer");
-    var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
+    var jpg_filepath = '/static/preview_images/' + parsed_name.program + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
     // if previous image had error, remove error sizing
     img.classList.remove("thumbnail");
 
     // Reset the slider values
-    document.getElementById("slider_range").value = 1;
-    document.getElementById("slider_range").max = num_ints[type];
-    document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = total_ints[type];
-
-    // Update the integration changing buttons
-    if (num_ints[type] > 1) {
-        document.getElementById("int_after").disabled = false;
-    } else {
-        document.getElementById("int_after").disabled = true;
-    }
+    reset_integration_slider(num_ints[type], total_ints[type])
 
     // Update the image exploration and header links
     document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
     document.getElementById("explore_image").href = '/' + inst + '/' + file_root + '_' + type + '/explore_image/';
-
-    // Disable the "left" button, since this will be showing integ0
-    document.getElementById("int_before").disabled = true;
-
 }
 
 
@@ -183,12 +154,12 @@
  * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
  *                             Only relevant if method is "button".
  */
-function change_int(file_root, num_ints, available_ints, method, direction='right') {
+function change_integration(file_root, num_ints, available_ints, method, direction='right') {
 
     // Figure out the current image and integration
     var suffix = document.getElementById("view_file_type").getAttribute('data-current-suffix');
     var integration = Number(document.getElementById("slider_val").innerText) - 1;
-    var program = file_root.slice(0,7);
+    var program = parse_filename(file_root).program;
 
     // Find the total number of integrations for the current image
     num_ints = num_ints.replace(/'/g, '"');
@@ -268,6 +239,18 @@ function change_int(file_root, num_ints, available_ints, method, direction='righ
 
 
 /**
+ * Clean garbage characters in input dictionary parameters passed as strings.
+ * @param {String} param_value - The parameter value to clean
+ * @returns {String} cleaned - The cleaned parameter value
+ */
+function clean_input_parameter(param_value) {
+    param_value = param_value.replace(/&#39;/g, '"');
+    param_value = param_value.replace(/'/g, '"');
+    return param_value
+}
+
+
+/**
  * Determine what filetype to use for a thumbnail
  * @param {String} thumbnail_dir - The path to the thumbnail directory
  * @param {List} suffixes - A list of available suffixes for the file of interest
@@ -279,7 +262,7 @@ function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file
     // Update the thumbnail filename
     var img = document.getElementById('thumbnail'+i);
     if (thumb_filename != 'none') {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
+        var jpg_path = thumbnail_dir + parse_filename(file_root).program + '/' + thumb_filename;
         img.src = jpg_path;
     }
 
@@ -554,6 +537,55 @@ function unhide_file(detector) {
 
     // Update the view/explore link as needed
     update_view_explore_link();
+}
+
+/**
+ * Parse observation information from a JWST file name.
+ * @param {String} filename - The file or group root name to parse
+ * @returns {Object} parsed - Dictionary containing 'proposal', 'obs_id', 'visit_id', 'program'
+ */
+function parse_filename(root_name) {
+    // eg. for root_name jw02589006001_04101_00001-seg001_nrs1:
+    //   program = jw02589
+    //   proposal = 02589
+    //   obs_id = 006
+    //   visit_id = 001
+
+    // used for preview directories
+    var program = root_name.slice(0,7);
+
+    // used for observation description fields
+    var proposal = root_name.slice(2, 7);
+    var obs_id = root_name.slice(7, 10);
+    var visit_id = root_name.slice(10, 13);
+
+    const parsed_name = {program: program, proposal: proposal,
+                         obs_id: obs_id, visit_id: visit_id};
+    return parsed_name;
+}
+
+
+/**
+ * Reset the integration slider for a new file
+ * @param {Int} num_integration - The number of integration images available
+ * @param {Int} total_integration - The total number of integrations to display
+ */
+function reset_integration_slider(num_integration, total_integration) {
+    // Reset the slider values
+    document.getElementById("slider_range").value = 1;
+    document.getElementById("slider_range").max = num_integration;
+    document.getElementById("slider_val").innerHTML = 1;
+    document.getElementById("total_ints").innerHTML = total_integration;
+
+    // Update the integration changing buttons
+    if (num_integration > 1) {
+        document.getElementById("int_after").disabled = false;
+    } else {
+        document.getElementById("int_after").disabled = true;
+    }
+
+    // Disable the "left" button, since this will be showing integ0
+    document.getElementById("int_before").disabled = true;
 }
 
 
@@ -933,7 +965,7 @@ function update_archive_page(inst, base_url) {
 
 
 /**
- * Updates various compnents on the MSATA page
+ * Updates various components on the MSATA page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
@@ -965,7 +997,7 @@ function update_msata_page(base_url) {
 
 
 /**
- * Updates various compnents on the WATA page
+ * Updates various components on the WATA page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
@@ -997,7 +1029,7 @@ function update_wata_page(base_url) {
 
 
 /**
- * Updates various compnents on the thumbnails page
+ * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
  * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
@@ -1141,6 +1173,7 @@ function update_header_display(extension, num_extensions) {
     header_table_to_show.style.display = 'inline';
 
 }
+
 
 /**
  * Updates the obs-list div with observation number options
