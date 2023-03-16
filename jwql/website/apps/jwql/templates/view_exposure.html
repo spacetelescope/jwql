@@ -86,6 +86,16 @@
                             </a>
                         </span>
                     </div>
+                    <div class="col" id="{{ detector1 }}_view_fallback">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector1 }}/">
+                                <img class="image_preview_viewer thumbnail" id="fallback_image_viewer_{{ detector1 }}"
+                                     title="Preview image for {{ group_root }}, detector {{ detector1_fallback }}"
+                                     data-detector="{{ detector1 }}" style="width:100%"
+                                     src="/static/img/imagenotfound.png" alt="Preview image not found">
+                            </a>
+                        </span>
+                    </div>
                     {% endif %}
                 {% endfor %}
         </div>
@@ -99,6 +109,16 @@
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector2 }}"
                                      title="Preview image for {{ group_root }}, detector {{ detector2 }}"
                                      data-detector="{{ detector2 }}" style="width:100%">
+                            </a>
+                        </span>
+                    </div>
+                    <div class="col" id="{{ detector2 }}_view_fallback">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector2 }}/">
+                                <img class="image_preview_viewer thumbnail" id="fallback_image_viewer_{{ detector2 }}"
+                                     title="Preview image for {{ group_root }}, detector {{ detector2_fallback }}"
+                                     data-detector="{{ detector2 }}" style="width:100%"
+                                     src="/static/img/imagenotfound.png" alt="Preview image not found">
                             </a>
                         </span>
                     </div>
@@ -118,6 +138,16 @@
                             </a>
                         </span>
                     </div>
+                    <div class="col" id="{{ detector3 }}_view_fallback">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector3 }}/">
+                                <img class="image_preview_viewer thumbnail" id="fallback_image_viewer_{{ detector3 }}"
+                                     title="Preview image for {{ group_root }}, detector {{ detector3_fallback }}"
+                                     data-detector="{{ detector3 }}" style="width:100%"
+                                     src="/static/img/imagenotfound.png" alt="Preview image not found">
+                            </a>
+                        </span>
+                    </div>
                     {% endif %}
                 {% endfor %}
         </div>
@@ -131,6 +161,16 @@
                                 <img class="image_preview_viewer" id="image_viewer_{{ detector }}"
                                      title="Preview image for {{ group_root }}, detector {{ detector }}"
                                      data-detector="{{ detector }}" style="width:100%">
+                            </a>
+                        </span>
+                    </div>
+                    <div class="col" id="{{ detector }}_view_fallback">
+                        <span class="image_preview">
+                            <a href="{{ base_url }}/{{ inst }}/{{ group_root }}_{{ detector }}/">
+                                <img class="image_preview_viewer thumbnail" id="fallback_image_viewer_{{ detector }}"
+                                     title="Preview image for {{ group_root }}, detector {{ detector_fallback }}"
+                                     data-detector="{{ detector }}" style="width:100%"
+                                     src="/static/img/imagenotfound.png" alt="Preview image not found">
                             </a>
                         </span>
                     </div>

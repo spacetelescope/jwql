@@ -503,6 +503,7 @@ function group_by_thumbnails(group_type, base_url) {
 
 /**
  * Hide an image viewer
+ * @param {String} detector - The detector name for the image viewer
  */
 function hide_file(detector) {
     var img = document.getElementById("image_viewer_" + detector);
@@ -522,6 +523,7 @@ function hide_file(detector) {
 
 /**
  * Show an image viewer
+ * @param {String} detector - The detector name for the image viewer
  */
 function unhide_file(detector) {
     var img = document.getElementById("image_viewer_" + detector);
@@ -531,6 +533,13 @@ function unhide_file(detector) {
     // Show the image and div
     img.style.display = "inline-block";
     div.style.display = "inline-block";
+
+    // Hide the fallback image and div
+    // These are never re-displayed: if any image loads for the detector,
+    // they will not show up. This is intended to cover the case where FITS files
+    // exist for the exposure, but no preview images have been generated yet.
+    document.getElementById("fallback_image_viewer_" + detector).style.display = "none";
+    document.getElementById(detector + "_view_fallback").style.display = "none";
 
     // Enable the associated filename
     filename.disabled = false;
@@ -591,6 +600,8 @@ function reset_integration_slider(num_integration, total_integration) {
 
 /**
  * Check for a detector image and show or hide its viewer accordingly.
+ * @param {String} detector - The detector name
+ * @param {String} jpg_filepath - The image to show
  */
 function show_viewer(detector, jpg_filepath) {
     $.get(jpg_filepath, function() {unhide_file(detector);})
