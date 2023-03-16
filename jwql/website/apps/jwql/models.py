@@ -133,6 +133,8 @@ class Anomalies(models.Model):
         on_delete=models.CASCADE,
         primary_key=True,
     )
+    flag_date = models.DateTimeField(help_text="flag date", null=True, blank=True)
+    user = models.CharField(max_length=50, help_text="user", default='', null=True, blank=True)
     cosmic_ray_shower = models.BooleanField(default=False)
     diffraction_spike = models.BooleanField(default=False)
     excessive_saturation = models.BooleanField(default=False)
