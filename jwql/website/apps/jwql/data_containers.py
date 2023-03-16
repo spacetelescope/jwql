@@ -13,6 +13,7 @@ Authors
     - Teagan King
     - Bryan Hilbert
     - Maria Pena-Guerrero
+    - Rachel Cooper
 
 Use
 ---
@@ -56,6 +57,7 @@ from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVER
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
+from jwql.website.apps.jwql.models import RootFileInfo
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 
@@ -1570,8 +1572,14 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             pass
     obs_list = sorted(list(set(all_obs)))
 
+    # Get additional info about exposures
+    more_cols = {'NIRSpec':['filter','patt_num','lamp','opmode'],
+                'NIRCam':['filter','pupil'],
+                'NIRISS':['filter','pupil'],
+                'MIRI':[],}
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
+    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type']+more_cols[inst])
+    # if the instrument doesn't have that keyword, column with be list of 'NONE'
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
@@ -1611,9 +1619,15 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
-        exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
         exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
         exp_types.append(exp_type)
+
+        # Get other keywords returned in columns (instrument dependant)
+        moreinfo = {}
+        for col in columns:
+            keyword = columns[col]
+            moreinfo[col] = [val for fname, val in zip(filenames, keyword) if rootname in fname][0]
+
 
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
@@ -1624,7 +1638,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
             viewed = THUMBNAIL_FILTER_LOOK[0]
 
-        exp_num = filename_dict['exposure_id']#.lstrip('0')
+        exp_num = filename_dict['exposure_id']
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
@@ -1643,6 +1657,28 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             logging.warning(e)
         except KeyError:
             print("KeyError with get_expstart for {}".format(rootname))
+
+        # # Add instrument-specific info to data_dict for hover-over
+        # #if inst == 'NIRCam':
+        # if inst == 'NIRSpec':
+        #     #EXP_TYPE, DETECTOR, FILTER, GRATING, PATT_NUM, EXP_START, LAMP, OPMODE
+        #     data_dict['file_data'][rootname]['filter'] = filt
+        #     #data_dict['file_data'][rootname]['grating'] = 
+        #     data_dict['file_data'][rootname]['patt_num'] = 
+        #     data_dict['file_data'][rootname]['lamp'] = 
+        #     data_dict['file_data'][rootname]['opmode'] = 
+        # #if inst == 'NIRISS':
+        # #if inst == 'MIRI':
+
+        for keyword in moreinfo:
+            data_dict['file_data'][rootname][keyword] = moreinfo[keyword]
+
+        # if they both exist, replace 'filter' and 'pupil' with 'filter/pupil'
+        if 'filter' in data_dict['file_data'][rootname].keys() & 'pupil' in data_dict['file_data'][rootname].keys():
+            filt_pup = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['pupil']
+            data_dict['file_data'][rootname]['filter/pupil'] = filt_pup
+            del data_dict['file_data'][rootname]['filter']
+            del data_dict['file_data'][rootname]['pupil']
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
