@@ -47,9 +47,9 @@ class RootFileInfoAdmin(admin.ModelAdmin):
 
 @admin.register(Anomalies)
 class AnomaliesAdmin(admin.ModelAdmin):
-    list_display = ('root_file_info', 'cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error',
+    list_display = ('root_file_info', 'flag_date', 'user', 'cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error',
                     'ghost', 'snowball', 'column_pull_up', 'column_pull_down', 'dominant_msa_leakage', 'dragons_breath', 'mrs_glow', 'mrs_zipper', 'internal_reflection', 'optical_short', 'row_pull_up',
                     'row_pull_down', 'lrs_contamination', 'tree_rings', 'scattered_light', 'claws', 'wisps', 'tilt_event', 'light_saber', 'other')
-    list_filter = ('cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error',
+    list_filter = ('flag_date', 'user', 'cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error',
                    'ghost', 'snowball', 'column_pull_up', 'column_pull_down', 'dominant_msa_leakage', 'dragons_breath', 'mrs_glow', 'mrs_zipper', 'internal_reflection', 'optical_short', 'row_pull_up',
                    'row_pull_down', 'lrs_contamination', 'tree_rings', 'scattered_light', 'claws', 'wisps', 'tilt_event', 'light_saber', 'other', 'root_file_info')
