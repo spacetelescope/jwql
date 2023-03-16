@@ -46,6 +46,7 @@ from bokeh.layouts import gridplot
 from bokeh.palettes import Category20_20 as palette
 from bokeh.plotting import figure, output_file, save
 import numpy as np
+from sqlalchemy.exc import DataError
 
 from jwql.database.database_interface import engine
 from jwql.database.database_interface import session
@@ -218,9 +219,11 @@ def get_area_stats(central_storage_dict):
     """
     logging.info('Gathering stats for central storage area')
 
-    arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+    #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+    arealist = ['outputs']
     counteddirs = []
 
+    skipped_files = []
     sums = 0  # to be used to count 'all'
     for area in arealist:
 
@@ -263,6 +266,8 @@ def get_area_stats(central_storage_dict):
                             if exists:
                                 filesize = os.path.getsize(file_path)
                                 sums += filesize
+                            else:
+                                skipped_files.append(filename)
             use = sums / (1024 ** 4)
         else:
             for dirpath, _, files in os.walk(fullpath):
@@ -274,10 +279,12 @@ def get_area_stats(central_storage_dict):
                         filesize = os.path.getsize(file_path)
                         used += filesize
                         sums += filesize
+                    else:
+                        skipped_files.append(filename)
             use = used / (1024 ** 4)
         central_storage_dict[area]['used'] = use
 
-    return central_storage_dict
+    return central_storage_dict, skipped_files
 
 
 def get_observation_characteristics():
@@ -690,8 +697,14 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
             new_record['filetype'] = filetype
             new_record['count'] = instrument_results_dict[instrument][filetype]['count']
             new_record['size'] = instrument_results_dict[instrument][filetype]['size']
-            engine.execute(FilesystemInstrument.__table__.insert(), new_record)
-            session.commit()
+
+            # Protect against updated enum options that have not been propagated to
+            # the table definition
+            try:
+                engine.execute(FilesystemInstrument.__table__.insert(), new_record)
+                session.commit()
+            except DataError as e:
+                logging.error(e)
 
     # Add data to central_storage table
     arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']

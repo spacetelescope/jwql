@@ -152,6 +152,56 @@ class GeneralDashboard:
         now = dt.now()
         self.date = pd.Timestamp('{}-{}-{}'.format(now.year, now.month, now.day))
 
+    def dashboard_central_store_data_volume(self):
+        """Create trending plot of data volume for various areas on central store
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each central store area
+        """
+        # Plot total data volume and available disk space versus time
+        results = session.query(CentralStore.date, CentralStore.size, CentralStore.available).all()
+
+        # Initialize plot
+        dates, total_sizes, availables = zip(*results)
+        plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                      x_axis_type='datetime',
+                      title='Central Store stats',
+                      x_axis_label='Date',
+                      y_axis_label='Size TB')
+
+        plot.line(dates, total_sizes, legend='Total size', line_color='red')
+        plot.circle(dates, total_sizes, color='red')
+        plot.line(dates, availables, legend='Free', line_color='blue')
+        plot.circle(dates, availables, color='blue')
+
+        # This part of the plot should cycle through areas and plot area used values vs. date
+        arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+        colors = itertools.cycle(palette)
+        for area, color in zip(arealist, colors):
+
+            # Query for used sizes
+            results = session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area)
+
+            # Group by date
+            if results:
+                results_dict = defaultdict(int)
+                for date, value in results:
+                    results_dict[date] += value
+
+                # Parse results so they can be easily plotted
+                dates = list(results_dict.keys())
+                values = list(results_dict.values())
+
+                # Plot the results
+                plot.line(dates, values, legend='{} files'.format(area), line_color=color)
+                plot.circle(dates, values, color=color)
+
+        session.close()
+        return plot
+
+
     def dashboard_filetype_bar_chart(self):
         """Build bar chart of files based off of type
 
