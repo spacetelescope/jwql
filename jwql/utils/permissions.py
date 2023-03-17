@@ -88,6 +88,45 @@ DEFAULT_MODES = {DEFAULT_OWNER: DEFAULT_MODE,
                  'other': LOCAL_MODE}
 
 
+def find_mode_to_use(pathname, owner, mode):
+    """Select the appropriate mode to use for the input pathname,
+    depending on who the owner is, as well as whether the pathname
+    is a file or directory.
+
+    Parameters
+    ----------
+    pathname : str
+        Directory or file to be inspected
+    owner : str
+        String representation of the owner
+    mode : dict
+        Dictionary of integer representation of the permission mode, compatible with
+        ``os.stat`` output. Keys are <owner name> (with a default of DEFAULT_OWNER),
+        and 'other', so we can differentiate between files created by the server
+        accounts and those created by local users
+
+    Returns
+    -------
+    mode_value : int
+        Integer representation of the permission mode, compatible
+        with ``os.stat`` output
+    """
+    if owner in get_owner_string(pathname):
+        if DEFAULT_OWNER in owner:
+            mode_value = mode[owner]
+        else:
+            mode_value = mode['other']
+    else:
+        mode_value = mode['other']
+
+    # Default permissions are for a file. If pathname is a directory, then
+    # make it owner and group executable as well
+    if os.path.isdir(pathname):
+        mode_value = mode_value | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+
+    return mode_value
+
+
 def get_group_string(pathname):
     """Return the group of ``pathname`` in string representation.
 
@@ -126,7 +165,7 @@ def get_owner_string(pathname):
     return owner_name
 
 
-def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP):
+def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEFAULT_GROUP):
     """Return boolean indicating whether ``pathname`` has the specified
     owner, permission, and group scheme.
 
@@ -150,15 +189,17 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     file_statinfo = os.stat(pathname)
     groupinfo = grp.getgrgid(file_statinfo.st_gid)
 
+    mode_to_use = find_mode_to_use(pathname, owner, mode)
+
     # complement mode depending on whether input is file or directory
     if os.path.isfile(pathname):
-        mode = mode | stat.S_IFREG
+        mode_to_use = mode_to_use | stat.S_IFREG
     elif os.path.isdir(pathname):
-        mode = mode | stat.S_IFDIR
+        mode_to_use = mode_to_use | stat.S_IFDIR
 
     # This will be False in all cases when running on the servers, since the DEFAULT_OWNER
     # does not match the full owner names
-    if (get_owner_string(pathname) != owner) or (file_statinfo.st_mode != mode)\
+    if (get_owner_string(pathname) != owner) or (file_statinfo.st_mode != mode_to_use)\
             or (groupinfo.gr_name != group):
         return False
 
@@ -188,15 +229,7 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEF
     # When using the defaults, if the file is owned by one of the server
     # accounts, then set the permissions using the DEFAULT_OWNER's default
     # permissions. Otherwise fall back to the 'other' default permissions.
-    if owner in get_owner_string(pathname):
-        mode_to_use = mode[owner]
-    else:
-        mode_to_use = mode['other']
-
-    # Default permissions are for a file. If pathname is a directory, then
-    # make it owner and group executable as well
-    if os.path.isdir(pathname):
-        mode_to_use = mode_to_use | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+    mode_to_use = find_mode_to_use(pathname, owner, mode)
 
     if verbose:
         print('\nBefore:')
