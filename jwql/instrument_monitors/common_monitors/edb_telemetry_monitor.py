@@ -1410,7 +1410,7 @@ class EdbMnemonicMonitor():
                         multiday_every_change_data.extend(mnemonic_info.every_change_values)
                 else:
                     multiday_median_times.extend(mnemonic_info.data["dates"].data)
-                    multiday_mean_vals.extend(mnemonic_info.mean))
+                    multiday_mean_vals.extend(mnemonic_info.mean)
                     multiday_stdev_vals.extend(mnemonic_info.stdev)
                     multiday_median_vals.extend(mnemonic_info.data["euvalues"].data)
                     multiday_max_vals.extend(mnemonic_info.max)
