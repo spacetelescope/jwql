@@ -82,7 +82,10 @@ DEFAULT_OWNER = 'jwqladm'
 DEFAULT_GROUP = 'jwql_dev'
 
 # set the default mode for DEFAULT_OWNER
-DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  # equivalent to '?rwxr-x---'
+DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  | stat.S_IROTH  # equivalent to '?rwxr-xr--'
+LOCAL_MODE = stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH  # equivalent to '?rwxrwxr--'
+DEFAULT_MODES = {DEFAULT_OWNER: DEFAULT_MODE,
+                 'other': LOCAL_MODE}
 
 
 def get_group_string(pathname):
@@ -153,6 +156,8 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     elif os.path.isdir(pathname):
         mode = mode | stat.S_IFDIR
 
+    # This will be False in all cases when running on the servers, since the DEFAULT_OWNER
+    # does not match the full owner names
     if (get_owner_string(pathname) != owner) or (file_statinfo.st_mode != mode)\
             or (groupinfo.gr_name != group):
         return False
@@ -160,7 +165,7 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     return True
 
 
-def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP, verbose=False):
+def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEFAULT_GROUP, verbose=False):
     """Set mode and group of the file/directory identfied by
     ``pathname``, if and only if it is owned by ``owner``.
 
@@ -170,23 +175,34 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
         Directory or file to be inspected
     owner : str
         String representation of the owner
-    mode : int
-        Integer representation of the permission mode, compatible with
-        ``os.stat`` output
+    mode : dict
+        Dictionary of integer representation of the permission mode, compatible with
+        ``os.stat`` output. Keys are <owner name> (with a default of DEFAULT_OWNER),
+        and 'other', so we can differentiate between files created by the server
+        accounts and those created by local users
     group : str
         String representation of the group
     verbose : bool
         Boolean indicating whether verbose output is requested
     """
+    # When using the defaults, if the file is owned by one of the server
+    # accounts, then set the permissions using the
+    if owner in get_owner_string(pathname):
+        mode_to_use = mode[owner]
+    else:
+        mode_to_use = mode['other']
+
     if verbose:
         print('\nBefore:')
         show_permissions(pathname)
 
     if not has_permissions(pathname):
-        if get_owner_string(pathname) == owner:
-            os.chmod(pathname, mode)
+        try:
+            os.chmod(pathname, mode_to_use)
             # change group but not owner
             os.chown(pathname, -1, grp.getgrnam(group).gr_gid)
+        except PermissionError:
+            pass
 
     if verbose:
         print('After:')
