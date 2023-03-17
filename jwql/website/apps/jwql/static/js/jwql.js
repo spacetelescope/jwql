@@ -514,8 +514,12 @@ function hide_file(detector) {
     img.style.display = "none";
     div.style.display = "none";
 
-    // Disable the associated filename
-    filename.disabled = true;
+    // Disable the associated filename unless there
+    // are no previews available at all
+    var fallback_shown = document.getElementById(detector + "_view_fallback");
+    if (fallback_shown.style.display == "none") {
+        filename.disabled = true;
+    }
 
     // Update the view/explore link as needed
     update_view_explore_link();
