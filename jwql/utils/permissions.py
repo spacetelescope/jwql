@@ -196,7 +196,7 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEF
     # Default permissions are for a file. If pathname is a directory, then
     # make it owner and group executable as well
     if os.path.isdir(pathname):
-        mode_to_use = mode_to_use | stat.S_IXUSR | stat.S_IXGRP
+        mode_to_use = mode_to_use | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
     if verbose:
         print('\nBefore:')
