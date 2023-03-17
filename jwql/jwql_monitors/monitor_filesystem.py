@@ -68,7 +68,9 @@ PROPRIETARY_FILESYSTEM = os.path.join(FILESYSTEM, 'proprietary')
 PUBLIC_FILESYSTEM = os.path.join(FILESYSTEM, 'public')
 CENTRAL = SETTINGS['jwql_dir']
 OUTPUTS = SETTINGS['outputs']
-
+PREVIEW_IMAGES = SETTINGS['preview_image_filesystem']
+THUMBNAILS = SETTINGS['thumbnail_filesystem']
+LOGS = SETTINGS['log_dir']
 
 def files_per_filter():
     """Querying MAST (rather than looping through the filesystem), determine how
@@ -219,23 +221,24 @@ def get_area_stats(central_storage_dict):
     """
     logging.info('Gathering stats for central storage area')
 
+    areas = {'outputs': OUTPUTS,
+             'logs': LOGS,
+             'preview_images': PREVIEW_IMAGES,
+             'thumbnails': THUMBNAILS,
+             'all': CENTRAL}
+
     #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
-    arealist = ['outputs']
     counteddirs = []
 
-    skipped_files = []
     sums = 0  # to be used to count 'all'
-    for area in arealist:
+    for area in areas:
 
         used = 0
         # initialize area in dictionary
         if area not in central_storage_dict:
             central_storage_dict[area] = {}
 
-        if area == 'all':
-            fullpath = CENTRAL
-        else:
-            fullpath = os.path.join(CENTRAL, area)
+        fullpath = areas[area]
 
         logging.info('\tSearching directory {}'.format(fullpath))
         counteddirs.append(fullpath)

@@ -32,6 +32,7 @@ Dependencies
 from datetime import datetime as dt
 from math import pi
 from operator import itemgetter
+import os
 
 from bokeh.layouts import column
 from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
@@ -43,6 +44,7 @@ import pandas as pd
 from sqlalchemy import func, and_
 
 import jwql.database.database_interface as di
+from jwql.database.database_interface import CentralStore
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
@@ -152,54 +154,192 @@ class GeneralDashboard:
         now = dt.now()
         self.date = pd.Timestamp('{}-{}-{}'.format(now.year, now.month, now.day))
 
+    def dashboard_disk_usage(self):
+        """Create trending plot of data volume for various disks. Here we are plotting
+        the results of a "df -hk" call for top-level directories. The results (i.e. on
+        central store) may contain contributions from non-JWQL files, since JWQL can
+        share disks with other projects. These plots are useful for tracking disk usage
+        and requesting more disk space if needed.
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            Set of tabs containing plots of the used and available disk space
+        """
+        # There are two main disks that we want to show usage for. The central store
+        # area, and the disk that is internal to the server. Use the logs entry to
+        # get the central store information, and the preview_image entry to get
+        # server disk information.
+        config = get_config()
+
+        log_data = di.session.query(CentralStore.date, CentralStore.size, CentralStore.available) \
+            .filter(CentralStore.area == 'logs') \
+            .all()
+
+        # Convert to dataframe
+        log_data = pd.DataFrame(log_data)
+
+        preview_data = di.session.query(CentralStore.date, CentralStore.size, CentralStore.available) \
+            .filter(CentralStore.area == 'preview_images') \
+            .all()
+
+        # Convert to dataframe
+        preview_data = pd.DataFrame(preview_data)
+
+        # If the user is requesting a certain time range, cut down the entries
+        if not pd.isnull(self.delta_t):
+            log_data = log_data[(log_data['date'] >= self.date - self.delta_t) & (log_data['date'] <= self.date)]
+            preview_data = preview_data[(preview_data['date'] >= self.date - self.delta_t) & (preview_data['date'] <= self.date)]
+
+        log_results = {'dirname': os.path.abspath(os.path.join(config['log_dir'], '../')),
+                       'results': log_data,
+                       'shortname': 'Central Store'
+                       }
+
+        preview_results = {'dirname': os.path.abspath(os.path.join(config['preview_image_filesystem'], '../')),
+                           'results': preview_data,
+                           'shortname': 'Server'
+                           }
+
+        # Plot total data volume and available disk space versus time
+        plots = {}
+        tabs = []
+        for data in [preview_results, log_results]:
+
+            # Calculate the size of the data
+            data['results']['used'] = data['results']['size'] - data['results']['available']
+            source = ColumnDataSource(data['results'])
+
+            # Initialize plot
+            plots[data['shortname']] = figure(tools='pan,hover,box_zoom,wheel_zoom,reset,save',
+                                              x_axis_type='datetime',
+                                              title=f"Available & Used Storage on {data['shortname']}",
+                                              x_axis_label='Date',
+                                              y_axis_label='Size TB')
+
+            plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_color='red',line_width=3)
+            plots[data['shortname']].circle(x='date', y='available', source=source,color='red', size=10)
+            plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_color='blue', line_width=3)
+            plots[data['shortname']].circle(x='date', y='used', source=source,color='blue', size=10)
+
+            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                       days=["%d %B %Y"],
+                                                       months=["%d %B %Y"],
+                                                       years=["%d %B %Y"],
+                                                       )
+            plots[data['shortname']].xaxis.major_label_orientation = pi / 4
+            plots[data['shortname']].legend.location = 'top_left'
+
+            hover_tool = HoverTool(tooltips=[('Available:', '@available'),
+                                             ('Used:', '@used'),
+                                             ('Date:', '@time{%d %b %Y}')
+                                             ])
+            hover_tool.formatters = {'@time': 'datetime'}
+            plots[data['shortname']].tools.append(hover_tool)
+            tabs.append(Panel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
+
+        tabs = Tabs(tabs=tabs)
+
+        session.close()
+        return tabs
+
+
     def dashboard_central_store_data_volume(self):
-        """Create trending plot of data volume for various areas on central store
+        """Create trending plot of data volume for various JWQL-related areas on disk.
+        These plots show data volumes calculated by walking over subdirectories/files in
+        the JWQL-specific directories. So these plots may not include the total used
+        disk volume, in the cases where JWQL is sharing a disk with other projects. These
+        plots are useful for monitoring the total volume of e.g. our preview images.
 
         Returns
         -------
         tabs : bokeh.models.widgets.widget.Widget
             A figure with tabs for each central store area
         """
-        # Plot total data volume and available disk space versus time
-        results = session.query(CentralStore.date, CentralStore.size, CentralStore.available).all()
-
         # Initialize plot
-        dates, total_sizes, availables = zip(*results)
         plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
                       x_axis_type='datetime',
-                      title='Central Store stats',
+                      title='JWQL directory size',
                       x_axis_label='Date',
                       y_axis_label='Size TB')
 
-        plot.line(dates, total_sizes, legend='Total size', line_color='red')
-        plot.circle(dates, total_sizes, color='red')
-        plot.line(dates, availables, legend='Free', line_color='blue')
-        plot.circle(dates, availables, color='blue')
-
         # This part of the plot should cycle through areas and plot area used values vs. date
-        arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
-        colors = itertools.cycle(palette)
+        #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+        arealist = ['logs', 'outputs', 'preview_images', 'thumbnails']
+        colors = ['black', 'blue', 'red', 'green']
         for area, color in zip(arealist, colors):
 
             # Query for used sizes
-            results = session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area)
+            results = di.session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area).all()
 
-            # Group by date
             if results:
-                results_dict = defaultdict(int)
-                for date, value in results:
-                    results_dict[date] += value
+                # Convert to dataframe
+                results = pd.DataFrame(results)
 
-                # Parse results so they can be easily plotted
-                dates = list(results_dict.keys())
-                values = list(results_dict.values())
+                if not pd.isnull(self.delta_t):
+                    results = results[(results['date'] >= self.date - self.delta_t) & (results['date'] <= self.date)]
 
                 # Plot the results
-                plot.line(dates, values, legend='{} files'.format(area), line_color=color)
-                plot.circle(dates, values, color=color)
+                source = ColumnDataSource(results)
+                plot.line(x='date', y='used', source=source, line_color=color, legend_label=area, line_width=3)
+                plot.circle(x='date', y='used', source=source, color=color, size=10)
 
-        session.close()
-        return plot
+                hover_tool = HoverTool(tooltips=[('Used:', '@used'),
+                                                 ('Date:', '@time{%d %b %Y}')
+                                                 ])
+                hover_tool.formatters = {'@time': 'datetime'}
+                plot.tools.append(hover_tool)
+
+        plot.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                     days=["%d %B %Y"],
+                                                     months=["%d %B %Y"],
+                                                     years=["%d %B %Y"],
+                                                     )
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.legend.location = 'top_left'
+
+        # Put the "all" plot in a separate figure because it will be larger than all the pieces, which would
+        # throw off the y range if it were in a single plot
+        cen_store_plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                                x_axis_type='datetime',
+                                title='JWQL central store directory, total data volume',
+                                x_axis_label='Date',
+                                y_axis_label='Size TB')
+
+        cen_store_results = di.session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == 'all').all()
+
+        # Group by date
+        if cen_store_results:
+
+            # Convert to dataframe
+            cen_store_results = pd.DataFrame(cen_store_results)
+
+            if not pd.isnull(self.delta_t):
+                cen_store_results = cen_store_results[(cen_store_results['date'] >= self.date - self.delta_t) & (cen_store_results['date'] <= self.date)]
+
+            # Group by date
+            cen_store_source = ColumnDataSource(cen_store_results)
+
+            # Plot the results
+            legend_str = 'File volume'
+            cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_color='blue', line_width=3)
+            cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='blue', size=10)
+            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                                   days=["%d %B %Y"],
+                                                                   months=["%d %B %Y"],
+                                                                   years=["%d %B %Y"],
+                                                                   )
+            cen_store_plot.xaxis.major_label_orientation = pi / 4
+            cen_store_plot.legend.location = 'top_left'
+
+            hover_tool = HoverTool(tooltips=[('Used:', '@used'),
+                                             ('Date:', '@time{%d %b %Y}')
+                                             ])
+            hover_tool.formatters = {'@time': 'datetime'}
+            cen_store_plot.tools.append(hover_tool)
+
+        di.session.close()
+        return plot, cen_store_plot
 
 
     def dashboard_filetype_bar_chart(self):
@@ -217,9 +357,10 @@ class GeneralDashboard:
 
         # Keep only the rows containing the most recent timestamp
         data = data[data['date'] == data['date'].max()]
+        date_string = data['date'].max().strftime("%d %b %Y")
 
         # Set title and figures list to make panels
-        title = 'Files per Filetype by Instrument'
+        title = f'Files per Filetype by Instrument {date_string}'
         figures = []
 
         # For unique instrument values, loop through data
@@ -242,12 +383,12 @@ class GeneralDashboard:
         plot : bokeh.plotting.figure
             Pie chart figure
         """
-
         # Replace with jwql.website.apps.jwql.data_containers.build_table
         data = build_table('filesystem_instrument')
 
         # Keep only the rows containing the most recent timestamp
         data = data[data['date'] == data['date'].max()]
+        date_string = data['date'].max().strftime("%d %b %Y")
 
         try:
             file_counts = {'nircam': data[data.instrument == 'nircam']['count'].sum(),
@@ -265,12 +406,12 @@ class GeneralDashboard:
         data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index': 'instrument'})
         data['angle'] = data['value'] / data['value'].sum() * 2 * pi
         data['color'] = ['#F8B195', '#F67280', '#C06C84', '#6C5B7B', '#355C7D']
-        plot = figure(title="Number of Files Per Instrument", toolbar_location=None,
+        plot = figure(title=f"Number of Files Per Instrument {date_string}", toolbar_location=None,
                       tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
 
         plot.wedge(x=0, y=1, radius=0.4,
                    start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-                   line_color="white", color='color', legend='instrument', source=data)
+                   line_color="white", color='color', legend_label='instrument', source=data)
 
         url = "{}/@instrument".format(get_base_url())
         taptool = plot.select(type=TapTool)
@@ -308,8 +449,8 @@ class GeneralDashboard:
         # Show date and used and available storage together
 
         p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
-        p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend='Available Storage')
-        p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
+        p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend_label='Available Storage')
+        p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
         p2.scatter(x='date', y='used', source=source, color='#C85108', size=10)
         disable_scientific_notation(p2)
