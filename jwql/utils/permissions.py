@@ -186,7 +186,8 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEF
         Boolean indicating whether verbose output is requested
     """
     # When using the defaults, if the file is owned by one of the server
-    # accounts, then set the permissions using the
+    # accounts, then set the permissions using the DEFAULT_OWNER's default
+    # permissions. Otherwise fall back to the 'other' default permissions.
     if owner in get_owner_string(pathname):
         mode_to_use = mode[owner]
     else:
