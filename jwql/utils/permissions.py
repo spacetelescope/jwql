@@ -82,8 +82,8 @@ DEFAULT_OWNER = 'jwqladm'
 DEFAULT_GROUP = 'jwql_dev'
 
 # set the default mode for DEFAULT_OWNER
-DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  | stat.S_IROTH  # equivalent to '?rwxr-xr--'
-LOCAL_MODE = stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH  # equivalent to '?rwxrwxr--'
+DEFAULT_MODE = stat.S_IREAD | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH  # equivalent to '?rw-r--r--'
+LOCAL_MODE = stat.S_IREAD | stat.S_IWUSR | stat.S_IRGRP |  stat.S_IWGRP | stat.S_IROTH  # equivalent to '?rw-rw-r--'
 DEFAULT_MODES = {DEFAULT_OWNER: DEFAULT_MODE,
                  'other': LOCAL_MODE}
 
@@ -192,6 +192,11 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEF
         mode_to_use = mode[owner]
     else:
         mode_to_use = mode['other']
+
+    # Default permissions are for a file. If pathname is a directory, then
+    # make it owner and group executable as well
+    if os.path.isdir(pathname):
+        mode_to_use = mode_to_use | stat.S_IXUSR | stat.S_IXGRP
 
     if verbose:
         print('\nBefore:')
