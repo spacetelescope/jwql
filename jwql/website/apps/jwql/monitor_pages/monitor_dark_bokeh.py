@@ -241,7 +241,7 @@ class DarkImagePlot():
                 ydim, xdim = view.shape
                 dim = max(xdim, ydim)
                 self.plot = figure(x_range=(0, xdim), y_range=(0, ydim), tools='pan,box_zoom,reset,wheel_zoom,save')
-                self.plot.image_rgba(image=[img], x=0, y=0, dw=xdim, dh=ydim)
+                self.plot.image_rgba(image=[view], x=0, y=0, dw=xdim, dh=ydim)
                 self.plot.xaxis.visible = False
                 self.plot.yaxis.visible = False
 
