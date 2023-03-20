@@ -269,8 +269,6 @@ def get_area_stats(central_storage_dict):
                             if exists:
                                 filesize = os.path.getsize(file_path)
                                 sums += filesize
-                            else:
-                                skipped_files.append(filename)
             use = sums / (1024 ** 4)
         else:
             for dirpath, _, files in os.walk(fullpath):
@@ -282,12 +280,10 @@ def get_area_stats(central_storage_dict):
                         filesize = os.path.getsize(file_path)
                         used += filesize
                         sums += filesize
-                    else:
-                        skipped_files.append(filename)
             use = used / (1024 ** 4)
         central_storage_dict[area]['used'] = use
 
-    return central_storage_dict, skipped_files
+    return central_storage_dict
 
 
 def get_observation_characteristics():
