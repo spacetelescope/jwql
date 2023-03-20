@@ -52,8 +52,8 @@ from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS
@@ -73,7 +73,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 
 # Determine if the code is being run as part of a Readthedocs build
 ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
@@ -378,34 +378,116 @@ def get_all_proposals():
     return proposals
 
 
-def get_current_flagged_anomalies(rootname, instrument):
+def get_available_suffixes(all_suffixes, return_untracked=True):
+    """
+    Put available suffixes in a consistent order.
+
+    Any suffixes not recognized are returned at the end of the suffix
+    list, in random order.
+
+    Parameters
+    ----------
+    all_suffixes : list of str
+        List of all data product suffixes found for a given file root.
+    return_untracked : bool, optional
+        If set, a set of untracked suffixes is also returned, for
+        logging or diagnostic purposes.
+
+    Returns
+    -------
+    suffixes : list of str
+        All available unique suffixes in standard order.
+    untracked_suffixes : set of str, optional
+        Any suffixes that were not recognized.
+    """
+    #  Check if any of the
+    # suffixes are not in the list that specifies order.
+    suffixes = []
+    untracked_suffixes = set(all_suffixes)
+    for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
+        if 'crf' not in poss_suffix:
+            if (poss_suffix in all_suffixes
+                    and poss_suffix not in suffixes):
+                suffixes.append(poss_suffix)
+                untracked_suffixes.remove(poss_suffix)
+        else:
+            # EXPOSURE_PAGE_SUFFIX_ORDER contains crf and crfints,
+            # but the actual suffixes in the data will be e.g. o001_crf,
+            # and there may be more than one crf file in the list of suffixes.
+            # So in this case, we strip the e.g. o001 from the
+            # suffixes and check which list elements match.
+            for image_suffix in all_suffixes:
+                if (image_suffix.endswith(poss_suffix)
+                        and image_suffix not in suffixes):
+                    suffixes.append(image_suffix)
+                    untracked_suffixes.remove(image_suffix)
+
+    # If the data contain any suffixes that are not in the list
+    # that specifies the order to use, add them to the end of the
+    # suffixes list. Their order will be random since they are not in
+    # EXPOSURE_PAGE_SUFFIX_ORDER.
+    if len(untracked_suffixes) > 0:
+        suffixes.extend(untracked_suffixes)
+
+    if return_untracked:
+        return suffixes, untracked_suffixes
+    else:
+        return suffixes
+
+
+def get_current_flagged_anomalies(rootname, instrument, n_match=1):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
+
+    This function may be used to retrieve the current anomalies
+    for single files or sets of files in an exposure group. Group
+    anomalies are determined by comparing current anomaly settings
+    within the group to the ``n_match`` parameter.
+
+    For single files, ``n_match`` should be set to 1: any anomaly present for
+    the file is a current anomaly.  For groups of files, ``n_match`` should be
+    set to the total number of files in the group.  In this case, an
+    anomaly is returned as a current anomaly for the group only if it
+    is marked for every file in the group, i.e. there are ``n_match``
+    True values for that anomaly.
+
+    Note that the anomaly database may store multiple entries for
+    a rootfile, but only the last entry is considered current. Also
+    note that not every rootfile has an entry in the database: it only
+    appears if an anomaly has been marked for it at some point. The
+    ``n_match`` parameter is required as an argument for groups because
+    there is no way to determine from the anomaly table how many files
+    belong to a group.
 
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g.
-        ``jw86600008001_02101_00001_guider2/``)
+        The rootname of interest.  May be a file rootname
+        (e.g. ``jw86600008001_02101_00001_guider2``) or an exposure
+        group root (e.g. ``jw86600008001_02101_00001``). The rootname
+        is matched as a starts-with filter on the anomaly database.
+    instrument : str
+        The instrument corresponding to the file.
+    n_match : int
+        The number of root files that must match in order to report
+        an anomaly as current.
 
     Returns
     -------
-    current_anomalies : list
+    current_anomalies : list of str
         A list of currently flagged anomalies for the given ``rootname``
         (e.g. ``['snowball', 'crosstalk']``)
     """
+    table = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
+    query = di.session.query(table).filter(table.rootname.startswith(rootname)).order_by(table.flag_date.desc())
 
-    table_dict = {}
-    table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
-
-    table = table_dict[instrument.lower()]
-    query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
-
-    all_records = query.data_frame
+    all_records = query.data_frame.groupby('rootname').first()
+    current_anomalies = []
     if not all_records.empty:
-        current_anomalies = [col for col, val in np.sum(all_records, axis=0).items() if val]
-    else:
-        current_anomalies = []
+        for col, val in all_records.sum(axis=0, numeric_only=True).items():
+            # ignore rootname, flag_date, etc
+            if val == n_match and col in ANOMALIES_PER_INSTRUMENT:
+                current_anomalies.append(col)
 
     return current_anomalies
 
@@ -420,24 +502,40 @@ def get_anomaly_form(request, inst, file_root):
     inst : str
         Name of JWST instrument
     file_root : str
-        FITS filename of selected image in filesystem
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
 
     Returns
     -------
     InstrumentAnomalySubmitForm object
         form object to be sent with context to template
     """
+    # Check for group root name
+    file_root_info = RootFileInfo.objects.filter(root_name__startswith=file_root)
+    file_roots = [rf.root_name for rf in file_root_info]
+
     # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+    current_anomalies = get_current_flagged_anomalies(file_root, inst, n_match=len(file_roots))
 
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
     # If this is a POST request and the form is filled out, process the form data
-    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
-        anomaly_choices = dict(request.POST)['anomaly_choices']
+    if request.method == 'POST':
+        anomaly_choices = dict(request.POST).get('anomaly_choices', [])
         if form.is_valid():
-            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+            for file_root in file_roots:
+                # for a group form submit, add any individual anomalies
+                # not in the original group set
+                if len(file_roots) > 1:
+                    file_current = get_current_flagged_anomalies(file_root, inst)
+                    choices = anomaly_choices.copy()
+                    for choice in file_current:
+                        if choice not in current_anomalies:
+                            choices.append(choice)
+                else:
+                    choices = anomaly_choices
+                form.update_anomaly_table(file_root, 'unknown', choices)
             messages.success(request, "Anomaly submitted successfully")
         else:
             messages.error(request, "Failed to submit anomaly")
@@ -446,15 +544,12 @@ def get_anomaly_form(request, inst, file_root):
 
 
 def get_dashboard_components(request):
-    """Build and return dictionaries containing components and html
-    needed for the dashboard.
+    """Build and return a Dashboard class.
 
     Returns
     -------
-    dashboard_components : dict
-        A dictionary containing components needed for the dashboard.
-    dashboard_html : dict
-        A dictionary containing full HTML needed for the dashboard.
+    dashboard_components : GeneralDashboard
+        The dashboard.
     """
 
     from jwql.website.apps.jwql.bokeh_dashboard import GeneralDashboard
@@ -693,7 +788,9 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, proposal, observation_id=None, restriction='all', query_file=None, query_response=None, other_columns=None):
+def get_filenames_by_instrument(instrument, proposal, observation_id=None,
+                                restriction='all', query_file=None,
+                                query_response=None, other_columns=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -729,7 +826,9 @@ def get_filenames_by_instrument(instrument, proposal, observation_id=None, restr
         e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     if not query_file and not query_response:
-        result = mast_query_filenames_by_instrument(instrument, proposal, observation_id=observation_id, other_columns=other_columns)
+        result = mast_query_filenames_by_instrument(
+            instrument, proposal, observation_id=observation_id,
+            other_columns=other_columns)
 
     elif query_response:
         result = query_response
@@ -1026,7 +1125,7 @@ def get_header_info(filename, filetype):
     return header_info
 
 
-def get_image_info(file_root, rewrite):
+def get_image_info(file_root):
     """Build and return a dictionary containing information for a given
     ``file_root``.
 
@@ -1035,9 +1134,6 @@ def get_image_info(file_root, rewrite):
     file_root : str
         The rootname of the file of interest (e.g.
         ``jw86600008001_02101_00007_guider2``).
-    rewrite : bool
-        ``True`` if the corresponding JPEG needs to be rewritten,
-        ``False`` if not.
 
     Returns
     -------
@@ -1053,15 +1149,22 @@ def get_image_info(file_root, rewrite):
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
     image_info['total_ints'] = {}
+    image_info['detectors'] = set()
 
-    # Find all of the matching files
+    # Find all the matching files
     proposal_dir = file_root[:7]
     observation_dir = file_root[:13]
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+    filenames = glob.glob(
+        os.path.join(FILESYSTEM_DIR, 'public', proposal_dir,
+                     observation_dir, '{}*.fits'.format(file_root)))
+    filenames.extend(glob.glob(
+        os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir,
+                     observation_dir, '{}*.fits'.format(file_root))))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames
+                 if os.path.splitext(filename)[0].split('_')[-1]
+                 not in IGNORED_SUFFIXES]
     image_info['all_files'] = filenames
 
     # Determine the jpg directory
@@ -1070,8 +1173,10 @@ def get_image_info(file_root, rewrite):
 
     for filename in image_info['all_files']:
 
+        parsed_fn = filename_parser(filename)
+
         # Get suffix information
-        suffix = filename_parser(filename)['suffix']
+        suffix = parsed_fn['suffix']
 
         # For crf or crfints suffixes, we need to also include the association value
         # in the suffix, so that preview images can be found later.
@@ -1085,24 +1190,41 @@ def get_image_info(file_root, rewrite):
         jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
-        # Check that a jpg does not already exist. If it does (and rewrite=False),
-        # just call the existing jpg file
-        if os.path.exists(jpg_filepath) and not rewrite:
-            pass
-
         # Record how many integrations have been saved as preview images per filetype
-        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
-        image_info['num_ints'][suffix] = len(jpgs)
-        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
+        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}*_{}_integ*.jpg'.format(file_root, suffix)))
+        image_info['available_ints'][suffix] = sorted(set([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs]))
+        image_info['num_ints'][suffix] = len(image_info['available_ints'][suffix])
         image_info['all_jpegs'].append(jpg_filepath)
 
-        # Record how many integrations exist per filetype. crf needs to be treated
-        # separately because the suffix includes the association number, which can't
-        # be predicted for a given program.
-        if ((suffix not in SUFFIXES_WITH_AVERAGED_INTS) and (suffix[-3:] != 'crf')):
-            image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
+        # Record how many integrations exist per filetype.
+        if suffix not in SUFFIXES_WITH_AVERAGED_INTS:
+            header = fits.getheader(filename)
+            nint = header['NINTS']
+            if 'time_series' in parsed_fn['filename_type']:
+                # time series segments need special handling
+                intstart = header.get('INTSTART', 1)
+                intend = header.get('INTEND', nint)
+                image_info['total_ints'][suffix] = intend - intstart + 1
+            elif image_info['num_ints'][suffix] > nint:
+                # so do data cubes:
+                # get max ints from data shape in first extension
+                sci_header = fits.getheader(filename, ext=1)
+                n_frame = sci_header.get('NAXIS3', nint)
+
+                # for groups with multiple cubes (e.g. miri with ifu
+                # short and long), make sure we keep the highest total
+                if 'suffix' in image_info['total_ints']:
+                    if n_frame > image_info['total_ints'][suffix]:
+                        image_info['total_ints'][suffix] = n_frame
+                else:
+                    image_info['total_ints'][suffix] = n_frame
+            else:
+                image_info['total_ints'][suffix] = nint
         else:
             image_info['total_ints'][suffix] = 1
+
+        # Record the detector used
+        image_info['detectors'].add(parsed_fn.get('detector', 'Unknown'))
 
     return image_info
 
@@ -1277,6 +1399,7 @@ def get_preview_images_by_rootname(rootname):
 
     return preview_images
 
+
 def get_proposals_by_category(instrument):
     """Return a dictionary of program numbers based on category type
     Parameters
@@ -1303,6 +1426,7 @@ def get_proposals_by_category(instrument):
     proposals_by_category = {d['program']:d['category'] for d in unique_results}
 
     return proposals_by_category
+
 
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
@@ -1662,6 +1786,7 @@ def text_scrape(prop_id):
     url = 'http://www.stsci.edu/cgi-bin/get-proposal-info?id=' + str(prop_id) + '&submit=Go&observatory=JWST'
     html = BeautifulSoup(requests.get(url).text, 'lxml')
     not_available = "not available via this interface" in html.text
+    not_available |= "temporarily unable" in html.text
 
     program_meta = {}
     program_meta['prop_id'] = prop_id
@@ -1679,6 +1804,7 @@ def text_scrape(prop_id):
         program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
 
         links = html.findAll('a')
+
         proposal_type = links[0].contents[0]
 
         program_meta['prop_type'] = proposal_type
@@ -1752,7 +1878,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict : dict
         Dictionary of data needed for the ``thumbnails`` template
     """
-
     # generate the list of all obs of the proposal here, so that the list can be
     # properly packaged up and sent to the js scripts. but to do this, we need to call
     # get_rootnames_for_instrument_proposal, which is largely repeating the work done by
@@ -1773,14 +1898,15 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
+
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
     # Initialize dictionary that will contain all needed data
-    data_dict = {}
-    data_dict['inst'] = inst
-    data_dict['file_data'] = {}
-    exp_types = []
+    data_dict = {'inst': inst,
+                 'file_data': dict()}
+    exp_types = set()
+    exp_groups = set()
 
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
@@ -1789,10 +1915,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # Parse filename
         try:
             filename_dict = filename_parser(rootname)
-
-            # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
-            if 'detector' not in filename_dict.keys():
-                filename_dict['detector'] = 'Unknown'
 
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' in filename_dict['filename_type']:
@@ -1807,14 +1929,21 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                              'parallel_seq_id': rootname[16],
                              'program_id': rootname[2:7],
                              'visit': rootname[10:13],
-                             'visit_group': rootname[14:16]}
+                             'visit_group': rootname[14:16],
+                             'group_root': rootname[:26]}
 
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
-        available_files = [item for item in filenames if rootname in item]
-        exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
-        exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
-        exp_types.append(exp_type)
+        available_files = []
+        exp_start = None
+        exp_type = None
+        for i, item in enumerate(filenames):
+            if rootname in item:
+                available_files.append(item)
+                if exp_start is None:
+                    exp_start = columns['expstart'][i]
+                    exp_type = columns['exp_type'][i]
+        exp_types.add(exp_type)
 
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
@@ -1822,15 +1951,17 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             root_file_info = RootFileInfo.objects.get(root_name=rootname)
             viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
         except RootFileInfo.DoesNotExist:
-
             viewed = THUMBNAIL_FILTER_LOOK[0]
+
+        # Add to list of all exposure groups
+        exp_groups.add(filename_dict['group_root'])
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]["viewed"] = viewed
-        data_dict['file_data'][rootname]["exp_type"] = exp_type
+        data_dict['file_data'][rootname]['viewed'] = viewed
+        data_dict['file_data'][rootname]['exp_type'] = exp_type
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
         try:
@@ -1855,12 +1986,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     if proposal is not None:
         dropdown_menus = {'detector': sorted(detectors),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(set(exp_types))}
+                          'exp_type': sorted(exp_types)}
     else:
         dropdown_menus = {'detector': sorted(detectors),
                           'proposal': sorted(proposals),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(set(exp_types))}
+                          'exp_type': sorted(exp_types)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -1872,8 +2003,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     data_dict['file_data'] = sorted_file_data
 
-    # Add list of observation numbers
+    # Add list of observation numbers and group roots
     data_dict['obs_list'] = obs_list
+    data_dict['exp_groups'] = sorted(exp_groups)
 
     return data_dict
 
@@ -1899,10 +2031,11 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-    data_dict = {}
-    data_dict['inst'] = inst
-    data_dict['file_data'] = {}
-    exp_types = []
+    data_dict = {'inst': inst,
+                 'file_data': dict()}
+    exp_types = set()
+    exp_groups = set()
+
     # Get the available files for the instrument
     for observation in observations:
         obs_num = observation.obsnum
@@ -1915,10 +2048,6 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
             # Parse filename
             try:
                 filename_dict = filename_parser(rootname)
-
-                # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
-                if 'detector' not in filename_dict.keys():
-                    filename_dict['detector'] = 'Unknown'
 
                 # Weed out file types that are not supported by generate_preview_images
                 if 'stage_3' in filename_dict['filename_type']:
@@ -1933,23 +2062,33 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
                                  'parallel_seq_id': rootname[16],
                                  'program_id': rootname[2:7],
                                  'visit': rootname[10:13],
-                                 'visit_group': rootname[14:16]}
+                                 'visit_group': rootname[14:16],
+                                 'group_root': rootname[:26]}
 
             # Get list of available filenames and exposure start times. All files with a given
             # rootname will have the same exposure start time, so just keep the first.
-            available_files = [item for item in filenames if rootname in item]
-            exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
+            available_files = []
+            exp_start = None
+            exp_type = None
+            for i, item in enumerate(filenames):
+                if rootname in item:
+                    available_files.append(item)
+                    if exp_start is None:
+                        exp_start = columns['expstart'][i]
+                        exp_type = columns['exp_type'][i]
+
             if exp_start >= inclusive_start_time_mjd and exp_start < exclusive_stop_time_mjd:
-                exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
-                exp_types.append(exp_type)
+                exp_types.add(exp_type)
                 # Viewed is stored by rootname in the Model db.  Save it with the data_dict
                 # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
                 try:
                     root_file_info = RootFileInfo.objects.get(root_name=rootname)
                     viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
                 except RootFileInfo.DoesNotExist:
-
                     viewed = THUMBNAIL_FILTER_LOOK[0]
+
+                # Add to list of all exposure groups
+                exp_groups.add(filename_dict['group_root'])
 
                 # Add data to dictionary
                 data_dict['file_data'][rootname] = {}
@@ -1986,12 +2125,13 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
 
-
     # Order dictionary by descending expstart time.
     sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
                                    key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 
     data_dict['file_data'] = sorted_file_data
+    data_dict['exp_groups'] = sorted(exp_groups)
+
     return data_dict
 
 
@@ -2012,15 +2152,16 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
     # Initialize dictionary that will contain all needed data
-    data_dict = {}
-    # dummy variable for view_image when thumbnail is selected
-    data_dict['inst'] = "all"
-    data_dict['file_data'] = {}
+    data_dict = {'inst': 'all',
+                 'file_data': dict()}
+    exp_groups = set()
+
     # Gather data for each rootname
     for rootname in rootnames:
         # fit expected format for get_filenames_by_rootname()
+        split_name = rootname.split("_")
         try:
-            rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
+            rootname = split_name[0] + '_' + split_name[1] + '_' + split_name[2] + '_' + split_name[3]
         except IndexError:
             continue
 
@@ -2029,6 +2170,9 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
             filename_dict = filename_parser(rootname)
         except ValueError:
             continue
+
+        # Add to list of all exposure groups
+        exp_groups.add(filename_dict['group_root'])
 
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
@@ -2078,5 +2222,6 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
+    data_dict['exp_groups'] = sorted(exp_groups)
 
     return data_dict

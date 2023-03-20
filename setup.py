@@ -36,6 +36,7 @@ REQUIRES = [
     'pysiaf',
     'pytest',
     'pytest-cov',
+    'pytest-mock',
     'pyvo',
     'scipy',
     'sphinx',
