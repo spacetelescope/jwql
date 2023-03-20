@@ -17,7 +17,7 @@
     <main role="main" class="container">
 
         <h3 id='title'>Archived {{ inst }} Images</h3>
-        <p id='img_show_count'></p>
+        <div id='img_show_count'></div>
         <hr>
 
         <!-- Filter and sort options -->
@@ -35,14 +35,14 @@
             <!-- Sort Options -->
             <div class="mx-4 mr-5 ml-auto">
                 Sort by:<br>
-                <span class="dropdown">
+                <div class="dropdown">
                   <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Descending</button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <a class="dropdown-item" href="#" onclick="sort_by_proposals('Ascending');">Ascending</a>
                     <a class="dropdown-item" href="#" onclick="sort_by_proposals('Descending');">Descending</a>
                     <a class="dropdown-item" href="#" onclick="sort_by_proposals('Recent');">Recent</a>
                   </div>
-                </span>
+                </div>
             </div>
             <!-- Download Data -->
             <div class="mr-4 mr-5">
