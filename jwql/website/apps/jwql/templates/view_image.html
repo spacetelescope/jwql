@@ -24,11 +24,11 @@
     	JPG Filename: <a id="jpg_filename"></a><br><br>
 
     	<!-- Allow the user to change the file type that is being displayed -->
-    	View File Type:
+    	<a id="view_file_type" data-current-suffix="">View File Type:</a>
     	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
-	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
+	    <form class="my-2">
 	    	{% for suffix in suffixes %}
 	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
@@ -47,17 +47,15 @@
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
-    		    	<img id="image_viewer"
-                         src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg'
+    		    	<img class="image_preview_viewer" id="image_viewer"
                          onerror="image_error(this, true);"
-                         alt='{{ file_root }}_cal_integ0.jpg'
                          title="Preview image for {{ file_root }}">
     		    </span>
 
                 <div class="int_changer">
-                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
-                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
-                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
+                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_integration("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
+                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_integration("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
+                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_integration("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
                     <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
                 </div>
 
@@ -101,9 +99,11 @@
 
                         <!--Show the field forms-->
                         {% for field in form %}
+                            <ul>
                             {% for subwidget in field.subwidgets %}
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
+                            </ul>
                         {% endfor %}
                         <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
                     </form>

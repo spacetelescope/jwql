@@ -43,7 +43,9 @@ FILENAME_PARSER_TEST_DATA = [
       'program_id': '90002',
       'suffix': 'rateints',
       'visit': '001',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw90002001001_02102_00001_nis',
+      'group_root': 'jw90002001001_02102_00001'}),
 
     # Test full stage 1 and 2 filename
     ('jw00327001001_02101_00002_nrca1_rate.fits',
@@ -57,7 +59,9 @@ FILENAME_PARSER_TEST_DATA = [
       'program_id': '00327',
       'suffix': 'rate',
       'visit': '001',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw00327001001_02101_00002_nrca1',
+      'group_root': 'jw00327001001_02101_00002'}),
 
     # Test root stage 1 and 2 filename
     ('jw00327001001_02101_00002_nrca1',
@@ -70,7 +74,9 @@ FILENAME_PARSER_TEST_DATA = [
       'parallel_seq_id': '1',
       'program_id': '00327',
       'visit': '001',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw00327001001_02101_00002_nrca1',
+      'group_root': 'jw00327001001_02101_00002'}),
 
     # Test stage 2 MSA metadata filename
     ('jw01118008001_01_msa.fits',
@@ -78,7 +84,10 @@ FILENAME_PARSER_TEST_DATA = [
          'instrument': 'nirspec',
          'observation': '008',
          'program_id': '01118',
-         'visit': '001'}),
+         'visit': '001',
+         'detector': 'Unknown',
+         'file_root': 'jw01118008001_01_msa',
+         'group_root': 'jw01118008001_01_msa'}),
 
     # Test full stage 2c filename
     ('jw94015002002_02108_00001_mirimage_o002_crf.fits',
@@ -93,7 +102,9 @@ FILENAME_PARSER_TEST_DATA = [
       'program_id': '94015',
       'suffix': 'crf',
       'visit': '002',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw94015002002_02108_00001_mirimage',
+      'group_root': 'jw94015002002_02108_00001'}),
 
     # Test root stage 2c filename
     ('jw90001001003_02101_00001_nis_o001',
@@ -107,7 +118,9 @@ FILENAME_PARSER_TEST_DATA = [
       'parallel_seq_id': '1',
       'program_id': '90001',
       'visit': '003',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw90001001003_02101_00001_nis',
+      'group_root': 'jw90001001003_02101_00001'}),
 
     # Test full stage 3 filename with target_id
     ('jw80600-o009_t001_miri_f1130w_i2d.fits',
@@ -117,7 +130,10 @@ FILENAME_PARSER_TEST_DATA = [
       'optical_elements': 'f1130w',
       'program_id': '80600',
       'suffix': 'i2d',
-      'target_id': 't001'}),
+      'target_id': 't001',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-o009_t001_miri_f1130w',
+      'group_root': 'jw80600-o009_t001_miri_f1130w'}),
 
     # Test full stage 3 filename with target_id and different ac_id
     ('jw80600-c0001_t001_miri_f1130w_i2d.fits',
@@ -127,7 +143,10 @@ FILENAME_PARSER_TEST_DATA = [
       'optical_elements': 'f1130w',
       'program_id': '80600',
       'suffix': 'i2d',
-      'target_id': 't001'}),
+      'target_id': 't001',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-c0001_t001_miri_f1130w',
+      'group_root': 'jw80600-c0001_t001_miri_f1130w'}),
 
     # Test full stage 3 filename with source_id
     ('jw80600-o009_s00001_miri_f1130w_i2d.fits',
@@ -137,7 +156,10 @@ FILENAME_PARSER_TEST_DATA = [
       'optical_elements': 'f1130w',
       'program_id': '80600',
       'source_id': 's00001',
-      'suffix': 'i2d'}),
+      'suffix': 'i2d',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-o009_s00001_miri_f1130w',
+      'group_root': 'jw80600-o009_s00001_miri_f1130w'}),
 
     # Test stage 3 filename with target_id and epoch
     ('jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits',
@@ -148,7 +170,10 @@ FILENAME_PARSER_TEST_DATA = [
       'optical_elements': 'f1130w',
       'program_id': '80600',
       'suffix': 'i2d',
-      'target_id': 't001'}),
+      'target_id': 't001',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-o009_t001-epoch1_miri_f1130w',
+      'group_root': 'jw80600-o009_t001-epoch1_miri_f1130w'}),
 
     # Test stage 3 filename with source_id and epoch
     ('jw80600-o009_s00001-epoch1_miri_f1130w_i2d.fits',
@@ -159,7 +184,10 @@ FILENAME_PARSER_TEST_DATA = [
       'optical_elements': 'f1130w',
       'program_id': '80600',
       'source_id': 's00001',
-      'suffix': 'i2d'}),
+      'suffix': 'i2d',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-o009_s00001-epoch1_miri_f1130w',
+      'group_root': 'jw80600-o009_s00001-epoch1_miri_f1130w'}),
 
     # Test root stage 3 filename with target_id
     ('jw80600-o009_t001_miri_f1130w',
@@ -168,7 +196,10 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
-      'target_id': 't001'}),
+      'target_id': 't001',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-o009_t001_miri_f1130w',
+      'group_root': 'jw80600-o009_t001_miri_f1130w'}),
 
     # Test root stage 3 filename with source_id
     ('jw80600-o009_s00001_miri_f1130w',
@@ -177,7 +208,10 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
-      'source_id': 's00001'}),
+      'source_id': 's00001',
+      'detector': 'Unknown',
+      'file_root': 'jw80600-o009_s00001_miri_f1130w',
+      'group_root': 'jw80600-o009_s00001_miri_f1130w'}),
 
     # Test full time series filename
     ('jw00733003001_02101_00002-seg001_nrs1_rate.fits',
@@ -192,7 +226,27 @@ FILENAME_PARSER_TEST_DATA = [
       'segment': '001',
       'suffix': 'rate',
       'visit': '001',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw00733003001_02101_00002-seg001_nrs1',
+      'group_root': 'jw00733003001_02101_00002-seg001'}),
+
+    # Test full time series filename for stage 2c
+    ('jw00733003001_02101_00002-seg001_nrs1_o001_crfints.fits',
+     {'ac_id': 'o001',
+      'activity': '01',
+      'detector': 'nrs1',
+      'exposure_id': '00002',
+      'filename_type': 'time_series_2c',
+      'instrument': 'nirspec',
+      'observation': '003',
+      'parallel_seq_id': '1',
+      'program_id': '00733',
+      'segment': '001',
+      'suffix': 'crfints',
+      'visit': '001',
+      'visit_group': '02',
+      'file_root': 'jw00733003001_02101_00002-seg001_nrs1',
+      'group_root': 'jw00733003001_02101_00002-seg001'}),
 
     # Test root time series filename
     ('jw00733003001_02101_00002-seg001_nrs1',
@@ -206,7 +260,9 @@ FILENAME_PARSER_TEST_DATA = [
       'program_id': '00733',
       'segment': '001',
       'visit': '001',
-      'visit_group': '02'}),
+      'visit_group': '02',
+      'file_root': 'jw00733003001_02101_00002-seg001_nrs1',
+      'group_root': 'jw00733003001_02101_00002-seg001'}),
 
     # Test full guider ID filename
     ('jw00729011001_gs-id_1_image_cal.fits',
@@ -218,7 +274,10 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '011',
       'program_id': '00729',
       'suffix': 'image_cal',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw00729011001_gs-id_1',
+      'group_root': 'jw00729011001_gs-id_1'}),
 
     # Test full guider ID filename with 2-digit attempts
     ('jw00729011001_gs-id_12_image_cal.fits',
@@ -230,7 +289,10 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '011',
       'program_id': '00729',
       'suffix': 'image_cal',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw00729011001_gs-id_12',
+      'group_root': 'jw00729011001_gs-id_12'}),
 
     # Test root guider ID filename
     ('jw00327001001_gs-id_2',
@@ -241,7 +303,10 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '001',
       'program_id': '00327',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw00327001001_gs-id_2',
+      'group_root': 'jw00327001001_gs-id_2'}),
 
     # Test root guider ID filename with 2-digit attempts
     ('jw00327001001_gs-id_12',
@@ -252,7 +317,10 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '001',
       'program_id': '00327',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw00327001001_gs-id_12',
+      'group_root': 'jw00327001001_gs-id_12'}),
 
     # Test full guider non-ID filename
     ('jw86600048001_gs-fg_2016018175411_stream.fits',
@@ -264,7 +332,10 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '048',
       'program_id': '86600',
       'suffix': 'stream',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw86600048001_gs-fg_2016018175411',
+      'group_root': 'jw86600048001_gs-fg_2016018175411'}),
 
     # Test root guider non-ID filename
     ('jw00729011001_gs-acq2_2019155024808',
@@ -275,7 +346,10 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '011',
       'program_id': '00729',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw00729011001_gs-acq2_2019155024808',
+      'group_root': 'jw00729011001_gs-acq2_2019155024808'}),
 
     # Test segmented guider file
     ('jw01118005001_gs-fg_2022150070312-seg002_uncal.fits',
@@ -288,7 +362,10 @@ FILENAME_PARSER_TEST_DATA = [
       'program_id': '01118',
       'segment': '002',
       'suffix': 'uncal',
-      'visit': '001'}),
+      'visit': '001',
+      'detector': 'Unknown',
+      'file_root': 'jw01118005001_gs-fg_2022150070312-seg002',
+      'group_root': 'jw01118005001_gs-fg_2022150070312-seg002'}),
 
     # Test msa file
     ('jw02560013001_01_msa.fits',
@@ -296,7 +373,10 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '013',
       'visit': '001',
       'filename_type': 'stage_2_msa',
-      'instrument': 'nirspec'})
+      'instrument': 'nirspec',
+      'detector': 'Unknown',
+      'file_root': 'jw02560013001_01_msa',
+      'group_root': 'jw02560013001_01_msa'})
 ]
 
 

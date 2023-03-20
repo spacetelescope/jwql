@@ -27,17 +27,30 @@ import glob
 import json
 import os
 
+import numpy as np
+import pandas as pd
 import pytest
 
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
+from jwql.tests.resources import (
+    MockSessionFileAnomaly, MockSessionGroupAnomaly,
+    MockGetRequest, MockPostRequest)
+from jwql.utils import constants
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
+def test_build_table():
+    tab = data_containers.build_table('filesystem_general')
+    assert isinstance(tab, pd.DataFrame)
+    assert len(tab['date']) > 0
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 @pytest.mark.parametrize('filter_keys',
                          [{'instrument': 'NIRSpec', 'proposal': '2589',
                            'obsnum': '006', 'look': 'All'},
@@ -64,7 +77,7 @@ def test_filter_root_files(filter_keys):
         assert all(rf_test)
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_filter_root_files_sorting():
     filter_keys = {'instrument': 'NIRSpec', 'proposal': '2589',
                    'obsnum': '006'}
@@ -87,6 +100,23 @@ def test_filter_root_files_sorting():
         assert rf['expstart'] >= rfi[i]['expstart']
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_create_archived_proposals_context(tmp_path, mocker):
+    # write to a temporary directory
+    mocker.patch.object(data_containers, 'OUTPUT_DIR', str(tmp_path))
+    archive_dir = tmp_path / 'archive_page'
+    os.mkdir(archive_dir)
+
+    data_containers.create_archived_proposals_context('nirspec')
+    context_file = str(archive_dir / 'NIRSpec_archive_context.json')
+    assert os.path.isfile(context_file)
+
+    with open(context_file, 'r') as obj:
+        context = json.load(obj)
+    assert context['inst'] == 'NIRSpec'
+    assert context['num_proposals'] > 0
+
+
 def test_get_acknowledgements():
     """Tests the ``get_acknowledgements`` function."""
 
@@ -104,18 +134,197 @@ def test_get_all_proposals():
     assert len(proposals) > 0
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_expstart():
+@pytest.mark.parametrize('untracked,input_suffixes,expected',
+                         [(True, [], ([], set())),
+                          (True, ['rate', 'uncal', 'bad'],
+                           (['uncal', 'rate', 'bad'], {'bad'})),
+                          (False, ['rate', 'uncal', 'bad'],
+                           ['uncal', 'rate', 'bad']),
+                          (True,
+                           ['rate', 'uncal', 'bad',
+                           'o006_crfints', 'o001_crf'],
+                           (['uncal', 'rate', 'o001_crf',
+                             'o006_crfints', 'bad'], {'bad'})),
+                          (False,
+                           ['rate', 'uncal', 'bad',
+                           'o006_crfints', 'o001_crf'],
+                           ['uncal', 'rate', 'o001_crf',
+                            'o006_crfints', 'bad']),
+                          ])
+def test_get_available_suffixes(untracked, input_suffixes, expected):
+    result = data_containers.get_available_suffixes(
+        input_suffixes, return_untracked=untracked)
+    assert result == expected
+
+
+def test_get_current_flagged_anomalies(mocker):
+    # get a sample query group with 2 files
+    rootname = 'jw02589006001_04101_00001-seg001'
+    instrument = 'NIRSpec'
+
+    # mock a single shared anomaly type
+    mocker.patch.object(data_containers.di, 'session', MockSessionGroupAnomaly())
+
+    result = data_containers.get_current_flagged_anomalies(
+        rootname, instrument, n_match=2)
+    assert result == ['persistence']
+
+    # get a sample query for 1 file
+    rootname = 'jw02589006001_04101_00001-seg001_nrs1'
+
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session', MockSessionFileAnomaly())
+
+    result = data_containers.get_current_flagged_anomalies(
+        rootname, instrument, n_match=1)
+    assert result == ['persistence', 'crosstalk']
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
+def test_get_anomaly_form_get(mocker):
+    request = MockGetRequest()
+    inst = 'NIRSpec'
+    file_root = 'jw02589006001_04101_00001-seg001_nrs1'
+
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session',
+                        MockSessionFileAnomaly())
+
+    form = data_containers.get_anomaly_form(request, inst, file_root)
+
+    # form should contain all anomaly options and two should be checked
+    html = str(form)
+    for anomaly in constants.ANOMALY_CHOICES_NIRSPEC:
+        assert anomaly[1] in html
+    assert html.count('checked') == 2
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
+def test_get_anomaly_form_post(mocker):
+    request = MockPostRequest()
+    inst = 'NIRSpec'
+    file_root = 'jw02589006001_04101_00001-seg001_nrs1'
+
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session',
+                        MockSessionFileAnomaly())
+
+    # post a different selection: others are deselected
+    request.POST['anomaly_choices'] = ['optical_short']
+
+    # mock form validity and update functions
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=True)
+    update_mock = mocker.patch.object(
+        data_containers.InstrumentAnomalySubmitForm, 'update_anomaly_table')
+
+    form = data_containers.get_anomaly_form(request, inst, file_root)
+
+    # form should contain all anomaly options and only
+    # the chosen one should be checked
+    html = str(form)
+    for anomaly in constants.ANOMALY_CHOICES_NIRSPEC:
+        assert anomaly[1] in html
+    assert html.count('checked') == 1
+
+    # message should indicate success, update should have been called
+    assert 'Anomaly submitted successfully' in request._messages.messages
+    assert update_mock.call_count == 1
+
+    # mock invalid form
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=False)
+    data_containers.get_anomaly_form(request, inst, file_root)
+
+    # messages indicate failure, update is not called again
+    assert 'Failed to submit anomaly' in request._messages.messages
+    assert update_mock.call_count == 1
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
+def test_get_anomaly_form_post_group(mocker):
+    request = MockPostRequest()
+    inst = 'NIRSpec'
+    file_root = 'jw02589006001_04101_00001-seg001'
+
+    # mock anomalies for the group
+    mocker.patch.object(data_containers.di, 'session',
+                        MockSessionGroupAnomaly())
+
+    # post a different selection: others are deselected,
+    # unless they belong only to the file, not to the group
+    # as a whole
+    request.POST['anomaly_choices'] = ['optical_short']
+
+    # mock form validity and update functions
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=True)
+    update_mock = mocker.patch.object(
+        data_containers.InstrumentAnomalySubmitForm, 'update_anomaly_table')
+
+    form = data_containers.get_anomaly_form(request, inst, file_root)
+
+    # form should contain all anomaly options and only
+    # the chosen one should be checked
+    html = str(form)
+    for anomaly in constants.ANOMALY_CHOICES_NIRSPEC:
+        assert anomaly[1] in html
+    assert html.count('checked') == 1
+
+    # message should indicate success, update should have been
+    # called for both files
+    assert 'Anomaly submitted successfully' in request._messages.messages
+    assert update_mock.call_count == 2
+
+    # mock invalid form
+    mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
+                        'is_valid', return_value=False)
+    data_containers.get_anomaly_form(request, inst, file_root)
+
+    # messages indicate failure, update is not called again
+    assert 'Failed to submit anomaly' in request._messages.messages
+    assert update_mock.call_count == 2
+
+
+def test_get_dashboard_components():
+    request = MockPostRequest()
+
+    # empty POST
+    dash = data_containers.get_dashboard_components(request)
+    assert dash.delta_t is None
+
+    # POST contains time delta
+    request.POST['time_delta_value'] = True
+
+    # all time = None
+    request.POST['timedelta'] = 'All Time'
+    dash = data_containers.get_dashboard_components(request)
+    assert dash.delta_t is None
+
+    # specific value
+    request.POST['timedelta'] = '1 Day'
+    dash = data_containers.get_dashboard_components(request)
+    assert dash.delta_t == pd.DateOffset(days=1)
+
+
+@pytest.mark.parametrize('inst,fileroot,value',
+                         [('NIRCam',
+                           'jw01068001001_02102_00001_nrcb1', 59714),
+                          ('NIRSpec',
+                           'jw02589006001_04101_00001-seg002_nrs2', 59777),
+                          ('NIRSpec', 'bad_filename', 0)])
+def test_get_expstart(inst, fileroot, value):
     """Tests the ``get_expstart`` function."""
+    expstart = data_containers.get_expstart(inst, fileroot)
 
-    expstart = data_containers.get_expstart('NIRCam', 'jw01068001001_02102_00001_nrcb1')
-    assert isinstance(expstart, float)
+    # if mast query failed, it will return 0
+    # otherwise, it should have a known value for this file
+    assert np.isclose(expstart, value, atol=1)
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_instrument():
     """Tests the ``get_filenames_by_instrument`` function."""
-
+    # queries MAST; should not need central storage
     filepaths = data_containers.get_filenames_by_instrument('NIRCam', '1068')
     assert isinstance(filepaths, list)
     assert len(filepaths) > 0
@@ -202,8 +411,7 @@ def test_get_header_info():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
-
-    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1', False)
+    image_info = data_containers.get_image_info('jw01068001001_02102_00001_nrcb1')
 
     assert isinstance(image_info, dict)
 
@@ -212,16 +420,15 @@ def test_get_image_info():
         assert key in image_info
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_instrument_proposals():
     """Tests the ``get_instrument_proposals`` function."""
-
+    # queries MAST, no need for central storage
     proposals = data_containers.get_instrument_proposals('Fgs')
     assert isinstance(proposals, list)
     assert len(proposals) > 0
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 @pytest.mark.parametrize('keys,viewed,sort_as,exp_type,cat_type',
                          [(None, None, None, None, None),
                           (None, 'viewed', None, None, None),
@@ -297,18 +504,18 @@ def test_get_preview_images_by_rootname():
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+
 def test_get_proposals_by_category():
     """Tests the ``get_proposals_by_category`` function."""
-
+    # MAST query, no need for central storage
     proposals_by_category = data_containers.get_proposals_by_category('fgs')
     assert isinstance(proposals_by_category, dict)
     assert len(proposals_by_category) > 0
 
+
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
-
     filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw01068', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
@@ -322,7 +529,6 @@ def test_get_proposal_info():
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_thumbnails_by_proposal():
     """Tests the ``get_thumbnails_by_proposal`` function."""
-
     preview_images = data_containers.get_thumbnails_by_proposal('01033')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
@@ -384,7 +590,6 @@ def test_mast_query_by_rootname():
                     subarray=dict_stuff.get('subarray', ''),
                     pupil=dict_stuff.get('pupil', ''))
     assert isinstance(defaults, dict)
-
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

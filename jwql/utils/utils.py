@@ -339,7 +339,12 @@ def filename_parser(filename):
     """
 
     filename = os.path.basename(filename)
-    file_root_name = (len(filename.split('.')) < 2)
+    split_filename = filename.split('.')
+    file_root_name = (len(split_filename) < 2)
+    if file_root_name:
+        root_name = filename
+    else:
+        root_name = split_filename[0]
 
     # Stage 1 and 2 filenames
     # e.g. "jw80500012009_01101_00012_nrcalong_uncal.fits"
@@ -431,7 +436,22 @@ def filename_parser(filename):
         r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
         r"_(?P<exposure_id>\d+)"\
         r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
-        r"_(?P<detector>\w+)"
+        r"_(?P<detector>((?!_)[\w])+)"
+
+    # Time series filenames for stage 2c
+    # e.g. "jw00733003001_02101_00002-seg001_nrs1_o001_crfints.fits"
+    time_series_2c = \
+        r"jw" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})"\
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})"\
+        r"_(?P<visit_group>\d{" + f"{FILE_VISIT_GRP_LEN}" + "})"\
+        r"(?P<parallel_seq_id>\d{" + f"{FILE_PARALLEL_SEQ_ID_LEN}" + "})"\
+        r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
+        r"_(?P<exposure_id>\d+)"\
+        r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
+        r"_(?P<detector>((?!_)[\w])+)"\
+        r"_(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"
 
     # Guider filenames
     # e.g. "jw00729011001_gs-id_1_image_cal.fits" or
@@ -465,6 +485,7 @@ def filename_parser(filename):
         stage_3_target_id_epoch,
         stage_3_source_id_epoch,
         time_series,
+        time_series_2c,
         guider,
         guider_segment]
 
@@ -477,6 +498,7 @@ def filename_parser(filename):
         'stage_3_target_id_epoch',
         'stage_3_source_id_epoch',
         'time_series',
+        'time_series_2c',
         'guider',
         'guider_segment'
     ]
@@ -516,6 +538,17 @@ def filename_parser(filename):
                 ]
             elif name_match == 'stage_2_msa':
                 filename_dict['instrument'] = 'nirspec'
+
+        # Also add detector, root name, and group root name
+        root_name = re.sub(rf"_{filename_dict.get('suffix', '')}$", '', root_name)
+        root_name = re.sub(rf"_{filename_dict.get('ac_id', '')}$", '', root_name)
+        filename_dict['file_root'] = root_name
+        if 'detector' not in filename_dict.keys():
+            filename_dict['detector'] = 'Unknown'
+            filename_dict['group_root'] = root_name
+        else:
+            group_root = re.sub(rf"_{filename_dict['detector']}$", '', root_name)
+            filename_dict['group_root'] = group_root
 
     # Raise error if unable to parse the filename
     except AttributeError:
