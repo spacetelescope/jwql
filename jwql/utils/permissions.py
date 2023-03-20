@@ -113,7 +113,7 @@ def find_mode_to_use(pathname, owner, mode):
     """
     if owner in get_owner_string(pathname):
         if DEFAULT_OWNER in owner:
-            mode_value = mode[owner]
+            mode_value = mode[DEFAULT_OWNER]
         else:
             mode_value = mode['other']
     else:
