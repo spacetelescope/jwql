@@ -484,7 +484,7 @@ def dashboard(request):
     grating_plot = db.dashboard_exposure_count_by_filter()
     anomaly_plot = db.dashboard_anomaly_per_instrument()
 
-    plot = layout([[files_graph, usage_graph],
+    plot = layout([[files_graph, useage_graph],
                    [directories_usage_graph, central_store_usage_graph],
                    [pie_graph, filetype_bar],
                    [grating_plot, anomaly_plot]], sizing_mode='stretch_width')

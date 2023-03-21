@@ -35,7 +35,7 @@ from operator import itemgetter
 import os
 
 from bokeh.layouts import column
-from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
+from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, HoverTool, OpenURL, TapTool
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
@@ -212,6 +212,7 @@ class GeneralDashboard:
 
             # Initialize plot
             plots[data['shortname']] = figure(tools='pan,hover,box_zoom,wheel_zoom,reset,save',
+                                              plot_width=800,
                                               x_axis_type='datetime',
                                               title=f"Available & Used Storage on {data['shortname']}",
                                               x_axis_label='Date',
@@ -240,7 +241,7 @@ class GeneralDashboard:
 
         tabs = Tabs(tabs=tabs)
 
-        session.close()
+        di.session.close()
         return tabs
 
 
@@ -258,6 +259,7 @@ class GeneralDashboard:
         """
         # Initialize plot
         plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                      plot_width=800,
                       x_axis_type='datetime',
                       title='JWQL directory size',
                       x_axis_label='Date',
@@ -301,6 +303,7 @@ class GeneralDashboard:
         # Put the "all" plot in a separate figure because it will be larger than all the pieces, which would
         # throw off the y range if it were in a single plot
         cen_store_plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                                plot_width=800,
                                 x_axis_type='datetime',
                                 title='JWQL central store directory, total data volume',
                                 x_axis_label='Date',
@@ -439,7 +442,7 @@ class GeneralDashboard:
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        p1 = figure(title="Number of Files in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1 = figure(title="Number of Files in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         p1.scatter(x='date', y='total_file_count', source=source, color='#C85108', size=10)
         disable_scientific_notation(p1)
@@ -448,7 +451,7 @@ class GeneralDashboard:
         # Create separate tooltip for storage plot.
         # Show date and used and available storage together
 
-        p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
+        p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
         p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend_label='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
@@ -552,8 +555,8 @@ class GeneralDashboard:
         # This is a loop over instruments
         for i in range(len(data)):
             instrument = data.loc[i]['instrument']
-            filterpupil = data.loc[i]['filter_pupil']
-            num_obs = data.loc[i]['obs_per_filter_pupil']
+            filterpupil = np.array(data.loc[i]['filter_pupil'])
+            num_obs = np.array(data.loc[i]['obs_per_filter_pupil'])
 
             # Sort by num_obs in order to make the plot more readable
             idx = np.argsort(num_obs)
