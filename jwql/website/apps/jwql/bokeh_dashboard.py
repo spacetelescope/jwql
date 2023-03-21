@@ -746,21 +746,21 @@ class GeneralDashboard:
                 figures.append(tab_sw)
                 figures.append(tab_lw)
 
-            # Add in a placeholder plot for FGS, in order to keep the page looking consistent
-            # from instrument to instrument
-            instrument = 'fgs'
-            data_dict = {}
-            data_dict['None'] = 100.
-            data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
-            data['angle'] = 2 * np.pi
-            data['colors'] = ['#c85108']
-            pie_fig = create_filter_based_pie_chart("FGS has no filters", data)
-            small_pie_fig = create_filter_based_pie_chart("FGS has no filters", data)
+        # Add in a placeholder plot for FGS, in order to keep the page looking consistent
+        # from instrument to instrument
+        instrument = 'fgs'
+        data_dict = {}
+        data_dict['None'] = 100.
+        inst_data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
+        inst_data['angle'] = 2 * np.pi
+        inst_data['colors'] = ['#c85108']
+        pie_fig = create_filter_based_pie_chart("FGS has no filters", inst_data)
+        small_pie_fig = create_filter_based_pie_chart("FGS has no filters", inst_data)
 
-            # Place the pie charts in a column/Panel, and append to the figure
-            colplots = column(pie_fig, small_pie_fig)
-            tab = Panel(child=colplots, title=f'{instrument}')
-            figures.append(tab)
+        # Place the pie charts in a column/Panel, and append to the figure
+        colplots = column(pie_fig, small_pie_fig)
+        tab = Panel(child=colplots, title=f'{instrument}')
+        figures.append(tab)
 
         tabs = Tabs(tabs=figures)
 
