@@ -218,10 +218,10 @@ class GeneralDashboard:
                                               x_axis_label='Date',
                                               y_axis_label='Size TB')
 
-            plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_color='red',line_width=3)
-            plots[data['shortname']].circle(x='date', y='available', source=source,color='red', size=10)
-            plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_color='blue', line_width=3)
-            plots[data['shortname']].circle(x='date', y='used', source=source,color='blue', size=10)
+            plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_dash='dashed', line_color='#C85108', line_width=3)
+            plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', size=10)
+            plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
+            plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
 
             plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
                                                        days=["%d %B %Y"],
@@ -268,7 +268,7 @@ class GeneralDashboard:
         # This part of the plot should cycle through areas and plot area used values vs. date
         #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
         arealist = ['logs', 'outputs', 'preview_images', 'thumbnails']
-        colors = ['black', 'blue', 'red', 'green']
+        colors = ['#F8B195', '#F67280', '#6C5B7B', '#355C7D']
         for area, color in zip(arealist, colors):
 
             # Query for used sizes
@@ -283,7 +283,7 @@ class GeneralDashboard:
 
                 # Plot the results
                 source = ColumnDataSource(results)
-                plot.line(x='date', y='used', source=source, line_color=color, legend_label=area, line_width=3)
+                plot.line(x='date', y='used', source=source, line_color=color, line_dash='dashed', legend_label=area, line_width=3)
                 plot.circle(x='date', y='used', source=source, color=color, size=10)
 
                 hover_tool = HoverTool(tooltips=[('Used:', '@used'),
@@ -325,8 +325,8 @@ class GeneralDashboard:
 
             # Plot the results
             legend_str = 'File volume'
-            cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_color='blue', line_width=3)
-            cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='blue', size=10)
+            cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_dash='dashed', line_color='#355C7D', line_width=3)
+            cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', size=10)
             cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
                                                                    days=["%d %B %Y"],
                                                                    months=["%d %B %Y"],
@@ -452,10 +452,10 @@ class GeneralDashboard:
         # Show date and used and available storage together
 
         p2 = figure(title="Available & Used Storage in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
-        p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend_label='Available Storage')
+        p2.line(x='date', y='available', source=source, color='#C85108', line_dash='dashed', line_width=3, legend_label='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
-        p2.scatter(x='date', y='used', source=source, color='#C85108', size=10)
+        p2.scatter(x='date', y='used', source=source, color='#355C7D', size=10)
         disable_scientific_notation(p2)
         tab2 = Panel(child=p2, title='Storage')
 
