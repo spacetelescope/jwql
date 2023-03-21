@@ -571,29 +571,29 @@ class GeneralDashboard:
             for filt, val in zip(filterpupil, num_obs):
                 data_dict[filt] = val
 
-            data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
+            inst_data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
 
             if instrument != 'nircam':
                 # Calculate the angle covered by each filter
-                data['angle'] = data['value']/data['value'].sum() * 2 * np.pi
+                inst_data['angle'] = inst_data['value'] / inst_data['value'].sum() * 2 * np.pi
 
                 # Keep all wedges the same color, except for those that are a very
                 # small fraction, and will be covered in the second pie chart. Make
                 # those wedges grey in the primary pie chart.
-                data['colors'] = ['#c85108'] * len(data)
-                data.loc[data['value'] < 0.5, 'colors'] = '#bec4d4'
+                inst_data['colors'] = ['#c85108'] * len(inst_data)
+                inst_data.loc[inst_data['value'] < 0.5, 'colors'] = '#bec4d4'
 
                 # Make a dataframe containing only the filters that are used in less
                 # than some threshold percentage of observations
-                small = data.loc[data['value'] <0.5].copy()
+                small = inst_data.loc[inst_data['value'] < 0.5].copy()
 
                 # Recompute the angles for these, and make them all the same color.
                 small['angle'] = small['value'] / small['value'].sum() * 2 * np.pi
                 small['colors'] = ['#bec4d4'] * len(small)
 
                 # Create two pie charts
-                pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", data)
-                small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", sw_small)
+                pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", inst_data)
+                small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", small)
 
                 # Place the pie charts in a column/Panel, and append to the figure
                 colplots = column(pie_fig, small_pie_fig)
@@ -618,19 +618,19 @@ class GeneralDashboard:
                             channel.append('LW')
                     else:
                         channel.append('SW')
-                data['channel'] = channel
+                inst_data['channel'] = channel
 
                 # Set the colors. All wedges with a pie chart have the same color.
                 color_options = {'LW': '#c85108', 'SW': '#3d85c6', 'Dark': '#bec4d4'}
                 colors = []
                 for entry in channel:
                     colors.append(color_options[entry])
-                data['colors'] = colors
+                inst_data['colors'] = colors
 
                 # Even though it's not quite correct, create separate charts for SW vs LW. This will
                 # hopefully make them much easier to read
-                sw_data = data.loc[data['channel'] == 'SW'].copy()
-                lw_data = data.loc[data['channel'] == 'LW'].copy()
+                sw_data = inst_data.loc[inst_data['channel'] == 'SW'].copy()
+                lw_data = inst_data.loc[inst_data['channel'] == 'LW'].copy()
 
                 # Recalculate the angles. These won't be strictly correct since SW and LW filters
                 # are not both used exactly 50% of the time, but it's close enough for now.
