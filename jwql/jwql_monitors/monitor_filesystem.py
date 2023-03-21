@@ -653,8 +653,8 @@ def update_characteristics_database(char_info):
 
     # Add data to filesystem_instrument table
     for instrument in ['nircam', 'niriss', 'nirspec', 'miri']:
-        filter_list = [e[0] for e in obs['nircam']]
-        value_list= [e[1] for e in obs['nircam']]
+        filter_list = [e[0] for e in char_info['nircam']]
+        value_list= [e[1] for e in char_info['nircam']]
         new_record = {}
         new_record['date'] = now
         new_record['instrument'] = instrument
