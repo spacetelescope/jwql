@@ -554,9 +554,9 @@ class GeneralDashboard:
         figures = []
         # This is a loop over instruments
         for i in range(len(data)):
-            instrument = data.loc[i]['instrument']
-            filterpupil = np.array(data.loc[i]['filter_pupil'])
-            num_obs = np.array(data.loc[i]['obs_per_filter_pupil'])
+            instrument = data.iloc[i]['instrument']
+            filterpupil = np.array(data.iloc[i]['filter_pupil'])
+            num_obs = np.array(data.iloc[i]['obs_per_filter_pupil'])
 
             # Sort by num_obs in order to make the plot more readable
             idx = np.argsort(num_obs)
