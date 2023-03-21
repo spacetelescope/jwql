@@ -24,7 +24,10 @@ Use
         $ python archive_database_update.py
 
         Use the '--fill_empty' argument to provide a model and field.  Updates ALL fields for any model with empty/null/0 specified field
-        $ python archive_database_update.py --fill_empty rootfileinfo Filter
+        $ python archive_database_update.py --fill_empty rootfileinfo expstart
+        WARNING: Not all fields will be populated by all model objects. This will result in updates that may not be necessary.
+                 While this will not disturb the data, it has the potential to increase run time.  
+                 Select the field that is most pertient to the models you need updated minimize run time
 
         Use the 'update' argument to update every rootfileinfo data model with the most complete information from MAST
         $ python archive_database_update.py --update
