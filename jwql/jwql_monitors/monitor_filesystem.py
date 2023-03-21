@@ -50,7 +50,7 @@ from sqlalchemy.exc import DataError
 
 from jwql.database.database_interface import engine
 from jwql.database.database_interface import session
-from jwql.database.database_interface import FilesystemGeneral
+from jwql.database.database_interface import FilesystemCharacteristics, FilesystemGeneral
 from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
