@@ -24,7 +24,7 @@ Use
         $ python archive_database_update.py
 
         Use the '--fill_empty' argument to provide a model and field.  Updates ALL fields for any model with empty/null/0 specified field
-        $ python archive_database_update.py --fill_empty root_file_info Filter
+        $ python archive_database_update.py --fill_empty rootfileinfo Filter
 
         Use the 'update' argument to update every rootfileinfo data model with the most complete information from MAST
         $ python archive_database_update.py --update
@@ -349,7 +349,7 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
             logging.warning(f'\tError {e} was raised')
             logging.warning(f'\tError with root_name: {file} inst: {instrument} obsnum: {obs_instance} proposal: {prop}')
     if nr_files_created > 0:
-        logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
+        logging.info(f'Created {nr_files_created} rootfileinfo entries for: {instrument} - proposal:{prop} - obs:{obs}')
 
 
 @log_fail
