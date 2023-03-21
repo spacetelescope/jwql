@@ -451,7 +451,7 @@ class GeneralDashboard:
         # Create separate tooltip for storage plot.
         # Show date and used and available storage together
 
-        p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
+        p2 = figure(title="Available & Used Storage in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
         p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend_label='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
@@ -472,6 +472,7 @@ class GeneralDashboard:
                                                    years=["%d %B %Y"],
                                                    )
         p2.xaxis.major_label_orientation = pi / 4
+        p2.legend.location = 'top_left'
 
         tabs = Tabs(tabs=[tab1, tab2])
 
