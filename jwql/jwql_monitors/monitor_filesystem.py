@@ -55,7 +55,8 @@ from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.constants import FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FILESYSYEM_MONITOR_SUBDIRS, FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
@@ -227,7 +228,6 @@ def get_area_stats(central_storage_dict):
              'thumbnails': THUMBNAILS,
              'all': CENTRAL}
 
-    #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
     counteddirs = []
 
     sums = 0  # to be used to count 'all'
@@ -522,8 +522,6 @@ def plot_central_store_dirs():
     # Plot system stats vs. date
     results = session.query(CentralStore.date, CentralStore.size, CentralStore.available).all()
 
-    arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
-
     # Initialize plot
     dates, total_sizes, availables = zip(*results)
     plot = figure(
@@ -540,7 +538,7 @@ def plot_central_store_dirs():
     plot.circle(dates, availables, color='blue')
 
     # This part of the plot should cycle through areas and plot area used values vs. date
-    for area, color in zip(arealist, colors):
+    for area, color in zip(FILESYSYEM_MONITOR_SUBDIRS, colors):
 
         # Query for used sizes
         results = session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area)
@@ -706,8 +704,7 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
                 logging.error(e)
 
     # Add data to central_storage table
-    arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
-    for area in arealist:
+    for area in FILESYSYEM_MONITOR_SUBDIRS:
         new_record = {}
         new_record['date'] = central_storage_dict['date']
         new_record['area'] = area
