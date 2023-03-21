@@ -216,17 +216,17 @@ class GeneralDashboard:
                                               x_axis_type='datetime',
                                               title=f"Available & Used Storage on {data['shortname']}",
                                               x_axis_label='Date',
-                                              y_axis_label='Size TB')
+                                              y_axis_label='Disk Space (TB)')
 
             plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_dash='dashed', line_color='#C85108', line_width=3)
             plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', size=10)
             plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
             plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
 
-            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                        days=["%d %B %Y"],
                                                        months=["%d %B %Y"],
-                                                       years=["%d %B %Y"],
+                                                       years=["%B %Y"],
                                                        )
             plots[data['shortname']].xaxis.major_label_orientation = pi / 4
             plots[data['shortname']].legend.location = 'top_left'
@@ -263,7 +263,7 @@ class GeneralDashboard:
                       x_axis_type='datetime',
                       title='JWQL directory size',
                       x_axis_label='Date',
-                      y_axis_label='Size TB')
+                      y_axis_label='Disk Space (TB)')
 
         # This part of the plot should cycle through areas and plot area used values vs. date
         #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
@@ -292,10 +292,10 @@ class GeneralDashboard:
                 hover_tool.formatters = {'@time': 'datetime'}
                 plot.tools.append(hover_tool)
 
-        plot.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+        plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                      days=["%d %B %Y"],
                                                      months=["%d %B %Y"],
-                                                     years=["%d %B %Y"],
+                                                     years=["%B %Y"],
                                                      )
         plot.xaxis.major_label_orientation = pi / 4
         plot.legend.location = 'top_left'
@@ -307,7 +307,7 @@ class GeneralDashboard:
                                 x_axis_type='datetime',
                                 title='JWQL central store directory, total data volume',
                                 x_axis_label='Date',
-                                y_axis_label='Size TB')
+                                y_axis_label='Disk Space (TB)')
 
         cen_store_results = di.session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == 'all').all()
 
@@ -327,10 +327,10 @@ class GeneralDashboard:
             legend_str = 'File volume'
             cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_dash='dashed', line_color='#355C7D', line_width=3)
             cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', size=10)
-            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                                    days=["%d %B %Y"],
                                                                    months=["%d %B %Y"],
-                                                                   years=["%d %B %Y"],
+                                                                   years=["%B %Y"],
                                                                    )
             cen_store_plot.xaxis.major_label_orientation = pi / 4
             cen_store_plot.legend.location = 'top_left'
@@ -442,7 +442,7 @@ class GeneralDashboard:
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        p1 = figure(title="Number of Files in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1 = figure(title="Number of Files in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         p1.scatter(x='date', y='total_file_count', source=source, color='#C85108', size=10)
         disable_scientific_notation(p1)
@@ -451,7 +451,7 @@ class GeneralDashboard:
         # Create separate tooltip for storage plot.
         # Show date and used and available storage together
 
-        p2 = figure(title="Available & Used Storage in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
+        p2 = figure(title="Available & Used Storage in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Disk Space (TB)')
         p2.line(x='date', y='available', source=source, color='#C85108', line_dash='dashed', line_width=3, legend_label='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
@@ -459,17 +459,17 @@ class GeneralDashboard:
         disable_scientific_notation(p2)
         tab2 = Panel(child=p2, title='Storage')
 
-        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                    days=["%d %B %Y"],
                                                    months=["%d %B %Y"],
-                                                   years=["%d %B %Y"],
+                                                   years=["%B %Y"],
                                                    )
         p1.xaxis.major_label_orientation = pi / 4
 
-        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                    days=["%d %B %Y"],
                                                    months=["%d %B %Y"],
-                                                   years=["%d %B %Y"],
+                                                   years=["%B %Y"],
                                                    )
         p2.xaxis.major_label_orientation = pi / 4
         p2.legend.location = 'top_left'
