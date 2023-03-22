@@ -45,7 +45,7 @@ from sqlalchemy import func, and_
 
 import jwql.database.database_interface as di
 from jwql.database.database_interface import CentralStore
-from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT
+from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
 
@@ -363,7 +363,6 @@ class GeneralDashboard:
         date_string = data['date'].max().strftime("%d %b %Y")
 
         # Set title and figures list to make panels
-        title = f'Files per Filetype by Instrument {date_string}'
         figures = []
 
         # For unique instrument values, loop through data
@@ -372,6 +371,7 @@ class GeneralDashboard:
         for instrument in data.instrument.unique():
             index = data["instrument"] == instrument
             inst_only = data[index].sort_values('filetype')
+            title = f'{JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]} files per Filetype: {date_string}'
             figures.append(self.make_panel(inst_only['filetype'], inst_only['count'], instrument, title, 'File Type'))
 
         tabs = Tabs(tabs=figures)
