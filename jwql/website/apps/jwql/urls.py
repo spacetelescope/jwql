@@ -77,6 +77,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('download_table/<str:tablename>', views.export, name='download_table'),
     path('edb/', views.engineering_database, name='edb'),
+    path('edb/data_table', views.download_edb_data, name='download_edb_data')
     path('jwqldb/', views.jwqldb_table_viewer, name='jwqldb'),
     path('jwqldb/<str:tablename_param>', views.jwqldb_table_viewer, name='jwqldb_table_viewer'),
     path('log_view/', views.log_view, name='log_view'),

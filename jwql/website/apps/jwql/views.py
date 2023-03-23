@@ -522,6 +522,42 @@ def dashboard(request):
     return render(request, template, context)
 
 
+def download_edb_data(request, mnemonic_result):
+    """
+    """
+    mnemonic_identifier = mnemonic_result.mnemonic_identifier
+    start_time = mnemonic_result.start_time
+    end_time = mnemonic_result.end_time
+
+    result_table = mnemonic_result.data
+
+    # add meta data to saved table
+    comments = []
+    comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
+    for key, value in mnemonic_query_result.info.items():
+        comments.append('{} = {}'.format(key, str(value)))
+    comments.append(' ')
+    comments.append('Start time {}'.format(start_time.isot))
+    comments.append('End time   {}'.format(end_time.isot))
+    comments.append('Number of rows {}'.format(len(result_table)))
+    comments.append(' ')
+    result_table.meta['comments'] = comments
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{mnemonic_query_result.file_for_download}"'
+
+    writer = csv.writer(response)
+
+    for comment in result_table.meta['comments']:
+        writer.writerow(comment)
+    for i in range(len(result_table)):
+        writer.writerow([result_table['dates'][i], result_table['euvalues'][i]])
+
+    now do we need a new html file that this sends the response to? probably.
+
+    return response
+
+
 def download_report(request, inst):
     """Download data report by look status.
 
