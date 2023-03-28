@@ -517,7 +517,7 @@ def get_anomaly_form(request, inst, file_root):
                             choices.append(choice)
                 else:
                     choices = anomaly_choices
-                form.update_anomaly_table(rootfileinfo, 'unknown', choices)  # SAPP TODO -> update the DJANGO Model table
+                form.update_anomaly_table(rootfileinfo, 'unknown', choices)  # TODO do we actually want usernames?
             messages.success(request, "Anomaly submitted successfully")
         else:
             messages.error(request, "Failed to submit anomaly")
