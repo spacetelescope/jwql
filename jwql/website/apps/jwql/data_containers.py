@@ -77,6 +77,7 @@ ON_READTHEDOCS = False
 if 'READTHEDOCS' in os.environ:  # pragma: no cover
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
+
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # These lines are needed in order to use the Django models in a standalone
     # script (as opposed to code run as a result of a webpage request). If these
@@ -94,14 +95,12 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from astropy import config
     conf = config.get_config('astroquery')
     conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
-
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     FILESYSTEM_DIR = configs['filesystem']
     PREVIEW_IMAGE_FILESYSTEM = configs['preview_image_filesystem']
     THUMBNAIL_FILESYSTEM = configs['thumbnail_filesystem']
     OUTPUT_DIR = configs['outputs']
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -894,7 +893,6 @@ def mast_query_by_rootname(instrument, rootname):
     else:
         retval = result['data'][0]
     return retval
-
 
 
 def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=None, other_columns=None):
