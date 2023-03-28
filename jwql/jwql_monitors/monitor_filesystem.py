@@ -406,9 +406,10 @@ def monitor_filesystem():
     # Add data to database tables
     update_database(general_results_dict, instrument_results_dict, central_storage_dict)
     update_characteristics_database(characteristics)
+    update_central_store_database(central_storage_dict)
 
     # Create the plots
-    plot_filesystem_stats()
+    #plot_filesystem_stats()
 
 
 def plot_by_filetype(plot_type, instrument):
@@ -638,6 +639,25 @@ def plot_total_file_counts():
 
     return plot
 
+def update_central_store_database(central_storage_dict):
+    """Updates the ``CentralStore`` database table with info on disk space
+
+    Parameters
+    ----------
+    central_storage_dict : dict
+        A dictionary for the ``central_storage`` database table
+    """
+    for area in FILESYSYEM_MONITOR_SUBDIRS:
+        new_record = {}
+        new_record['date'] = central_storage_dict['date']
+        new_record['area'] = area
+        new_record['size'] = central_storage_dict[area]['size']
+        new_record['used'] = central_storage_dict[area]['used']
+        new_record['available'] = central_storage_dict[area]['available']
+        engine.execute(CentralStore.__table__.insert(), new_record)
+        session.commit()
+    session.close()
+
 
 def update_characteristics_database(char_info):
     """Updates the ``filesystem_characteristics`` database table.
@@ -676,9 +696,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         A dictionary for the ``filesystem_general`` database table
     instrument_results_dict : dict
         A dictionary for the ``filesystem_instrument`` database table
-    central_storage_dict : dict
-        A dictionary for the ``central_storage`` database table
-
     """
     logging.info('\tUpdating the database')
 
@@ -702,17 +719,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
                 session.commit()
             except DataError as e:
                 logging.error(e)
-
-    # Add data to central_storage table
-    for area in FILESYSYEM_MONITOR_SUBDIRS:
-        new_record = {}
-        new_record['date'] = central_storage_dict['date']
-        new_record['area'] = area
-        new_record['size'] = central_storage_dict[area]['size']
-        new_record['used'] = central_storage_dict[area]['used']
-        new_record['available'] = central_storage_dict[area]['available']
-        engine.execute(CentralStore.__table__.insert(), new_record)
-        session.commit()
 
     session.close()
 
