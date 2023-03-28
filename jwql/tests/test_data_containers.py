@@ -156,10 +156,10 @@ def test_get_available_suffixes(untracked, input_suffixes, expected):
         input_suffixes, return_untracked=untracked)
     assert result == expected
 
-
-def test_get_current_flagged_anomalies(mocker):
+# TODO - This test will need to be refactored to accoutn for Django Models
+# TODO - We will need to imlement django based testing to account for all Model based tests.
+# def test_get_current_flagged_anomalies(mocker):
     # get a sample query group with 2 files
-    # TODO update this test to use the new django models
 
     # rootname = 'jw02589006001_04101_00001-seg001'
     # instrument = 'NIRSpec'
