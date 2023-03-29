@@ -61,7 +61,6 @@ from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVER
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
-from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 
 # Increase the limit on the number of entries that can be returned by
@@ -86,7 +85,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     setup()
 
-    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm
     from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo, Anomalies
     check_config_for_key('auth_mast')
     configs = get_config()

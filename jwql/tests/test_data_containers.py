@@ -31,8 +31,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from django.conf import settings
-settings.configure()
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 
 # Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
