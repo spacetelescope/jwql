@@ -464,6 +464,7 @@ def get_current_flagged_anomalies(rootfileinfo_set):
             anomalies_set.append(rootfileinfo.anomalies.get_marked_anomalies())
         except (ObjectDoesNotExist, AttributeError):
             empty_anomaly_found = True
+            break
 
     if not empty_anomaly_found:
         # If all RootFileInfos have anomalies, calculate which anomalies exist in every RootFileInfo
