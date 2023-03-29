@@ -447,7 +447,8 @@ def get_current_flagged_anomalies(rootfileinfo_set):
     Parameters
     ----------
     rootfileinfo_set : RootFileInfo Queryset
-        A query set of 1 or more RootFileInfos of interest.
+        A query set of 1 or more RootFileInfos of interest 
+        Must be iterable, even if only one RootFileInfo.
 
     Returns
     -------
@@ -509,7 +510,7 @@ def get_anomaly_form(request, inst, file_root):
                 # for a group form submit, add any individual anomalies
                 # not in the original group set
                 if len(rootfileinfo_set) > 1:
-                    file_current = get_current_flagged_anomalies(rootfileinfo)
+                    file_current = get_current_flagged_anomalies([rootfileinfo])
                     choices = anomaly_choices.copy()
                     for choice in file_current:
                         if choice not in current_anomalies:
