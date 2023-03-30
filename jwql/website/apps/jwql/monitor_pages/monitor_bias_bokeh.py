@@ -37,6 +37,7 @@ from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import read_png
+from jwql.website.apps.jwql.bokeh_containers import PlaceholderPlot
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -207,6 +208,8 @@ class HistogramPlot():
     def create_plot(self):
         """Create figure of data histogram
         """
+        x_label = 'Signal (DN)'
+        y_label = '# Pixels'
         if len(self.data['expstart']) > 0:
 
             # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
@@ -228,22 +231,11 @@ class HistogramPlot():
             hover_text = axis_text.split(' ')[0]
             hover_tool = HoverTool(tooltips=[(f'@bin_centers: @counts')])
             self.plot.tools.append(hover_tool)
+            self.plot.xaxis.axis_label = x_label
+            self.plot.yaxis.axis_label = y_label
+
         else:
-            self.plot = figure(title=f'Calibrated data: Histogram', tools='pan,box_zoom,reset,wheel_zoom,save',
-                               background_fill_color="#fafafa")
-
-            # If there are no data, then create an empty placeholder plot
-            self.plot.x_range.start = 0
-            self.plot.x_range.end = 1
-            self.plot.y_range.start = 0
-            self.plot.y_range.end = 1
-
-            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
-            self.plot.add_glyph(source, glyph)
-
-        self.plot.xaxis.axis_label = 'Signal (DN)'
-        self.plot.yaxis.axis_label = '# Pixels'
+            self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
 
 
 class MedianRowColPlot():
@@ -284,10 +276,11 @@ class MedianRowColPlot():
             axis_text = 'Row Number'
 
         datestr = frame['expstart'].strftime("%m/%d/%Y")
-        plot = figure(title=f'Calibrated data: Collapsed {title_text}, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
-                      background_fill_color="#fafafa")
+        title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
 
         if len(frame[col]) > 0:
+            plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
+                          background_fill_color="#fafafa")
 
             # Add a column containing pixel numbers to plot against
             pix_num = np.arange(len(frame[col]))
@@ -302,19 +295,11 @@ class MedianRowColPlot():
             hover_text = axis_text.split(' ')[0]
             hover_tool = HoverTool(tooltips=[(f'{hover_text} @pixel: @col')])
             plot.tools.append(hover_tool)
+            plot.xaxis.axis_label = axis_text
+            plot.yaxis.axis_label = 'Median Signal (DN)'
         else:
             # If there are no data, then create an empty placeholder plot
-            plot.x_range.start = 0
-            plot.x_range.end = 1
-            plot.y_range.start = 0
-            plot.y_range.end = 1
-
-            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
-            plot.add_glyph(source, glyph)
-
-        plot.xaxis.axis_label = axis_text
-        plot.yaxis.axis_label = 'Median Signal (DN)'
+            plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
 
         return plot
 
@@ -365,10 +350,13 @@ class TrendingPlot():
         plot : bokeh.plotting.figure
             Figure containing the plot
         """
-        plot = figure(title=f'Uncal data: Amp {amp_num}', tools='pan,box_zoom,reset,wheel_zoom,save',
-                      background_fill_color="#fafafa")
+        title_str = f'Uncal data: Amp {amp_num}'
+        x_label = 'Date'
+        y_label = 'Bias Level (DN)'
 
         if len(self.data["expstart"]) > 0:
+            plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
+                      background_fill_color="#fafafa")
             source = ColumnDataSource(amp_data)
             even_col = f'amp{amp_num}_even_med'
             odd_col = f'amp{amp_num}_odd_med'
@@ -396,19 +384,11 @@ class TrendingPlot():
                                    )
             hover_tool.formatters = {'@expstart': 'datetime'}
             plot.tools.append(hover_tool)
+            plot.xaxis.axis_label = x_label
+            plot.yaxis.axis_label = y_label
         else:
             # If there are no data, then create an empty placeholder plot
-            plot.x_range.start = 0
-            plot.x_range.end = 1
-            plot.y_range.start = 0
-            plot.y_range.end = 1
-
-            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
-            plot.add_glyph(source, glyph)
-
-        plot.xaxis.axis_label = 'Date'
-        plot.yaxis.axis_label = 'Bias Level (DN)'
+            plot = PlaceholderPlot(title_str, x_label, y_label).plot
 
         return plot
 
