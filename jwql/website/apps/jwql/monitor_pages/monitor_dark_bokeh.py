@@ -30,7 +30,7 @@ from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import get_unique_values_per_column, session
 from jwql.database.database_interface import NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -310,24 +310,6 @@ class DarkMonitorData():
         self.stats_table_columns = self.stats_table.metadata.tables[f'{self.instrument.lower()}_dark_dark_current'].columns.keys()
         self.pixel_table_columns = self.pixel_table.metadata.tables[f'{self.instrument.lower()}_dark_pixel_stats'].columns.keys()
 
-    def get_unique_stats_column_vals(self, column_name):
-        """Return a list of the unique values from a particular column in the
-        <Instrument>DarkDarkCurrent table (self.stats_table)
-
-        Parameters
-        ----------
-        column_name : str
-            Table column name to query
-
-        Returns
-        -------
-        distinct_colvals : list
-            List of unique values in the given column
-        """
-        colvals = session.query(eval(f'self.stats_table.{column_name}')).distinct()
-        distinct_colvals = [eval(f'x.{column_name}') for x in colvals]
-        return distinct_colvals
-
     def retrieve_data(self, aperture, get_pixtable_for_detector=False):
         """Get all nedded data from the database tables.
 
@@ -477,7 +459,7 @@ class DarkMonitorPlots():
         self.db = DarkMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        self.available_apertures = self.db.get_unique_stats_column_vals('aperture')
+        self.available_apertures = get_unique_values_per_column(self.db, 'aperture')
 
         # Require entries for all full frame apertures. If there are no data for a
         # particular full frame entry, then produce an empty plot, in order to

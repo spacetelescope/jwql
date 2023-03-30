@@ -30,7 +30,7 @@ import numpy as np
 import pysiaf
 
 from jwql.website.apps.jwql import monitor_pages
-from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
+from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import BiasMonitorPlots, DarkMonitorPlots
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
@@ -175,53 +175,23 @@ def bias_monitor_tabs(instrument):
     Returns
     -------
     div : str
-        The HTML div to render bias monitor plots
+        The HTML div to render dark monitor plots
     script : str
-        The JS script to render bias monitor plots
+        The JS script to render dark monitor plots
     """
+    # This will query for the data and produce the plots
+    plots = BiasMonitorPlots(instrument)
 
     # Make a separate tab for each aperture
     tabs = []
     for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
-        monitor_template = monitor_pages.BiasMonitor()
-        monitor_template.input_parameters = (instrument, aperture)
 
-        # Add the mean bias vs time plots for each amp and odd/even columns
-        plots = []
-        for amp in ['1', '2', '3', '4']:
-            for kind in ['even', 'odd']:
-                bias_plot = monitor_template.refs['mean_bias_figure_amp{}_{}'.format(amp, kind)]
-                bias_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
-                plots.append(bias_plot)
-
-        # Add the calibrated 0th group image
-        calibrated_image = monitor_template.refs['cal_image']
-        calibrated_image.sizing_mode = 'scale_width'
-        calibrated_image.margin = (0, 100, 0, 100)  # Add space around sides of figure
-        plots.append(calibrated_image)
-
-        # Add the calibrated 0th group histogram
-        if instrument == 'NIRISS':
-            calibrated_hist = monitor_template.refs['cal_hist']
-            calibrated_hist.sizing_mode = 'scale_width'
-            calibrated_hist.margin = (0, 190, 0, 190)
-            plots.append(calibrated_hist)
-
-        # Add the collapsed row/column plots
-        if instrument != 'NIRISS':
-            for direction in ['rows', 'columns']:
-                collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
-                collapsed_plot.sizing_mode = 'scale_width'
-                plots.append(collapsed_plot)
-
-        # Put the mean bias plots on the top 2 rows, the calibrated image on the
-        # third row, and the remaining plots on the bottom row.
-        bias_layout = layout(
-            plots[0:8][::2],
-            plots[0:8][1::2],
-            plots[8:9],
-            plots[9:]
-        )
+        bias_layout = layout([[plots.trending_plots[aperture][1], plots.trending_plots[aperture][2], plots.trending_plots[aperture][3], plots.trending_plots[aperture][4]],
+                              [plots.zerothgroup_plots[aperture]],
+                              [plots.rowcol_plots[aperture]['collapsed_rows'], plots.rowcol_plots[aperture]['collapsed_columns']],
+                              [plots.histograms[aperture]]
+                              ]
+                             )
         bias_layout.sizing_mode = 'scale_width'
         bias_tab = Panel(child=bias_layout, title=aperture)
         tabs.append(bias_tab)
