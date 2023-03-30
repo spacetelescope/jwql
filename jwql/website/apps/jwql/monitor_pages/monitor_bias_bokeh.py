@@ -234,7 +234,7 @@ class HistogramPlot():
             series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
             source = ColumnDataSource(dict(series))
             self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
-                           fill_color="#C85108", line_color="white", alpha=0.75, source=source)
+                           fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
             hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
             self.plot.tools.append(hover_tool)
@@ -300,7 +300,8 @@ class MedianRowColPlot():
             series = self.data.iloc[0]
             series = series[['pixel', colname]]
             source = ColumnDataSource(dict(series))
-            plot.scatter(x='pixel', y=colname, fill_color="#C85108", alpha=0.75, source=source)
+            plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
+                         alpha=0.75, source=source)
 
             hover_text = axis_text.split(' ')[0]
             hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
@@ -372,8 +373,10 @@ class TrendingPlot():
             even_col = f'amp{amp_num}_even_med'
             odd_col = f'amp{amp_num}_odd_med'
 
-            plot.scatter(x='expstart', y=even_col, fill_color="#C85108", alpha=0.75, source=source, legend_label='Even cols')
-            plot.scatter(x='expstart', y=odd_col, fill_color="#355C7D", alpha=0.75, source=source, legend_label='Odd cols')
+            plot.scatter(x='expstart', y=even_col, fill_color="#C85108", line_color="#C85108",
+                         alpha=0.75, source=source, legend_label='Even cols')
+            plot.scatter(x='expstart', y=odd_col, fill_color="#355C7D", line_color="#355C7D",
+                         alpha=0.75, source=source, legend_label='Odd cols')
 
             # Make the x axis tick labels look nice
             plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
