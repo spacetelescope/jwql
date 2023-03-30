@@ -242,9 +242,13 @@ class DarkImagePlot():
             else:
                 # If the given file is missing, create an empty plot
                 self.plot = PlaceholderPlot(self.aperture, '', '').plot
+                self.plot.xaxis.visible = False
+                self.plot.yaxis.visible = False
         else:
             # If no filename is given, then create an empty plot
             self.plot = PlaceholderPlot(self.aperture, '', '').plot
+            self.plot.xaxis.visible = False
+            self.plot.yaxis.visible = False
 
 
 class DarkMonitorData():

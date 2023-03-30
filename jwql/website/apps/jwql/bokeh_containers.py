@@ -196,9 +196,9 @@ def bias_monitor_tabs(instrument):
     Returns
     -------
     div : str
-        The HTML div to render dark monitor plots
+        The HTML div to render bias monitor plots
     script : str
-        The JS script to render dark monitor plots
+        The JS script to render bias monitor plots
     """
     # This will query for the data and produce the plots
     plots = BiasMonitorPlots(instrument)
