@@ -35,9 +35,9 @@ from sqlalchemy import func
 
 from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import read_png
-from jwql.website.apps.jwql.bokeh_containers import PlaceholderPlot
+from jwql.website.apps.jwql.bokeh_utils import PlaceholderPlot
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -83,15 +83,15 @@ class BiasMonitorData():
 
         # Query database for all data in bias stats with a matching aperture,
         # and sort the data by exposure start time.
-        self.tmp_trending_data = session.query(self.stats_table.amp1_even_med,
-                                      self.stats_table.amp1_odd_med,
-                                      self.stats_table.amp2_even_med,
-                                      self.stats_table.amp2_odd_med,
-                                      self.stats_table.amp3_even_med,
-                                      self.stats_table.amp3_odd_med,
-                                      self.stats_table.amp4_even_med,
-                                      self.stats_table.amp4_odd_med,
-                                      self.stats_table.expstart) \
+        tmp_trending_data = session.query(self.stats_table.amp1_even_med,
+                                          self.stats_table.amp1_odd_med,
+                                          self.stats_table.amp2_even_med,
+                                          self.stats_table.amp2_odd_med,
+                                          self.stats_table.amp3_even_med,
+                                          self.stats_table.amp3_odd_med,
+                                          self.stats_table.amp4_even_med,
+                                          self.stats_table.amp4_odd_med,
+                                          self.stats_table.expstart) \
             .filter(self.stats_table.aperture == aperture) \
             .order_by(self.stats_table.expstart) \
             .all()
@@ -99,11 +99,15 @@ class BiasMonitorData():
         session.close()
 
         # Convert the query results to a pandas dataframe
-        self.trending_data = pd.DataFrame(self.tmp_trending_data, columns=['amp1_even_med', 'amp1_odd_med',
-                                                                  'amp2_even_med', 'amp2_odd_med',
-                                                                  'amp3_even_med', 'amp3_odd_med',
-                                                                  'amp4_even_med', 'amp3_odd_med',
-                                                                  'expstart'])
+        self.trending_data = pd.DataFrame(tmp_trending_data, columns=['amp1_even_med', 'amp1_odd_med',
+                                                                      'amp2_even_med', 'amp2_odd_med',
+                                                                      'amp3_even_med', 'amp3_odd_med',
+                                                                      'amp4_even_med', 'amp3_odd_med',
+                                                                      'expstart_str'])
+        # Add a column of expstart values that are datetime objects
+        format_data = "%Y-%m-%dT%H:%M:%S.%f"
+        datetimes = [datetime.strptime(entry, format_data) for entry in self.trending_data['expstart_str']]
+        self.trending_data['expstart'] = datetimes
 
     def retrieve_latest_data(self, aperture):
         """Query the database table to get the data needed for the non-trending
@@ -121,17 +125,26 @@ class BiasMonitorData():
                                self.stats_table.collapsed_rows,
                                self.stats_table.collapsed_columns,
                                self.stats_table.counts,
-                               self.stats_table.bin_centers)
+                               self.stats_table.bin_centers,
+                               self.stats_table.entry_date)
+                     .order_by(self.stats_table.entry_date) \
                      .join(subq, self.stats_table.expstart == subq.c.max_created)
                      )
 
         latest_data = query.all()
         session.close()
 
-        # Put the returned data in a dataframe
-        self.latest_data = pd.DataFrame(latest_data, columns=['uncal_filename', 'cal_filename',
-                                                              'cal_image', 'expstart', 'collapsed_rows',
-                                                              'collapsed_columns', 'counts', 'bin_centers'])
+        # Put the returned data in a dataframe. Include only the most recent entry.
+        # The query has already filtered to include only entries using the latest
+        # expstart value.
+        self.latest_data = pd.DataFrame(latest_data[-1:], columns=['uncal_filename', 'cal_filename',
+                                                                  'cal_image', 'expstart_str', 'collapsed_rows',
+                                                                  'collapsed_columns', 'counts', 'bin_centers',
+                                                                  'entry_date'])
+        # Add a column of expstart values that are datetime objects
+        format_data = "%Y-%m-%dT%H:%M:%S.%f"
+        datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart_str']]
+        self.latest_data['expstart'] = datetimes
 
 
 
@@ -141,7 +154,7 @@ class BiasMonitorPlots():
     classes to create figures from the data.
     """
     def __init__(self, instrument):
-        self.output_dir = os.path.join(OUTPUTS_DIR, 'bias_monitor')
+        #self.output_dir = os.path.join(OUTPUTS_DIR, 'bias_monitor')
         self.instrument = instrument
         self.trending_plots = {}
         self.zerothgroup_plots = {}
@@ -159,9 +172,6 @@ class BiasMonitorPlots():
         # keep the plot layout consistent
         self.ensure_all_full_frame_apertures()
 
-        # List of full frame aperture names
-        full_apertures = FULL_FRAME_APERTURES[self.instrument.upper()]
-
         for aperture in self.available_apertures:
             self.aperture = aperture
 
@@ -173,7 +183,7 @@ class BiasMonitorPlots():
             self.trending_plots[self.aperture] = TrendingPlot(self.db.trending_data).plots
 
             # Create a figure showing the zeroth group image
-            self.zerothgroup_plots[self.apertre] = ZerothGroupImage(self.db.latest_data).figure
+            self.zerothgroup_plots[self.aperture] = ZerothGroupImage(self.db.latest_data).figure
 
             # Create plots showing median row and column values
             self.rowcol_plots[self.aperture] = MedianRowColPlot(self.db.latest_data).plots
@@ -205,26 +215,28 @@ class HistogramPlot():
         """
         x_label = 'Signal (DN)'
         y_label = '# Pixels'
-        if len(self.data['expstart']) > 0:
+        if len(self.data['counts'].iloc[0]) > 0:
 
             # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
-            half_widths = (self.data['bin_centers'][1:] - self.data['bin_centers'][0:-1]) / 2
-            self.data['bin_left'] = self.data['bin_centers'] - half_widths
-            self.data['bin_right'] = self.data['bin_centers'] + half_widths
+            bin_centers = np.array(self.data['bin_centers'][0])
+            half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
+            half_widths = np.insert(half_widths, 0, half_widths[0])
+            self.data['bin_left'] = [bin_centers - half_widths]
+            self.data['bin_right'] = [bin_centers + half_widths]
 
-            datestr = self.data['expstart'].strftime("%m/%d/%Y")
+            #datestr = self.data['expstart'][0].strftime("%m/%d/%Y")
+            datestr = self.data['expstart_str'].iloc[0]
             self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
 
-            source = ColumnDataSource(self.data)
+            # Keep only the columns where the data are a list
+            series = self.data.iloc[0]
+            series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
+            source = ColumnDataSource(dict(series))
             self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
-                           fill_color="#C85108", line_color="white", alpha=0.5, source=source)
+                           fill_color="#C85108", line_color="white", alpha=0.75, source=source)
 
-            ######################################
-            # Do some testing and see if you need to set x and y ranges manually, like is done for the dark monitor trending plots
-
-            hover_text = axis_text.split(' ')[0]
-            hover_tool = HoverTool(tooltips=[(f'@bin_centers: @counts')])
+            hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
             self.plot.tools.append(hover_tool)
             self.plot.xaxis.axis_label = x_label
             self.plot.yaxis.axis_label = y_label
@@ -238,7 +250,7 @@ class MedianRowColPlot():
     """Class to create a plot of the median signal across rows
     or columns
     """
-    def __init(self, data):
+    def __init__(self, data):
         self.data = data
         self.create_plots()
 
@@ -247,10 +259,10 @@ class MedianRowColPlot():
         """
         self.plots = {}
         for colname in ['collapsed_rows', 'collapsed_columns']:
-            subframe = self.data[[colname, 'expstart']]
-            self.plots[colname] = self.create_plot(subframe)
+            #subframe = self.data[[colname, 'expstart']]
+            self.plots[colname] = self.create_plot(colname)
 
-    def create_plot(self, frame):
+    def create_plot(self, colname):
         """Create a plot showing either the collapsed row or column info
 
         Parameters
@@ -258,38 +270,40 @@ class MedianRowColPlot():
         frame : pandas.DataFrame
             Single column, containing the data to be plotted
 
+        colname : str
+            Column name from DataFrame containing data to be plotted
+
         Returns
         -------
         plot : bokeh.plotting.figure
             Plot of the data contained in ``frame``
         """
-        col = frame.columns[0]
-        if 'row' in col.lower():
+        if 'row' in colname.lower():
             title_text = 'Row'
             axis_text = 'Column Number'
-        elif 'column' in col.lower():
+        elif 'column' in colname.lower():
             title_text = 'Column'
             axis_text = 'Row Number'
 
-        datestr = frame['expstart'].strftime("%m/%d/%Y")
+        #datestr = self.data['expstart'][0].strftime("%m/%d/%Y")
+        datestr = self.data['expstart_str'].iloc[0]
         title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
 
-        if len(frame[col]) > 0:
+        if len(self.data[colname].iloc[0]) > 0:
             plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
                           background_fill_color="#fafafa")
 
             # Add a column containing pixel numbers to plot against
-            pix_num = np.arange(len(frame[col]))
-            frame['pixel'] = pix_num
+            pix_num = np.arange(len(self.data[colname].iloc[0]))
+            self.data['pixel'] = [pix_num]
 
-            source = ColumnDataSource(frame)
-            plot.scatter(x='pixel', y=col, fill_color="#C85108", alpha=0.75, source=source)
-
-            ######################################
-            # Do some testing and see if you need to set x and y ranges manually, like is done for the dark monitor trending plots
+            series = self.data.iloc[0]
+            series = series[['pixel', colname]]
+            source = ColumnDataSource(dict(series))
+            plot.scatter(x='pixel', y=colname, fill_color="#C85108", alpha=0.75, source=source)
 
             hover_text = axis_text.split(' ')[0]
-            hover_tool = HoverTool(tooltips=[(f'{hover_text} @pixel: @col')])
+            hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
             plot.tools.append(hover_tool)
             plot.xaxis.axis_label = axis_text
             plot.yaxis.axis_label = 'Median Signal (DN)'
@@ -326,7 +340,7 @@ class TrendingPlot():
         # worry about some amps having data but others not.
         # Create one plot per amplifier
         for amp_num in range(1, 5):
-            cols_to_use = [col for col in self.data.columns if amp_num in col]
+            cols_to_use = [col for col in self.data.columns if str(amp_num) in col]
             cols_to_use.append('expstart')
             subframe = self.data[cols_to_use]
             self.plots[amp_num] = self.create_amp_plot(amp_num, subframe)
@@ -358,8 +372,8 @@ class TrendingPlot():
             even_col = f'amp{amp_num}_even_med'
             odd_col = f'amp{amp_num}_odd_med'
 
-            plot.scatter(x='expstart', y=even_col, fill_color="#C85108", alpha=0.75, source=source, label='Even cols')
-            plot.scatter(x='expstart', y=odd_col, fill_color="#355C7D", alpha=0.75, source=source, label='Odd cols')
+            plot.scatter(x='expstart', y=even_col, fill_color="#C85108", alpha=0.75, source=source, legend_label='Even cols')
+            plot.scatter(x='expstart', y=odd_col, fill_color="#355C7D", alpha=0.75, source=source, legend_label='Odd cols')
 
             # Make the x axis tick labels look nice
             plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
@@ -371,11 +385,8 @@ class TrendingPlot():
                                                          )
             plot.xaxis.major_label_orientation = np.pi / 4
 
-            ######################################
-            # Do some testing and see if you need to set x and y ranges manually, like is done for the dark monitor trending plots
-
             hover_tool = HoverTool(tooltips=[('Even col bias:', f'@{even_col}'),
-                                             ('Odd col bias:', f'@{odd_col}')
+                                             ('Odd col bias:', f'@{odd_col}'),
                                              ('Date:', '@expstart{%d %b %Y}')
                                              ]
                                    )
@@ -402,10 +413,10 @@ class ZerothGroupImage():
     def create_figure(self):
         """Create the Bokeh figure
         """
-        if os.path.isfile(self.data['cal_image']):
-            image = read_png(self.data['cal_image'])
+        if os.path.isfile(self.data['cal_image'].iloc[0]):
+            image = read_png(self.data['cal_image'].iloc[0])
 
-            datestr = self.data['expstart'].strftime("%m/%d/%Y")
+            datestr = self.data['expstart_str'].iloc[0]
 
             # Display the 32-bit RGBA image
             ydim, xdim = image.shape
@@ -418,6 +429,6 @@ class ZerothGroupImage():
 
         else:
             # If the given file is missing, create an empty plot
-            self.figure = PlaceholderPlot(self.aperture, '', '').plot
+            self.figure = PlaceholderPlot('Calibrated Zeroth Group of Most Recent Dark', '', '').plot
             self.figure.xaxis.visible = False
             self.figure.yaxis.visible = False
