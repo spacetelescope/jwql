@@ -8,7 +8,7 @@
                                     margin-left: 80px; }
         span#helpBlock.help-block {font-size: LARGER;}
     </style>
-    
+
     <title>Dynamic Query Form - JWQL</title>
 
 
@@ -62,7 +62,7 @@
             Note, however, that it may increase the run time if you search a wider array of images.
         </p>
     </main>
-        
+
     <div class='form-group'>
         <form method="POST" action="." name="jwstqueryform">
             {{ csrf_input }}
@@ -70,7 +70,7 @@
                 <hr class="col-md-12">
                 <div class='instrument-form-group' id='instrument_form_group'>
                     <!-- Initial INSTRUMENT Checkbox -->
-                    <div class="col-sm-2">
+                    <div class="col-md-2">
                         <span id="helpBlock" class="help-block">Instruments</span>
                         <div class="form-control" name='instrument' id='instrument'>
                             {% for option in form.instrument %}
@@ -80,53 +80,9 @@
                             {% endfor %}
                         </div>
                     </div>
-                    
+
                     <!-- FGS Fields -->
                     <div style="display: flex" id="FGS">
-                        <section class="col-sm">
-                            <span id="helpBlock" class="help-block">FGS Apertures</span>
-                            <div class="form-control" class="row-1" id='fgs_aper'>
-                                {% for field in form.fgs_aper %}
-                                <div class="row-1">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Detectors</span>
-                            <div class="form-control" id='fgs_detector'>
-                                {% for field in form.fgs_detector %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Read Patterns</span>
-                            <div class="form-control" id='fgs_readpatt'>
-                                {% for field in form.fgs_readpatt %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Exposure Types</span>
-                            <div class="form-control" id='fgs_exptype'>
-                                {% for field in form.fgs_exptype %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
                         <section class="col-md">
                             <span id="helpBlock" class="help-block">FGS Anomalies</span>
                             <div class="form-control" id='fgs_anomalies'>
@@ -138,64 +94,58 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">FGS Apertures</span>
+                            <div class="form-control" id='fgs_aper'>
+                                {% for field in form.fgs_aper %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">FGS Detectors</span>
+                            <div class="form-control" id='fgs_detector'>
+                                {% for field in form.fgs_detector %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">FGS Exposure Types</span>
+                            <div class="form-control" id='fgs_exptype'>
+                                {% for field in form.fgs_exptype %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">FGS Read Patterns</span>
+                            <div class="form-control" id='fgs_readpatt'>
+                                {% for field in form.fgs_readpatt %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
                     </div>
 
                     <!-- MIRI Fields -->
                     <div style="display: flex" id="MIRI">
-                        <section class="col-sm">
-                            <span id="helpBlock" class="help-block">MIRI Subarrays</span>
-                            <div class="form-control" id='miri_aper'>
-                                {% for field in form.miri_aper %}
-                                <div class="row-2">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Filters</span>
-                            <div class="form-control" id='miri_filt'>
-                                {% for field in form.miri_filt %}
-                                <div class="row-2">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Detectors</span>
-                            <div class="form-control" id='miri_detector'>
-                                {% for field in form.miri_detector %}
-                                <div class="row-2">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Read Patterns</span>
-                            <div class="form-control" id='miri_readpatt'>
-                                {% for field in form.miri_readpatt %}
-                                <div class="row-2">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Exposure Types</span>
-                            <div class="form-control" id='miri_exptype'>
-                                {% for field in form.miri_exptype %}
-                                <div class="row-2">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
                         <section class="col-md">
                             <span id="helpBlock" class="help-block">MIRI Anomalies</span>
                             <div class="form-control" id='miri_anomalies'>
@@ -207,65 +157,69 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">MIRI Detectors</span>
+                            <div class="form-control" id='miri_detector'>
+                                {% for field in form.miri_detector %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">MIRI Exposure Types</span>
+                            <div class="form-control" id='miri_exptype'>
+                                {% for field in form.miri_exptype %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">MIRI Filters</span>
+                            <div class="form-control" id='miri_filt'>
+                                {% for field in form.miri_filt %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">MIRI Read Patterns</span>
+                            <div class="form-control" id='miri_readpatt'>
+                                {% for field in form.miri_readpatt %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">MIRI Subarrays</span>
+                            <div class="form-control" id='miri_subarray'>
+                                {% for field in form.miri_subarray %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </section>
                     </div>
 
                     <!-- NIRCAM Fields -->
                     <div style="display: flex" id="NIRCAM">
-                        <section class="col-sm">
-                            <span id="helpBlock" class="help-block">NIRCam Apertures</span>
-                            <div class="form-control" class="row-3" id='nircam_aper'>
-                                {% for field in form.nircam_aper %}
-                                <div class="row-1">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Filters</span>
-                            <div class="form-control" id='nircam_filt'>
-                                {% for field in form.nircam_filt %}
-                                <div class="row-1">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Detectors</span>
-                            <div class="form-control" id='nircam_detector'>
-                                {% for field in form.nircam_detector %}
-                                <div class="row-4">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Read Patterns</span>
-                            <div class="form-control" id='nircam_readpatt'>
-                                {% for field in form.nircam_readpatt %}
-                                <div class="row-4">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Exposure Types</span>
-                            <div class="form-control" id='nircam_exptype'>
-                                {% for field in form.nircam_exptype %}
-                                <div class="row-4">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
                         <section class="col-md">
                             <span id="helpBlock" class="help-block">NIRCam Anomalies</span>
                             <div class="form-control" id='nircam_anomalies'>
@@ -277,54 +231,82 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRCam Detectors</span>
+                            <div class="form-control" id='nircam_detector'>
+                                {% for field in form.nircam_detector %}
+                                <div class="row-4">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRCam Exposure Types</span>
+                            <div class="form-control" id='nircam_exptype'>
+                                {% for field in form.nircam_exptype %}
+                                <div class="row-4">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRCam Filters</span>
+                            <div class="form-control" id='nircam_filt'>
+                                {% for field in form.nircam_filt %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRCam Pupils</span>
+                            <div class="form-control" id='nircam_pupil'>
+                                {% for field in form.nircam_pupil %}
+                                <div class="row-4">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRCam Read Patterns</span>
+                            <div class="form-control" id='nircam_readpatt'>
+                                {% for field in form.nircam_readpatt %}
+                                <div class="row-4">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRCam Subarrays</span>
+                            <div class="form-control" id='nircam_subarray'>
+                                {% for field in form.nircam_subarray %}
+                                <div class="row-4">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
                     </div>
 
                     <!-- NIRISS Fields -->
                     <div style="display: flex" id="NIRISS">
-                        <section class="col-sm">
-                            <span id="helpBlock" class="help-block">NIRISS Apertures</span>
-                            <div class="form-control" class="row-4" id='niriss_aper'>
-                                {% for field in form.niriss_aper %}
-                                <div class="row-1">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Filters</span>
-                            <div class="form-control" id='niriss_filt'>
-                                {% for field in form.niriss_filt %}
-                                <div class="row-1">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Read Patterns</span>
-                            <div class="form-control" id='niriss_readpatt'>
-                                {% for field in form.niriss_readpatt %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Exposure Types</span>
-                            <div class="form-control" id='niriss_exptype'>
-                                {% for field in form.niriss_exptype %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
                         <section class="col-md">
                             <span id="helpBlock" class="help-block">NIRISS Anomalies</span>
                             <div class="form-control" id='niriss_anomalies'>
@@ -336,32 +318,106 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRISS Detectors</span>
+                            <div class="form-control" id='niriss_detector'>
+                                {% for field in form.niriss_detector %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRISS Exposure Types</span>
+                            <div class="form-control" id='niriss_exptype'>
+                                {% for field in form.niriss_exptype %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRISS Filters</span>
+                            <div class="form-control" id='niriss_filt'>
+                                {% for field in form.niriss_filt %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRISS Pupils</span>
+                            <div class="form-control" id='niriss_pupil'>
+                                {% for field in form.niriss_pupil %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRISS Read Patterns</span>
+                            <div class="form-control" id='niriss_readpatt'>
+                                {% for field in form.niriss_readpatt %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRISS Subarrays</span>
+                            <div class="form-control" id='niriss_subarray'>
+                                {% for field in form.niriss_subarray %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
                     </div>
 
                     <!-- NIRSPEC Fields -->
                     <div style="display: flex" id="NIRSPEC">
-                        <section class="col-sm">
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRSpec Anomalies</span>
+                            <div class="form-control" id='nirspec_anomalies'>
+                                {% for field in form.nirspec_anomalies %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
                             <span id="helpBlock" class="help-block">NIRSpec Apertures</span>
                             <div class="form-control" id='nirspec_aper'>
                                 {% for field in form.nirspec_aper %}
-                                <div class="row-1">
+                                <div class="row-sm-10">
                                     {{ field }}
                                 </div>
                                 {% endfor %}
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Filters</span>
-                            <div class="form-control" id='nirspec_filt'>
-                                {% for field in form.nirspec_filt %}
-                                <div class="row-1">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
+
                         <section class="col-md">
                             <span id="helpBlock" class="help-block">NIRSpec Detectors</span>
                             <div class="form-control" id='nirspec_detector'>
@@ -373,28 +429,7 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Gratings</span>
-                            <div class="form-control" id='nirspec_grating'>
-                                {% for field in form.nirspec_grating %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
-                        <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Read Patterns</span>
-                            <div class="form-control" id='nirspec_readpatt'>
-                                {% for field in form.nirspec_readpatt %}
-                                <div class="row-sm-10">
-                                    {{ field }}
-                                </div>
-                                {% endfor %}
-                                <div class="input-group-addon" style='width:60px'></div>
-                            </div>
-                        </section>
+
                         <section class="col-md">
                             <span id="helpBlock" class="help-block">NIRSpec Exposure Types</span>
                             <div class="form-control" id='nirspec_exptype'>
@@ -406,10 +441,35 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Anomalies</span>
-                            <div class="form-control" id='nirspec_anomalies'>
-                                {% for field in form.nirspec_anomalies %}
+                            <span id="helpBlock" class="help-block">NIRSpec Filters</span>
+                            <div class="form-control" id='nirspec_filt'>
+                                {% for field in form.nirspec_filt %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRSpec Gratings</span>
+                            <div class="form-control" id='nirspec_grating'>
+                                {% for field in form.nirspec_grating %}
+                                <div class="row-sm-10">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                                <div class="input-group-addon" style='width:60px'></div>
+                            </div>
+                        </section>
+
+                        <section class="col-md">
+                            <span id="helpBlock" class="help-block">NIRSpec Read Patterns</span>
+                            <div class="form-control" id='nirspec_readpatt'>
+                                {% for field in form.nirspec_readpatt %}
                                 <div class="row-sm-10">
                                     {{ field }}
                                 </div>
