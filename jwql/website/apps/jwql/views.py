@@ -42,7 +42,6 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
-from copy import deepcopy
 import csv
 import datetime
 import json
@@ -60,7 +59,7 @@ import socket
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -82,7 +81,7 @@ from .data_containers import thumbnails_date_range_ajax
 from .forms import JwqlQueryForm
 from .forms import FileSearchForm
 if not os.environ.get("READTHEDOCS"):
-    from .models import Observation, Proposal, RootFileInfo
+    from .models import Observation, RootFileInfo
 from astropy.io import fits
 from astropy.time import Time
 import astropy.units as u
@@ -104,9 +103,11 @@ def jwql_query(request):
                 query_configs[instrument]['exptypes'] = [query_unformat(i) for i in form.cleaned_data['{}_exptype'.format(instrument)]]
                 query_configs[instrument]['readpatts'] = [query_unformat(i) for i in form.cleaned_data['{}_readpatt'.format(instrument)]]
                 query_configs[instrument]['gratings'] = [query_unformat(i) for i in form.cleaned_data['{}_grating'.format(instrument)]]
+                query_configs[instrument]['subarrays'] = [query_unformat(i) for i in form.cleaned_data['{}_subarray'.format(instrument)]]
+                query_configs[instrument]['pupils'] = [query_unformat(i) for i in form.cleaned_data['{}_pupil'.format(instrument)]]
                 query_configs[instrument]['anomalies'] = [query_unformat(i) for i in form.cleaned_data['{}_anomalies'.format(instrument)]]
 
-            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_anomalies = {}, {}, {}, {}, {}, {}, {}
+            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_subarrays, all_pupils, all_anomalies = {}, {}, {}, {}, {}, {}, {}, {}, {}
             for instrument in query_configs:
                 all_filters[instrument] = query_configs[instrument]['filters']
                 all_apers[instrument] = query_configs[instrument]['apertures']
@@ -114,6 +115,8 @@ def jwql_query(request):
                 all_exptypes[instrument] = query_configs[instrument]['exptypes']
                 all_readpatts[instrument] = query_configs[instrument]['readpatts']
                 all_gratings[instrument] = query_configs[instrument]['gratings']
+                all_subarrays[instrument] = query_configs[instrument]['subarrays']
+                all_pupils[instrument] = query_configs[instrument]['pupils']
                 all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
             parameters = QUERY_CONFIG_TEMPLATE.copy()
@@ -125,6 +128,8 @@ def jwql_query(request):
             parameters[QUERY_CONFIG_KEYS.EXP_TYPES] = all_exptypes
             parameters[QUERY_CONFIG_KEYS.READ_PATTS] = all_readpatts
             parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
+            parameters[QUERY_CONFIG_KEYS.SUBARRAYS] = all_subarrays
+            parameters[QUERY_CONFIG_KEYS.PUPILS] = all_pupils
             parameters[QUERY_CONFIG_KEYS.EXP_TIME_MIN] = str(form.cleaned_data['exp_time_min'])
             parameters[QUERY_CONFIG_KEYS.EXP_TIME_MAX] = str(form.cleaned_data['exp_time_max'])
 
