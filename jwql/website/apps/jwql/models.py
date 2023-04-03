@@ -163,6 +163,19 @@ class Anomalies(models.Model):
     light_saber = models.BooleanField(default=False)
     other = models.BooleanField(default=False)
 
+    def get_marked_anomalies(self):
+        """Return all boolean field names (anomalies) currently set"""
+        true_anomalies = []
+        for field, value in vars(self).items():
+            if isinstance(value, bool) and value:
+                true_anomalies.append(field)
+        return true_anomalies
+    
+    @classmethod
+    def get_all_anomalies(cls):
+        """Return list of all anomalies (assumed as any field with default of False)"""
+        return [f.name for f in cls._meta.fields if isinstance(f.default, bool)]
+
     class Meta:
         app_label = 'jwql'
         ordering = ['-root_file_info']

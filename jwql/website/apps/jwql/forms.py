@@ -48,6 +48,7 @@ from collections import defaultdict
 import datetime
 import glob
 import os
+import logging
 
 from astropy.time import Time, TimeDelta
 from django import forms
@@ -55,9 +56,9 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from jwql.edb.engineering_database import is_valid_mnemonic
+from jwql.website.apps.jwql.models import Anomalies
 
 
-from jwql.database import database_interface as di
 from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT, EXP_TYPE_PER_INSTRUMENT,
                                   FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT, GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE,
                                   JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES)
@@ -189,37 +190,29 @@ class InstrumentAnomalySubmitForm(forms.Form):
             widget=forms.CheckboxSelectMultiple(), required=False)
         self.instrument = instrument
 
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
+    def update_anomaly_table(self, rootfileinfo, user, anomaly_choices):
+        """Update the ``Anomalies`` model associated with the sent RootFileInfo.
+        All 'anomaly_choices' should be marked 'True' and the rest should be 'False'
 
         Parameters
         ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
+        rootfileinfo : RootFileInfo
+            The RootFileInfo model object of the image to update
         user : str
             The user that is flagging the anomaly
         anomaly_choices : list
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
         """
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        if self.instrument == 'fgs':
-            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'nirspec':
-            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'miri':
-            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'niriss':
-            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'nircam':
-            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
+        default_dict = {'flag_date': datetime.datetime.now(),
+                        'user': user}
+        for anomaly in Anomalies.get_all_anomalies():
+            default_dict[anomaly] = (anomaly in anomaly_choices)
+
+        try:
+            Anomalies.objects.update_or_create(root_file_info=rootfileinfo, defaults=default_dict)
+        except Exception as e:
+            logging.warning('Unable to update anomaly table for {} due to {}'.format(rootfileinfo.root_name, e))
 
     def clean_anomalies(self):
 

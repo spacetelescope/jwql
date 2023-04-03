@@ -42,6 +42,7 @@ from bs4 import BeautifulSoup
 from django import setup
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 import numpy as np
 from operator import itemgetter
 import pandas as pd
@@ -52,7 +53,7 @@ from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
@@ -60,7 +61,6 @@ from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVER
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
-from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 
 # Increase the limit on the number of entries that can be returned by
@@ -76,6 +76,7 @@ ON_READTHEDOCS = False
 if 'READTHEDOCS' in os.environ:  # pragma: no cover
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
+
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # These lines are needed in order to use the Django models in a standalone
     # script (as opposed to code run as a result of a webpage request). If these
@@ -84,8 +85,8 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     setup()
 
-    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
-    from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo
+    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm
+    from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo, Anomalies
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
@@ -93,14 +94,12 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from astropy import config
     conf = config.get_config('astroquery')
     conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
-
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     FILESYSTEM_DIR = configs['filesystem']
     PREVIEW_IMAGE_FILESYSTEM = configs['preview_image_filesystem']
     THUMBNAIL_FILESYSTEM = configs['thumbnail_filesystem']
     OUTPUT_DIR = configs['outputs']
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -319,7 +318,7 @@ def create_archived_proposals_context(inst):
                'thumbnails': thumbnails_dict,
                'dropdown_menus': dropdown_menus}
 
-    json_object = json.dumps(context, indent = 4)
+    json_object = json.dumps(context, indent=4)
 
     # Writing to json file
     outfilename = os.path.join(OUTPUT_DIR, 'archive_page', f'{inst}_archive_context.json')
@@ -435,59 +434,45 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
         return suffixes
 
 
-def get_current_flagged_anomalies(rootname, instrument, n_match=1):
+def get_current_flagged_anomalies(rootfileinfo_set):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
 
     This function may be used to retrieve the current anomalies
-    for single files or sets of files in an exposure group. Group
-    anomalies are determined by comparing current anomaly settings
-    within the group to the ``n_match`` parameter.
+    for single rootfileinfo or sets of rootfileinfos in an exposure group. Group
+    anomalies are returned if they are true in every rootfileinfo in the set.
+    For single files,  any anomaly present for the file is a current anomaly.
 
-    For single files, ``n_match`` should be set to 1: any anomaly present for
-    the file is a current anomaly.  For groups of files, ``n_match`` should be
-    set to the total number of files in the group.  In this case, an
-    anomaly is returned as a current anomaly for the group only if it
-    is marked for every file in the group, i.e. there are ``n_match``
-    True values for that anomaly.
-
-    Note that the anomaly database may store multiple entries for
-    a rootfile, but only the last entry is considered current. Also
-    note that not every rootfile has an entry in the database: it only
-    appears if an anomaly has been marked for it at some point. The
-    ``n_match`` parameter is required as an argument for groups because
-    there is no way to determine from the anomaly table how many files
-    belong to a group.
 
     Parameters
     ----------
-    rootname : str
-        The rootname of interest.  May be a file rootname
-        (e.g. ``jw86600008001_02101_00001_guider2``) or an exposure
-        group root (e.g. ``jw86600008001_02101_00001``). The rootname
-        is matched as a starts-with filter on the anomaly database.
-    instrument : str
-        The instrument corresponding to the file.
-    n_match : int
-        The number of root files that must match in order to report
-        an anomaly as current.
+    rootfileinfo_set : RootFileInfo Queryset
+        A query set of 1 or more RootFileInfos of interest 
+        Must be iterable, even if only one RootFileInfo.
 
     Returns
     -------
     current_anomalies : list of str
-        A list of currently flagged anomalies for the given ``rootname``
+        A list of currently flagged anomalies for the given rootfileinfo_set
         (e.g. ``['snowball', 'crosstalk']``)
     """
-    table = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
-    query = di.session.query(table).filter(table.rootname.startswith(rootname)).order_by(table.flag_date.desc())
-
-    all_records = query.data_frame.groupby('rootname').first()
+    all_anomalies = Anomalies.get_all_anomalies()
+    anomalies_set = []
     current_anomalies = []
-    if not all_records.empty:
-        for col, val in all_records.sum(axis=0, numeric_only=True).items():
-            # ignore rootname, flag_date, etc
-            if val == n_match and col in ANOMALIES_PER_INSTRUMENT:
-                current_anomalies.append(col)
+    empty_anomaly_found = False
+    for rootfileinfo in rootfileinfo_set:
+        try:
+            anomalies_set.append(rootfileinfo.anomalies.get_marked_anomalies())
+        except (ObjectDoesNotExist, AttributeError):
+            empty_anomaly_found = True
+            break
+
+    if not empty_anomaly_found:
+        # If all RootFileInfos have anomalies, calculate which anomalies exist in every RootFileInfo
+        flat_list = [anomaly for sublist in anomalies_set for anomaly in sublist]
+        for anomaly in all_anomalies:
+            if flat_list.count(anomaly) == len(rootfileinfo_set):
+                current_anomalies.append(anomaly)
 
     return current_anomalies
 
@@ -511,12 +496,9 @@ def get_anomaly_form(request, inst, file_root):
         form object to be sent with context to template
     """
     # Check for group root name
-    file_root_info = RootFileInfo.objects.filter(root_name__startswith=file_root)
-    file_roots = [rf.root_name for rf in file_root_info]
-
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
     # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst, n_match=len(file_roots))
-
+    current_anomalies = get_current_flagged_anomalies(rootfileinfo_set)
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
@@ -524,18 +506,18 @@ def get_anomaly_form(request, inst, file_root):
     if request.method == 'POST':
         anomaly_choices = dict(request.POST).get('anomaly_choices', [])
         if form.is_valid():
-            for file_root in file_roots:
+            for rootfileinfo in rootfileinfo_set:
                 # for a group form submit, add any individual anomalies
                 # not in the original group set
-                if len(file_roots) > 1:
-                    file_current = get_current_flagged_anomalies(file_root, inst)
+                if len(rootfileinfo_set) > 1:
+                    file_current = get_current_flagged_anomalies([rootfileinfo])
                     choices = anomaly_choices.copy()
                     for choice in file_current:
                         if choice not in current_anomalies:
                             choices.append(choice)
                 else:
                     choices = anomaly_choices
-                form.update_anomaly_table(file_root, 'unknown', choices)
+                form.update_anomaly_table(rootfileinfo, 'unknown', choices)  # TODO do we actually want usernames?
             messages.success(request, "Anomaly submitted successfully")
         else:
             messages.error(request, "Failed to submit anomaly")
@@ -912,7 +894,6 @@ def mast_query_by_rootname(instrument, rootname):
     else:
         retval = result['data'][0]
     return retval
-
 
 
 def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=None, other_columns=None):
@@ -1579,10 +1560,11 @@ def get_thumbnails_all_instruments(parameters):
     if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
         for thumbnail in thumbnails_subset:
             components = thumbnail.split('_')
-            rootname = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
+            file_root = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
+            filerootinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
             try:
                 instrument = filename_parser(thumbnail)['instrument']
-                thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
+                thumbnail_anomalies = get_current_flagged_anomalies(filerootinfo_set)
                 if thumbnail_anomalies:
                     for anomaly in anomalies[instrument.lower()]:
                         if anomaly.lower() in thumbnail_anomalies:
