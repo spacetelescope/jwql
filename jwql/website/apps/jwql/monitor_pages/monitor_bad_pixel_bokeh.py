@@ -13,7 +13,7 @@ Use
     ::
 
         from jwql.website.apps.jwql import monitor_pages
-        monitor_pages.BadPixelMonitor('nircam')
+        monitor_pages.BadPixelPlots('nircam')
 """
 
 import os
