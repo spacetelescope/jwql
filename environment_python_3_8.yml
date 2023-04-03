@@ -59,7 +59,7 @@ dependencies:
     - astroquery==0.4.6
     - bandit==1.7.4
     - jwst==1.10.0
-    - pandas=2.0.0
+    - pandas==2.0.0
     - pysiaf==0.19.1
     - pysqlite3==0.5.0
     - pyvo==1.4
