@@ -188,52 +188,6 @@ def bad_pixel_monitor_tabs(instrument):
     return div, script
 
 
-def bias_monitor_tabs(instrument):
-    """Creates the various tabs of the bias monitor results page.
-
-    Parameters
-    ----------
-    instrument : str
-        The JWST instrument of interest (e.g. ``nircam``).
-
-    Returns
-    -------
-    div : str
-        The HTML div to render bias monitor plots
-    script : str
-        The JS script to render bias monitor plots
-    """
-    from bokeh.io import output_file, save
-
-
-    # This will query for the data and produce the plots
-    plots = BiasMonitorPlots(instrument)
-
-    # Make a separate tab for each aperture
-    tabs = []
-    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
-
-        bias_layout = layout([[plots.trending_plots[aperture][1], plots.trending_plots[aperture][2]],
-                              [plots.trending_plots[aperture][3], plots.trending_plots[aperture][4]],
-                              [plots.zerothgroup_plots[aperture], plots.histograms[aperture]],
-                              [plots.rowcol_plots[aperture]['collapsed_rows'], plots.rowcol_plots[aperture]['collapsed_columns']]
-                              ]
-                             )
-        bias_layout.sizing_mode = 'scale_width'
-        bias_tab = Panel(child=bias_layout, title=aperture)
-        tabs.append(bias_tab)
-
-    # Build tabs
-    tabs = Tabs(tabs=tabs)
-
-    # Return tab HTML and JavaScript to web app
-    #script, div = components(tabs)
-    output_file(os.path.join(TEMPLATE_DIR, f"bias_monitor_{instrument.lower()}.html"))
-    save(tabs)
-
-    #return div, script
-
-
 def cosmic_ray_monitor_tabs(instrument):
     """Creates the various tabs of the cosmic monitor results page.
 
