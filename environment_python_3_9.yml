@@ -38,6 +38,7 @@ dependencies:
   - nodejs=18.12.1
   - numpy=1.24.2
   - numpydoc=1.5.0
+  - pandas=2.0.0
   - pip=23.0
   - postgresql=15.2
   - psycopg2=2.9.3
@@ -59,7 +60,6 @@ dependencies:
     - astroquery==0.4.6
     - bandit==1.7.4
     - jwst==1.10.0
-    - pandas==2.0.0
     - pysiaf==0.19.1
     - pysqlite3==0.5.0
     - pyvo==1.4
