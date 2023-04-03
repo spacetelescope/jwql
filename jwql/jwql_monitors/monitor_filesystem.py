@@ -49,6 +49,7 @@ import numpy as np
 
 from jwql.database.database_interface import engine
 from jwql.database.database_interface import session
+from jwql.database.database_interface import FilesystemCharacteristics
 from jwql.database.database_interface import FilesystemGeneral
 from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
@@ -654,8 +655,9 @@ def update_characteristics_database(char_info):
         new_record['instrument'] = instrument
         new_record['filter_pupil'] = list(char_info[instrument].keys())
         new_record['obs_per_filter_pupil'] = list(char_info[instrument].values())
-        engine.execute(FilesystemCharacteristics.__table__.insert(), new_record)
-        session.commit()
+        with engine.begin() as connection:
+            connection.execute(
+                FilesystemCharacteristics.__table__.insert(), new_record)
 
     session.close()
 
@@ -676,8 +678,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
     """
     logging.info('\tUpdating the database')
 
-    engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
-    session.commit()
+    with engine.begin() as connection:
+        connection.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
 
     # Add data to filesystem_instrument table
     for instrument in JWST_INSTRUMENT_NAMES:
@@ -688,8 +690,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
             new_record['filetype'] = filetype
             new_record['count'] = instrument_results_dict[instrument][filetype]['count']
             new_record['size'] = instrument_results_dict[instrument][filetype]['size']
-            engine.execute(FilesystemInstrument.__table__.insert(), new_record)
-            session.commit()
+            with engine.begin() as connection:
+                connection.execute(FilesystemInstrument.__table__.insert(), new_record)
 
     # Add data to central_storage table
     arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
@@ -700,8 +702,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         new_record['size'] = central_storage_dict[area]['size']
         new_record['used'] = central_storage_dict[area]['used']
         new_record['available'] = central_storage_dict[area]['available']
-        engine.execute(CentralStore.__table__.insert(), new_record)
-        session.commit()
+        with engine.begin() as connection:
+            connection.execute(CentralStore.__table__.insert(), new_record)
 
     session.close()
 

@@ -75,6 +75,7 @@ from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
+from sqlalchemy import text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.query import Query
@@ -436,7 +437,8 @@ def set_read_permissions():
     db_username = '_'.join(db_username.split('_')[:-1])
     db_account = '{}_read'.format(db_username)
     command = 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};'.format(db_account)
-    engine.execute(command)
+    with engine.begin() as connection:
+        connection.execute(text(command))
 
 
 # Create tables from ORM factory

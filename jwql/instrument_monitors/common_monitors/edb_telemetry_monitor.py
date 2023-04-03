@@ -390,7 +390,7 @@ from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlock
     NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats, MIRIEDBBlockStats, \
     MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats, \
     FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats, NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
-    NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session
+    NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session, engine
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
@@ -527,7 +527,8 @@ class EdbMnemonicMonitor():
                     'min': mins,
                     'entry_date': datetime.datetime.now()
                     }
-        self.history_table.__table__.insert().execute(db_entry)
+        with engine.begin() as connection:
+            connection.execute(self.history_table.__table__.insert(), db_entry)
 
     def add_new_every_change_db_entry(self, mnem, mnem_dict, dependency_name, query_time):
         """Add new entries to the database table for "every change"
@@ -565,7 +566,9 @@ class EdbMnemonicMonitor():
                         'latest_query': query_time,
                         'entry_date': datetime.datetime.now()
                         }
-            self.history_table.__table__.insert().execute(db_entry)
+            with engine.begin() as connection:
+                connection.execute(
+                    self.history_table.__table__.insert(), db_entry)
 
     def calc_timed_stats(self, mnem_data, bintime, sigma=3):
         """Not currently used.

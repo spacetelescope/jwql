@@ -56,7 +56,7 @@ from bokeh.embed import components
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.database.database_interface import session
+from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
@@ -1178,7 +1178,8 @@ class MSATA():
                      'files_found': len(new_filenames),
                      'run_monitor': monitor_run,
                      'entry_date': datetime.now()}
-        self.query_table.__table__.insert().execute(new_entry)
+        with engine.begin() as connection:
+            connection.execute(self.query_table.__table__.insert(), new_entry)
         logging.info('\tUpdated the query history table')
 
         logging.info('MSATA Monitor completed successfully.')
