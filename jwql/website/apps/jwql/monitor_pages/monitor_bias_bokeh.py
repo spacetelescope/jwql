@@ -39,7 +39,7 @@ from sqlalchemy import func
 from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.permissions import permissions
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import read_png
 from jwql.website.apps.jwql.bokeh_containers import PlaceholderPlot
 
@@ -283,7 +283,7 @@ class BiasMonitorPlots():
         # Save the modified html
         with open(self.html_file, "w") as file:
             file.write(self._html)
-        permissions.set_permissions(self.html_file)
+        set_permissions(self.html_file)
 
     def save_tabs(self):
         """Save the Bokeh tabs to an html file
@@ -292,7 +292,7 @@ class BiasMonitorPlots():
         self.html_file = os.path.join(TEMPLATE_DIR, f'{self.instrument.lower()}_bias_plots.html')
         output_file(self.html_file)
         save(self.tabs)
-        permissions.set_permissions(self.html_file)
+        set_permissions(self.html_file)
 
 
 class HistogramPlot():
