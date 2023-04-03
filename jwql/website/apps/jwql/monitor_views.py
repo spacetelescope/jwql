@@ -92,13 +92,15 @@ def bias_monitor(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get the html and JS needed to render the bias tab plots
-    tabs_components = bokeh_containers.bias_monitor_tabs(inst)
+    #tabs_components = bokeh_containers.bias_monitor_tabs(inst)
 
-    template = "bias_monitor.html"
+    #template = "bias_monitor.html"
+    template = f"{inst.lower()}_bias_plots.html"
+
 
     context = {
         'inst': inst,
-        'tabs_components': tabs_components,
+        #'tabs_components': tabs_components,
     }
 
     # Return a HTTP response with the template and dictionary of variables

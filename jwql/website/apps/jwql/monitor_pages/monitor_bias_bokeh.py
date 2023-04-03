@@ -24,9 +24,12 @@ import os
 
 from astropy.stats import sigma_clip
 
+from bokeh.embed import components, file_html
+from bokeh.layouts import layout
 from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
-from bokeh.models import Range1d, Text, Whisker
-from bokeh.plotting import figure
+from bokeh.models.widgets import Tabs, Panel
+from bokeh.plotting import figure, output_file, save
+from bokeh.resources import CDN
 from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
@@ -36,11 +39,13 @@ from sqlalchemy import func
 from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.permissions import permissions
 from jwql.utils.utils import read_png
-from jwql.website.apps.jwql.bokeh_utils import PlaceholderPlot
+from jwql.website.apps.jwql.bokeh_containers import PlaceholderPlot
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(SCRIPT_DIR, '../templates')
 
 
 class BiasMonitorData():
@@ -102,7 +107,7 @@ class BiasMonitorData():
         self.trending_data = pd.DataFrame(tmp_trending_data, columns=['amp1_even_med', 'amp1_odd_med',
                                                                       'amp2_even_med', 'amp2_odd_med',
                                                                       'amp3_even_med', 'amp3_odd_med',
-                                                                      'amp4_even_med', 'amp3_odd_med',
+                                                                      'amp4_even_med', 'amp4_odd_med',
                                                                       'expstart_str'])
         # Add a column of expstart values that are datetime objects
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
@@ -191,6 +196,35 @@ class BiasMonitorPlots():
             # Create a plot of the histogram of the latest calibrated image
             self.histograms[self.aperture] = HistogramPlot(self.db.latest_data).plot
 
+        # Organize plots into tabs
+        self.create_tabs()
+
+        # Save the tabbed plots using bokeh
+        self.save_tabs()
+
+        # Modify the saved html file such that it works in our Django ecosystem
+        self.modify_bokeh_saved_html()
+
+    def create_tabs(self):
+        """Organize the plots into a separate tab for each aperture
+        """
+        tabs = []
+        for aperture in FULL_FRAME_APERTURES[self.instrument.upper()]:
+
+            bias_layout = layout([[self.trending_plots[aperture][1], self.trending_plots[aperture][2]],
+                                  [self.trending_plots[aperture][3], self.trending_plots[aperture][4]],
+                                  [self.zerothgroup_plots[aperture], self.histograms[aperture]],
+                                  [self.rowcol_plots[aperture]['collapsed_rows'], self.rowcol_plots[aperture]['collapsed_columns']]
+                                  ]
+                                 )
+            bias_layout.sizing_mode = 'scale_width'
+            bias_tab = Panel(child=bias_layout, title=aperture)
+            tabs.append(bias_tab)
+
+        # Build tabs
+        self.tabs = Tabs(tabs=tabs)
+        self.script, self.div = components(self.tabs)
+
     def ensure_all_full_frame_apertures(self):
         """Be sure that self.available_apertures contains entires for all
         full frame apertures. These are needed to make sure the plot layout
@@ -201,6 +235,64 @@ class BiasMonitorPlots():
             if ap not in self.available_apertures:
                 self.available_apertures.append(ap)
 
+    def modify_bokeh_saved_html(self):
+        """Given an html string produced by Bokeh when saving bad pixel monitor plots,
+        make tweaks such that the page follows the general JWQL page formatting.
+        """
+        # Insert into our html template and save
+        #template_file = os.path.join(TEMPLATE_DIR, 'bias_monitor_savefile_basic.html')
+        temp_vars = {'inst': self.instrument, 'plot_script': self.script, 'plot_div': self.div}
+        #self._html = file_html(self.tabs, CDN, f'{self.instrument} bias monitor', template_file, temp_vars)
+        self._html = file_html(self.tabs, CDN, f'{self.instrument} bias monitor', self.html_file, temp_vars)
+
+        lines = self._html.split('\n')
+
+        # List of lines that Bokeh likes to save in the file, but we don't want
+        lines_to_remove = ["<!DOCTYPE html>",
+                           '<html lang="en">',
+                           '  </body>',
+                           '</html>']
+
+        # Our Django-related lines that need to be at the top of the file
+        hstring = """href="{{'/jwqldb/%s_bias_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Go to JWQLDB page</a>"""
+        newlines = ['{% extends "base.html" %}\n', "\n",
+                    "{% block preamble %}\n", "\n",
+                    f"<title>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bias Monitor- JWQL</title>\n", "\n",
+                    "{% endblock %}\n", "\n",
+                    "{% block content %}\n", "\n",
+                    '  <main role="main" class="container">\n', "\n",
+                    f"  <h1>{JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bias Monitor</h1>\n",
+                    "  <hr>\n",
+                    f"  <b>View or Download {JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]} Bias Stats Table:</b>&emsp; <a " + hstring,
+                    "  <hr>\n"
+                    ]
+
+        # More lines that we want to have in the html file, at the bottom
+        endlines = ["\n",
+                    "</main>\n", "\n",
+                    "{% endblock %}"
+                    ]
+
+        for line in lines:
+            if line not in lines_to_remove:
+                newlines.append(line + '\n')
+        newlines = newlines + endlines
+
+        self._html = "".join(newlines)
+
+        # Save the modified html
+        with open(self.html_file, "w") as file:
+            file.write(self._html)
+        permissions.set_permissions(self.html_file)
+
+    def save_tabs(self):
+        """Save the Bokeh tabs to an html file
+        """
+        #self.html_file = os.path.join(TEMPLATE_DIR, f"bias_monitor_{self.instrument.lower()}.html")
+        self.html_file = os.path.join(TEMPLATE_DIR, f'{self.instrument.lower()}_bias_plots.html')
+        output_file(self.html_file)
+        save(self.tabs)
+        permissions.set_permissions(self.html_file)
 
 
 class HistogramPlot():
@@ -333,19 +425,6 @@ class TrendingPlot():
         self.data = data
         self.create_plots()
 
-    def create_plots(self):
-        """Create the 4 plots
-        """
-        self.plots = {}
-        # Either all amps will have data, or all amps will be empty. No need to
-        # worry about some amps having data but others not.
-        # Create one plot per amplifier
-        for amp_num in range(1, 5):
-            cols_to_use = [col for col in self.data.columns if str(amp_num) in col]
-            cols_to_use.append('expstart')
-            subframe = self.data[cols_to_use]
-            self.plots[amp_num] = self.create_amp_plot(amp_num, subframe)
-
     def create_amp_plot(self, amp_num, amp_data):
         """Create a trending plot for a single amplifier
 
@@ -366,7 +445,7 @@ class TrendingPlot():
         x_label = 'Date'
         y_label = 'Bias Level (DN)'
 
-        if len(self.data["expstart"]) > 0:
+        if len(amp_data["expstart"]) > 0:
             plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
                       background_fill_color="#fafafa")
             source = ColumnDataSource(amp_data)
@@ -388,9 +467,15 @@ class TrendingPlot():
                                                          )
             plot.xaxis.major_label_orientation = np.pi / 4
 
+            # Use the string representation of the time in the hover tool, rather than the
+            # datetime version. If you use the datetime version, and save this information
+            # to the html file, when trying to read and display the html file, jinja will
+            # interpret the format codes as html tags and crash with errors such as:
+            # "Encountered unknown tag 'd'. Jinja was looking for the following tags: 'endblock'.
+            # The innermost block that needs to be closed is 'block'"
             hover_tool = HoverTool(tooltips=[('Even col bias:', f'@{even_col}'),
                                              ('Odd col bias:', f'@{odd_col}'),
-                                             ('Date:', '@expstart{%d %b %Y}')
+                                             ('Date:', '@expstart_str')
                                              ]
                                    )
             hover_tool.formatters = {'@expstart': 'datetime'}
@@ -403,6 +488,18 @@ class TrendingPlot():
 
         return plot
 
+    def create_plots(self):
+        """Create the 4 plots
+        """
+        self.plots = {}
+        # Either all amps will have data, or all amps will be empty. No need to
+        # worry about some amps having data but others not.
+        # Create one plot per amplifier
+        for amp_num in range(1, 5):
+            cols_to_use = [col for col in self.data.columns if str(amp_num) in col]
+            cols_to_use.append('expstart')
+            subframe = self.data[cols_to_use]
+            self.plots[amp_num] = self.create_amp_plot(amp_num, subframe)
 
 
 class ZerothGroupImage():
@@ -424,7 +521,7 @@ class ZerothGroupImage():
             # Display the 32-bit RGBA image
             ydim, xdim = image.shape
             dim = max(xdim, ydim)
-            self.figure = figure(title='Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
+            self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
                                  tools='pan,box_zoom,reset,wheel_zoom,save')
             self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)
             self.figure.xaxis.visible = False
