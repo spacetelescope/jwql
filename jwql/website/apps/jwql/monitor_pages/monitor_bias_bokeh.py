@@ -6,6 +6,7 @@ Author
 
     - Ben Sunnquist
     - Maria A. Pena-Guerrero
+    - Bryan Hilbert
 
 Use
 ---
@@ -50,31 +51,36 @@ TEMPLATE_DIR = os.path.join(SCRIPT_DIR, '../templates')
 
 class BiasMonitorData():
     """Class to hold bias data to be plotted
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name (e.g. nircam)
+
+    Attributes
+    ----------
+
+    instrument : str
+        Instrument name (e.g. nircam)
+
+    latest_data : pandas.DataFrame
+        Latest bias data for a particular aperture, from the
+        stats_table
+
+    stats_table : sqlalchemy.orm.decl_api.DeclarativeMeta
+        Bias stats sqlalchemy table
+
+    trending_data : pandas.DataFrame
+        Data from the stats table to be used for the trending plot
     """
     def __init__(self, instrument):
         self.instrument = instrument
-        #self.create_aperture_name()
         self.identify_tables()
 
     def identify_tables(self):
         """Determine which database tables to use for the given instrument"""
-
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
         self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
-
-    def organize_latest_data(self, data):
-        """Convert the latest data, as returned from the database table, from a nested
-        list into a dictionary. Keys will be the uncal filenames.
-
-        Parameters
-        ----------
-        data : list of tuples
-            Nested list returned from the database query
-        """
-        self.latest_data = {}
-
-        for row in data:
-            pass
 
     def retrieve_trending_data(self, aperture):
         """Query the database table to get all of the data needed to create
@@ -85,7 +91,6 @@ class BiasMonitorData():
         aperture : str
             Name of the aperture whose data are being collected. e.g. 'NRCA1_FULL'
         """
-
         # Query database for all data in bias stats with a matching aperture,
         # and sort the data by exposure start time.
         tmp_trending_data = session.query(self.stats_table.amp1_even_med,
@@ -116,7 +121,12 @@ class BiasMonitorData():
 
     def retrieve_latest_data(self, aperture):
         """Query the database table to get the data needed for the non-trending
-        plots. In this case, we need only the most recent entry
+        plots. In this case, we need only the most recent entry.
+
+        Parameters
+        ----------
+        aperture : str
+            Aperture name (e.g. NRCA1_FULL)
         """
         subq = (session.query(func.max(self.stats_table.expstart).label("max_created")) \
         .filter(self.stats_table.aperture == aperture) \
@@ -157,9 +167,56 @@ class BiasMonitorPlots():
     """This is the top-level class, which will call the BiasMonitorData
     class to get results from the bias monitor, and use the plotting
     classes to create figures from the data.
+
+    Paramters
+    ---------
+    instrument : str
+        Instrument name (e.g. nircam)
+
+    Attributes
+    ----------
+
+    aperture : str
+        Aperture name (e.g. NRCA1_FULL)
+
+    available_apertures : list
+        List of apertures present in the data from the database
+
+    div : str
+        html div output by bokeh.components
+
+    db : jwql.website.apps.jwql.monitor_bias_bokeh.BiasMonitorData
+        Object containing data retrieved from the bias stats database table
+
+    instrument : str
+        Instrument name (e.g. nircam)
+
+    histograms : dict
+        Keys are aperture names, and values are corresponding Bokeh figures
+        showing histograms of the signal in the dark exposure
+
+    html_file: str
+        Name of html file to save plots into
+
+    rowcol_plots : dict
+        Keys are aperture names, and values are corresponding Bokeh figures
+        showing the mean row and column signal in the dark exposure
+
+    script : str
+        html script output by bokeh.components
+
+    tabs: bokeh.models.widgets.Tabs
+        Tabs object containing one Tab for each aperture's plots
+
+    trending_plots : dict
+        Keys are aperture names, and values are corresponding Bokeh figures
+        of the bias level versus time
+
+    zerothgroup_plots : dict
+        Keys are aperture names, and values are corresponding Bokeh images
+        of the zeroth frames from dark exposures
     """
     def __init__(self, instrument):
-        #self.output_dir = os.path.join(OUTPUTS_DIR, 'bias_monitor')
         self.instrument = instrument
         self.trending_plots = {}
         self.zerothgroup_plots = {}
@@ -240,12 +297,10 @@ class BiasMonitorPlots():
         make tweaks such that the page follows the general JWQL page formatting.
         """
         # Insert into our html template and save
-        #template_file = os.path.join(TEMPLATE_DIR, 'bias_monitor_savefile_basic.html')
         temp_vars = {'inst': self.instrument, 'plot_script': self.script, 'plot_div': self.div}
-        #self._html = file_html(self.tabs, CDN, f'{self.instrument} bias monitor', template_file, temp_vars)
-        self._html = file_html(self.tabs, CDN, f'{self.instrument} bias monitor', self.html_file, temp_vars)
+        html_lines = file_html(self.tabs, CDN, f'{self.instrument} bias monitor', self.html_file, temp_vars)
 
-        lines = self._html.split('\n')
+        lines = html_lines.split('\n')
 
         # List of lines that Bokeh likes to save in the file, but we don't want
         lines_to_remove = ["<!DOCTYPE html>",
@@ -278,17 +333,16 @@ class BiasMonitorPlots():
                 newlines.append(line + '\n')
         newlines = newlines + endlines
 
-        self._html = "".join(newlines)
+        html_lines = "".join(newlines)
 
         # Save the modified html
         with open(self.html_file, "w") as file:
-            file.write(self._html)
+            file.write(html_lines)
         set_permissions(self.html_file)
 
     def save_tabs(self):
         """Save the Bokeh tabs to an html file
         """
-        #self.html_file = os.path.join(TEMPLATE_DIR, f"bias_monitor_{self.instrument.lower()}.html")
         self.html_file = os.path.join(TEMPLATE_DIR, f'{self.instrument.lower()}_bias_plots.html')
         output_file(self.html_file)
         save(self.tabs)
@@ -296,7 +350,22 @@ class BiasMonitorPlots():
 
 
 class HistogramPlot():
-    """Class to create plots of histogram data
+    """Class to create histogram plots of bias data
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted. Required columns include bin_right, bin_left,
+        counts, expstart_str
+
+    Attributes
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted. Required columns include bin_right, bin_left,
+        counts, expstart_str
+
+    plot : bokeh.plotting.figure
+        Figure containing the histogram plot
     """
     def __init__(self, data):
         self.data = data
@@ -316,7 +385,6 @@ class HistogramPlot():
             self.data['bin_left'] = [bin_centers - half_widths]
             self.data['bin_right'] = [bin_centers + half_widths]
 
-            #datestr = self.data['expstart'][0].strftime("%m/%d/%Y")
             datestr = self.data['expstart_str'].iloc[0]
             self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
@@ -341,6 +409,22 @@ class HistogramPlot():
 class MedianRowColPlot():
     """Class to create a plot of the median signal across rows
     or columns
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted. Required columns include bin_right, bin_left,
+        counts, expstart_str
+
+    Attributes
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted. Required columns include bin_right, bin_left,
+        counts, expstart_str
+
+    plots : dict
+        Dictionary containing plots. Keys are 'collapsed_rows' and 'collapsed_columns',
+        and the values are the Bokeh figures
     """
     def __init__(self, data):
         self.data = data
@@ -351,7 +435,6 @@ class MedianRowColPlot():
         """
         self.plots = {}
         for colname in ['collapsed_rows', 'collapsed_columns']:
-            #subframe = self.data[[colname, 'expstart']]
             self.plots[colname] = self.create_plot(colname)
 
     def create_plot(self, colname):
@@ -411,6 +494,11 @@ class MedianRowColPlot():
 class TrendingPlot():
     """Class to create trending plots of bias level over time. There should be
     4 plots produced: 1 for each amplifier (with even and odd columns plotted in each).
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted
 
     Attributes
     ----------
@@ -505,6 +593,21 @@ class TrendingPlot():
 class ZerothGroupImage():
     """Class to create an image to show the zeroth group of a
     calibrated dark file
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted. Required columns include bin_right, bin_left,
+        counts, expstart_str
+
+    Attributes
+    ----------
+    data : pandas.DataFrame
+        Data to be plotted. Required columns include bin_right, bin_left,
+        counts, expstart_str
+
+    figure : bokeh.plotting.figure
+        Figure containing an image
     """
     def __init__(self, data):
         self.data = data
