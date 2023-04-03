@@ -39,7 +39,7 @@ from jwql.database.database_interface import FGSDarkPixelStats, FGSDarkDarkCurre
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, read_png
-from jwql.website.apps.jwql.bokeh_containers import PlaceholderPlot
+from jwql.website.apps.jwql.bokeh_utils import PlaceholderPlot
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = get_config()['outputs']
