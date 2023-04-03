@@ -50,12 +50,13 @@ import glob
 import logging
 import os
 import operator
+import socket
 
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-import socket
+from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
@@ -701,7 +702,7 @@ def jwqldb_table_viewer(request, tablename_param=None):
         table_meta = build_table(tablename)
 
     _, _, engine, _ = load_connection(get_config()['connection_string'])
-    all_jwql_tables = engine.table_names()
+    all_jwql_tables = inspect(engine).get_table_names()
 
     if 'django_migrations' in all_jwql_tables:
         all_jwql_tables.remove('django_migrations')  # No necessary information.

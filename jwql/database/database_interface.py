@@ -76,10 +76,8 @@ from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
 from sqlalchemy import UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import text
 from sqlalchemy.types import ARRAY
 
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -94,7 +92,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 @property
 def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
-
+    # NOTE: this requires pandas>=2 if sqlalchemy>=2
     return pd.read_sql(self.statement, self.session.bind)
 
 
@@ -135,11 +133,11 @@ def load_connection(connection_string):
     ``ascql``:
         https://github.com/spacetelescope/acsql/blob/master/acsql/database/database_interface.py
     """
-    engine = create_engine(connection_string, echo=False, client_encoding='utf8', encoding='utf8')
-    base = declarative_base(engine)
+    engine = create_engine(connection_string, echo=False)
+    base = declarative_base()
     Session = sessionmaker(bind=engine)
     session = Session()
-    meta = MetaData(engine)
+    meta = MetaData()
 
     return session, base, engine, meta
 

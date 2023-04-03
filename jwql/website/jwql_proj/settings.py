@@ -87,7 +87,8 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages'
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request'
             ],
         },
     },
@@ -152,6 +153,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static/"),
+    os.path.join(BASE_DIR, "apps", "jwql", "static/"),
     get_config()['jwql_dir']
 ]
+
+# Use integer for auto primary key, as was default before django 3.2
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

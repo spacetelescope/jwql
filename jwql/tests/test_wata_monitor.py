@@ -287,9 +287,7 @@ def test_mk_plt_layout():
 
     # set group write permission for the test file
     # to make sure others can overwrite it
-    owner = permissions.get_owner_string(ta.output_file_name)
-    permissions.set_permissions(ta.output_file_name,
-                                owner=owner, mode=0o664)
+    permissions.set_permissions(ta.output_file_name)
 
     assert type(script) == type(truth_script)
     assert type(div) == type(truth_div)

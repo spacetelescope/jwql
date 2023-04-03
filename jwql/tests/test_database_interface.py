@@ -92,6 +92,8 @@ def test_anomaly_records():
         .filter(di.FGSAnomaly.ghost == "True")
     assert bool(ghosts.data_frame.iloc[0]['ghost']) is True
 
+    di.session.close()
+
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_load_connections():
@@ -103,6 +105,7 @@ def test_load_connections():
     assert str(type(base)) == "<class 'sqlalchemy.orm.decl_api.DeclarativeMeta'>"
     assert str(type(engine)) == "<class 'sqlalchemy.engine.base.Engine'>"
     assert str(type(meta)) == "<class 'sqlalchemy.sql.schema.MetaData'>"
+    session.close()
 
 
 def test_monitor_orm_factory():
