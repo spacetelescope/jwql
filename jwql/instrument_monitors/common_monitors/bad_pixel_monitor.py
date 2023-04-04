@@ -110,7 +110,6 @@ from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists, get_config, filesystem_path
-from jwql.website.apps.jwql.monitor_pages.monitor_bad_pixel_bokeh import BadPixelPlots
 
 # Determine if the code is being run by Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
