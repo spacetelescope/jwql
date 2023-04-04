@@ -38,6 +38,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+TEMPLATE_DIR = os.path.join(PACKAGE_DIR, 'website/apps/jwql/templates')
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
