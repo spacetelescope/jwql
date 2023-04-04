@@ -233,9 +233,9 @@ class GeneralDashboard:
 
             hover_tool = HoverTool(tooltips=[('Available:', '@available'),
                                              ('Used:', '@used'),
-                                             ('Date:', '@time{%d %b %Y}')
+                                             ('Date:', '@date{%d %b %Y}')
                                              ])
-            hover_tool.formatters = {'@time': 'datetime'}
+            hover_tool.formatters = {'@date': 'datetime'}
             plots[data['shortname']].tools.append(hover_tool)
             tabs.append(Panel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
 
@@ -336,9 +336,9 @@ class GeneralDashboard:
             cen_store_plot.legend.location = 'top_left'
 
             hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
-                                             ('Date:', '@time{%d %b %Y}')
+                                             ('Date:', '@date{%d %b %Y}')
                                              ])
-            hover_tool.formatters = {'@time': 'datetime'}
+            hover_tool.formatters = {'@date': 'datetime'}
             cen_store_plot.tools.append(hover_tool)
 
         di.session.close()
