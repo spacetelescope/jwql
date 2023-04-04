@@ -60,6 +60,7 @@ from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (modul
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
 from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots  # noqa: E402 (module import not at top)
 
 
 class Bias():
@@ -372,7 +373,7 @@ class Bias():
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
-            
+
             if filename not in outputs:
                 processed_file = filename.replace("uncal_0thgroup", "refpix")
                 if not os.path.isfile(processed_file):
@@ -534,6 +535,9 @@ class Bias():
                              'entry_date': datetime.datetime.now()}
                 self.query_table.__table__.insert().execute(new_entry)
                 logging.info('\tUpdated the query history table')
+
+            # Update the bias monitor plots
+            BiasMonitorPlots(instrument)
 
         logging.info('Bias Monitor completed successfully.')
 

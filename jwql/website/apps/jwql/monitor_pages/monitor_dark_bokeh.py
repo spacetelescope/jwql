@@ -30,7 +30,7 @@ from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import get_unique_values_per_column, session
 from jwql.database.database_interface import NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -39,6 +39,7 @@ from jwql.database.database_interface import FGSDarkPixelStats, FGSDarkDarkCurre
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, read_png
+from jwql.website.apps.jwql.bokeh_utils import PlaceholderPlot
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = get_config()['outputs']
@@ -108,6 +109,10 @@ class DarkHistPlot():
             else:
                 use_amp = '1'
 
+            title_str = f'{self.aperture}: Dark Rate Histogram'
+            x_label = 'Dark Rate (DN/sec)'
+            y_label = 'Number of Pixels'
+
             # If there are histogram data for multiple amps, then we can plot each histogram.
             if len(self.data) > 1:
                 # Looks like the histogram data for the individual amps is not being saved
@@ -141,7 +146,7 @@ class DarkHistPlot():
                                                 )
                                       )
 
-            self.plot = figure(title=f'{self.aperture}: Dark Rate Histogram',
+            self.plot = figure(title=title_str,
                                tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
 
             # Plot the histogram for the "main" amp
@@ -179,6 +184,9 @@ class DarkHistPlot():
             # Set the initial x range to include 99.8% of the distribution
             disp_index = np.where((cdf > 0.001) & (cdf < 0.999))[0]
 
+            # Set labels and ranges
+            self.plot.xaxis.axis_label = x_label
+            self.plot.yaxis.axis_label = y_label
             self.plot.y_range.start = 0
             self.plot.y_range.end = np.max(mainy) * 1.1
             self.plot.x_range.start = mainx[disp_index[0]]
@@ -188,20 +196,7 @@ class DarkHistPlot():
             self.plot.grid.grid_line_color="white"
         else:
             # If self.data is empty, then make a placeholder plot
-            self.plot = figure(title=f'{self.aperture}: Dark Rate Histogram',
-                               tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
-            self.plot.y_range.start = 0
-            self.plot.y_range.end = 1
-            self.plot.x_range.start = 0
-            self.plot.x_range.end = 1
-
-            source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
-            self.plot.add_glyph(source, glyph)
-
-        # Set labels and ranges
-        self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
-        self.plot.yaxis.axis_label = 'Number of Pixels'
+            self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
 
 
 class DarkImagePlot():
@@ -247,22 +242,14 @@ class DarkImagePlot():
 
             else:
                 # If the given file is missing, create an empty plot
-                self.empty_plot()
+                self.plot = PlaceholderPlot(self.aperture, '', '').plot
+                self.plot.xaxis.visible = False
+                self.plot.yaxis.visible = False
         else:
             # If no filename is given, then create an empty plot
-            self.empty_plot()
-
-    def empty_plot(self):
-        # If no mean image is given, create an empty figure
-        self.plot = figure(title=self.aperture, tools='')
-        self.plot.x_range.start = 0
-        self.plot.x_range.end = 1
-        self.plot.y_range.start = 0
-        self.plot.y_range.end = 1
-
-        source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-        glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
-        self.plot.add_glyph(source, glyph)
+            self.plot = PlaceholderPlot(self.aperture, '', '').plot
+            self.plot.xaxis.visible = False
+            self.plot.yaxis.visible = False
 
 
 class DarkMonitorData():
@@ -310,24 +297,6 @@ class DarkMonitorData():
         # Get a list of column names for each
         self.stats_table_columns = self.stats_table.metadata.tables[f'{self.instrument.lower()}_dark_dark_current'].columns.keys()
         self.pixel_table_columns = self.pixel_table.metadata.tables[f'{self.instrument.lower()}_dark_pixel_stats'].columns.keys()
-
-    def get_unique_stats_column_vals(self, column_name):
-        """Return a list of the unique values from a particular column in the
-        <Instrument>DarkDarkCurrent table (self.stats_table)
-
-        Parameters
-        ----------
-        column_name : str
-            Table column name to query
-
-        Returns
-        -------
-        distinct_colvals : list
-            List of unique values in the given column
-        """
-        colvals = session.query(eval(f'self.stats_table.{column_name}')).distinct()
-        distinct_colvals = [eval(f'x.{column_name}') for x in colvals]
-        return distinct_colvals
 
     def retrieve_data(self, aperture, get_pixtable_for_detector=False):
         """Get all nedded data from the database tables.
@@ -478,7 +447,7 @@ class DarkMonitorPlots():
         self.db = DarkMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        self.available_apertures = self.db.get_unique_stats_column_vals('aperture')
+        self.available_apertures = get_unique_values_per_column(self.db, 'aperture')
 
         # Require entries for all full frame apertures. If there are no data for a
         # particular full frame entry, then produce an empty plot, in order to
