@@ -430,17 +430,6 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 
-def set_read_permissions():
-    """Set read permissions for db tables"""
-
-    db_username = SETTINGS['database']['user']
-    db_username = '_'.join(db_username.split('_')[:-1])
-    db_account = '{}_read'.format(db_username)
-    command = 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};'.format(db_account)
-    with engine.begin() as connection:
-        connection.execute(text(command))
-
-
 # Create tables from ORM factory
 NIRCamAnomaly = anomaly_orm_factory('nircam_anomaly')
 NIRISSAnomaly = anomaly_orm_factory('niriss_anomaly')
