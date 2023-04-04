@@ -112,6 +112,17 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists, get_config, filesystem_path
 from jwql.website.apps.jwql.monitor_pages.monitor_bad_pixel_bokeh import BadPixelPlots
 
+# Determine if the code is being run by Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    from jwql.website.apps.jwql.monitor_pages.monitor_bad_pixel_bokeh import BadPixelPlots
+
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
 
 
