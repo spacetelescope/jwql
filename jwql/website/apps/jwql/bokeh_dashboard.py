@@ -203,6 +203,7 @@ class GeneralDashboard:
 
         # Plot total data volume and available disk space versus time
         plots = {}
+        hover_tool = {}
         tabs = []
         for data in [preview_results, log_results]:
 
@@ -224,19 +225,19 @@ class GeneralDashboard:
             plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
 
             plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                       days=["%d %B %Y"],
-                                                       months=["%d %B %Y"],
-                                                       years=["%B %Y"],
-                                                       )
+                                                                             days=["%d %B %Y"],
+                                                                             months=["%d %B %Y"],
+                                                                             years=["%B %Y"],
+                                                                             )
             plots[data['shortname']].xaxis.major_label_orientation = pi / 4
             plots[data['shortname']].legend.location = 'top_left'
 
-            hover_tool = HoverTool(tooltips=[('Available:', '@available'),
-                                             ('Used:', '@used'),
-                                             ('Date:', '@date{%d %b %Y}')
-                                             ])
-            hover_tool.formatters = {'@date': 'datetime'}
-            plots[data['shortname']].tools.append(hover_tool)
+            hover_tool[data['shortname']] = HoverTool(tooltips=[('Available:', '@available'),
+                                                                ('Used:', '@used'),
+                                                                ('Date:', '@date{%d %b %Y}')
+                                                                ])
+            hover_tool[data['shortname']].formatters = {'@date': 'datetime'}
+            plots[data['shortname']].tools.append(hover_tool[data['shortname']])
             tabs.append(Panel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
 
         tabs = Tabs(tabs=tabs)
