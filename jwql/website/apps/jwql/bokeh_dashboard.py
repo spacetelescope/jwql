@@ -212,7 +212,7 @@ class GeneralDashboard:
             source = ColumnDataSource(data['results'])
 
             # Initialize plot
-            plots[data['shortname']] = figure(tools='pan,hover,box_zoom,wheel_zoom,reset,save',
+            plots[data['shortname']] = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
                                               plot_width=800,
                                               x_axis_type='datetime',
                                               title=f"Available & Used Storage on {data['shortname']}",
