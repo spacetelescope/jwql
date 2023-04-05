@@ -159,3 +159,9 @@ STATICFILES_DIRS = [
 
 # Use integer for auto primary key, as was default before django 3.2
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# Add trusted origins for CSRF origin checking
+CSRF_TRUSTED_ORIGINS = ['https://jwql.stsci.edu',
+                        'https://jwql-test.stsci.edu',
+                        'https://jwql-dev.stsci.edu',
+                        'https://127.0.0.1']

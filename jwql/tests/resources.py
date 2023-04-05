@@ -21,7 +21,7 @@ def has_test_db():
     try:
         config = get_config()
         connection = config['connection_string']
-        return ('dl' in connection) and ('pl' not in connection)
+        return 'dljwql' in connection
     except (ValueError, KeyError, FileNotFoundError):
         return False
 
