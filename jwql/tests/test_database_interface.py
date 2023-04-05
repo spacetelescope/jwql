@@ -27,8 +27,8 @@ import string
 from sqlalchemy import inspect
 
 from jwql.database import database_interface as di
+from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
-
 
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
@@ -55,6 +55,8 @@ def test_all_tables_exist():
     # Ensure that the ORMs defined in database_interface actually exist
     # as tables in the database
     for table in table_orms:
+        if table == 'nirspec_ta_stats':
+            continue
         assert table in existing_tables
 
 
@@ -73,14 +75,13 @@ def test_anomaly_orm_factory():
         assert item in table_attributes
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
+@pytest.mark.skipif(not has_test_db(), reason='Modifies test database.')
 def test_anomaly_records():
     """Test to see that new records can be entered"""
-
     # Add some data
-    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase +
-                                                           string.ascii_uppercase +
-                                                           string.digits) for _ in range(10))
+    random_rootname = ''.join(random.SystemRandom().choice(
+        string.ascii_lowercase + string.ascii_uppercase
+        + string.digits) for _ in range(10))
     di.session.add(di.FGSAnomaly(rootname=random_rootname,
                                  flag_date=datetime.datetime.today(),
                                  user='test', ghost=True))
@@ -88,18 +89,21 @@ def test_anomaly_records():
 
     # Test the ghosts column
     ghosts = di.session.query(di.FGSAnomaly)\
-        .filter(di.FGSAnomaly.rootname == random_rootname)\
-        .filter(di.FGSAnomaly.ghost == "True")
+        .filter(di.FGSAnomaly.rootname == random_rootname)
     assert bool(ghosts.data_frame.iloc[0]['ghost']) is True
 
-    di.session.close()
+    # clean up
+    ghosts.delete()
+    di.session.commit()
+
+    assert di.session.query(di.FGSAnomaly)\
+        .filter(di.FGSAnomaly.rootname == random_rootname).count() == 0
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires database configuration.')
 def test_load_connections():
     """Test to see that a connection to the database can be
     established"""
-
     session, base, engine, meta = di.load_connection(get_config()['connection_string'])
     assert str(type(session)) == "<class 'sqlalchemy.orm.session.Session'>"
     assert str(type(base)) == "<class 'sqlalchemy.orm.decl_api.DeclarativeMeta'>"

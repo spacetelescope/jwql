@@ -32,10 +32,7 @@ from jwql.database.database_interface import NIRSpecTAQueryHistory
 from jwql.utils.utils import get_config, ensure_dir_exists
 from jwql.utils import monitor_utils, permissions
 
-
-
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
 
 # define the type of a Bokeh plot type
 bokeh_plot_type = type(figure())

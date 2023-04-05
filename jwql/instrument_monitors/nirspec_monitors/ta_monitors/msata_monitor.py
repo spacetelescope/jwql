@@ -1160,7 +1160,7 @@ class MSATA():
         if self.msata_data is not None:
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
-            logging.info('\Output html plot file created: {}'.format(self.output_file_name))
+            logging.info('\tOutput html plot file created: {}'.format(self.output_file_name))
             msata_files_used4plots = len(self.msata_data['visit_id'])
             logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
             # update the list of successful and failed TAs
