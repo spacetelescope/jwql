@@ -235,7 +235,7 @@ def log_info(func):
         for module in module_list:
             try:
                 mod = importlib.import_module(module)
-                logging.info(module + ' Version: ' + mod.__version__)
+                logging.info(module + ' Version: ' + importlib.metadata.version(module))
                 logging.info(module + ' Path: ' + mod.__path__[0])
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
