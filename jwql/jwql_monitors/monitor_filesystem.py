@@ -654,7 +654,8 @@ def update_central_store_database(central_storage_dict):
         new_record['size'] = central_storage_dict[area]['size']
         new_record['used'] = central_storage_dict[area]['used']
         new_record['available'] = central_storage_dict[area]['available']
-        engine.execute(CentralStore.__table__.insert(), new_record)
+        with engine.begin() as connection:
+            connection.execute(CentralStore.__table__.insert(), new_record)
         session.commit()
     session.close()
 
@@ -680,7 +681,8 @@ def update_characteristics_database(char_info):
         new_record['instrument'] = instrument
         new_record['filter_pupil'] = filter_list
         new_record['obs_per_filter_pupil'] = value_list
-        engine.execute(FilesystemCharacteristics.__table__.insert(), new_record)
+        with engine.begin() as connection:
+            connection.execute(FilesystemCharacteristics.__table__.insert(), new_record)
         session.commit()
 
     session.close()
@@ -699,7 +701,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
     """
     logging.info('\tUpdating the database')
 
-    engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
+    with engine.begin() as connection:
+        connection.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
     session.commit()
 
     # Add data to filesystem_instrument table
@@ -715,7 +718,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
             # Protect against updated enum options that have not been propagated to
             # the table definition
             try:
-                engine.execute(FilesystemInstrument.__table__.insert(), new_record)
+                with engine.begin() as connection:
+                    connection.execute(FilesystemInstrument.__table__.insert(), new_record)
                 session.commit()
             except DataError as e:
                 logging.error(e)
