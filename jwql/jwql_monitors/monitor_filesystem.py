@@ -656,7 +656,6 @@ def update_central_store_database(central_storage_dict):
         new_record['available'] = central_storage_dict[area]['available']
         with engine.begin() as connection:
             connection.execute(CentralStore.__table__.insert(), new_record)
-        session.commit()
     session.close()
 
 
@@ -682,8 +681,8 @@ def update_characteristics_database(char_info):
         new_record['filter_pupil'] = filter_list
         new_record['obs_per_filter_pupil'] = value_list
         with engine.begin() as connection:
-            connection.execute(FilesystemCharacteristics.__table__.insert(), new_record)
-        session.commit()
+            connection.execute(
+                FilesystemCharacteristics.__table__.insert(), new_record)
 
     session.close()
 
@@ -703,7 +702,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
 
     with engine.begin() as connection:
         connection.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
-    session.commit()
 
     # Add data to filesystem_instrument table
     for instrument in JWST_INSTRUMENT_NAMES:
@@ -720,7 +718,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
             try:
                 with engine.begin() as connection:
                     connection.execute(FilesystemInstrument.__table__.insert(), new_record)
-                session.commit()
             except DataError as e:
                 logging.error(e)
 
