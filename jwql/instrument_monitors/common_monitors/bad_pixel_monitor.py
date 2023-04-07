@@ -95,7 +95,7 @@ from jwst.datamodels import dqflags
 from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import engine, session
 from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
 from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
 from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
@@ -441,7 +441,8 @@ class BadPixels():
                  'obs_end_time': obs_end_time,
                  'baseline_file': baseline_file,
                  'entry_date': datetime.datetime.now()}
-        self.pixel_table.__table__.insert().execute(entry)
+        with engine.begin() as connection:
+            connection.execute(self.pixel_table.__table__.insert(), entry)
 
     def filter_query_results(self, results, datatype):
         """Filter MAST query results. For input flats, keep only those
@@ -1287,7 +1288,8 @@ class BadPixels():
                              'run_bpix_from_flats': run_flats,
                              'run_monitor': run_flats or run_darks,
                              'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
+                with engine.begin() as connection:
+                    connection.execute(self.query_table.__table__.insert(), new_entry)
                 logging.info('\tUpdated the query history table')
 
         # Update the figures to be shown in the web app. Only update figures

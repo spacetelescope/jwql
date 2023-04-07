@@ -54,7 +54,7 @@ from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIRead
 from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import session  # noqa: E348 (comparison to true)
+from jwql.database.database_interface import session, engine  # noqa: E348 (comparison to true)
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
@@ -525,7 +525,8 @@ class Readnoise():
                     readnoise_db_entry[key] = amp_stats[key].astype(float)
 
             # Add this new entry to the readnoise database table
-            self.stats_table.__table__.insert().execute(readnoise_db_entry)
+            with engine.begin() as connection:
+                connection.execute(self.stats_table.__table__.insert(), readnoise_db_entry)
             logging.info('\tNew entry added to readnoise database table')
 
             # Remove the raw and calibrated files to save memory space
@@ -649,7 +650,8 @@ class Readnoise():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
+                with engine.begin() as connection:
+                    connection.execute(self.query_table.__table__.insert(), new_entry)
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')

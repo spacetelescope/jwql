@@ -50,7 +50,7 @@ from jwql.website.apps.jwql.models import RootFileInfo, Anomalies
 @log_info
 @log_fail
 def transfer_anomalies():
-    """Update the the Django anomalies model with all information in the existing postgres database.
+    """Update the Django anomalies model with all information in the existing postgres database.
 
     """
     instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
@@ -64,8 +64,10 @@ def transfer_anomalies():
         table_keys = list(map(lambda x: x.lower(), table_keys))
         updated = 0
 
-        anomaly_dict = {}
-        rows = query.statement.execute().fetchall()
+        with di.engine.connect() as connection:
+            result = connection.execute(query.statement)
+        rows = result.fetchall()
+
         for rowx, row in enumerate(rows):
             anomaly_dict = {}
             for ix, value in enumerate(row):
@@ -91,6 +93,7 @@ def transfer_anomalies():
             except Exception as e:
                 logging.warning('Failed to create {} with exception {}'.format(root_file_info_name, e))
         logging.info('Transferred {} anomalies for {}'.format(updated, instrument))
+
 
 if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')

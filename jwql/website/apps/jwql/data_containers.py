@@ -886,7 +886,7 @@ def mast_query_by_rootname(instrument, rootname):
         result = response[0].json()
     except Exception as e:
         logging.error("Mast.service_request_async- {} - {}".format(file_set_name, e))
-        result['data'] = []
+        result = {'data': []}
 
     retval = {}
     if result['data'] == []:

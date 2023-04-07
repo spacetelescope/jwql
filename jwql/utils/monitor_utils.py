@@ -21,7 +21,7 @@ import os
 from astroquery.mast import Mast, Observations
 
 
-from jwql.database.database_interface import Monitor
+from jwql.database.database_interface import Monitor, engine
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
@@ -226,4 +226,5 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['status'] = get_log_status(log_file)
     new_entry['log_file'] = os.path.basename(log_file)
 
-    Monitor.__table__.insert().execute(new_entry)
+    with engine.begin() as connection:
+        connection.execute(Monitor.__table__.insert(), new_entry)
