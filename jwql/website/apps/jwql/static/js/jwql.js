@@ -923,12 +923,33 @@ function update_thumbnail_array(data) {
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
-        content += 'Proposal: ' + filename_dict.program_id + '<br>';
-        content += 'Observation: ' + filename_dict.observation + '<br>';
-        content += 'Visit: ' + filename_dict.visit + '<br>';
-        content += 'Detector: ' + filename_dict.detector + '<br>';
-        content += 'Exp_Start: ' + file.expstart_iso + '<br>';
-        content += 'Exp_Num: ' + file.exp_num + '<br>';
+        content += '<span class="thumbinfo-key">Proposal: </span>' + '<span class="thumbinfo-val">'+ filename_dict.program_id + '</span><br>';
+        content += '<span class="thumbinfo-key">Observation: </span>' + '<span class="thumbinfo-val">'+ filename_dict.observation + '</span><br>';
+        content += '<span class="thumbinfo-key">Visit: </span>' + '<span class="thumbinfo-val">'+ filename_dict.visit + '</span><br>';
+        content += '<span class="thumbinfo-key">Detector: </span>' + '<span class="thumbinfo-val">'+ filename_dict.detector + '</span><br>';
+        content += '<span class="thumbinfo-key">Start: </span>' + '<span class="thumbinfo-val">'+ file.expstart_str + '</span><br>';
+        content += '<span class="thumbinfo-key">Exp_Num: </span>' + '<span class="thumbinfo-val">'+ file.exp_num + '</span><br>';
+
+        // Additional keywords to be displayed for each instrument
+        if (filename_dict.instrument=="nirspec"){
+            content += '<span class="thumbinfo-key">Filter: </span>' + '<span class="thumbinfo-val">'+ file.filter+ '</span><br>';
+            content += '<span class="thumbinfo-key">Grating: </span>' + '<span class="thumbinfo-val">'+ file.grating+ '</span><br>';
+            content += '<span class="thumbinfo-key">Patt_Num: </span>' + '<span class="thumbinfo-val">'+ file.pattnum+ '</span><br>';
+            content += '<span class="thumbinfo-key">Lamp: </span>' + '<span class="thumbinfo-val">'+ file.lamp+ '</span><br>';
+            content += '<span class="thumbinfo-key">Opmode: </span>' + '<span class="thumbinfo-val">'+ file.opmode+ '</span><br>';
+        }
+        if (filename_dict.instrument=="nircam"){
+            content += '<span class="thumbinfo-key">Filter/Pupil: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
+        }
+        if (filename_dict.instrument=="niriss"){
+            content += '<span class="thumbinfo-key">Filter/Pupil: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
+        }
+        if (filename_dict.instrument=="miri"){
+            content += '<span class="thumbinfo-key">Filter: </span>'+ '<span class="thumbinfo-val">'+ file.filter + '</span><br>';
+        }
+        if (exp_type=="miri_mrs"){
+            content += '<span class="thumbinfo-key">Band: </span>'+ '<span class="thumbinfo-val">'+ file.band + '</span><br>';
+            }
         content += '</div></a></div>';
 
         // Add the content to the div
