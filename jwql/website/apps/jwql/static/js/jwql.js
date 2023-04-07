@@ -924,32 +924,34 @@ function update_thumbnail_array(data) {
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += '<span class="thumbinfo-key">Proposal: </span>' + '<span class="thumbinfo-val">'+ filename_dict.program_id + '</span><br>';
-        content += '<span class="thumbinfo-key">Observation: </span>' + '<span class="thumbinfo-val">'+ filename_dict.observation + '</span><br>';
-        content += '<span class="thumbinfo-key">Visit: </span>' + '<span class="thumbinfo-val">'+ filename_dict.visit + '</span><br>';
+        content += '<span class="thumbinfo-key">Obs/Visit: </span>' + '<span class="thumbinfo-val">'+ file.obs_visit + '</span><br>';
         content += '<span class="thumbinfo-key">Detector: </span>' + '<span class="thumbinfo-val">'+ filename_dict.detector + '</span><br>';
         content += '<span class="thumbinfo-key">Start: </span>' + '<span class="thumbinfo-val">'+ file.expstart_str + '</span><br>';
         content += '<span class="thumbinfo-key">Exp_Num: </span>' + '<span class="thumbinfo-val">'+ file.exp_num + '</span><br>';
 
         // Additional keywords to be displayed for each instrument
         if (filename_dict.instrument=="nirspec"){
-            content += '<span class="thumbinfo-key">Filter: </span>' + '<span class="thumbinfo-val">'+ file.filter+ '</span><br>';
-            content += '<span class="thumbinfo-key">Grating: </span>' + '<span class="thumbinfo-val">'+ file.grating+ '</span><br>';
+            content += '<span class="thumbinfo-key">Optics: </span>' + '<span class="thumbinfo-val">'+ file.filtergrating+ '</span><br>';
             content += '<span class="thumbinfo-key">Patt_Num: </span>' + '<span class="thumbinfo-val">'+ file.patt_num+ '</span><br>';
-            content += '<span class="thumbinfo-key">Lamp: </span>' + '<span class="thumbinfo-val">'+ file.lamp+ '</span><br>';
+            if (file.lamp !== "NONE"){
+                content += '<span class="thumbinfo-key">Lamp: </span>' + '<span class="thumbinfo-val">'+ file.lamp+ '</span><br>';
+            }
             content += '<span class="thumbinfo-key">Opmode: </span>' + '<span class="thumbinfo-val">'+ file.opmode+ '</span><br>';
         }
         if (filename_dict.instrument=="nircam"){
-            content += '<span class="thumbinfo-key">Filter/Pupil: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
+            content += '<span class="thumbinfo-key">Optics: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
         }
         if (filename_dict.instrument=="niriss"){
-            content += '<span class="thumbinfo-key">Filter/Pupil: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
+            content += '<span class="thumbinfo-key">Optics: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
         }
         if (filename_dict.instrument=="miri"){
-            content += '<span class="thumbinfo-key">Filter: </span>'+ '<span class="thumbinfo-val">'+ file.filter + '</span><br>';
-            content += '<span class="thumbinfo-key">Ngrp/Nint: </span>'+ '<span class="thumbinfo-val">'+ file.ngrp_nint + '</span><br>';
-            if (exp_type=="mir_mrs"){
-                content += '<span class="thumbinfo-key">Band: </span>'+ '<span class="thumbinfo-val">'+ file.band + '</span><br>';
+            if ('band' in file) {
+                content += '<span class="thumbinfo-key">Optics: </span>'+ '<span class="thumbinfo-val">'+ file.filterband + '</span><br>';
             }
+            else {
+                content += '<span class="thumbinfo-key">Filter: </span>'+ '<span class="thumbinfo-val">'+ file.filter + '</span><br>';
+            }
+            content += '<span class="thumbinfo-key">Ngrp/Nint: </span>'+ '<span class="thumbinfo-val">'+ file.ngrp_nint + '</span><br>';
         }
         
         content += '</div></a></div>';

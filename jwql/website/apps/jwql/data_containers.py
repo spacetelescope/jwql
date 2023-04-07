@@ -1634,6 +1634,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]["viewed"] = viewed
         data_dict['file_data'][rootname]["exp_type"] = exp_type
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
+        data_dict['file_data'][rootname]['obs_visit'] = filename_dict['observation']+'/'+filename_dict['visit']
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -1677,15 +1678,16 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             except KeyError: # only MRS mode has band kwd?
                 continue
 
-        # for keyword in moreinfo:
-        #     data_dict['file_data'][rootname][keyword] = moreinfo[keyword]
-
-        # if they both exist, replace 'filter' and 'pupil' with 'filter/pupil'
+        # combine optical elements keywords to save space
         if ('filter' in data_dict['file_data'][rootname].keys()) & ('pupil' in data_dict['file_data'][rootname].keys()):
             filt_pup = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['pupil']
             data_dict['file_data'][rootname]['filterpupil'] = filt_pup
-            del data_dict['file_data'][rootname]['filter']
-            del data_dict['file_data'][rootname]['pupil']
+        if ('filter' in data_dict['file_data'][rootname].keys()) & ('grating' in data_dict['file_data'][rootname].keys()):
+            filt_grat = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['grating']
+            data_dict['file_data'][rootname]['filtergrating'] = filt_grat
+        if ('filter' in data_dict['file_data'][rootname].keys()) & ('band' in data_dict['file_data'][rootname].keys()):
+            filt_band = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['band']
+            data_dict['file_data'][rootname]['filterband'] = filt_band
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)

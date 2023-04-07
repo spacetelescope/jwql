@@ -474,7 +474,7 @@
   
   .thumbnail {
       width: 8rem;
-      height: 12rem;
+      height: 8rem;
       text-align: center;
       position: relative;
       display: inline-block;
@@ -485,7 +485,7 @@
   .thumbnail-color-fill {
       display: none;
       width: 100%;
-      height: 100%;
+      height: 105%;
       background-color: #356198;
       opacity: 0.5;
       position: absolute;
