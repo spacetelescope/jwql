@@ -72,7 +72,8 @@ from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_instrument_looks
-from .data_containers import get_thumbnails_all_instruments
+from .data_containers import get_rootnames_from_query
+from .data_containers import get_thumbnail_by_rootname
 from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
@@ -469,17 +470,8 @@ def archive_thumbnails_query_ajax(request):
     """
 
     parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
-    # Ensure the instrument is correctly capitalized
-    instruments_list = []
-    for instrument in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
-        instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
-        instruments_list.append(instrument)
-
-    # when parameters only contains nirspec as instrument,
-    # thumbnails still end up being all niriss data
-    thumbnails = get_thumbnails_all_instruments(parameters)
-
-    data = thumbnails_query_ajax(thumbnails)
+    filtered_rootnames = get_rootnames_from_query(parameters)
+    data = thumbnails_query_ajax(filtered_rootnames)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
