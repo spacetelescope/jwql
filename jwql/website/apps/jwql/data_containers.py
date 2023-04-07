@@ -1572,14 +1572,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             pass
     obs_list = sorted(list(set(all_obs)))
 
-    # Get additional info about exposures
-    more_cols = {'NIRSpec':['filter','patt_num','lamp','opmode'],
-                'NIRCam':['filter','pupil'],
-                'NIRISS':['filter','pupil'],
-                'MIRI':[],}
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type']+more_cols[inst])
-    # if the instrument doesn't have that keyword, column with be list of 'NONE'
+    filenames = get_filenames_by_instrument(inst, proposal, observation_id=obs_num)
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
@@ -1592,7 +1586,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
     for rootname in rootnames:
-
         # Parse filename
         try:
             filename_dict = filename_parser(rootname)
@@ -1619,25 +1612,19 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
-        exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
-        exp_types.append(exp_type)
-
-        # Get other keywords returned in columns (instrument dependant)
-        moreinfo = {}
-        for col in columns:
-            keyword = columns[col]
-            moreinfo[col] = [val for fname, val in zip(filenames, keyword) if rootname in fname][0]
-
 
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
             root_file_info = RootFileInfo.objects.get(root_name=rootname)
             viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
-        except RootFileInfo.DoesNotExist:
-
+        except RootFileInfo.DoesNotExist as e:
             viewed = THUMBNAIL_FILTER_LOOK[0]
 
+        # All this will break if root_file_info doesn't exist... 
+        exp_start = root_file_info.expstart
+        exp_type = root_file_info.exp_type
+        exp_types.append(exp_type)
         exp_num = filename_dict['exposure_id']
 
         # Add data to dictionary
@@ -1650,7 +1637,11 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
+            
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
+            # reformat time for display (omit seconds to fit on one line)
+            data_dict['file_data'][rootname]['expstart_str'] = Time(exp_start, format='mjd').strftime("%y-%m-%d %H:%M")
+
             data_dict['file_data'][rootname]['exp_num'] = exp_num
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
@@ -1658,25 +1649,41 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             print("KeyError with get_expstart for {}".format(rootname))
 
-        # # Add instrument-specific info to data_dict for hover-over
-        # #if inst == 'NIRCam':
-        # if inst == 'NIRSpec':
-        #     #EXP_TYPE, DETECTOR, FILTER, GRATING, PATT_NUM, EXP_START, LAMP, OPMODE
-        #     data_dict['file_data'][rootname]['filter'] = filt
-        #     #data_dict['file_data'][rootname]['grating'] = 
-        #     data_dict['file_data'][rootname]['patt_num'] = 
-        #     data_dict['file_data'][rootname]['lamp'] = 
-        #     data_dict['file_data'][rootname]['opmode'] = 
-        # #if inst == 'NIRISS':
-        # #if inst == 'MIRI':
+        # Read header from file to get keywords not in model
+        # get_header_info() dict structure overcomplicates things
+        if inst in ['MIRI','NIRSpec']: # only miri and nirspec need header keywords for now
+            filetype=available_files[0].split('_')[-1].replace('.fits','')
+            fits_filepath = filesystem_path(rootname, search=f'*_{filetype}.fits')
+            header = fits.getheader(fits_filepath) # primary header
 
-        for keyword in moreinfo:
-            data_dict['file_data'][rootname][keyword] = moreinfo[keyword]
+        # # Add instrument-specific info to data_dict for hover-over
+        if inst == 'NIRCam':
+            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
+            data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
+        if inst == 'NIRSpec':
+            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
+            data_dict['file_data'][rootname]['grating'] = root_file_info.grating
+            data_dict['file_data'][rootname]['patt_num'] = root_file_info.read_patt_num
+            data_dict['file_data'][rootname]['lamp'] = header['LAMP']
+            data_dict['file_data'][rootname]['opmode'] = header['OPMODE']
+        if inst == 'NIRISS':
+            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
+            data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
+        if inst == 'MIRI':
+            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
+            data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
+            try:
+                data_dict['file_data'][rootname]['band'] = header['BAND']
+            except KeyError: # only MRS mode has band kwd?
+                continue
+
+        # for keyword in moreinfo:
+        #     data_dict['file_data'][rootname][keyword] = moreinfo[keyword]
 
         # if they both exist, replace 'filter' and 'pupil' with 'filter/pupil'
-        if 'filter' in data_dict['file_data'][rootname].keys() & 'pupil' in data_dict['file_data'][rootname].keys():
+        if ('filter' in data_dict['file_data'][rootname].keys()) & ('pupil' in data_dict['file_data'][rootname].keys()):
             filt_pup = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['pupil']
-            data_dict['file_data'][rootname]['filter/pupil'] = filt_pup
+            data_dict['file_data'][rootname]['filterpupil'] = filt_pup
             del data_dict['file_data'][rootname]['filter']
             del data_dict['file_data'][rootname]['pupil']
 
@@ -1707,7 +1714,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     # Order dictionary by descending expstart time.
     sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
                                    key=lambda x: getitem(x[1], 'expstart'), reverse=True))
-
     data_dict['file_data'] = sorted_file_data
 
     # Add list of observation numbers
