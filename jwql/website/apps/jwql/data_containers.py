@@ -1671,7 +1671,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
         if inst == 'MIRI':
             data_dict['file_data'][rootname]['filter'] = root_file_info.filter
-            data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
+            data_dict['file_data'][rootname]['ngrp_nint'] = str(header['NGROUPS'])+'/'+str(header['NINTS'])
             try:
                 data_dict['file_data'][rootname]['band'] = header['BAND']
             except KeyError: # only MRS mode has band kwd?

@@ -934,7 +934,7 @@ function update_thumbnail_array(data) {
         if (filename_dict.instrument=="nirspec"){
             content += '<span class="thumbinfo-key">Filter: </span>' + '<span class="thumbinfo-val">'+ file.filter+ '</span><br>';
             content += '<span class="thumbinfo-key">Grating: </span>' + '<span class="thumbinfo-val">'+ file.grating+ '</span><br>';
-            content += '<span class="thumbinfo-key">Patt_Num: </span>' + '<span class="thumbinfo-val">'+ file.pattnum+ '</span><br>';
+            content += '<span class="thumbinfo-key">Patt_Num: </span>' + '<span class="thumbinfo-val">'+ file.patt_num+ '</span><br>';
             content += '<span class="thumbinfo-key">Lamp: </span>' + '<span class="thumbinfo-val">'+ file.lamp+ '</span><br>';
             content += '<span class="thumbinfo-key">Opmode: </span>' + '<span class="thumbinfo-val">'+ file.opmode+ '</span><br>';
         }
@@ -946,10 +946,12 @@ function update_thumbnail_array(data) {
         }
         if (filename_dict.instrument=="miri"){
             content += '<span class="thumbinfo-key">Filter: </span>'+ '<span class="thumbinfo-val">'+ file.filter + '</span><br>';
-        }
-        if (exp_type=="miri_mrs"){
-            content += '<span class="thumbinfo-key">Band: </span>'+ '<span class="thumbinfo-val">'+ file.band + '</span><br>';
+            content += '<span class="thumbinfo-key">Ngrp/Nint: </span>'+ '<span class="thumbinfo-val">'+ file.ngrp_nint + '</span><br>';
+            if (exp_type=="mir_mrs"){
+                content += '<span class="thumbinfo-key">Band: </span>'+ '<span class="thumbinfo-val">'+ file.band + '</span><br>';
             }
+        }
+        
         content += '</div></a></div>';
 
         // Add the content to the div
