@@ -616,22 +616,28 @@ class ZerothGroupImage():
     def create_figure(self):
         """Create the Bokeh figure
         """
-        if len(self.data['cal_image']) > 0 and os.path.isfile(self.data['cal_image'].iloc[0]):
-            image = read_png(self.data['cal_image'].iloc[0])
+        if len(self.data['cal_image']) > 0:
+            if os.path.isfile(self.data['cal_image'].iloc[0]):
+                image = read_png(self.data['cal_image'].iloc[0])
 
-            datestr = self.data['expstart_str'].iloc[0]
+                datestr = self.data['expstart_str'].iloc[0]
 
-            # Display the 32-bit RGBA image
-            ydim, xdim = image.shape
-            dim = max(xdim, ydim)
-            self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
-                                 tools='pan,box_zoom,reset,wheel_zoom,save')
-            self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)
-            self.figure.xaxis.visible = False
-            self.figure.yaxis.visible = False
+                # Display the 32-bit RGBA image
+                ydim, xdim = image.shape
+                dim = max(xdim, ydim)
+                self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
+                                     tools='pan,box_zoom,reset,wheel_zoom,save')
+                self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)
+                self.figure.xaxis.visible = False
+                self.figure.yaxis.visible = False
+            else:
+                # If the listed file is missing, create an empty plot
+                self.figure = PlaceholderPlot('Calibrated Zeroth Group of Most Recent Dark', '', '').plot
+                self.figure.xaxis.visible = False
+                self.figure.yaxis.visible = False
 
         else:
-            # If the given file is missing, create an empty plot
+            # If no file is given, create an empty plot
             self.figure = PlaceholderPlot('Calibrated Zeroth Group of Most Recent Dark', '', '').plot
             self.figure.xaxis.visible = False
             self.figure.yaxis.visible = False
