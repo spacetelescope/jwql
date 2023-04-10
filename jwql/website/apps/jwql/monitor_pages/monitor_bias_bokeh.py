@@ -115,6 +115,9 @@ class BiasMonitorData():
                                                                       'amp3_even_med', 'amp3_odd_med',
                                                                       'amp4_even_med', 'amp4_odd_med',
                                                                       'expstart_str', 'uncal_filename'])
+        uncal_basename = [os.path.basename(e) for e in self.trending_data['uncal_filename']]
+        self.trending_data['uncal_filename'] = uncal_basename
+
         # Add a column of expstart values that are datetime objects
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
         datetimes = [datetime.strptime(entry, format_data) for entry in self.trending_data['expstart_str']]
@@ -567,10 +570,10 @@ class TrendingPlot():
             hover_tool = HoverTool(tooltips=[('File:', '@uncal_filename'),
                                              ('Even col bias:', f'@{even_col}'),
                                              ('Odd col bias:', f'@{odd_col}'),
-                                             ('Date:', '@expstart')
+                                             ('Date:', '@expstart_str')
                                              ]
                                    )
-            hover_tool.formatters = {'@expstart': 'datetime'}
+            #hover_tool.formatters = {'@expstart': 'datetime'}
             plot.tools.append(hover_tool)
             plot.xaxis.axis_label = x_label
             plot.yaxis.axis_label = y_label
@@ -589,7 +592,7 @@ class TrendingPlot():
         # Create one plot per amplifier
         for amp_num in range(1, 5):
             cols_to_use = [col for col in self.data.columns if str(amp_num) in col]
-            cols_to_use.append('expstart')
+            cols_to_use.extend(['expstart', 'expstart_str', 'uncal_filename'])
             subframe = self.data[cols_to_use]
             self.plots[amp_num] = self.create_amp_plot(amp_num, subframe)
 
