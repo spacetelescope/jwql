@@ -22,12 +22,16 @@
     	<div id='img_show_count'></div>
     	<hr>
 
+        <!-- Link Back to Query Page -->
+        <a role="button" class="btn btn-primary my-2" type="submit" href="/jwql_query/">Return To Query Form</a>
+        <hr>
+
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">
 			<div class="mr-4" id="thumbnail-filter"></div>
 			<div class="mx-4" id="thumbnail-sort"></div>
             <div class="mx-4 mr-5 ml-auto" id="group-by-exposure"></div>
-		</div> 
+		</div>
 
 		<hr>
 
@@ -53,9 +57,13 @@
         <script>update_thumbnails_query_page('{{base_url}}', '{{ sort }}', '{{ group }}');</script>
         <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
+        <hr>
+        <!-- Link Back to Query Page -->
+        <a role="button" class="btn btn-primary my-2" type="submit" href="/jwql_query/">Return To Query Form</a>
+
 	</main>
 
-    
-   
+
+
 
 {% endblock %}

@@ -18,11 +18,16 @@
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $("#MIRI").hide();
-            $("#NIRCAM").hide();
-            $("#NIRISS").hide();
-            $("#NIRSPEC").hide();
-            $("#FGS").hide();
+
+            hide_all = function() {
+                $("#MIRI").hide();
+                $("#NIRCAM").hide();
+                $("#NIRISS").hide();
+                $("#NIRSPEC").hide();
+                $("#FGS").hide();
+            }
+
+            hide_all();
 
             $("#instrument").change(function () {
                 if (document.getElementById("id_instrument_1").checked) {
@@ -481,6 +486,7 @@
                     <hr class="col-md-12">
                     <div class='form-group'>
                         <input type="submit" value="Submit" class="btn btn-primary" name="jwstqueryform" />
+                        <input type="reset" value="Clear Form" class="btn btn-primary mx-4" name="jwstqueryform" onclick="hide_all();" />
                     </div>
                 </div>
             </form>
