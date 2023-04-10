@@ -93,7 +93,7 @@ from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -232,7 +232,8 @@ class Dark():
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
-        self.pixel_table.__table__.insert().execute(entry)
+        with engine.begin() as connection:
+            connection.execute(self.pixel_table.__table__.insert(), entry)
 
     def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None):
         """Create and save a png containing the mean dark slope image,
@@ -861,7 +862,8 @@ class Dark():
                              'hist_amplitudes': histogram[key],
                              'entry_date': datetime.datetime.now()
                              }
-            self.stats_table.__table__.insert().execute(dark_db_entry)
+            with engine.begin() as connection:
+                connection.execute(self.stats_table.__table__.insert(), dark_db_entry)
 
     def read_baseline_slope_image(self, filename):
         """Read in a baseline mean slope image and associated standard
@@ -1049,7 +1051,9 @@ class Dark():
                                  'files_found': len(new_entries),
                                  'run_monitor': monitor_run,
                                  'entry_date': datetime.datetime.now()}
-                    self.query_table.__table__.insert().execute(new_entry)
+                    with engine.begin() as connection:
+                        connection.execute(
+                            self.query_table.__table__.insert(), new_entry)
                     logging.info('\tUpdated the query history table')
 
         logging.info('Dark Monitor completed successfully.')

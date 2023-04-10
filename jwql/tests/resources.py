@@ -14,6 +14,17 @@ Use
 
 import pandas as pd
 
+from jwql.utils.utils import get_config
+
+
+def has_test_db():
+    try:
+        config = get_config()
+        connection = config['connection_string']
+        return 'dljwql' in connection
+    except (ValueError, KeyError, FileNotFoundError):
+        return False
+
 
 class MockAnomalyQuery(object):
     """Mock a SQLAlchemy query on an anomaly table."""

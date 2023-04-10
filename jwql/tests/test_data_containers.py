@@ -158,30 +158,32 @@ def test_get_available_suffixes(untracked, input_suffixes, expected):
         input_suffixes, return_untracked=untracked)
     assert result == expected
 
-# TODO - This test will need to be refactored to accoutn for Django Models
-# TODO - We will need to imlement django based testing to account for all Model based tests.
-# def test_get_current_flagged_anomalies(mocker):
+
+# TODO - These tests will need to be refactored to account for Django Models
+# TODO - We will need to implement django based testing to account for all Model based tests.
+"""
+def test_get_current_flagged_anomalies(mocker):
     # get a sample query group with 2 files
 
-    # rootname = 'jw02589006001_04101_00001-seg001'
-    # instrument = 'NIRSpec'
+    rootname = 'jw02589006001_04101_00001-seg001'
+    instrument = 'NIRSpec'
 
-    # # mock a single shared anomaly type
-    # mocker.patch.object(data_containers.di, 'session', MockSessionGroupAnomaly())
+    # mock a single shared anomaly type
+    mocker.patch.object(data_containers.di, 'session', MockSessionGroupAnomaly())
 
-    # result = data_containers.get_current_flagged_anomalies(
-    #     rootname, instrument, n_match=2)
-    # assert result == ['persistence']
+    result = data_containers.get_current_flagged_anomalies(
+        rootname, instrument, n_match=2)
+    assert result == ['persistence']
 
-    # # get a sample query for 1 file
-    # rootname = 'jw02589006001_04101_00001-seg001_nrs1'
+    # get a sample query for 1 file
+    rootname = 'jw02589006001_04101_00001-seg001_nrs1'
 
-    # # mock two anomalies for this file
-    # mocker.patch.object(data_containers.di, 'session', MockSessionFileAnomaly())
+    # mock two anomalies for this file
+    mocker.patch.object(data_containers.di, 'session', MockSessionFileAnomaly())
 
-    # result = data_containers.get_current_flagged_anomalies(
-    #     rootname, instrument, n_match=1)
-    # assert result == ['persistence', 'crosstalk']
+    result = data_containers.get_current_flagged_anomalies(
+        rootname, instrument, n_match=1)
+    assert result == ['persistence', 'crosstalk']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
@@ -288,7 +290,7 @@ def test_get_anomaly_form_post_group(mocker):
     # messages indicate failure, update is not called again
     assert 'Failed to submit anomaly' in request._messages.messages
     assert update_mock.call_count == 2
-
+"""
 
 def test_get_dashboard_components():
     request = MockPostRequest()

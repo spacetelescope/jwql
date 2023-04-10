@@ -616,7 +616,7 @@ class ZerothGroupImage():
     def create_figure(self):
         """Create the Bokeh figure
         """
-        if os.path.isfile(self.data['cal_image'].iloc[0]):
+        if len(self.data['cal_image']) > 0 and os.path.isfile(self.data['cal_image'].iloc[0]):
             image = read_png(self.data['cal_image'].iloc[0])
 
             datestr = self.data['expstart_str'].iloc[0]
