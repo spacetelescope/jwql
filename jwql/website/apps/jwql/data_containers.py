@@ -1549,7 +1549,8 @@ def get_rootnames_from_query(parameters):
 
             filtered_rootnames.extend(anomaly_rootnames)
         else:
-            filtered_rootnames.extend(current_ins_rootfileinfos)
+            rootnames = [name[0] for name in current_ins_rootfileinfos.values_list("root_name")]
+            filtered_rootnames.extend(rootnames)
 
     return list(set(filtered_rootnames))
     #      >>>  END CODE PRE DB MIGRATION HERE  <<<
