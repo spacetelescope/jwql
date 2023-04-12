@@ -1621,11 +1621,10 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except RootFileInfo.DoesNotExist as e:
             viewed = THUMBNAIL_FILTER_LOOK[0]
 
-        # All this will break if root_file_info doesn't exist... 
-        exp_start = root_file_info.expstart
+        # All this will break if root_file_info doesn't exist (model not found)
         exp_type = root_file_info.exp_type
         exp_types.append(exp_type)
-        exp_num = filename_dict['exposure_id']
+        exp_start = root_file_info.expstart
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
@@ -1635,15 +1634,14 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]["exp_type"] = exp_type
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
         data_dict['file_data'][rootname]['obs_visit'] = filename_dict['observation']+'/'+filename_dict['visit']
+        data_dict['file_data'][rootname]['exp_num'] = filename_dict['exposure_id']
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
-            
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
             # reformat time for display (omit seconds to fit on one line)
             data_dict['file_data'][rootname]['expstart_str'] = Time(exp_start, format='mjd').strftime("%y-%m-%d %H:%M")
-
-            data_dict['file_data'][rootname]['exp_num'] = exp_num
+            
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
             logging.warning(e)
@@ -1657,37 +1655,27 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             fits_filepath = filesystem_path(rootname, search=f'*_{filetype}.fits')
             header = fits.getheader(fits_filepath) # primary header
 
-        # # Add instrument-specific info to data_dict for hover-over
+        # Add instrument-specific info to data_dict for hover-over
+        # Combine optical elements keywords to save space
         if inst == 'NIRCam':
-            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
-            data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
+            filt_pup = root_file_info.filter + '/' + root_file_info.pupil
+            data_dict['file_data'][rootname]['filterpupil'] = filt_pup
         if inst == 'NIRSpec':
-            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
-            data_dict['file_data'][rootname]['grating'] = root_file_info.grating
+            filt_grat = root_file_info.filter+'/'+root_file_info.grating
+            data_dict['file_data'][rootname]['filtergrating'] = filt_grat
             data_dict['file_data'][rootname]['patt_num'] = root_file_info.read_patt_num
             data_dict['file_data'][rootname]['lamp'] = header['LAMP']
             data_dict['file_data'][rootname]['opmode'] = header['OPMODE']
         if inst == 'NIRISS':
-            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
-            data_dict['file_data'][rootname]['pupil'] = root_file_info.pupil
-        if inst == 'MIRI':
-            data_dict['file_data'][rootname]['filter'] = root_file_info.filter
-            data_dict['file_data'][rootname]['ngrp_nint'] = str(header['NGROUPS'])+'/'+str(header['NINTS'])
-            try:
-                data_dict['file_data'][rootname]['band'] = header['BAND']
-            except KeyError: # only MRS mode has band kwd?
-                continue
-
-        # combine optical elements keywords to save space
-        if ('filter' in data_dict['file_data'][rootname].keys()) & ('pupil' in data_dict['file_data'][rootname].keys()):
-            filt_pup = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['pupil']
+            filt_pup = root_file_info.filter + '/' + root_file_info.pupil
             data_dict['file_data'][rootname]['filterpupil'] = filt_pup
-        if ('filter' in data_dict['file_data'][rootname].keys()) & ('grating' in data_dict['file_data'][rootname].keys()):
-            filt_grat = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['grating']
-            data_dict['file_data'][rootname]['filtergrating'] = filt_grat
-        if ('filter' in data_dict['file_data'][rootname].keys()) & ('band' in data_dict['file_data'][rootname].keys()):
-            filt_band = data_dict['file_data'][rootname]['filter'] + '/' + data_dict['file_data'][rootname]['band']
-            data_dict['file_data'][rootname]['filterband'] = filt_band
+        if inst == 'MIRI':
+            if 'MRS' in exp_type:
+                channel, band = header['CHANNEL'], header['BAND']
+                data_dict['file_data'][rootname]['channelband'] = channel+'/'+band
+            else:
+                data_dict['file_data'][rootname]['filter'] = root_file_info.filter
+            data_dict['file_data'][rootname]['ngrp_nint'] = str(header['NGROUPS']) + '/' + str(header['NINTS'])
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)

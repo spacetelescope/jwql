@@ -945,8 +945,8 @@ function update_thumbnail_array(data) {
             content += '<span class="thumbinfo-key">Optics: </span>' + '<span class="thumbinfo-val">'+ file.filterpupil + '</span><br>';   
         }
         if (filename_dict.instrument=="miri"){
-            if ('band' in file) {
-                content += '<span class="thumbinfo-key">Optics: </span>'+ '<span class="thumbinfo-val">'+ file.filterband + '</span><br>';
+            if ('channelband' in file) {
+                content += '<span class="thumbinfo-key">Optics: </span>'+ '<span class="thumbinfo-val">'+ file.channelband + '</span><br>';
             }
             else {
                 content += '<span class="thumbinfo-key">Filter: </span>'+ '<span class="thumbinfo-val">'+ file.filter + '</span><br>';
