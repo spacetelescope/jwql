@@ -294,9 +294,9 @@ def get_observation_characteristics():
     Returns
     -------
     n_obs : dict
-        Nested dictionary with instrument names as the top level keys, and
-        filter/pupil values as the second level keys. Values are the number of
-        observations that use the filter/pupil value.
+        Dictionary with instrument names as the top level keys, and lists of 2-tuples
+        as values. Each tuple contains filter/pupil string and the number of
+        observations that use that filter/pupil.
     """
     n_obs = {}
     for instrument in ['nircam', 'niriss', 'nirspec', 'miri']:  # Skip FGS here. It has no filters
