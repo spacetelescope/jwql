@@ -674,11 +674,13 @@ def update_characteristics_database(char_info):
 
     # Add data to filesystem_instrument table
     for instrument in ['nircam', 'niriss', 'nirspec', 'miri']:
+        optics = [e[0] for e in char_info[instrument]]
+        values = [e[1] for e in char_info[instrument]]
         new_record = {}
         new_record['date'] = now
         new_record['instrument'] = instrument
-        new_record['filter_pupil'] = list(char_info[instrument].keys())
-        new_record['obs_per_filter_pupil'] = list(char_info[instrument].values())
+        new_record['filter_pupil'] = optics
+        new_record['obs_per_filter_pupil'] = values
         with engine.begin() as connection:
             connection.execute(
                 FilesystemCharacteristics.__table__.insert(), new_record)
