@@ -60,7 +60,7 @@ from jwql.database.database_interface import NIRSpecCosmicRayQueryHistory
 from jwql.database.database_interface import NIRSpecCosmicRayStats
 from jwql.database.database_interface import FGSCosmicRayQueryHistory
 from jwql.database.database_interface import FGSCosmicRayStats
-from jwql.database.database_interface import session
+from jwql.database.database_interface import session, engine
 from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
@@ -702,7 +702,8 @@ class CosmicRay:
                                            'magnitude': cosmic_ray_mags,
                                            'outliers': outlier_mags
                                            }
-                    self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
+                    with engine.begin() as connection:
+                        connection.execute(self.stats_table.__table__.insert(), cosmic_ray_db_entry)
 
                     logging.info("Successfully inserted into database. \n")
 
@@ -820,7 +821,8 @@ class CosmicRay:
                              'files_found': len(new_entries),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
+                with engine.begin() as connection:
+                    connection.execute(self.query_table.__table__.insert(), new_entry)
                 logging.info('\tUpdated the query history table')
 
     def query_mast(self):

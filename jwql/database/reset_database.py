@@ -29,7 +29,7 @@ from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import ProgrammingError
 import sys
 
-from jwql.database.database_interface import base, set_read_permissions
+from jwql.database.database_interface import base
 from jwql.database.database_interface import INSTRUMENT_TABLES, MONITOR_TABLES
 from jwql.utils.utils import get_config
 

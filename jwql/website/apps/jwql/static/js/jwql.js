@@ -6,7 +6,78 @@
  * @author Brad Sappington
  * @author Bryan Hilbert
  * @author Maria Pena-Guerrero
+ * @author Melanie Clarke
  */
+
+
+ /**
+ * Change the filetype for all displayed images
+ * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
+ * @param {String} group_root - The rootname of the file group
+ * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
+ *                          values are the number of integrations with an associated
+ *                          preview image for that suffix
+ * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the integration numbers of the available
+ *                                jpgs for that suffix
+ * @param {Dict} total_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the total number of integrations for that
+ *                                filetype.
+ * @param {String} inst - The instrument for the given file
+ */
+ function change_all_filetypes(type, group_root, num_ints, available_ints, total_ints, inst, detectors) {
+
+    // Change the radio button to check the right filetype
+    document.getElementById(type).checked = true;
+
+    // Store the currently displayed suffix
+    document.getElementById("view_file_type").setAttribute('data-current-suffix', type);
+
+    // Clean the input parameters
+    num_ints = clean_input_parameter(num_ints);
+    num_ints = JSON.parse(num_ints);
+
+    // Get the available integration jpg numbers
+    available_ints = clean_input_parameter(available_ints);
+    available_ints = JSON.parse(available_ints)[type];
+
+    // Get the total number of integrations
+    total_ints = clean_input_parameter(total_ints);
+    total_ints = JSON.parse(total_ints);
+
+    // Update the APT parameters
+    var parsed_name = parse_filename(group_root);
+    document.getElementById("proposal").innerHTML = parsed_name.proposal;
+    document.getElementById("obs_id").innerHTML = parsed_name.obs_id;
+    document.getElementById("visit_id").innerHTML = parsed_name.visit_id;
+
+    var detector_list = detectors.split(',');
+    for (let i = 0; i < detector_list.length; i++) {
+        var detector = detector_list[i];
+
+        // Update the filename lists
+        var filename_option = document.getElementById(detector + "_filename");
+        filename_option.value = inst + '/' + group_root + '_' + detector + '_' + type;
+        filename_option.textContent = group_root + '_' + detector + '_' + type;
+
+        // Show the appropriate image
+        var img = document.getElementById("image_viewer_" + detector);
+        var jpg_filepath = '/static/preview_images/' + parsed_name.program +
+                           '/' + group_root + '_' + detector + '_' + type + '_integ0.jpg';
+        img.src = jpg_filepath;
+        img.alt = jpg_filepath;
+
+        // Show/hide the viewer as appropriate
+        show_viewer(detector, jpg_filepath);
+    }
+
+    // Reset the slider values
+    reset_integration_slider(num_ints[type], total_ints[type])
+
+    // Update the view/explore links for the new file type
+    update_view_explore_link();
+}
+
 
  /**
  * Change the filetype of the displayed image
@@ -28,61 +99,47 @@
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
 
+    // Store the currently displayed suffix
+    document.getElementById("view_file_type").setAttribute('data-current-suffix', type);
+
     // Clean the input parameters
-    var num_ints = num_ints.replace(/&#39;/g, '"');
-    var num_ints = num_ints.replace(/'/g, '"');
-    var num_ints = JSON.parse(num_ints);
+    num_ints = clean_input_parameter(num_ints);
+    num_ints = JSON.parse(num_ints);
 
     // Get the available integration jpg numbers
-    var available_ints = available_ints.replace(/&#39;/g, '"');
-    var available_ints = available_ints.replace(/'/g, '"');
-    var available_ints = JSON.parse(available_ints)[type];
+    available_ints = clean_input_parameter(available_ints);
+    available_ints = JSON.parse(available_ints)[type];
 
     // Get the total number of integrations
-    var total_ints = total_ints.replace(/&#39;/g, '"');
-    var total_ints = total_ints.replace(/'/g, '"');
-    var total_ints = JSON.parse(total_ints);
+    total_ints = clean_input_parameter(total_ints);
+    total_ints = JSON.parse(total_ints);
 
-    // Propogate the text fields showing the filename and APT parameters
+    // Propagate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
+    var parsed_name = parse_filename(file_root);
+
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
     document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
-    document.getElementById("proposal").innerHTML = file_root.slice(2,7);
-    document.getElementById("obs_id").innerHTML = file_root.slice(7,10);
-    document.getElementById("visit_id").innerHTML = file_root.slice(10,13);
+    document.getElementById("proposal").innerHTML = parsed_name.proposal;
+    document.getElementById("obs_id").innerHTML = parsed_name.obs_id;
+    document.getElementById("visit_id").innerHTML = parsed_name.visit_id;
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
     // Show the appropriate image
     var img = document.getElementById("image_viewer");
-    var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
+    var jpg_filepath = '/static/preview_images/' + parsed_name.program + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
     // if previous image had error, remove error sizing
     img.classList.remove("thumbnail");
 
     // Reset the slider values
-    document.getElementById("slider_range").value = 1;
-    document.getElementById("slider_range").max = num_ints[type];
-    document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = total_ints[type];
+    reset_integration_slider(num_ints[type], total_ints[type])
 
-    // Update the integration changing buttons
-    if (num_ints[type] > 1) {
-        document.getElementById("int_after").disabled = false;
-    } else {
-        document.getElementById("int_after").disabled = true;
-    }
-
-    // Update the image download and header links
-    // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
-    // document.getElementById("download_jpg").href = jpg_filepath;
+    // Update the image exploration and header links
     document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
     document.getElementById("explore_image").href = '/' + inst + '/' + file_root + '_' + type + '/explore_image/';
-
-    // Disable the "left" button, since this will be showing integ0
-    document.getElementById("int_before").disabled = true;
-
-};
+}
 
 
  /**
@@ -97,37 +154,41 @@
  * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
  *                             Only relevant if method is "button".
  */
-function change_int(file_root, num_ints, available_ints, method, direction = 'right') {
+function change_integration(file_root, num_ints, available_ints, method, direction='right') {
 
     // Figure out the current image and integration
-    var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
-    var integration = Number(suffix[suffix.length - 1].replace('.jpg','').replace('integ',''))
-    var suffix = suffix[suffix.length - 2];
-    var program = file_root.slice(0,7);
+    var suffix = document.getElementById("view_file_type").getAttribute('data-current-suffix');
+    var integration = Number(document.getElementById("slider_val").innerText) - 1;
+    var program = parse_filename(file_root).program;
 
     // Find the total number of integrations for the current image
-    var num_ints = num_ints.replace(/'/g, '"');
-    var num_ints = JSON.parse(num_ints)[suffix];
+    num_ints = num_ints.replace(/'/g, '"');
+    num_ints = JSON.parse(num_ints)[suffix];
 
     // Get the available integration jpg numbers and the current integration index
-    var available_ints = available_ints.replace(/'/g, '"');
-    var available_ints = JSON.parse(available_ints)[suffix];
+    available_ints = available_ints.replace(/'/g, '"');
+    available_ints = JSON.parse(available_ints)[suffix];
     var current_index = available_ints.indexOf(integration);
 
     // Get the desired integration value
+    var new_integration;
+    var new_value;
     switch (method) {
         case "button":
             if ((integration == num_ints - 1 && direction == 'right')||
                 (integration == 0 && direction == 'left')) {
                 return;
             } else if (direction == 'right') {
-                new_integration = available_ints[current_index + 1]
+                new_value = current_index + 1;
+                new_integration = available_ints[new_value];
             } else if (direction == 'left') {
-                new_integration = available_ints[current_index - 1]
+                new_value = current_index - 1;
+                new_integration = available_ints[new_value];
             }
             break;
         case "slider":
-            new_integration = available_ints[document.getElementById("slider_range").value - 1];
+            new_value = document.getElementById("slider_range").value - 1;
+            new_integration = available_ints[new_value];
             break;
     }
 
@@ -143,23 +204,50 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
         document.getElementById("int_before").disabled = false;
     }
 
-    // Update the JPG filename
-    var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
-    var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
-    document.getElementById("jpg_filename").innerHTML = jpg_filename;
+    var img_viewers = document.getElementsByClassName("image_preview_viewer");
+    for (let i = 0; i < img_viewers.length; i++) {
+        var img = img_viewers[i];
 
-    // Show the appropriate image
-    var img = document.getElementById("image_viewer")
-    img.src = jpg_filepath;
-    img.alt = jpg_filepath;
+        var jpg_filename;
+        var detector = img.getAttribute('data-detector');
+        if (detector != null) {
+            // exposure view
+           jpg_filename = file_root + '_' + detector + '_' + suffix + '_integ' + new_integration + '.jpg';
+        } else {
+           // image view
+           jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg';
+           document.getElementById("jpg_filename").innerHTML = jpg_filename;
+           // if previous image had error, remove error sizing
+           img.classList.remove("thumbnail");
+        }
 
-    // Update the jpg download link
-    // document.getElementById("download_jpg").href = jpg_filepath;
+        // Show the appropriate image
+        var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename;
+        img.src = jpg_filepath;
+        img.alt = jpg_filepath;
+
+        // Show/hide the viewer as appropriate for the image
+        if (detector != null) {
+            show_viewer(detector, jpg_filepath);
+        }
+    }
 
     // Update the slider values
-    document.getElementById("slider_range").value = new_integration + 1
-    document.getElementById("slider_val").innerHTML = new_integration + 1
-};
+    document.getElementById("slider_range").value = new_value + 1;
+    document.getElementById("slider_val").innerHTML = new_integration + 1;
+}
+
+
+/**
+ * Clean garbage characters in input dictionary parameters passed as strings.
+ * @param {String} param_value - The parameter value to clean
+ * @returns {String} cleaned - The cleaned parameter value
+ */
+function clean_input_parameter(param_value) {
+    param_value = param_value.replace(/&#39;/g, '"');
+    param_value = param_value.replace(/'/g, '"');
+    return param_value
+}
 
 
 /**
@@ -174,11 +262,11 @@ function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file
     // Update the thumbnail filename
     var img = document.getElementById('thumbnail'+i);
     if (thumb_filename != 'none') {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
-        img.src = jpg_path
-    };
+        var jpg_path = thumbnail_dir + parse_filename(file_root).program + '/' + thumb_filename;
+        img.src = jpg_path;
+    }
 
-};
+}
 
 
 /**
@@ -191,6 +279,7 @@ function determine_page_title(instrument, proposal) {
     var url = document.URL;
     var url_split = url.split('/');
     var url_title = url_split[url_split.length - 2];
+    var final_title;
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal
     } else if (url_title == 'unlooked') {
@@ -202,9 +291,9 @@ function determine_page_title(instrument, proposal) {
         document.getElementById('title').innerHTML = final_title;
         if (document.title != final_title) {
             document.title = final_title;
-        };
-    };
-};
+        }
+    }
+}
 
 /**
  * Determine whether the page is archive or unlooked
@@ -217,7 +306,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
     var url = document.URL;
     var url_split = url.split('/');
     var url_title = url_split[url_split.length - 3];
-    var url_end = url_split[url_split.length - 1];
+    var final_title;
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
     } else if (url_title == 'unlooked') {
@@ -231,9 +320,9 @@ function determine_page_title_obs(instrument, proposal, observation) {
         document.getElementById('title').innerHTML = final_title;
         if (document.title != final_title) {
             document.title = final_title;
-        };
-    };
-};
+        }
+    }
+}
 
 /**
  * adds/removes disabled_section class and clears value
@@ -258,16 +347,16 @@ function determine_page_title_obs(instrument, proposal, observation) {
 function explore_image_update_enable_options(integrations, groups) {
     
     // Check nr of integrations and groups of currently selected extension
-    ext_name = get_radio_button_value("extension");
+    var ext_name = get_radio_button_value("extension");
 
     // Clean the input parameters and get our integrations/groups for this extension
     var calc_difference = false;
-    var integrations = integrations.replace(/&#39;/g, '"');
-    var integrations = integrations.replace(/'/g, '"');
-    var integrations = JSON.parse(integrations)[ext_name];
-    var groups = groups.replace(/&#39;/g, '"');
-    var groups = groups.replace(/'/g, '"');
-    var groups = JSON.parse(groups)[ext_name];
+    integrations = integrations.replace(/&#39;/g, '"');
+    integrations = integrations.replace(/'/g, '"');
+    integrations = JSON.parse(integrations)[ext_name];
+    groups = groups.replace(/&#39;/g, '"');
+    groups = groups.replace(/'/g, '"');
+    groups = JSON.parse(groups)[ext_name];
     
     // Zero base our calculations
     integrations -= 1
@@ -344,7 +433,7 @@ function getCookie(name) {
 function get_radio_button_value(element_name) {
     var element = document.getElementsByName(element_name);
 
-    for(i = 0; i < element.length; i++) {
+    for(var i = 0; i < element.length; i++) {
         if(element[i].checked) {
             return element[i].value;
         }
@@ -364,6 +453,165 @@ function get_number_or_none(element_id) {
     return limit;
 }
 
+
+/**
+ * Group thumbnail display by exposure or file, save group type in session
+ * @param {String} group_type - The group type
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function group_by_thumbnails(group_type, base_url) {
+
+    // Update dropdown menu text and update thumbnails for current setting
+    show_only('group', group_type, base_url);
+
+    // Group divs to update display style
+    var group_divs = document.getElementsByClassName("thumbnail-group");
+    // Thumbnail links to update to group or image pages
+    var thumbnail_links = document.getElementsByClassName("thumbnail-link");
+    // Show count total and type to update
+    var img_total = document.getElementById('img_total');
+    var img_type = document.getElementById('img_type');
+    var group_by = document.getElementById('group_by')
+
+    if (group_type == 'Exposure') {
+        img_total.innerText = group_by.getAttribute('data-ngroup');
+        img_type.innerText = 'groups';
+        for (let i = 0; i < group_divs.length; i++) {
+            group_divs[i].classList.add('thumbnail-group-active');
+            thumbnail_links[i].href = thumbnail_links[i].getAttribute('data-group-href');
+        }
+    } else {
+        img_total.innerText = group_by.getAttribute('data-nfile');
+        img_type.innerText = 'activities';
+        for (let i = 0; i < group_divs.length; i++) {
+            group_divs[i].classList.remove('thumbnail-group-active');
+            thumbnail_links[i].href = thumbnail_links[i].getAttribute('data-image-href');
+        }
+    }
+
+    $.ajax({
+        url: base_url + '/ajax/image_group/',
+        data: {
+            'group_type': group_type
+        },
+        error : function(response) {
+            console.log("session image group update failed");
+        }
+    });
+}
+
+
+/**
+ * Hide an image viewer
+ * @param {String} detector - The detector name for the image viewer
+ */
+function hide_file(detector) {
+    var img = document.getElementById("image_viewer_" + detector);
+    var div = document.getElementById(detector + "_view");
+    var filename = document.getElementById(detector + "_filename");
+
+    // Hide the image and div
+    img.style.display = "none";
+    div.style.display = "none";
+
+    // Disable the associated filename unless there
+    // are no previews available at all
+    var fallback_shown = document.getElementById(detector + "_view_fallback");
+    if (fallback_shown.style.display == "none") {
+        filename.disabled = true;
+    }
+
+    // Update the view/explore link as needed
+    update_view_explore_link();
+}
+
+/**
+ * Show an image viewer
+ * @param {String} detector - The detector name for the image viewer
+ */
+function unhide_file(detector) {
+    var img = document.getElementById("image_viewer_" + detector);
+    var div = document.getElementById(detector + "_view");
+    var filename = document.getElementById(detector + "_filename");
+
+    // Show the image and div
+    img.style.display = "inline-block";
+    div.style.display = "inline-block";
+
+    // Hide the fallback image and div
+    // These are never re-displayed: if any image loads for the detector,
+    // they will not show up. This is intended to cover the case where FITS files
+    // exist for the exposure, but no preview images have been generated yet.
+    document.getElementById("fallback_image_viewer_" + detector).style.display = "none";
+    document.getElementById(detector + "_view_fallback").style.display = "none";
+
+    // Enable the associated filename
+    filename.disabled = false;
+
+    // Update the view/explore link as needed
+    update_view_explore_link();
+}
+
+/**
+ * Parse observation information from a JWST file name.
+ * @param {String} filename - The file or group root name to parse
+ * @returns {Object} parsed - Dictionary containing 'proposal', 'obs_id', 'visit_id', 'program'
+ */
+function parse_filename(root_name) {
+    // eg. for root_name jw02589006001_04101_00001-seg001_nrs1:
+    //   program = jw02589
+    //   proposal = 02589
+    //   obs_id = 006
+    //   visit_id = 001
+
+    // used for preview directories
+    var program = root_name.slice(0,7);
+
+    // used for observation description fields
+    var proposal = root_name.slice(2, 7);
+    var obs_id = root_name.slice(7, 10);
+    var visit_id = root_name.slice(10, 13);
+
+    const parsed_name = {program: program, proposal: proposal,
+                         obs_id: obs_id, visit_id: visit_id};
+    return parsed_name;
+}
+
+
+/**
+ * Reset the integration slider for a new file
+ * @param {Int} num_integration - The number of integration images available
+ * @param {Int} total_integration - The total number of integrations to display
+ */
+function reset_integration_slider(num_integration, total_integration) {
+    // Reset the slider values
+    document.getElementById("slider_range").value = 1;
+    document.getElementById("slider_range").max = num_integration;
+    document.getElementById("slider_val").innerHTML = 1;
+    document.getElementById("total_ints").innerHTML = total_integration;
+
+    // Update the integration changing buttons
+    if (num_integration > 1) {
+        document.getElementById("int_after").disabled = false;
+    } else {
+        document.getElementById("int_after").disabled = true;
+    }
+
+    // Disable the "left" button, since this will be showing integ0
+    document.getElementById("int_before").disabled = true;
+}
+
+
+/**
+ * Check for a detector image and show or hide its viewer accordingly.
+ * @param {String} detector - The detector name
+ * @param {String} jpg_filepath - The image to show
+ */
+function show_viewer(detector, jpg_filepath) {
+    $.get(jpg_filepath, function() {unhide_file(detector);})
+    .fail(function() {hide_file(detector)});
+}
+
 /**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
@@ -378,37 +626,23 @@ function image_error(image, makeThumbnail=false) {
 
 
 /**
- * Parse a JSON string containing a Bokeh plot
- * @param {String} element - json-formatted string
- */
-function parse_plot_json(element) {
-    // Determine if the URL is 'archive' or 'unlooked'
-    var formatted = Object;
-    formatted = JSON.parse(element)
-};
-
-
-
-/**
  * Perform a search of images and display the resulting thumbnails
  */
 function search() {
 
     // Find all proposal elements
     var proposals = document.getElementsByClassName("proposal");
-    var n_proposals = document.getElementsByClassName("proposal").length;
 
     // Determine the current search value
     var search_value = document.getElementById("search_box").value;
 
     // Determine whether or not to display each thumbnail
     var num_proposals_displayed = 0;
-    for (i = 0; i < proposals.length; i++) {
+    for (var i = 0; i < proposals.length; i++) {
         // Evaluate if the proposal number matches the search
         var j = i + 1
-        var prop_name = document.getElementById("proposal" + j).getAttribute('proposal')
+        var prop_name = document.getElementById("proposal" + j).getAttribute('data-proposal')
         var prop_num = Number(prop_name)
-
 
         if (prop_name.startsWith(search_value) || prop_num.toString().startsWith(search_value)) {
             proposals[i].style.display = "inline-block";
@@ -416,29 +650,31 @@ function search() {
         } else {
             proposals[i].style.display = "none";
         }
-    };
+    }
 
     // If there are no proposals to display, tell the user
     if (num_proposals_displayed == 0) {
         document.getElementById('no_proposals_msg').style.display = 'inline-block';
     } else {
         document.getElementById('no_proposals_msg').style.display = 'none';
-    };
+    }
 
     // Update the count of how many images are being shown
-    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_proposals_displayed + '/' + n_proposals + ' proposals';
-};
+    document.getElementById('img_shown').innerText = num_proposals_displayed;
+}
 
 
 /**
  * Limit the displayed thumbnails based on filter criteria
  * @param {String} filter_type - The filter type.
  * @param {Integer} value - The filter value
- * @param {List} dropdown_keys - A list of dropdown menu keys
- * @param {Integer} num_fileids - The number of files that are available to display
- * @param {String} thumbnail_class - The class name of the thumbnails that will be filtered.
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class, find_substring, base_url) {
+function show_only(filter_type, value, base_url) {
+
+    var filter_div = document.getElementById('filter_by');
+    var dropdown_keys = filter_div.getAttribute('data-dropdown-key-list');
+    var thumbnail_class = filter_div.getAttribute('data-thumbnail-class');
 
     // Get all filter options from {{dropdown_menus}} variable
     var all_filters = dropdown_keys.split(',');
@@ -446,13 +682,19 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
     // Update dropdown menu text
     document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
 
+    // Check for grouping setting for special handling
+    var group_option = document.getElementById('group_dropdownMenuButton')
+    var group = false;
+    if (group_option != null) {
+        group = (group_option.innerText == 'Exposure');
+    }
+
     // Determine the current value for each filter
     var filter_values = [];
-    for (j = 0; j < all_filters.length; j++) {
+    for (var j = 0; j < all_filters.length; j++) {
         var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
         filter_values.push(filter_value);
     }
-
 
     // Find all thumbnail elements
     var thumbnails = document.getElementsByClassName(thumbnail_class);
@@ -460,37 +702,52 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
     // Determine whether or not to display each thumbnail
     var num_thumbnails_displayed = 0;
     var list_of_rootnames = "";
-    for (i = 0; i < thumbnails.length; i++) {
+    var groups_shown = new Set();
+    for (var i = 0; i < thumbnails.length; i++) {
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
-            var filter_attribute = thumbnails[i].getAttribute(all_filters[j])
-            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
-                         || (filter_attribute == filter_values[j])
-                         || (find_substring && filter_attribute.includes(filter_values[j]));
+            var filter_attribute = thumbnails[i].getAttribute('data-' + all_filters[j]);
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0)
+                         || (filter_attribute.includes(filter_values[j]));
             criteria.push(criterion);
-        };
+        }
 
-        // Only display if all filter criteria are met
+        // If data are grouped, check if a thumbnail for the group has already been displayed
+        var show_group = true;
+        if (group && groups_shown.has(thumbnails[i].getAttribute('data-group_root'))) {
+            show_group = false;
+        }
+
+        // Only display if all criteria are met
         if (criteria.every(function(r){return r})) {
-            thumbnails[i].style.display = "inline-block";
-            num_thumbnails_displayed++;
-            list_of_rootnames = list_of_rootnames + thumbnails[i].getAttribute("file_root") + '=' + thumbnails[i].getAttribute("exp_start") + ',';
+            // if group has already been shown, do not show thumbnail,
+            // but do store the file root for navigation
+            if (show_group) {
+                thumbnails[i].style.display = "inline-block";
+                num_thumbnails_displayed++;
+                if (group) { groups_shown.add(thumbnails[i].getAttribute('data-group_root')); }
+            } else {
+                thumbnails[i].style.display = "none";
+            }
+            list_of_rootnames = list_of_rootnames +
+                                thumbnails[i].getAttribute("data-file_root") +
+                                '=' + thumbnails[i].getAttribute("data-exp_start") + ',';
         } else {
             thumbnails[i].style.display = "none";
         }
-    };
+    }
     if (document.getElementById('no_thumbnails_msg') != null) {
         // If there are no thumbnails to display, tell the user
         if (num_thumbnails_displayed == 0) {
             document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
         } else {
             document.getElementById('no_thumbnails_msg').style.display = 'none';
-        };
+        }
     }
 
     // Update the count of how many images are being shown
-    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+    document.getElementById('img_shown').innerText = num_thumbnails_displayed;
     if (num_thumbnails_displayed) {
         // remove trailing ','.
         list_of_rootnames = list_of_rootnames.slice(0, -1);
@@ -507,7 +764,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
             }
         });
     }
-};
+}
 
 
 /**
@@ -526,9 +783,9 @@ function sort_by_proposals(sort_type) {
         tinysort(props, {order:'desc'});
     } else if (sort_type == 'Recent') {
         // Sort by the most recent Observation Start
-        tinysort(props, {order:'desc', attr:'obs_time'});
+        tinysort(props, {order:'desc', attr:'data-obs_time'});
     }
-};
+}
 
 
 /**
@@ -546,14 +803,14 @@ function sort_by_thumbnails(sort_type, base_url) {
 
     var thumbs = $('div#thumbnail-array>div')
     if (sort_type == 'Descending') {
-        tinysort(thumbs, {attr:'file_root', order:'desc'});
+        tinysort(thumbs, {attr:'data-file_root', order:'desc'});
     } else if (sort_type == 'Recent') {
-        tinysort(thumbs, {attr:'exp_start', order:'desc'}, {attr:'file_root', order:'asc'});
+        tinysort(thumbs, {attr:'data-exp_start', order:'desc'}, {attr:'data-file_root', order:'asc'});
     } else if (sort_type == 'Oldest') {
-        tinysort(thumbs, {attr:'exp_start', order:'asc'}, {attr:'file_root', order:'asc'});
+        tinysort(thumbs, {attr:'data-exp_start', order:'asc'}, {attr:'data-file_root', order:'asc'});
     } else {
         // Default to 'Ascending'
-        tinysort(thumbs, {attr:'file_root', order:'asc'});
+        tinysort(thumbs, {attr:'data-file_root', order:'asc'});
     }
     $.ajax({
         url: base_url + '/ajax/image_sort/',
@@ -564,7 +821,7 @@ function sort_by_thumbnails(sort_type, base_url) {
             console.log("session image sort update failed");
         }
     });
-};
+}
 
 
 /**
@@ -575,7 +832,8 @@ function sort_by_thumbnails(sort_type, base_url) {
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
 function toggle_viewed(file_root, base_url) {
-    // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
+    // Toggle the button immediately so user isn't confused
+    // (ajax result will confirm choice or fix on failure)
     var elem = document.getElementById("viewed");
     update_viewed_button(elem.value == "New" ? true : false);
     elem.disabled=true;
@@ -599,7 +857,77 @@ function toggle_viewed(file_root, base_url) {
 
 
 /**
- * Updates various compnents on the archive page
+ * Set the viewed status for a group of files.
+ * Ajax call to update RootFileInfo model with toggled value
+ *
+ * @param {String} group_root - The rootname of the exposure group
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function toggle_viewed_group(group_root, base_url) {
+    // Toggle the button immediately so user isn't confused
+    var elem = document.getElementById("viewed");
+    var to_viewed = elem.value.includes('New');
+    update_viewed_button(to_viewed, true);
+    elem.disabled=true;
+
+    // Ajax Call to update RootFileInfo model with "viewed" info
+    $.ajax({
+        url: base_url + '/ajax/viewed_group/' + group_root + '/' + (to_viewed ? 'viewed' : 'new'),
+        success: function(data){
+            // Update button with actual value (paranoia update, should not yield visible change)
+            update_viewed_button(data["marked_viewed"], true);
+            elem.disabled=false;
+        },
+        error : function(response) {
+            // If update fails put button back to original state
+            update_viewed_button(!to_viewed, true);
+            elem.disabled=false;
+
+        }
+    });
+}
+
+
+/**
+ * Download filtered data report
+ * @param {String} inst - The instrument in use
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function download_report(inst, base_url) {
+    var elem = document.getElementById('download_report_button');
+    elem.disabled = true;
+
+    // Get sort value
+    var sort_option = document.getElementById('sort_dropdownMenuButton').innerText;
+    var options = '?sort_as=' + sort_option.toLowerCase();
+
+    // Get search value - use as proposal.startswith
+    var search_value = document.getElementById("search_box").value;
+    if (search_value != '') {
+        options += '&proposal=' + search_value;
+    }
+
+    // Get all filter values
+    var filter_div = document.getElementById('thumbnail-filter');
+    var filters = filter_div.getElementsByClassName('dropdown-toggle');
+
+    for (var i=0; i < filters.length; i++) {
+        var name = filters[i].id.split('_dropdownMenuButton')[0];
+        var status = filters[i].innerText.toLowerCase();
+        if (!status.includes('all')) {
+            options += '&' + name + '=' + status;
+        }
+    }
+    var report_url = '/' + inst + '/report' + options;
+    console.log('Redirecting to: ' + report_url);
+
+    // Redirect to download content
+    window.location = base_url + report_url;
+    elem.disabled = false;
+}
+
+/**
+ * Updates various components on the archive page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
@@ -609,27 +937,33 @@ function update_archive_page(inst, base_url) {
         success: function(data){
 
             // Update the number of proposals displayed
-            num_proposals = data.thumbnails.proposals.length;
+            var num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
-            update_filter_options(data, base_url, num_proposals, 'proposal');
+            update_filter_options(data, base_url, 'proposal');
 
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
 
                 // Parse out useful variables
-                prop = data.thumbnails.proposals[i];
-                min_obsnum = data.min_obsnum[i];
-                thumb = data.thumbnails.thumbnail_paths[i];
-                n = data.thumbnails.num_files[i];
-                viewed = data.thumbnails.viewed[i];
-                exp_types = data.thumbnails.exp_types[i];
-                obs_time = data.thumbnails.obs_time[i];
+                var prop = data.thumbnails.proposals[i];
+                var min_obsnum = data.min_obsnum[i];
+                var thumb = data.thumbnails.thumbnail_paths[i];
+                var n = data.thumbnails.num_files[i];
+                var viewed = data.thumbnails.viewed[i];
+                var exp_types = data.thumbnails.exp_types[i];
+                var obs_time = data.thumbnails.obs_time[i];
+                var cat_type = data.thumbnails.cat_types[i];
 
                 // Build div content
-                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                var content = '<div class="proposal text-center" data-look="' + viewed +
+                              '" data-exp_type="' + exp_types + '" data-obs_time="' + obs_time +
+                              '" data-cat_type="' + cat_type + '">';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' +
+                           min_obsnum + '/" id="proposal' + (i + 1) + '" data-proposal="' + prop + '">';
                 content += '<span class="helper"></span>'
-                content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
+                content += '<img src="/static/thumbnails/' + thumb +
+                           '" alt="" title="Thumbnail for ' + prop +
+                           '" width=100% style="max-height:100%">';
                 content += '<div class="proposal-color-fill" ></div>';
                 content += '<div class="proposal-info">';
                 content += '<h3>' + prop + '</h3>';
@@ -642,13 +976,13 @@ function update_archive_page(inst, base_url) {
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("proposal-array").style.display = "block";
-            };
+            }
     }});
-};
+}
 
 
 /**
- * Updates various compnents on the MSATA page
+ * Updates various components on the MSATA page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
@@ -658,7 +992,7 @@ function update_msata_page(base_url) {
         success: function(data){
 
             // Build div content
-            content = data["div"];
+            var content = data["div"];
             content += data["script"];
 
             /* Add the content to the div
@@ -676,11 +1010,11 @@ function update_msata_page(base_url) {
             document.getElementById('msata_fail').style.display = "inline-block";
         }
     });
-};
+}
 
 
 /**
- * Updates various compnents on the WATA page
+ * Updates various components on the WATA page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
@@ -690,7 +1024,7 @@ function update_wata_page(base_url) {
         success: function(data){
 
             // Build div content
-            content = data["div"];
+            var content = data["div"];
             content += data["script"];
 
             /* Add the content to the div
@@ -708,11 +1042,11 @@ function update_wata_page(base_url) {
             document.getElementById('wata_fail').style.display = "inline-block";
         }
     });
-};
+}
 
 
 /**
- * Updates various compnents on the thumbnails page
+ * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
  * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
@@ -722,21 +1056,23 @@ function update_wata_page(base_url) {
  function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
 
     /* if they exist set up the optional parameters before the ajax call*/
-    optional_params = "";
+    var optional_params = "";
     if(do_opt_args) {
         // Reset loading
         document.getElementById("loading").style.display = "inline-block";
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
-        calc_difference = document.getElementById("calcDifference").checked;
+        var calc_difference = document.getElementById("calcDifference").checked;
 
         // Get the arguments to update
-        scaling = get_radio_button_value("scaling");
-        low_lim = get_number_or_none("low_lim");
-        high_lim = get_number_or_none("high_lim");
-        ext_name = get_radio_button_value("extension");
-        int1_nr = get_number_or_none("integration1");
-        grp1_nr = get_number_or_none("group1");
+        var scaling = get_radio_button_value("scaling");
+        var low_lim = get_number_or_none("low_lim");
+        var high_lim = get_number_or_none("high_lim");
+        var ext_name = get_radio_button_value("extension");
+        var int1_nr = get_number_or_none("integration1");
+        var grp1_nr = get_number_or_none("group1");
+        var int2_nr;
+        var grp2_nr;
         if (calc_difference) {
             int2_nr = get_number_or_none("integration2");
             grp2_nr = get_number_or_none("group2");
@@ -752,7 +1088,7 @@ function update_wata_page(base_url) {
         success: function(data){
 
             // Build div content
-            content = data["div"];
+            var content = data["div"];
             content += data["script"];
 
             /* Add the content to the div
@@ -770,31 +1106,25 @@ function update_wata_page(base_url) {
             document.getElementById('explore_image_fail').style.display = "inline-block";
         }
     });
-};
+}
 
 
 /**
  * Updates the thumbnail-filter div with filter options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
- * @param {Integer} num_items - The total number of items that will be filtered upon
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} thumbnail_class - the class name of the thumbnails that will be filtered
  */
- function update_filter_options(data, base_url, num_items, thumbnail_class) {
-    content = 'Filter by:'
+ function update_filter_options(data, base_url, thumbnail_class) {
+    var dropdown_key_list = Object.keys(data.dropdown_menus);
+    var content = '<div class="d-inline" id="filter_by" data-dropdown-key-list="' +
+                  dropdown_key_list + '" data-thumbnail-class="' +
+                  thumbnail_class + '">Filter by:</div>';
 
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
-        filter_type = Object.keys(data.dropdown_menus)[i];
-        filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-        num_rootnames = num_items;
-        dropdown_key_list = Object.keys(data.dropdown_menus);
-        
-        if (filter_type == "exp_type") {
-            // Any filters where there may be a list as a string for the attribute to filter on
-            find_substring = true;
-        } else {
-            find_substring = false;
-        } 
+        var filter_type = Object.keys(data.dropdown_menus)[i];
+        var filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
 
         // Build div content
         content += '<div style="display: flex">';
@@ -802,19 +1132,40 @@ function update_wata_page(base_url) {
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\',\'' + base_url + '\');">All ' + filter_type + 's</a>';
+        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + base_url + '\');">All ' + filter_type + 's</a>';
 
         for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\',\'' + base_url + '\');">' + filter_options[j] + '</a>';
-        };
+            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + base_url + '\');">' + filter_options[j] + '</a>';
+        }
 
         content += '</div>';
         content += '</div></div>';
-    };
+    }
 
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
-};
+}
+
+/**
+ * Updates the group-by-exposure div
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_group_options(data, base_url) {
+
+    // Build div content
+    var content = '<div class="d-inline" id="group_by" data-ngroup="' +
+                  data.exp_groups.length + '" data-nfile="' +
+                  Object.keys(data.file_data).length + '">Group by:<br></div>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="group_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_group + '</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'Exposure\', \'' + base_url + '\');">Exposure</a>';
+    content += '<a class="dropdown-item" href="#" onclick="group_by_thumbnails(\'File\', \'' + base_url + '\');">File</a>';
+    content += '</div></div>';
+    // Add the content to the div
+    $("#group-by-exposure")[0].innerHTML = content;
+}
+
 
 
 /**
@@ -830,7 +1181,7 @@ function update_header_display(extension, num_extensions) {
         var header_table = document.getElementById("header-table-extension" + i);
         header_name.style.display = 'none';
         header_table.style.display = 'none';
-    };
+    }
 
     // Display the header selected
     var header_name_to_show = document.getElementById("header-display-name-extension" + extension);
@@ -838,7 +1189,8 @@ function update_header_display(extension, num_extensions) {
     header_name_to_show.style.display = 'inline';
     header_table_to_show.style.display = 'inline';
 
-};
+}
+
 
 /**
  * Updates the obs-list div with observation number options
@@ -849,7 +1201,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_obs_options(data, inst, prop, observation) {
     // Build div content
-    content = 'Available observations:';
+    var content = 'Available observations:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs' + observation + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -860,7 +1212,7 @@ function update_obs_options(data, inst, prop, observation) {
 
     // Add the content to the div
     $("#obs-list")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the img_show_count component
@@ -868,20 +1220,21 @@ function update_obs_options(data, inst, prop, observation) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
-    content = 'Showing ' + count + '/' + count + ' ' + type;
+    var content = 'Showing <a id="img_shown">' + count + '</a> / <a id="img_total">' + count + '</a> <a id="img_type">' + type + '</a>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the thumbnail-sort div with sorting options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
 function update_sort_options(data, base_url) {
 
     // Build div content
-    content = 'Sort by:';
+    var content = 'Sort by:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_sort + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -893,7 +1246,7 @@ function update_sort_options(data, base_url) {
 
     // Add the content to the div
     $("#thumbnail-sort")[0].innerHTML = content;
-};
+}
 
 /**
  * Updates the thumbnail-array div with interactive images of thumbnails
@@ -901,25 +1254,37 @@ function update_sort_options(data, base_url) {
  */
 function update_thumbnail_array(data) {
 
-      // Add content to the thumbail array div
+    // Add content to the thumbnail array div
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
         
         // Parse out useful variables
-        rootname = Object.keys(data.file_data)[i];
-        file = data.file_data[rootname];
-        viewed = file.viewed;
-        exp_type = file.exp_type;
-        filename_dict = file.filename_dict;
+        var rootname = Object.keys(data.file_data)[i];
+        var file = data.file_data[rootname];
+        var viewed = file.viewed;
+        var exp_type = file.exp_type;
+        var filename_dict = file.filename_dict;
 
         // Build div content
-        if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
-            content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        var instrument;
+        if (data.inst != "all") {
+            instrument = data.inst;
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
-            content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
+            instrument = filename_dict.instrument;
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
+        var content = '<div class="thumbnail" data-instrument="' + instrument +
+                      '" data-detector="' + filename_dict.detector + '" data-proposal="' + filename_dict.program_id +
+                      '" data-file_root="' + rootname + '" data-group_root="' + filename_dict.group_root +
+                      '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type + '">';
+        content += '<div class="thumbnail-group">'
+        content += '<a class="thumbnail-link" href="#" data-image-href="/' +
+                   instrument + '/' + rootname + '/" data-group-href="/' +
+                   instrument + '/exposure/' + filename_dict.group_root +  '">';
+        content += '<span class="helper"></span>'
+
+        // Make sure thumbnail img always has a src and alt
+        content += '<img id="thumbnail' + i +
+                   '" src="/static/img/default_thumb.png" ' +
+                   'alt="Thumbnail for file ' + rootname + '">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
@@ -927,20 +1292,25 @@ function update_thumbnail_array(data) {
         content += 'Visit: ' + filename_dict.visit + '<br>';
         content += 'Detector: ' + filename_dict.detector + '<br>';
         content += 'Exp_Start: ' + file.expstart_iso + '<br>';
-        content += '</div></a></div>';
+        content += '</div></a></div></div>';
 
         // Add the content to the div
         $("#thumbnail-array")[0].innerHTML += content;
 
         // Add the appropriate image to the thumbnail
         determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
-    };
-};
+    }
+}
 
-function submit_date_range_form(inst, base_url) {
+/**
+ * Read and submit the form for archive date ranges.
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function submit_date_range_form(inst, base_url, group) {
 
-    start_date = document.getElementById("start_date_range").value;
-    stop_date = document.getElementById("stop_date_range").value;
+    var start_date = document.getElementById("start_date_range").value;
+    var stop_date = document.getElementById("stop_date_range").value;
 
     if (!start_date) {
         alert("You must enter a Start Date/Time");
@@ -956,7 +1326,7 @@ function submit_date_range_form(inst, base_url) {
             url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
             success: function(data){
                 var show_thumbs = true;
-                num_thumbnails = Object.keys(data.file_data).length;
+                var num_thumbnails = Object.keys(data.file_data).length;
                 // verify we want to continue with results
                 if (num_thumbnails > 1000) {
                     show_thumbs = false;
@@ -969,10 +1339,14 @@ function submit_date_range_form(inst, base_url) {
                     if (num_thumbnails > 0) {
                         update_show_count(num_thumbnails, 'activities');
                         update_thumbnail_array(data);
-                        update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
-                        // Do initial sort to match sort button display
+                        update_filter_options(data, base_url, 'thumbnail');
+                        update_group_options(data, base_url);
                         update_sort_options(data, base_url);
+
+                        // Do initial sort and group to match sort button display
+                        group_by_thumbnails(group, base_url);
                         sort_by_thumbnails(data.thumbnail_sort, base_url);
+
                         // Replace loading screen with the proposal array div
                         document.getElementById("loading").style.display = "none";
                         document.getElementById("thumbnail-array").style.display = "block";
@@ -995,72 +1369,108 @@ function submit_date_range_form(inst, base_url) {
             }
         });
     }
-};
+}
 
 
 /**
- * Updates various compnents on the thumbnails page
+ * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} proposal - The proposal number of interest (e.g. "88660")
  * @param {String} observation - The observation number within the proposal (e.g. "001")
- * @param {List} observation_list - List of all observations in this proposal
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} sort - Sort method string saved in session data image_sort
+ * @param {String} group - Group method string saved in session data image_group
  */
-function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url, sort) {
+function update_thumbnails_per_observation_page(inst, proposal, observation, base_url, sort, group) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
             // Perform various updates to divs
-            num_thumbnails = Object.keys(data.file_data).length;
+            var num_thumbnails = Object.keys(data.file_data).length;
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal, observation);
-            update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_filter_options(data, base_url, 'thumbnail');
+            update_group_options(data, base_url);
             update_sort_options(data, base_url);
 
-            // Do initial sort to match sort button display
+            // Do initial sort and group to match sort button display
+            group_by_thumbnails(group, base_url);
             sort_by_thumbnails(sort, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
         }});
-};
+}
 
 /**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} sort - Sort method string saved in session data image_sort
  */
-function update_thumbnails_query_page(base_url, sort) {
+function update_thumbnails_query_page(base_url, sort, group) {
     $.ajax({
         url: base_url + '/ajax/query_submit/',
         success: function(data){
             // Perform various updates to divs
-            num_thumbnails = Object.keys(data.file_data).length;
+            var num_thumbnails = Object.keys(data.file_data).length;
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
-            update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_filter_options(data, base_url, 'thumbnail');
+            update_group_options(data, base_url);
             update_sort_options(data, base_url);
 
-            // Do initial sort to match sort button display
+            // Do initial sort and group to match sort button display
+            group_by_thumbnails(group, base_url);
             sort_by_thumbnails(sort, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
         }});
-};
+}
 
-function update_viewed_button(viewed) {
+
+/**
+ * Construct the URL for viewing/exploring a selected image on the exposure page
+ */
+function update_view_explore_link() {
+    var types = ['header', 'explore_image'];
+    for (var i = 0; i < types.length; i++) {
+        var type = types[i];
+        var file_selected = document.getElementById('fits_file_select');
+        var link_button = document.getElementById(type);
+
+        // Disable the button if the file isn't available
+        if (file_selected.options[file_selected.selectedIndex].disabled) {
+            link_button.href = '#';
+            link_button.classList.add('disabled_button');
+        } else {
+            // Update the link to the current setting
+            link_button.href = '/' + file_selected.value + '/' + type + '/';
+            link_button.classList.remove('disabled_button');
+        }
+    }
+}
+
+
+function update_viewed_button(viewed, group=false) {
     var elem = document.getElementById("viewed");
     if (viewed) {
         elem.classList.add("btn-outline-primary")
-        elem.value = "Viewed";
+        if (group) {
+            elem.value = "Viewed Group";
+        } else {
+            elem.value = "Viewed";
+        }
     } else {
         elem.classList.remove("btn-outline-primary")
-        elem.value = "New";
+        if (group) {
+            elem.value = "New Group";
+        } else {
+            elem.value = "New";
+        }
     }
 }
 
@@ -1073,4 +1483,4 @@ function version_url(version_string) {
     a_line += version_string;
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
-};
+}

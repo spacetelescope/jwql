@@ -22,14 +22,15 @@
     	<script>determine_page_title_obs('{{ inst }}','{{ prop }}','{{ obs }}');</script>
 
     	<!-- Show Count -->
-    	<p id='img_show_count'></p>
+    	<div id='img_show_count'></div>
     	<hr>
 
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">
-			<div class="mr-4" id="thumbnail-filter"></div>
+            <div class="mr-4" id="thumbnail-filter"></div>
             <div class="mx-4" id="obs-list"></div>
-            <div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
+            <div class="mx-4" id="thumbnail-sort"></div>
+            <div class="mx-4 mr-5 ml-auto" id="group-by-exposure"></div>
 		</div>
 
         <hr>
@@ -89,6 +90,6 @@
         </div>
     
     </main>
-	<script>update_thumbnails_per_observation_page('{{ inst }}', '{{ prop }}', '{{ obs }}', '{{ obs_list }}', '{{ base_url }}', '{{ sort }}');</script>
+	<script>update_thumbnails_per_observation_page('{{ inst }}', '{{ prop }}', '{{ obs }}', '{{ base_url }}', '{{ sort }}', '{{ group }}');</script>
     
 {% endblock %}

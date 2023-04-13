@@ -137,12 +137,15 @@ def disable_scientific_notation(figure):
         pass
 
 
+"""
+# Currently unused; preserved for reference when moving to bokeh 3
 def treemap(df, col, x, y, dx, dy, *, N=100):
     sub_df = df.nlargest(N, col)
     normed = normalize_sizes(sub_df[col], dx, dy)
     blocks = squarify(normed, x, y, dx, dy)
     blocks_df = pd.DataFrame.from_dict(blocks).set_index(sub_df.index)
     return sub_df.join(blocks_df, how='left').reset_index()
+"""
 
 
 class GeneralDashboard:

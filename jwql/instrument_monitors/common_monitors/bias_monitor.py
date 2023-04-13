@@ -49,7 +49,7 @@ import numpy as np  # noqa: E402 (module import not at top)
 from pysiaf import Siaf  # noqa: E402 (module import not at top)
 from sqlalchemy.sql.expression import and_  # noqa: E402 (module import not at top)
 
-from jwql.database.database_interface import session  # noqa: E402 (module import not at top)
+from jwql.database.database_interface import session, engine  # noqa: E402 (module import not at top)
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
 from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
@@ -60,6 +60,7 @@ from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (modul
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
 from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots  # noqa: E402 (module import not at top)
 
 
 class Bias():
@@ -372,7 +373,7 @@ class Bias():
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
-            
+
             if filename not in outputs:
                 processed_file = filename.replace("uncal_0thgroup", "refpix")
                 if not os.path.isfile(processed_file):
@@ -429,7 +430,8 @@ class Bias():
                 bias_db_entry[key] = float(amp_medians[key])
 
             # Add this new entry to the bias database table
-            self.stats_table.__table__.insert().execute(bias_db_entry)
+            with engine.begin() as connection:
+                connection.execute(self.stats_table.__table__.insert(), bias_db_entry)
             logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
 
             # Remove the raw and calibrated files to save memory space
@@ -532,8 +534,12 @@ class Bias():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
+                with engine.begin() as connection:
+                    connection.execute(self.query_table.__table__.insert(), new_entry)
                 logging.info('\tUpdated the query history table')
+
+            # Update the bias monitor plots
+            BiasMonitorPlots(instrument)
 
         logging.info('Bias Monitor completed successfully.')
 
