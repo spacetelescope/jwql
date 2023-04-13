@@ -666,8 +666,10 @@ def update_characteristics_database(char_info):
     Parameters
     ----------
     char_info : dict
-        A nested dictionary of characteristic information. Top level keys are
-        instrument names, and second level keys are filter/pupil strings.
+        A dictionary of characteristic information. Keys are
+        instrument names, and values are lists of tuples. Each tuple is
+        composed of a filter/pupil string and a count for the number of observations
+        using that filter/pupil.
     """
     logging.info('\tUpdating the characteristics database')
     now = datetime.datetime.now()
