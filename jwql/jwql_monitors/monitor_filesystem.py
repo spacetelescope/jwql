@@ -11,6 +11,7 @@ Authors
     - Misty Cracraft
     - Sara Ogaz
     - Matthew Bourque
+    - Bryan Hilbert
 
 Use
 ---

@@ -11,6 +11,7 @@ Authors
 -------
 
     - Mees B. Fix
+    - Bryan Hilbert
 
 Use
 ---
