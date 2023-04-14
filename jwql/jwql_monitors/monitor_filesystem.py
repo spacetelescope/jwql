@@ -56,7 +56,7 @@ from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.constants import FILESYSYEM_MONITOR_SUBDIRS, FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import FILESYSTEM_MONITOR_SUBDIRS, FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
@@ -540,7 +540,7 @@ def plot_central_store_dirs():
     plot.circle(dates, availables, color='blue')
 
     # This part of the plot should cycle through areas and plot area used values vs. date
-    for area, color in zip(FILESYSYEM_MONITOR_SUBDIRS, colors):
+    for area, color in zip(FILESYSTEM_MONITOR_SUBDIRS, colors):
 
         # Query for used sizes
         results = session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area)
@@ -648,7 +648,7 @@ def update_central_store_database(central_storage_dict):
     central_storage_dict : dict
         A dictionary for the ``central_storage`` database table
     """
-    for area in FILESYSYEM_MONITOR_SUBDIRS:
+    for area in FILESYSTEM_MONITOR_SUBDIRS:
         new_record = {}
         new_record['date'] = central_storage_dict['date']
         new_record['area'] = area
