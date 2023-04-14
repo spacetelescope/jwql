@@ -501,8 +501,8 @@ SUBARRAYS_PER_INSTRUMENT = {'nircam': ['FULL', 'FULLP', 'SUB640', 'SUB320', 'SUB
                             'niriss': ['FULL', 'SUBSTRIP96', 'SUBSTRIP256', 'SUB80', 'SUB64', 'SUB128', 'SUB256',
                                        'WFSS64R', 'WFSS128R', 'WFSS64C', 'WFSS128C', 'SUBAMPCAL', 'SUBTAAMI', 'SUBTASOSS'],
                             'nirspec': [],
-                            'miri': ['MIRIM_BRIGHTSKY', 'MIRIM_FULL', 'MIRIM_MASK1065', 'MIRIM_MASK1140',
-                                     'MIRIM_MASK1550', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB64', 'MIRIM_SUB128', 'MIRIM_SUB256'],
+                            'miri': ['BRIGHTSKY', 'FULL', 'MASK1065', 'MASK1140', 'MASK1550', 'MASKLYOT', 'SLITLESSPRISM',
+                                     'SUB64', 'SUB128', 'SUB256'],
                             'fgs': []}
 
 # Filename suffixes that need to include the association value in the suffix in
