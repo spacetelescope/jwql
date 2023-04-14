@@ -2159,7 +2159,8 @@ def thumbnails_query_ajax(rootnames):
         data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        exp_start = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
+        root_file_info = RootFileInfo.objects.get(root_name=rootname)
+        exp_start = root_file_info.expstart
         data_dict['file_data'][rootname]['expstart'] = exp_start
         data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         data_dict['file_data'][rootname]['suffixes'] = []
