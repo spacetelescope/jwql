@@ -16,7 +16,6 @@ REQUIRES = [
     'astroquery',
     'bandit',
     'bokeh<3',
-    'codecov',
     'crds',
     'cryptography',
     'django',
