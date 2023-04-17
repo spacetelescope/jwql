@@ -1,6 +1,5 @@
 [project]
 name = "jwql"
-version = "1.1.1"
 description = "The James Webb Space Telescope Quicklook Project"
 authors = [
   { name = "Matthew Bourque" },
@@ -49,6 +48,7 @@ dependencies = [
   "twine",
   "wtforms",
 ]
+dynamic = ["version"]
 
 [project.license]
 file = "LICENSE"
@@ -63,3 +63,5 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 namespaces = false
+
+[tool.setuptools_scm]
