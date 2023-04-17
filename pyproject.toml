@@ -17,14 +17,11 @@ dependencies = [
   "asdf",
   "astropy",
   "astroquery",
-  "bandit",
   "bokeh<3",
   "crds",
   "cryptography",
   "django",
-  "flake8",
   "inflection",
-  "ipython",
   "jinja2",
   "jsonschema",
   "jwst",
@@ -36,20 +33,25 @@ dependencies = [
   "pandas",
   "psycopg2",
   "pysiaf",
-  "pytest",
-  "pytest-cov",
-  "pytest-mock",
   "pyvo",
   "scipy",
-  "sphinx",
-  "sphinx_rtd_theme",
   "sqlalchemy",
   "stdatamodels",
-  "stsci_rtd_theme",
-  "twine",
   "wtforms",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-cov",
+  "pytest-mock",
+]  
+docs = [
+  "sphinx",
+  "sphinx_rtd_theme",
+  "stsci_rtd_theme",
+]
 
 [project.license]
 file = "LICENSE"
