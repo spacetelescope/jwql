@@ -49,7 +49,7 @@ It is highly suggested that contributors have a working installation of `anacond
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
 
-Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
+Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `pyproject.toml` file included in the repository.
 
 ### Clone the `jwql` repo
 

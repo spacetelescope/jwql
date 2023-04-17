@@ -56,7 +56,7 @@ jobs:
           echo " "
           echo "Installing jwql package"
           echo " "
-          python setup.py develop
+          pip install -e .
 
           echo " "
           echo "Testing package installation"
