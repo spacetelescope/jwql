@@ -1,6 +1,7 @@
 [project]
 name = "jwql"
 description = "The James Webb Space Telescope Quicklook Project"
+readme = "README.md"
 authors = [
   { name = "Matthew Bourque" },
   { name = "Lauren Chambers" },
