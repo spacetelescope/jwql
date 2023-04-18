@@ -25,7 +25,7 @@ dependencies = [
   "jinja2",
   "jsonschema",
   "jwst",
-  "jwst_reffiles @ git+https://github.com/spacetelescope/jwst_reffiles.git@master",
+  "jwst_reffiles",
   "matplotlib",
   "nodejs",
   "numpy",
