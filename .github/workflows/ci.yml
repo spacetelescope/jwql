@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
       - run: pip install bandit
       - run: bandit ./jwql/ -c .bandit
 
@@ -43,7 +45,7 @@ jobs:
           cache-env: true
           cache-downloads: true
 
-      - run: pip install -e .
+      - run: pip install -e .[test]
 
       - run: conda env export
       
