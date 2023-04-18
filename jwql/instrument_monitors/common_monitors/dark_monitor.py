@@ -402,11 +402,11 @@ class Dark():
         new_pixels_y : list
             List of y coordinates of new bad pixels
         """
-        
+
         if len(badpix[0]) == 0:
             logging.warning("\tNo new {} pixels to check.".format(pixel_type))
             return ([], [])
-        
+
         logging.info("\tChecking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
@@ -440,7 +440,7 @@ class Dark():
             if len(np.intersect1d(ind_x[0], ind_y[0])) == 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
-        
+
         logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
 #             pixel = (x, y)
 #             if pixel not in already_found:
@@ -810,7 +810,7 @@ class Dark():
                 # Add new noisy pixels to the database
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-            
+
             logging.info("Creating Mean Slope Image {}".format(slope_image))
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
@@ -937,11 +937,11 @@ class Dark():
                 # If the aperture is not listed in the threshold file, we need
                 # a default
                 if not np.any(match):
-                    file_count_threshold = 30
+                    integration_count_threshold = 30
                     logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
                                      'with the default threshold of 30 files.'.format(aperture)))
                 else:
-                    file_count_threshold = limits['Threshold'][match][0]
+                    integration_count_threshold = limits['Threshold'][match][0]
                 self.aperture = aperture
 
                 # We need a separate search for each readout pattern
@@ -967,80 +967,71 @@ class Dark():
                     logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
                                                                                            len(new_entries)))
 
-                    # Check to see if there are enough new files to meet the
-                    # monitor's signal-to-noise requirements
-                    if len(new_entries) >= file_count_threshold:
-                        logging.info('\tMAST query has returned sufficient new dark files for {}, {}, {} to run the dark monitor.'
-                                     .format(self.instrument, self.aperture, self.readpatt))
+                    # Get full paths to the files
+                    new_filenames = []
+                    for file_entry in new_entries:
+                        try:
+                             new_filenames.append(filesystem_path(file_entry['filename']))
+                        except FileNotFoundError:
+                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                            .format(file_entry['filename']))
 
-                        # Get full paths to the files
-                        new_filenames = []
-                        for file_entry in new_entries:
-                            try:
-                                new_filenames.append(filesystem_path(file_entry['filename']))
-                            except FileNotFoundError:
-                                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                                .format(file_entry['filename']))
-
-                        # In some (unusual) cases, there are files in MAST with the correct aperture name
-                        # but incorrect array sizes. Make sure that the new files all have the expected
-                        # aperture size
-                        temp_filenames = []
-                        bad_size_filenames = []
-                        expected_ap = Siaf(instrument)[aperture]
-                        expected_xsize = expected_ap.XSciSize
-                        expected_ysize = expected_ap.YSciSize
-                        for new_file in new_filenames:
-                            with fits.open(new_file) as hdulist:
-                                xsize = hdulist[0].header['SUBSIZE1']
-                                ysize = hdulist[0].header['SUBSIZE2']
-                            if xsize == expected_xsize and ysize == expected_ysize:
-                                temp_filenames.append(new_file)
-                            else:
-                                bad_size_filenames.append(new_file)
-                        if len(temp_filenames) != len(new_filenames):
-                            logging.info('\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
-                            for badfile in bad_size_filenames:
-                                logging.info('\t\t{}'.format(badfile))
-                        new_filenames = deepcopy(temp_filenames)
-
-                        # If it turns out that the monitor doesn't find enough
-                        # of the files returned by the MAST query to meet the threshold,
-                        # then the monitor will not be run
-                        if len(new_filenames) < file_count_threshold:
-                            logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
-                                          "This is less than the required minimum number of files ({}) necessary to run "
-                                          "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
-                            monitor_run = False
+                    # Generate a count of the total number of integrations across the files. This number will
+                    # be compared to the threshold value to determine if the monitor is run.
+                    # Also, in some (unusual) cases, there are files in MAST with the correct aperture name
+                    # but incorrect array sizes. Make sure that the new files all have the expected
+                    # aperture size
+                    total_integrations = 0
+                    temp_filenames = []
+                    bad_size_filenames = []
+                    expected_ap = Siaf(instrument)[aperture]
+                    expected_xsize = expected_ap.XSciSize
+                    expected_ysize = expected_ap.YSciSize
+                    for new_file in new_filenames:
+                        with fits.open(new_file) as hdulist:
+                            xsize = hdulist[0].header['SUBSIZE1']
+                            ysize = hdulist[0].header['SUBSIZE2']
+                            nints = hdulist[0].header['NINTS']
+                        if xsize == expected_xsize and ysize == expected_ysize:
+                            temp_filenames.append(new_file)
+                            total_integrations += int(nints)
                         else:
-                            logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
-                                         .format(len(new_filenames)))
-                            monitor_run = True
+                            bad_size_filenames.append(new_file)
+                    if len(temp_filenames) != len(new_filenames):
+                        logging.info('\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
+                        for badfile in bad_size_filenames:
+                            logging.info('\t\t{}'.format(badfile))
+                    new_filenames = deepcopy(temp_filenames)
 
-                        if monitor_run:
-                            # Set up directories for the copied data
-                            ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                            self.data_dir = os.path.join(self.output_dir,
-                                                         'data/{}_{}'.format(self.instrument.lower(),
-                                                                             self.aperture.lower()))
-                            ensure_dir_exists(self.data_dir)
-
-                            # Copy files from filesystem
-                            dark_files, not_copied = copy_files(new_filenames, self.data_dir)
-
-                            logging.info('\tNew_filenames: {}'.format(new_filenames))
-                            logging.info('\tData dir: {}'.format(self.data_dir))
-                            logging.info('\tCopied to working dir: {}'.format(dark_files))
-                            logging.info('\tNot copied: {}'.format(not_copied))
-
-                            # Run the dark monitor
-                            self.process(dark_files)
-
+                    # Check to see if there are enough new integrations to meet the
+                    # monitor's signal-to-noise requirements
+                    logging.info((f'\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
+                                  f'{self.readpatt} has found {total_integrations} in {len(new_filenames)} files.'))
+                    if total_integrations >= integration_count_threshold:
+                        logging.info(f'\tThis meets the threshold of {integration_count_threshold}.')
+                        monitor_run = True
                     else:
-                        logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                     '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                     .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                        logging.info(f'\tThis is below the threshold of {integration_count_threshold}. Monitor not run.')
                         monitor_run = False
+
+                    if monitor_run:
+                        # Set up directories for the copied data
+                        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                        self.data_dir = os.path.join(self.output_dir,
+                                                     'data/{}_{}'.format(self.instrument.lower(),
+                                                                         self.aperture.lower()))
+                        ensure_dir_exists(self.data_dir)
+
+                        # Copy files from filesystem
+                        dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                        logging.info('\tNew_filenames: {}'.format(new_filenames))
+                        logging.info('\tData dir: {}'.format(self.data_dir))
+                        logging.info('\tCopied to working dir: {}'.format(dark_files))
+                        logging.info('\tNot copied: {}'.format(not_copied))
+
+                        # Run the dark monitor
+                        self.process(dark_files)
 
                     # Update the query history
                     new_entry = {'instrument': instrument,
