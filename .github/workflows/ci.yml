@@ -40,7 +40,6 @@ jobs:
       - uses: mamba-org/provision-with-micromamba@v15
         with:
           environment-file: ./environment_python_${{ steps.python.outputs.major }}_${{ steps.python.outputs.minor }}.yml
-          environment-name: jwql-${{ matrix.python-version }}
           cache-env: true
           cache-downloads: true
 
