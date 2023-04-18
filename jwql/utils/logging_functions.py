@@ -66,9 +66,9 @@ import time
 import traceback
 
 if sys.version_info < (3, 11):
-      import tomli as tomllib
- else:
-      import tomllib
+    import tomli as tomllib
+else:
+    import tomllib
 
 from functools import wraps
 
