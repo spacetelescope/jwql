@@ -25,13 +25,13 @@ dependencies = [
   "jinja2",
   "jsonschema",
   "jwst",
-  "jwst_reffiles",
+  "jwst_reffiles @ git+https://github.com/spacetelescope/jwst_reffiles.git@master",
   "matplotlib",
   "nodejs",
   "numpy",
   "numpydoc",
   "pandas",
-  "psycopg2",
+  "psycopg2-binary",
   "pysiaf",
   "pyvo",
   "scipy",
@@ -68,3 +68,7 @@ include-package-data = true
 namespaces = false
 
 [tool.setuptools_scm]
+
+[tool.pytest]
+junit_family = "xunit2"
+addopts = "--ignore=jwql/website/apps/jwql/static"
