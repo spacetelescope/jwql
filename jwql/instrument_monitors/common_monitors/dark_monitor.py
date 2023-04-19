@@ -735,6 +735,13 @@ class Dark():
 
         try:
 
+
+
+            do we bother switching to use rateints files where available, so that we can create a sigma-clipped mean
+            slope rather than the basic mean that goes into the rate file? If we are confident in the jump flagging
+            then it seems like a straight mean might be ok? My concern with rateints files is that the pipeline
+            might not output them in all cases?
+
             # Read in all slope images and place into a list
             slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
 
