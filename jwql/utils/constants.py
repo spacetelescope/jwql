@@ -229,6 +229,9 @@ FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
                   'fgs': ['FGS_INTFLAT']}
 
+# output subdirectories to keep track of via the filesytem monitor
+FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'preview_images', 'thumbnails', 'all']
+
 FILTERS_PER_INSTRUMENT = {'fgs': [],
                           'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W', 'F1500W',
                                    'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W', 'F2550WR', 'FLENS', 'FND', 'OPAQUE', 'P750L'],

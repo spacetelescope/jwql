@@ -499,12 +499,16 @@ def dashboard(request):
     db = get_dashboard_components(request)
     pie_graph = db.dashboard_instrument_pie_chart()
     files_graph = db.dashboard_files_per_day()
+    useage_graph = db.dashboard_disk_usage()
+    directories_usage_graph, central_store_usage_graph = db.dashboard_central_store_data_volume()
     filetype_bar = db.dashboard_filetype_bar_chart()
     table_columns, table_values = db.dashboard_monitor_tracking()
     grating_plot = db.dashboard_exposure_count_by_filter()
     anomaly_plot = db.dashboard_anomaly_per_instrument()
 
-    plot = layout([[files_graph], [pie_graph, filetype_bar],
+    plot = layout([[files_graph, useage_graph],
+                   [directories_usage_graph, central_store_usage_graph],
+                   [pie_graph, filetype_bar],
                    [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
     script, div = components(plot)
 
