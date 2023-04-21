@@ -989,6 +989,7 @@ class Dark():
                     # but incorrect array sizes. Make sure that the new files all have the expected
                     # aperture size
                     total_integrations = 0
+                    integrations = []
                     temp_filenames = []
                     bad_size_filenames = []
                     expected_ap = Siaf(instrument)[aperture]
@@ -1002,6 +1003,7 @@ class Dark():
                         if xsize == expected_xsize and ysize == expected_ysize:
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
+                            integrations.append(int(nints))
                         else:
                             bad_size_filenames.append(new_file)
                     if len(temp_filenames) != len(new_filenames):
@@ -1015,13 +1017,9 @@ class Dark():
                     logging.info((f'\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
                                   f'{self.readpatt} has found {total_integrations} in {len(new_filenames)} files.'))
                     if total_integrations >= integration_count_threshold:
-                        logging.info(f'\tThis meets the threshold of {integration_count_threshold}.')
+                        logging.info(f'\tThis meets the threshold of {integration_count_threshold} integrations.')
                         monitor_run = True
-                    else:
-                        logging.info(f'\tThis is below the threshold of {integration_count_threshold}. Monitor not run.')
-                        monitor_run = False
 
-                    if monitor_run:
                         # Set up directories for the copied data
                         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
                         self.data_dir = os.path.join(self.output_dir,
@@ -1029,16 +1027,57 @@ class Dark():
                                                                          self.aperture.lower()))
                         ensure_dir_exists(self.data_dir)
 
-                        # Copy files from filesystem
-                        dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+                        # Split the list of good files into sub-lists based on the integration
+                        # threshold. The monitor will then be run on each sub-list independently,
+                        # in order to produce results with roughly the same signal-to-noise. This
+                        # also prevents the monitor running on a huge chunk of files in the case
+                        # where it hasn't been run in a while and data have piled up in the meantime.
+                        self.split_files_into_equal_lists(new_filenames, integrations)
+                        The function above needs to create self.new_file_lists, which is a
+                        list of file lists. It also needs to keep track of the starting and
+                        ending time associated with each sub-list, so that the database can
+                        be updated appropriately
 
-                        logging.info('\tNew_filenames: {}'.format(new_filenames))
-                        logging.info('\tData dir: {}'.format(self.data_dir))
-                        logging.info('\tCopied to working dir: {}'.format(dark_files))
-                        logging.info('\tNot copied: {}'.format(not_copied))
+                        what about the case where the final few files are not enough to trigger
+                        another run of the monitor? do we leave them for next time? or bundle them
+                        into the final sub-list? Probably the latter.
 
-                        # Run the dark monitor
-                        self.process(dark_files)
+                        # Run the monitor once on each list
+                        for new_file_list in self.new_file_lists:
+                            # Copy files from filesystem
+                            dark_files, not_copied = copy_files(new_file_list, self.data_dir)
+
+                            logging.info('\tNew_filenames: {}'.format(new_file_list))
+                            logging.info('\tData dir: {}'.format(self.data_dir))
+                            logging.info('\tCopied to working dir: {}'.format(dark_files))
+                            logging.info('\tNot copied: {}'.format(not_copied))
+
+                            # Run the dark monitor
+                            self.process(dark_files)
+
+                            # Update the query history
+                            new_entry = {'instrument': instrument,
+                                         'aperture': aperture,
+                                         'readpattern': self.readpatt,
+                                         'start_time_mjd': self.query_start,
+                                         'end_time_mjd': self.query_end,
+                                         'files_found': len(new_entries),
+                                         'run_monitor': monitor_run,
+                                         'entry_date': datetime.datetime.now()}
+                            with engine.begin() as connection:
+                                connection.execute(
+                                    self.query_table.__table__.insert(), new_entry)
+                            logging.info('\tUpdated the query history table')
+
+
+
+
+                    else:
+                        logging.info(f'\tThis is below the threshold of {integration_count_threshold} integrations. Monitor not run.')
+                        monitor_run = False
+
+
+
 
                     # Update the query history
                     new_entry = {'instrument': instrument,
@@ -1127,6 +1166,26 @@ class Dark():
         y += self.y0
 
         return (x, y)
+
+    def split_files_into_equal_lists(self, files, integration_list, threshold):
+        """Given a list of filenames and a list of the number of integrations
+        within each, split the files into sub-lists, where the files in each
+        list have a total number of integrations that is just over the given
+        threshold value
+
+        Parameters
+        ----------
+        files : list
+            List of filenames
+
+        integration_list : list
+            List of integers describing how many integrations are in each file
+
+        threshold : int
+            Threshold number of integrations needed to trigger a run of the
+            dark monitor
+        """
+        pass
 
     def stats_by_amp(self, image, amps):
         """Calculate statistics in the input image for each amplifier as
