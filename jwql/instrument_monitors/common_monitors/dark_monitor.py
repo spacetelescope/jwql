@@ -990,6 +990,8 @@ class Dark():
                     # aperture size
                     total_integrations = 0
                     integrations = []
+                    starting_times = []
+                    ending_times = []
                     temp_filenames = []
                     bad_size_filenames = []
                     expected_ap = Siaf(instrument)[aperture]
@@ -1004,6 +1006,8 @@ class Dark():
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
                             integrations.append(int(nints))
+                            starting_times.append(hdulist[0].header['EXPSTART'])
+                            ending_times.append(hdulist[0].header['EXPEND'])
                         else:
                             bad_size_filenames.append(new_file)
                     if len(temp_filenames) != len(new_filenames):
@@ -1032,18 +1036,10 @@ class Dark():
                         # in order to produce results with roughly the same signal-to-noise. This
                         # also prevents the monitor running on a huge chunk of files in the case
                         # where it hasn't been run in a while and data have piled up in the meantime.
-                        self.split_files_into_equal_lists(new_filenames, integrations)
-                        The function above needs to create self.new_file_lists, which is a
-                        list of file lists. It also needs to keep track of the starting and
-                        ending time associated with each sub-list, so that the database can
-                        be updated appropriately
-
-                        what about the case where the final few files are not enough to trigger
-                        another run of the monitor? do we leave them for next time? or bundle them
-                        into the final sub-list? Probably the latter.
+                        self.split_files_into_sub_lists(new_filenames, integrations, starting_times, ending_times, integration_count_threshold)
 
                         # Run the monitor once on each list
-                        for new_file_list in self.new_file_lists:
+                        for new_file_list, batch_start_time, batch_end_time in zip(self.file_batches, self.start_time_batches, self.end_time_batches):
                             # Copy files from filesystem
                             dark_files, not_copied = copy_files(new_file_list, self.data_dir)
 
@@ -1055,43 +1051,36 @@ class Dark():
                             # Run the dark monitor
                             self.process(dark_files)
 
-                            # Update the query history
+                            # Update the query history once for each group of files
                             new_entry = {'instrument': instrument,
                                          'aperture': aperture,
                                          'readpattern': self.readpatt,
-                                         'start_time_mjd': self.query_start,
-                                         'end_time_mjd': self.query_end,
-                                         'files_found': len(new_entries),
+                                         'start_time_mjd': batch_start_time,
+                                         'end_time_mjd': batch_end_time,
+                                         'files_found': len(dark_files),
                                          'run_monitor': monitor_run,
                                          'entry_date': datetime.datetime.now()}
                             with engine.begin() as connection:
                                 connection.execute(
                                     self.query_table.__table__.insert(), new_entry)
                             logging.info('\tUpdated the query history table')
-
-
-
-
                     else:
                         logging.info(f'\tThis is below the threshold of {integration_count_threshold} integrations. Monitor not run.')
                         monitor_run = False
 
-
-
-
-                    # Update the query history
-                    new_entry = {'instrument': instrument,
-                                 'aperture': aperture,
-                                 'readpattern': self.readpatt,
-                                 'start_time_mjd': self.query_start,
-                                 'end_time_mjd': self.query_end,
-                                 'files_found': len(new_entries),
-                                 'run_monitor': monitor_run,
-                                 'entry_date': datetime.datetime.now()}
-                    with engine.begin() as connection:
-                        connection.execute(
-                            self.query_table.__table__.insert(), new_entry)
-                    logging.info('\tUpdated the query history table')
+                        # Update the query history
+                        new_entry = {'instrument': instrument,
+                                     'aperture': aperture,
+                                     'readpattern': self.readpatt,
+                                     'start_time_mjd': self.query_start,
+                                     'end_time_mjd': self.query_end,
+                                     'files_found': len(new_entries),
+                                     'run_monitor': monitor_run,
+                                     'entry_date': datetime.datetime.now()}
+                        with engine.begin() as connection:
+                            connection.execute(
+                                self.query_table.__table__.insert(), new_entry)
+                        logging.info('\tUpdated the query history table')
 
         logging.info('Dark Monitor completed successfully.')
 
@@ -1167,11 +1156,24 @@ class Dark():
 
         return (x, y)
 
-    def split_files_into_equal_lists(self, files, integration_list, threshold):
+    def split_files_into_sub_lists(self, files, start_times, end_times, integration_list, threshold):
         """Given a list of filenames and a list of the number of integrations
         within each, split the files into sub-lists, where the files in each
         list have a total number of integrations that is just over the given
-        threshold value
+        threshold value.
+
+        Dark calibration plans per instrument:
+        NIRCam - for full frame, takes only 2 integrations (150 groups) once per ~30-50 days.
+                 for subarrays, takes 5-10 integrations once per 30-50 days
+        NIRISS - full frame - 2 exps of 5 ints within each 2 week period. No requirement for
+                            the 2 exps to be taken at the same time though. Could be separated
+                            by almost 2 weeks, and be closer to the darks from the previous or
+                            following 2 week period.
+                subarrays - 30 ints in each month-long span
+        MIRI - 2 ints every 2 hours-5 days for a while, then 2 ints every 14-21 days
+        NIRSpec - full frame 5-6 integrations spread over each month
+                  subarray - 12 ints spread over each 2 month period
+        FGS - N/A
 
         Parameters
         ----------
@@ -1181,11 +1183,131 @@ class Dark():
         integration_list : list
             List of integers describing how many integrations are in each file
 
+        start_times : list
+            List of MJD dates corresponding to the exposure start time of each file in ``files``
+
+        end_times : list
+            List of MJD dates corresponding to the exposures end time of each file in ``files``
+
+        integration_list : list
+            List of the number of integrations for each file in ``files``
+
         threshold : int
             Threshold number of integrations needed to trigger a run of the
             dark monitor
         """
-        pass
+
+        # Not grouping together data across multiple epochs is probably more
+        # important than the number of integrations....
+
+
+
+        #include a final delta_t value that is the time between the last file and
+        #the current time. If that value is less than...something...then we assume
+        #we are in the middle of an epoch of the cal program. In that case, we will
+        #skip running the monitor on the final batch, as defined below. We can save that
+        #for a future run, where the final delta_t is long enough that we can assume
+        #that epoch of the cal program has completed.
+
+        # Eventual return parameters
+        self.file_batches = []
+        self.start_time_batches = []
+        self.end_time_batches = []
+        self.integration_batches = []
+
+        # Add the current time onto the end of start_times
+        start_times = np.append(start_times, Time.now().mjd)
+
+        # Get the delta t between each pair of files. Insert 0 as the initial
+        # delta_t, to make the coding easier
+        delta_t = start_times[1:] - start_times[0:-1]  # units are days
+        delta_t = np.insert(delta_t, 0, 0)
+
+        # Divide up the list such that you don't cross large delta t values. We want to measure
+        # dark current during each "epoch" within a calibration proposal
+        dividers = np.where(delta_t >= DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME[self.instrument])[0]
+
+        # Add dividers at the beginning index to make the coding easier
+        dividers = np.insert(dividers, 0, 0)
+
+        # If no epoch boundaries are found, then add a divider at the end, and the entire
+        # set of files will be treated as a single batch
+        if len(dividers) == 1:
+            dividers = np.insert(dividers, len(dividers), len(dividers))
+
+        # Within each batch, divide up the integrations into multiple batches if the total
+        # number of integrations are above 2*threshold
+        for i in range(len(dividers) - 1):
+            batch_ints = integration_list[dividers[i]:dividers[i+1]]
+            batch_files = files[dividers[i]:dividers[i+1]]
+            batch_start_times = start_times[dividers[i]:dividers[i+1]]
+            batch_end_times = end_times[dividers[i]:dividers[i+1]]
+            batch_int_sum = np.sum(batch_ints)
+
+            # Calculate how many subgroups to break up the batch into,
+            # based on the threshold, and under the assumption that we
+            # don't want to skip running on any of the files.
+            n_subgroups = int(batch_int_sum / threshold)
+
+            if n_subgroups == 0:
+                # Here, we are in a batch where the total number of integrations
+                # is less than the treshold (but the batch was identified due to
+                # the gaps in time before and after the batch.) In this case, we'll
+                # run the monitor with fewer than the threshold number of integrations
+                self.file_batches.append(batch_files)
+                self.start_time_batches.append(batch_start_times)
+                self.end_time_batches.append(batch_end_times)
+                self.integration_batches.append(batch_ints)
+            if n_subgroups == 1:
+                # Here there are not enough integrations to split the batch into
+                # more than one subgroup
+                self.file_batches.append(batch_files)
+                self.start_time_batches.append(batch_start_times)
+                self.end_time_batches.append(batch_end_times)
+                self.integration_batches.append(batch_ints)
+
+            elif n_subgroups > 1:
+                # Here there are enough integrations to break the batch up
+                # into more than one subgroup. We can't split within a file,
+                # so we split after the file that gets the total number of
+                # integrations above the threshold.
+
+                # Calculate the total number of integrations up to each file
+                batch_int_sums = np.array([ np.sum(batch_ints[0:jj]) for jj in range(1, len(batch_ints)) ])
+
+                base = 0
+                startidx = 0
+                endidx = 0
+                complete = False
+                for batchnum in range(len(n_subgroups)):
+                    endidx = np.where(batch_int_sums >= (base + threshold))[0]
+
+                    # Check if we reach the end of the file list
+                    if len(endidx) == 0:
+                        endidx = len(batch_int_sum)
+                        complete = True
+                    else:
+                        endidx = endidx[0]
+
+                    subgroup_ints = batch_ints[startidx: endidx]
+                    subgroup_files = batch_files[startidx: endidx]
+                    subgroup_start_times = batch_start_times[startidx: endidx]
+                    subgroup_end_times = batch_end_times[startidx: endidx]
+                    subgroup_int_sum = np.sum(subgroup_ints)
+
+                    # Add to output lists
+                    self.file_batches.append(subgroup_files)
+                    self.start_time_batches.append(subgroup_start_times)
+                    self.end_time_batches.append(subgroup_end_times)
+                    self.integration_batches.append(subgroup_ints)
+
+                    if not complete:
+                        startidx = deepcopy(endidx)
+                        base = batch_int_sums[endidx - 1]
+                    else:
+                        # If we reach the end of the list before the expected number of
+                        # subgroups, then we quit.
+                        break
 
     def stats_by_amp(self, image, amps):
         """Calculate statistics in the input image for each amplifier as

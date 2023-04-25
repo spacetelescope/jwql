@@ -159,6 +159,18 @@ DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
 # Types of potential bad pixels identified by the dark current monitor
 DARK_MONITOR_BADPIX_TYPES = ['hot', 'dead', 'noisy']
 
+# Minimum amount of time, in days, between epochs of dark current observations. If the
+# dark monitor sees this much time, or longer, between two dark current files, it assumes
+# that the two files are part of separate epochs. This means the monitor will run separately
+# on these files, rather than bundling them together into a batch, where they would have
+# been combined into a mean dark rate
+DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME = {'nircam': 10.,
+                                             'niriss': 10.,
+                                             'miri': 10.,
+                                             'nirspec': 10.,
+                                             'fgs': 10.
+                                             }
+
 # Maximum number of potential new bad pixels to overplot on the dark monitor
 # mean dark image plot. Too many overplotted points starts to obscure the image
 # itself, and are most likely not really new bad pixels
