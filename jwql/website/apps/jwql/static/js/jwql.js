@@ -251,25 +251,6 @@ function clean_input_parameter(param_value) {
 
 
 /**
- * Determine what filetype to use for a thumbnail
- * @param {String} thumbnail_dir - The path to the thumbnail directory
- * @param {List} suffixes - A list of available suffixes for the file of interest
- * @param {Integer} i - The index of the thumbnail
- * @param {String} file_root - The rootname of the file corresponding to the thumbnail
- */
-function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file_root) {
-
-    // Update the thumbnail filename
-    var img = document.getElementById('thumbnail'+i);
-    if (thumb_filename != 'none') {
-        var jpg_path = thumbnail_dir + parse_filename(file_root).program + '/' + thumb_filename;
-        img.src = jpg_path;
-    }
-
-}
-
-
-/**
  * Determine whether the page is archive or unlooked
  * @param {String} instrument - The instrument of interest
  * @param {Integer} proposal - The proposal of interest
@@ -551,6 +532,33 @@ function unhide_file(detector) {
     // Update the view/explore link as needed
     update_view_explore_link();
 }
+
+
+/**
+ * Insert thumbnail images inside existing HTML img tags
+ * @param {List} updates - A list of updates to make, as [thumbnail_id, jpg_path].
+ */
+function insert_thumbnail_images(updates) {
+    // Update the thumbnail image source
+    for (var i = 0; i < updates.length; i++) {
+        var thumb_id = updates[i][0];
+        var jpg_path = updates[i][1];
+        set_thumbnail_image_source(thumb_id, jpg_path);
+    }
+}
+
+
+/**
+ * Check for a thumbnail image and add it to an img if it exists
+ * @param {Integer} thumb_id - The ID number for the thumbnail img
+ * @param {String} jpg_filepath - The image to show
+ */
+function set_thumbnail_image_source(thumb_id, jpg_path) {
+    $.get(jpg_path, function() {
+        var img = document.getElementById('thumbnail' + thumb_id);
+        img.src = jpg_path;})
+}
+
 
 /**
  * Parse observation information from a JWST file name.
@@ -1255,6 +1263,8 @@ function update_sort_options(data, base_url) {
 function update_thumbnail_array(data) {
 
     // Add content to the thumbnail array div
+    var thumbnail_content = "";
+    var image_updates = [];
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
         
         // Parse out useful variables
@@ -1295,11 +1305,17 @@ function update_thumbnail_array(data) {
         content += '</div></a></div></div>';
 
         // Add the content to the div
-        $("#thumbnail-array")[0].innerHTML += content;
+        thumbnail_content += content;
 
         // Add the appropriate image to the thumbnail
-        determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
+        if (file.thumbnail != 'none') {
+            var jpg_path = '/static/thumbnails/' + parse_filename(rootname).program +
+                           '/' + file.thumbnail;
+            image_updates.push([i, jpg_path]);
+        }
     }
+    $("#thumbnail-array")[0].innerHTML = thumbnail_content;
+    insert_thumbnail_images(image_updates);
 }
 
 /**
