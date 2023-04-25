@@ -694,21 +694,21 @@ class Dark():
         # Basic metadata that will be needed later
         self.get_metadata(file_list[0])
 
+        # For MIRI, save the rateints files. For other instruments save the rate files.
+        if self.instrument == 'miri':
+            output_suffix = 'rateints'
+        else:
+            output_suffix = 'rate'
+
         # Run pipeline steps on files, generating slope files
         pipeline_files = []
         slope_files = []
         for filename in file_list:
-
             logging.info('\tWorking on file: {}'.format(filename))
 
-
-            need to deal with rateints files here
-
-            rate_file = filename.replace("dark", "rate")
+            rate_file = filename.replace("dark", output_suffix)
             rate_file_name = os.path.basename(rate_file)
             local_rate_file = os.path.join(self.data_dir, rate_file_name)
-
-
 
             if os.path.isfile(local_rate_file):
                 logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
@@ -716,12 +716,6 @@ class Dark():
             else:
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
-
-        # For MIRI, save the rateints files. For other instruments save the rate files.
-        if self.instrument == 'miri':
-            output_suffix = 'rateints'
-        else:
-            output_suffix = 'rate'
 
         # For other instruments, just save the rate files
         outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument)
@@ -747,24 +741,9 @@ class Dark():
         mid_time = instrument_properties.mean_time(obs_times)
 
         try:
-
-
-
-            do we bother switching to use rateints files where available, so that we can create a sigma-clipped mean
-            slope rather than the basic mean that goes into the rate file? If we are confident in the jump flagging
-            then it seems like a straight mean might be ok? My concern with rateints files is that the pipeline
-            might not output them in all cases?
-
-
-            for MIRI, we want rateints files, and we want to throw out the first int of each one before creating mean slope images
-
-
-
-
-
             # Read in all slope images and create a stack of ints (from rateints files)
             # or mean ints (from rate files)
-            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files, skipped_initial_ints=)
+            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files, skipped_initial_ints=self.skipped_initial_ints)
 
             # Calculate a mean slope image from the inputs
             slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
@@ -965,11 +944,13 @@ class Dark():
                 # If the aperture is not listed in the threshold file, we need
                 # a default
                 if not np.any(match):
-                    integration_count_threshold = 30
+                    integration_count_threshold = 1
+                    self.skipped_initial_ints = 0
                     logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
-                                     'with the default threshold of 30 files.'.format(aperture)))
+                                     'with the default threshold of 1 file, and no skipped integrations.'.format(aperture)))
                 else:
                     integration_count_threshold = limits['Threshold'][match][0]
+                    self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
                 self.aperture = aperture
 
                 # We need a separate search for each readout pattern
@@ -1026,7 +1007,7 @@ class Dark():
                         if xsize == expected_xsize and ysize == expected_ysize:
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
-                            integrations.append(int(nints))
+                            integrations.append(int(nints) - self.skipped_initial_ints)
                             starting_times.append(hdulist[0].header['EXPSTART'])
                             ending_times.append(hdulist[0].header['EXPEND'])
                         else:
