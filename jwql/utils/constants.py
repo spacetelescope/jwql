@@ -166,7 +166,7 @@ DARK_MONITOR_BADPIX_TYPES = ['hot', 'dead', 'noisy']
 # been combined into a mean dark rate
 DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME = {'nircam': 10.,
                                              'niriss': 10.,
-                                             'miri': 10.,
+                                             'miri': 0.00001,  # Treat each MIRI exposure separately
                                              'nirspec': 10.,
                                              'fgs': 10.
                                              }

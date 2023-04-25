@@ -197,7 +197,7 @@ def get_pipeline_steps(instrument):
     return required_steps
 
 
-def image_stack(file_list):
+def image_stack(file_list, skipped_initial_ints=0):
     """Given a list of fits files containing 2D images, read in all data
     and place into a 3D stack
 
@@ -205,6 +205,11 @@ def image_stack(file_list):
     ----------
     file_list : list
         List of fits file names
+
+    skipped_initial_ints : int
+        Number of initial integrations from each file to skip over and
+        not include in the stack. Only works with files containing 3D
+        arrays (e.g. rateints files).
 
     Returns
     -------
@@ -223,7 +228,8 @@ def image_stack(file_list):
         if i == 0:
             ndim_base = image.shape
             if len(ndim_base) == 3:
-                cube = copy.deepcopy(image)
+                cube = copy.deepcopy(image[skipped_initial_ints:, :, :])
+                num_ints -= skipped_initial_ints
             elif len(ndim_base) == 2:
                 cube = np.expand_dims(image, 0)
         else:
@@ -231,9 +237,12 @@ def image_stack(file_list):
             if ndim_base[-2:] == ndim[-2:]:
                 if len(ndim) == 2:
                     image = np.expand_dims(image, 0)
+                    cube = np.vstack((cube, image))
+                elif len(ndim) == 3:
+                    cube = np.vstack((cube, image[skipped_initial_ints:, :, :]))
+                    num_ints -= skipped_initial_ints
                 elif len(ndim) > 3:
                     raise ValueError("4-dimensional input slope images not supported.")
-                cube = np.vstack((cube, image))
             else:
                 raise ValueError("Input images are of inconsistent size in x/y dimension.")
         exptimes.append([exptime] * num_ints)

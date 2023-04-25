@@ -701,9 +701,14 @@ class Dark():
 
             logging.info('\tWorking on file: {}'.format(filename))
 
+
+            need to deal with rateints files here
+
             rate_file = filename.replace("dark", "rate")
             rate_file_name = os.path.basename(rate_file)
             local_rate_file = os.path.join(self.data_dir, rate_file_name)
+
+
 
             if os.path.isfile(local_rate_file):
                 logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
@@ -712,9 +717,17 @@ class Dark():
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
 
-        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        # For MIRI, save the rateints files. For other instruments save the rate files.
+        if self.instrument == 'miri':
+            output_suffix = 'rateints'
+        else:
+            output_suffix = 'rate'
+
+        # For other instruments, just save the rate files
+        outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument)
+
         for filename in file_list:
-            processed_file = filename.replace("_dark", "_rate")
+            processed_file = filename.replace("_dark", f"_{output_suffix}")
             if processed_file not in slope_files and os.path.isfile(processed_file):
                 slope_files.append(processed_file)
                 os.remove(filename)
@@ -742,8 +755,16 @@ class Dark():
             then it seems like a straight mean might be ok? My concern with rateints files is that the pipeline
             might not output them in all cases?
 
-            # Read in all slope images and place into a list
-            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
+
+            for MIRI, we want rateints files, and we want to throw out the first int of each one before creating mean slope images
+
+
+
+
+
+            # Read in all slope images and create a stack of ints (from rateints files)
+            # or mean ints (from rate files)
+            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files, skipped_initial_ints=)
 
             # Calculate a mean slope image from the inputs
             slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
@@ -1165,12 +1186,16 @@ class Dark():
         Dark calibration plans per instrument:
         NIRCam - for full frame, takes only 2 integrations (150 groups) once per ~30-50 days.
                  for subarrays, takes 5-10 integrations once per 30-50 days
+            team response -
         NIRISS - full frame - 2 exps of 5 ints within each 2 week period. No requirement for
                             the 2 exps to be taken at the same time though. Could be separated
                             by almost 2 weeks, and be closer to the darks from the previous or
                             following 2 week period.
                 subarrays - 30 ints in each month-long span
         MIRI - 2 ints every 2 hours-5 days for a while, then 2 ints every 14-21 days
+            team response - monitor should run on each exp separately. It should also throw out
+                            the first integration of each exp.
+
         NIRSpec - full frame 5-6 integrations spread over each month
                   subarray - 12 ints spread over each 2 month period
         FGS - N/A
