@@ -17,12 +17,12 @@ standard deviation images are saved to a fits file, the name of which
 is entered into the ``<Instrument>DarkCurrent`` database table.
 
 The mean slope image is then normalized by an existing baseline slope
-image. New hot pixels are identified as those with normalized signal
-rates above a ``hot_threshold`` value. Similarly, pixels with
-normalized signal rates below a ``dead_threshold`` are flagged as new
-dead pixels.
+image, from the previous run of the monitor. New hot pixels are identified
+as those with normalized signal rates above a ``hot_threshold`` value.
+Similarly, pixels with normalized signal rates below a ``dead_threshold``
+are flagged as new dead pixels.
 
-The standard deviation slope image is normalized by a baseline
+The standard deviation slope image is also normalized by a baseline
 (historical) standard deviation image. Pixels with normalized values
 above a noise threshold are flagged as newly noisy pixels.
 
@@ -37,6 +37,26 @@ also fit to the histogram from the entire detector.
 
 The histogram itself as well as the best-fit Gaussian and double
 Gaussian parameters are saved to the DarkDarkCurrent database table.
+
+Currently, there are three outputs from the dark monitor that are shown
+in the JWQL web app. First, the dark current histogram is plotted, along
+with a corresponding cumulative distribution function (CDF). The Gaussian
+fits are not currently shown.
+
+Secondly, a trending plot of the mean dark current versus time is shown,
+where the mean value is the sigma-clipped mean across the detector in
+the mean slope image. Error bars on the plot show the sigma-clipped
+standard deviation across the detector.
+
+Finally, the mean slope image is shown. Any new potential hot, dead, and
+noisy pixels that were identified are also shown on the mean slope image,
+in order to give an idea of where these pixels are located on the detector.
+To keep the image from becoming too busy, this is only done if the number
+of potential new bad pixels is under 1000. If more pixels that this are
+identified, that number is reported in the plot, but the pixels are not
+marked on the image.
+
+
 
 
 Author
@@ -62,13 +82,18 @@ import os
 
 from astropy.io import ascii, fits
 from astropy.modeling import models
+from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
+from bokeh.io import export_png
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
+from bokeh.models import LinearColorMapper
+from bokeh.plotting import figure
 import numpy as np
 from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -76,9 +101,10 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
-                                 RAPID_READPATTERNS
+from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -189,10 +215,15 @@ class Dark():
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
 
+        # Change to int from numpy.int64 because the latter can't be put into the
+        # database apparently.
+        x_coord = [int(x) for x in coordinates[0]]
+        y_coord = [int(y) for y in coordinates[1]]
+
         source_files = [os.path.basename(item) for item in files]
         entry = {'detector': self.detector,
-                 'x_coord': coordinates[0],
-                 'y_coord': coordinates[1],
+                 'x_coord': x_coord,
+                 'y_coord': y_coord,
                  'type': pixel_type,
                  'source_files': source_files,
                  'obs_start_time': observation_start_time,
@@ -201,7 +232,128 @@ class Dark():
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
-        self.pixel_table.__table__.insert().execute(entry)
+        with engine.begin() as connection:
+            connection.execute(self.pixel_table.__table__.insert(), entry)
+
+    def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None):
+        """Create and save a png containing the mean dark slope image,
+        to be displayed in the web app
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array of the dark slop image
+
+        num_files : int
+            Number of individual exposures that went into creating the mean slope image
+
+        hotxy : tup
+            2-tuple of lists that give x, y coordinates of possible new hot pixels
+
+        deadxy : tup
+            2-tuple of lists that give x, y coordinates of possible new hot pixels
+
+        noisyxy : tup
+            2-tuple of lists that give x, y coordinates of possible new hot pixels
+
+        baseline_file : str
+            Name of fits file containing the mean slope image to which ``image`` was compared
+            when looking for new hot/dead/noisy pixels
+        """
+        output_filename = '{}_{}_{}_to_{}_mean_slope_image.png'.format(self.instrument.lower(),
+                                                                       self.aperture.lower(),
+                                                                       self.query_start, self.query_end)
+
+        mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
+
+        ensure_dir_exists(mean_slope_dir)
+        output_filename = os.path.join(mean_slope_dir, output_filename)
+        logging.info("Name of mean slope image: {}".format(output_filename))
+
+        if image is not None:
+            # Get info on image for better display later
+            ny, nx = image.shape
+            img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
+
+            # Create figure
+            start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            end_time  = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+
+            self.plot = figure(title=f'{self.aperture}: {num_files} files. {start_time} to {end_time}', tools='')
+            #                   tools='pan,box_zoom,reset,wheel_zoom,save')
+            self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
+
+            # Create the color mapper that will be used to scale the image
+            mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+
+            # Plot image and add color bar
+            imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                                      color_mapper=mapper, level="image")
+
+            color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
+            self.plot.add_layout(color_bar, 'right')
+
+            # Add hover tool for all pixel values
+            #hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
+            #                                 ('value:', '@image')
+            #                                 ],
+            #                       renderers=[imgplot])
+            #self.plot.tools.append(hover_tool)
+
+            if (('FULL' in self.aperture) or ('_CEN' in self.aperture)):
+
+                if hotxy is not None:
+                    # Create lists of hot/dead/noisy pixel values if present
+                    hot_vals = []
+                    for x, y in zip(hotxy[0], hotxy[1]):
+                        if ((x < nx) & (y < ny)):
+                            hot_vals.append(image[y, x])
+                else:
+                    hot_vals = None
+
+                if deadxy is not None:
+                    dead_vals = []
+                    for x, y in zip(deadxy[0], deadxy[1]):
+                        if ((x < nx) & (y < ny)):
+                            dead_vals.append(image[y, x])
+                else:
+                    dead_vals = None
+
+                if noisyxy is not None:
+                    noisy_vals = []
+                    for x, y in zip(noisyxy[0], noisyxy[1]):
+                        if ((x < nx) & (y < ny)):
+                            noisy_vals.append(image[y, x])
+                else:
+                    noisy_vals = None
+
+                hot_legend = self.overplot_bad_pix("hot", hotxy, hot_vals)
+                dead_legend = self.overplot_bad_pix("dead", deadxy, dead_vals)
+                noisy_legend = self.overplot_bad_pix("noisy", noisyxy, noisy_vals)
+
+                # Collect information about the file this image was compared against
+                if baseline_file is not None:
+                    base_parts = os.path.basename(baseline_file).split('_')
+
+                    # Get the starting and ending time from the filename.
+                    base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
+                    base_end = Time(float(base_parts[5]), format='mjd').tt.datetime
+                    base_start_time = base_start.strftime("%m/%d/%Y")
+                    base_end_time  = base_end.strftime("%m/%d/%Y")
+                    legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
+                else:
+                    legend_title = 'Compared to previous mean dark'
+                legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
+                                location="center",
+                                orientation='vertical',
+                                title = legend_title)
+
+                self.plot.add_layout(legend, 'below')
+
+            # Save the plot in a png
+            export_png(self.plot, filename=output_filename)
+            set_permissions(output_filename)
+
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file
@@ -216,8 +368,8 @@ class Dark():
 
         try:
             self.detector = header['DETECTOR']
-            self.x0 = header['SUBSTRT1']
-            self.y0 = header['SUBSTRT2']
+            self.x0 = header['SUBSTRT1'] - 1
+            self.y0 = header['SUBSTRT2'] - 1
             self.xsize = header['SUBSIZE1']
             self.ysize = header['SUBSIZE2']
             self.sample_time = header['TSAMPLE']
@@ -250,10 +402,17 @@ class Dark():
         new_pixels_y : list
             List of y coordinates of new bad pixels
         """
+        
+        if len(badpix[0]) == 0:
+            logging.warning("\tNo new {} pixels to check.".format(pixel_type))
+            return ([], [])
+        
+        logging.info("\tChecking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
+        logging.info("\t\tRunning database query")
         db_entries = session.query(self.pixel_table) \
             .filter(self.pixel_table.type == pixel_type) \
             .filter(self.pixel_table.detector == self.detector) \
@@ -266,16 +425,27 @@ class Dark():
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
                     already_found.append((x, y))
+        found_x = np.array([x[0] for x in already_found])
+        found_y = np.array([x[1] for x in already_found])
 
+        msg = "\t\tChecking pixels against list of {} existing {} pixels"
+        logging.info(msg.format(len(found_x), pixel_type))
         # Check to see if each pixel already appears in the database for
         # the given bad pixel type
         new_pixels_x = []
         new_pixels_y = []
         for x, y in zip(badpix[0], badpix[1]):
-            pixel = (x, y)
-            if pixel not in already_found:
+            ind_x = np.where(found_x == x)
+            ind_y = np.where(found_y == y)
+            if len(np.intersect1d(ind_x[0], ind_y[0])) == 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
+        
+        logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
+#             pixel = (x, y)
+#             if pixel not in already_found:
+#                 new_pixels_x.append(x)
+#                 new_pixels_y.append(y)
 
         session.close()
         return (new_pixels_x, new_pixels_y)
@@ -384,7 +554,7 @@ class Dark():
         """
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
                                                        self.query_table.readpattern == self.readpatt). \
-                              filter(self.query_table.run_monitor == True)
+                filter(self.query_table.run_monitor == True)  # noqa: E348 (comparison to true)
 
         dates = np.zeros(0)
         for instance in query:
@@ -435,6 +605,81 @@ class Dark():
 
         return noisy
 
+    def overplot_bad_pix(self, pix_type, coords, values):
+        """Add a scatter plot of potential new bad pixels to the plot
+
+        Parameters
+        ----------
+        pix_type : str
+            Type of bad pixel. "hot", "dead", or "noisy"
+
+        coords : tup
+            2-tuple of lists, containing the x and y coordinates of the bad pixels
+
+        values : list
+            Values in the mean dark image at the locations of the bad pixels
+
+        Returns
+        -------
+        legend_item : tup
+            Tuple of legend text and associated plot. Will be converted into
+            a LegendItem and added to the plot legend
+        """
+        if coords is None:
+            coords = ([], [])
+            values = []
+
+        numpix = len(coords[0])
+
+        colors = {"hot": "red", "dead": "blue", "noisy": "pink"}
+        adjective = {"hot": "hotter", "dead": "lower", "noisy": "noisier"}
+        sources = {}
+        badpixplots = {}
+        hover_tools = {}
+
+        # Need to make sources a dict because we can't use the same variable name
+        # for multiple ColumnDataSources
+        sources = {}
+        badpixplots = {}
+
+        # If the number of pixels to overplot is higher than the threshold,
+        # then empty the coords list. This way we can still create a
+        # legend entry for them
+        if numpix > DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
+            coords = ([], [])
+            values = []
+
+        sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
+                                                       pixels_y=coords[1],
+                                                       values=values
+                                                      )
+                                             )
+
+        # Overplot the bad pixel locations
+        badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
+                                                 source=sources[pix_type], color=colors[pix_type])
+
+        # Create hover tools for the bad pixel types
+        #hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
+        #                                            ('value:', f'@values'),
+        #                                            ],
+        #                                    renderers=[badpixplots[pix_type]])
+        # Add tool to plot
+        #self.plot.tools.append(hover_tools[pix_type])
+
+        # Add to the legend
+        if  numpix > 0:
+            if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
+                text = f"{numpix} pix {adjective[pix_type]} than baseline"
+            else:
+                text = f"{numpix} pix {adjective[pix_type]} than baseline (not shown)"
+        else:
+            text = f"No new {adjective[pix_type]}"
+
+        # Create a tuple to be added to the plot legend
+        legend_item = (text, [badpixplots[pix_type]])
+        return legend_item
+
     def process(self, file_list):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -449,55 +694,29 @@ class Dark():
         # Basic metadata that will be needed later
         self.get_metadata(file_list[0])
 
-        # Determine which pipeline steps need to be executed
-        required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info('\tRequired calwebb1_detector pipeline steps to have'
-                     'data in correct format:')
-        for item in required_steps:
-            logging.info('\t\t{}: {}'.format(item, required_steps[item]))
-
-        # Modify the list of pipeline steps to skip those not needed for the
-        # preparation of dark current data
-        required_steps['dark_current'] = False
-        required_steps['persistence'] = False
-
-        # NIRSpec IR^2 readout pattern NRSIRS2 is the only one with
-        # nframes not a power of 2
-        if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
-            required_steps['group_scale'] = False
-
         # Run pipeline steps on files, generating slope files
+        pipeline_files = []
         slope_files = []
         for filename in file_list:
 
-            completed_steps = pipeline_tools.completed_pipeline_steps(filename)
-            steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
-
             logging.info('\tWorking on file: {}'.format(filename))
-            logging.info('\tPipeline steps that remain to be run:')
-            for item in steps_to_run:
-                logging.info('\t\t{}: {}'.format(item, steps_to_run[item]))
 
-            # Run any remaining required pipeline steps
-            if any(steps_to_run.values()) is False:
-                slope_files.append(filename)
+            rate_file = filename.replace("dark", "rate")
+            rate_file_name = os.path.basename(rate_file)
+            local_rate_file = os.path.join(self.data_dir, rate_file_name)
+
+            if os.path.isfile(local_rate_file):
+                logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
+                slope_files.append(local_rate_file)
             else:
-                processed_file = filename.replace('.fits', '_{}.fits'.format('rate'))
+                logging.info("\t\tAdding {} to calibration set".format(filename))
+                pipeline_files.append(filename)
 
-                # If the slope file already exists, skip the pipeline call
-                if not os.path.isfile(processed_file):
-                    logging.info('\tRunning pipeline on {}'.format(filename))
-                    processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
-                    logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-
-                else:
-                    logging.info('\tSlope file {} already exists. Skipping call to pipeline.'
-                                 .format(processed_file))
-                    pass
-
+        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        for filename in file_list:
+            processed_file = filename.replace("_dark", "_rate")
+            if processed_file not in slope_files and os.path.isfile(processed_file):
                 slope_files.append(processed_file)
-
-                # Delete the original dark ramp file to save disk space
                 os.remove(filename)
 
         obs_times = []
@@ -514,85 +733,109 @@ class Dark():
         max_time = np.max(obs_times)
         mid_time = instrument_properties.mean_time(obs_times)
 
-        # Read in all slope images and place into a list
-        slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
+        try:
 
-        # Calculate a mean slope image from the inputs
-        slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
-        mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-        logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
+            # Read in all slope images and place into a list
+            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
 
-        # Free up memory
-        del slope_image_stack
+            # Calculate a mean slope image from the inputs
+            slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
+            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
 
-        # ----- Search for new hot/dead/noisy pixels -----
-        # Read in baseline mean slope image and stdev image
-        # The baseline image is used to look for hot/dead/noisy pixels,
-        # but not for comparing mean dark rates. Therefore, updates to
-        # the baseline can be minimal.
+            # Free up memory
+            del slope_image_stack
 
-        # Limit checks for hot/dead/noisy pixels to full frame data since
-        # subarray data have much shorter exposure times and therefore lower
-        # signal-to-noise
-        aperture_type = Siaf(self.instrument)[self.aperture].AperType
-        if aperture_type == 'FULLSCA':
-            baseline_file = self.get_baseline_filename()
-            if baseline_file is None:
-                logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
-                                 'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
-                baseline_file = mean_slope_file
-                baseline_mean = deepcopy(slope_image)
-                baseline_stdev = deepcopy(stdev_image)
-            else:
-                logging.info('\tBaseline file is {}'.format(baseline_file))
-                baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
+            # ----- Search for new hot/dead/noisy pixels -----
+            # Read in baseline mean slope image and stdev image
+            # The baseline image is used to look for hot/dead/noisy pixels,
+            # but not for comparing mean dark rates. Therefore, updates to
+            # the baseline can be minimal.
 
-            # Check the hot/dead pixel population for changes
-            new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
+            # Limit checks for hot/dead/noisy pixels to full frame data since
+            # subarray data have much shorter exposure times and therefore lower
+            # signal-to-noise
+            new_hot_pix = None
+            new_dead_pix = None
+            new_noisy_pixels = None
+            aperture_type = Siaf(self.instrument)[self.aperture].AperType
+            if aperture_type == 'FULLSCA':
+                baseline_file = self.get_baseline_filename()
+                if baseline_file is None:
+                    logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
+                                     'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
+                    baseline_file = mean_slope_file
+                    baseline_mean = deepcopy(slope_image)
+                    baseline_stdev = deepcopy(stdev_image)
+                else:
+                    logging.info('\tBaseline file is {}'.format(baseline_file))
+                    baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
-            # Shift the coordinates to be in full frame coordinate system
-            new_hot_pix = self.shift_to_full_frame(new_hot_pix)
-            new_dead_pix = self.shift_to_full_frame(new_dead_pix)
+                # Check the hot/dead pixel population for changes
+                logging.info("\tFinding new hot/dead pixels")
+                new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
 
-            # Exclude hot and dead pixels found previously
-            new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
-            new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
+                # Shift the coordinates to be in full frame coordinate system
+                logging.info("\tShifting hot pixels to full frame")
+                new_hot_pix = self.shift_to_full_frame(new_hot_pix)
 
-            # Add new hot and dead pixels to the database
-            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
-            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
-            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                # Exclude hot and dead pixels found previously
+                logging.info("\tExcluding previously-known hot pixels")
+                new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
 
-            # Check for any pixels that are significantly more noisy than
-            # in the baseline stdev image
-            new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
+                # Add new hot and dead pixels to the database
+                logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
+                self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-            # Shift coordinates to be in full_frame coordinate system
-            new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
+                # Same thing for dead pixels
+                logging.info("\tShifting dead pixels to full frame")
+                new_dead_pix = self.shift_to_full_frame(new_dead_pix)
+                logging.info("\tExcluding previously-known dead pixels")
+                new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
+                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
+                self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-            # Exclude previously found noisy pixels
-            new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
+                # Check for any pixels that are significantly more noisy than
+                # in the baseline stdev image
+                logging.info("\tChecking for noisy pixels")
+                new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
-            # Add new noisy pixels to the database
-            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
-            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                # Shift coordinates to be in full_frame coordinate system
+                logging.info("\tShifting noisy pixels to full frame")
+                new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
 
-        # ----- Calculate image statistics -----
+                # Exclude previously found noisy pixels
+                logging.info("\tExcluding existing bad pixels from noisy pixels")
+                new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
-        # Find amplifier boundaries so per-amp statistics can be calculated
-        number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-        logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+                # Add new noisy pixels to the database
+                logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
+                self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+            
+            logging.info("Creating Mean Slope Image {}".format(slope_image))
+            # Create png file of mean slope image. Add bad pixels only for full frame apertures
+            self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
+                                          noisyxy=new_noisy_pixels, baseline_file=baseline_file)
+            logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
-        # Calculate mean and stdev values, and fit a Gaussian to the
-        # histogram of the pixels in each amp
-        (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
-            histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
+            # ----- Calculate image statistics -----
 
-        # Remove the input files in order to save disk space
-        files_to_remove = glob(f'{self.data_dir}/*fits')
-        for filename in files_to_remove:
-            os.remove(filename)
+            # Find amplifier boundaries so per-amp statistics can be calculated
+            number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
+            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+
+            # Calculate mean and stdev values, and fit a Gaussian to the
+            # histogram of the pixels in each amp
+            (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
+                histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
+
+            # Remove the input files in order to save disk space
+            files_to_remove = glob(f'{self.data_dir}/*fits')
+            for filename in files_to_remove:
+                os.remove(filename)
+
+        except Exception as e:
+            logging.critical("ERROR: {}".format(e))
+            raise e
 
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]
@@ -615,11 +858,12 @@ class Dark():
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
                              'mean_dark_image_file': os.path.basename(mean_slope_file),
-                             'hist_dark_values': bins,
-                             'hist_amplitudes': histogram,
+                             'hist_dark_values': bins[key],
+                             'hist_amplitudes': histogram[key],
                              'entry_date': datetime.datetime.now()
                              }
-            self.stats_table.__table__.insert().execute(dark_db_entry)
+            with engine.begin() as connection:
+                connection.execute(self.stats_table.__table__.insert(), dark_db_entry)
 
     def read_baseline_slope_image(self, filename):
         """Read in a baseline mean slope image and associated standard
@@ -649,6 +893,7 @@ class Dark():
 
     @log_fail
     @log_info
+    @only_one(key='dark_monitor')
     def run(self):
         """The main method.  See module docstrings for further
         details.
@@ -793,8 +1038,8 @@ class Dark():
 
                     else:
                         logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                      '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                      .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                                     '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                     .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
                         monitor_run = False
 
                     # Update the query history
@@ -806,7 +1051,9 @@ class Dark():
                                  'files_found': len(new_entries),
                                  'run_monitor': monitor_run,
                                  'entry_date': datetime.datetime.now()}
-                    self.query_table.__table__.insert().execute(new_entry)
+                    with engine.begin() as connection:
+                        connection.execute(
+                            self.query_table.__table__.insert(), new_entry)
                     logging.info('\tUpdated the query history table')
 
         logging.info('Dark Monitor completed successfully.')
@@ -930,11 +1177,11 @@ class Dark():
             Reduced chi-squared for the best-fit parameters. Keys are
             amp numbers as strings
 
-        hist : numpy.ndarray
-            1D array of histogram values
+        hist : dict
+            Dictionary of 1D arrays of histogram values
 
-        bin_centers : numpy.ndarray
-            1D array of bin centers that match the ``hist`` values.
+        bins : dict
+            Dictionary of 1D arrays of bin centers that match the ``hist`` values.
         """
 
         amp_means = {}
@@ -943,10 +1190,12 @@ class Dark():
         gaussian_chi_squared = {}
         double_gaussian_params = {}
         double_gaussian_chi_squared = {}
+        hists = {}
+        bins = {}
 
         # Add full image coords to the list of amp_boundaries, so that full
         # frame stats are also calculated.
-        if 'FULL' in self.aperture:
+        if self.aperture in FULL_FRAME_APERTURES[self.instrument.upper()]:
             maxx = 0
             maxy = 0
             for amp in amps:
@@ -977,7 +1226,7 @@ class Dark():
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
 
-            # If the number of bins is smaller than the number of paramters
+            # If the number of bins is smaller than the number of parameters
             # to be fit, then we need to increase the number of bins
             if len(bin_edges) < 7:
                 logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
@@ -985,6 +1234,8 @@ class Dark():
                                                range=(lower_bound, upper_bound))
 
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
+            hists[key] = hist.astype(float)
+            bins[key] = bin_centers
             initial_params = [np.max(hist), amp_mean, amp_stdev]
 
             # Fit a Gaussian to the histogram. Save best-fit params and
@@ -1031,7 +1282,7 @@ class Dark():
                      .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
-                double_gaussian_chi_squared, hist.astype(float), bin_centers)
+                double_gaussian_chi_squared, hists, bins)
 
 
 if __name__ == '__main__':

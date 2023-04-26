@@ -47,7 +47,7 @@
 					 title="JWQL Logo">
 				<span style="padding: 0.5rem;">JWQL</span>
 				{% if inst != "" %}
-					<font color='#f2ce3a'>{{ inst }}</font>
+					<span style='color: #f2ce3a'>{{ inst }}</span>
 				{% endif %}
 			</a>
 
@@ -84,6 +84,10 @@
 					 <!--API-->
 					<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:api') }}>API<span class="sr-only">(current)</span></a>
+					</li>
+					<!--Log View-->
+					<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:log_view') }}>View Logs<span class="sr-only">(current)</span></a>
 	          		</li>
 	          		<!--Documentation-->
 		      		<li class="nav-item active">
@@ -112,6 +116,7 @@
 								<!-- <a class="dropdown-item disabled-dropdown" href='#'>Unlooked Images</a> -->
 								<!-- <a class="dropdown-item disabled-dropdown" href="#">Image Anomalies</a> -->
 								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
+								<a class="dropdown-item" href={{ url('jwql:archive_date_range', args=[inst_key]) }}>Date Range Images</a>
 								<div class="dropdown-divider"></div>
 								<a class='dropdown-heading mx-3'>Monitors</a>
 									{% for monitor_name, monitor_url in inst_tools %}
@@ -128,7 +133,7 @@
 
 					<!--Show GitHub link when navbar is collapsed-->
 	            	<li class="nav-item active d-xl-none">
-						<a id="github-link"
+						<a id="github-link-collapsed"
 						   class="nav-link"
 						   href="https://github.com/spacetelescope/jwql"
 						   target="_blank">
@@ -203,7 +208,7 @@
 						 alt="JWST Logo">
 	        	</a>
      	      	<div id='version-div'>
-	        		<p id="version_number"></p>
+	        		<p id="version_number">
 	        		   <script>document.getElementById("version_number").innerHTML = version_url('{{version}}');</script>
 	      	     	</p>
 	      	    </div>
@@ -226,5 +231,9 @@
 	    <!-- IMPORTANT: Needed for rendering Datatables in JWQLDB Viewer -->
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.21/af-2.3.5/b-1.6.2/b-colvis-1.6.2/b-html5-1.6.2/b-print-1.6.2/cr-1.5.2/fc-3.3.1/fh-3.1.7/kt-2.5.2/r-2.2.5/rg-1.1.2/rr-1.2.7/sl-1.3.1/datatables.min.css"/>
 		<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.21/af-2.3.5/b-1.6.2/b-colvis-1.6.2/b-html5-1.6.2/b-print-1.6.2/cr-1.5.2/fc-3.3.1/fh-3.1.7/kt-2.5.2/r-2.2.5/rg-1.1.2/rr-1.2.7/sl-1.3.1/datatables.min.js"></script>
+
+		<!-- Needed javascript -->
+		<!-- IMPORTANT: needed for EDB plots -->
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 	</body>
 </html>

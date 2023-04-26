@@ -29,6 +29,7 @@ References
 
 import getpass
 import glob
+import itertools
 import json
 import pyvo as vo
 import os
@@ -36,6 +37,14 @@ import re
 import shutil
 import http
 import jsonschema
+
+from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
+from bokeh.io import export_png
+from bokeh.models import LinearColorMapper, LogColorMapper
+from bokeh.plotting import figure
+import numpy as np
+from PIL import Image
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
@@ -114,6 +123,58 @@ def _validate_config(config_file_dict):
             'Provided config.json does not match the '
             'required JSON schema: {}'.format(e.message)
         )
+
+
+def create_png_from_fits(filename, outdir):
+    """Create and save a png file of the provided file. The file
+    will be saved with the same filename as the input file, but
+    with fits replaced by png
+
+    Parameters
+    ----------
+    filename : str
+        Fits file to be opened and saved as a png
+
+    outdir : str
+        Output directory to save the png file to
+
+    Returns
+    -------
+    png_file : str
+        Name of the saved png file
+    """
+    if os.path.isfile(filename):
+        image = fits.getdata(filename)
+        ny, nx = image.shape
+        img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
+
+        plot = figure(tools='')
+        plot.x_range.range_padding = plot.y_range.range_padding = 0
+        plot.toolbar.logo = None
+        plot.toolbar_location = None
+        plot.min_border = 0
+        plot.xgrid.visible = False
+        plot.ygrid.visible = False
+
+        # Create the color mapper that will be used to scale the image
+        #mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+
+        # Plot image
+        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                             color_mapper=mapper, level="image")
+
+        # Turn off the axes, in order to make embedding in another figure easier
+        plot.xaxis.visible = False
+        plot.yaxis.visible = False
+
+        # Save the plot in a png
+        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
+        export_png(plot, filename=output_filename)
+        permissions.set_permissions(output_filename)
+        return output_filename
+    else:
+        return None
 
 
 def get_config():
@@ -278,7 +339,12 @@ def filename_parser(filename):
     """
 
     filename = os.path.basename(filename)
-    file_root_name = (len(filename.split('.')) < 2)
+    split_filename = filename.split('.')
+    file_root_name = (len(split_filename) < 2)
+    if file_root_name:
+        root_name = filename
+    else:
+        root_name = split_filename[0]
 
     # Stage 1 and 2 filenames
     # e.g. "jw80500012009_01101_00012_nrcalong_uncal.fits"
@@ -370,7 +436,22 @@ def filename_parser(filename):
         r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
         r"_(?P<exposure_id>\d+)"\
         r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
-        r"_(?P<detector>\w+)"
+        r"_(?P<detector>((?!_)[\w])+)"
+
+    # Time series filenames for stage 2c
+    # e.g. "jw00733003001_02101_00002-seg001_nrs1_o001_crfints.fits"
+    time_series_2c = \
+        r"jw" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})"\
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})"\
+        r"_(?P<visit_group>\d{" + f"{FILE_VISIT_GRP_LEN}" + "})"\
+        r"(?P<parallel_seq_id>\d{" + f"{FILE_PARALLEL_SEQ_ID_LEN}" + "})"\
+        r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
+        r"_(?P<exposure_id>\d+)"\
+        r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
+        r"_(?P<detector>((?!_)[\w])+)"\
+        r"_(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"
 
     # Guider filenames
     # e.g. "jw00729011001_gs-id_1_image_cal.fits" or
@@ -404,6 +485,7 @@ def filename_parser(filename):
         stage_3_target_id_epoch,
         stage_3_source_id_epoch,
         time_series,
+        time_series_2c,
         guider,
         guider_segment]
 
@@ -416,6 +498,7 @@ def filename_parser(filename):
         'stage_3_target_id_epoch',
         'stage_3_source_id_epoch',
         'time_series',
+        'time_series_2c',
         'guider',
         'guider_segment'
     ]
@@ -454,8 +537,18 @@ def filename_parser(filename):
                     filename_dict['detector'][:3].lower()
                 ]
             elif name_match == 'stage_2_msa':
-                    filename_dict['instrument'] = 'nirspec'
+                filename_dict['instrument'] = 'nirspec'
 
+        # Also add detector, root name, and group root name
+        root_name = re.sub(rf"_{filename_dict.get('suffix', '')}$", '', root_name)
+        root_name = re.sub(rf"_{filename_dict.get('ac_id', '')}$", '', root_name)
+        filename_dict['file_root'] = root_name
+        if 'detector' not in filename_dict.keys():
+            filename_dict['detector'] = 'Unknown'
+            filename_dict['group_root'] = root_name
+        else:
+            group_root = re.sub(rf"_{filename_dict['detector']}$", '', root_name)
+            filename_dict['group_root'] = group_root
 
     # Raise error if unable to parse the filename
     except AttributeError:
@@ -503,7 +596,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         if len(filenames_found) > 0:
             filename = os.path.basename(filenames_found[0])
         else:
-            raise FileNotFoundError('{} did not yeild any files in predicted location {}'.format(search, full_subdir))
+            raise FileNotFoundError('{} did not yield any files in predicted location {}'.format(search, full_subdir))
 
     full_path = os.path.join(subdir1, subdir2, filename)
 
@@ -561,8 +654,8 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
     rootnames : list
         List of rootnames for the given instrument and proposal number
     """
-    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
+    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}%' and prpID='{int(proposal)}'")
     prop_table = tap_results.to_table()
     rootnames = prop_table['observationID'].data
     return rootnames.compressed()
@@ -580,18 +673,36 @@ def check_config_for_key(key):
     try:
         get_config()[key]
     except KeyError:
-        raise KeyError(
-            'The key `{}` is not present in config.json. Please add it.'.format(key) +
-            ' See the relevant wiki page (https://github.com/spacetelescope/' +
-            'jwql/wiki/Config-file) for more information.'
-        )
+        msg = 'The key `{}` is not present in config.json. Please add it.'.format(key)
+        msg += ' See the relevant wiki page (https://github.com/spacetelescope/'
+        msg += 'jwql/wiki/Config-file) for more information.'
+        raise KeyError(msg)
 
     if get_config()[key] == "":
-        raise ValueError(
-            'Please complete the `{}` field in your config.json. '.format(key) +
-            ' See the relevant wiki page (https://github.com/spacetelescope/' +
-            'jwql/wiki/Config-file) for more information.'
-        )
+        msg = 'Please complete the `{}` field in your config.json. '.format(key)
+        msg += ' See the relevant wiki page (https://github.com/spacetelescope/'
+        msg += 'jwql/wiki/Config-file) for more information.'
+        raise ValueError(msg)
+
+
+def delete_non_rate_thumbnails(extensions=['_rate_', '_dark']):
+    """This script will go through all the thumbnail directories and delete all
+    thumbnails that do not contain the given extensions. We currently create thumbnails
+    using only rate.fits and dark.fits files, so the default is to keep only those.
+
+    Parameters
+    ----------
+    extension : list
+        If a thumbnail filename contains any of these strings, it will not be deleted
+    """
+    base_dir = get_config()["thumbnail_filesystem"]
+    dir_list = sorted(glob.glob(os.path.join(base_dir, 'jw*')))
+
+    for dirname in dir_list:
+        files = glob.glob(os.path.join(dirname, '*.thumb'))
+        for file in files:
+            if not any([x in file for x in extensions]):
+                os.remove(file)
 
 
 def query_format(string):
@@ -607,3 +718,67 @@ def query_unformat(string):
     unsplit_string = string.replace(" ", "_")
 
     return unsplit_string
+
+
+def read_png(filename):
+    """Open the given png file and return as a 3D numpy array
+
+    Parameters
+    ----------
+    filename : str
+        png file to be opened
+
+    Returns
+    -------
+    data : numpy.ndarray
+        3D array representation of the data in the png file
+    """
+    if os.path.isfile(filename):
+        rgba_img = Image.open(filename).convert('RGBA')
+        xdim, ydim = rgba_img.size
+
+        # Create an array representation for the image, filled with
+        # dummy data to begin with
+        img = np.empty((ydim, xdim), dtype=np.uint32)
+
+        # Create a layer/RGBA" version with a set of 4, 8-bit layers.
+        # We will work with the data using 'view', and our changes
+        # will propagate back into the 2D 'img' version, which is
+        # what we will end up returning.
+        view = img.view(dtype=np.uint8).reshape((ydim, xdim, 4))
+
+        # Copy the RGBA image into view, flipping it so it comes right-side up
+        # with a lower-left origin
+        view[:,:,:] = np.flipud(np.asarray(rgba_img))
+    else:
+        view = None
+    # Return the 2D version
+    return img
+
+
+def grouper(iterable, chunksize):
+    """
+    Take a list of items (iterable), and group it into chunks of chunksize, with the
+    last chunk being any remaining items. This allows you to batch-iterate through a
+    potentially very long list without missing any items, and where each individual
+    iteration can involve a much smaller number of files. Particularly useful for
+    operations that you want to execute in batches, but don't want the batches to be too
+    long.
+
+    Examples
+    --------
+
+    grouper([1, 2, 3, 4, 5], 2)
+    produces
+    (1, 2), (3, 4), (5, )
+
+    grouper([1, 2, 3, 4, 5], 6)
+    produces
+    (1, 2, 3, 4, 5)
+    """
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, chunksize))
+        if not chunk:
+            return
+        yield chunk

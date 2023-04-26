@@ -35,6 +35,7 @@ from collections import OrderedDict
 import datetime
 import logging
 import os
+from time import sleep
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
@@ -42,22 +43,24 @@ from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
-from pysiaf import Siaf
-from sqlalchemy.sql.expression import and_
+import matplotlib.pyplot as plt  # noqa: E402 (module import not at top)
+from mpl_toolkits.axes_grid1 import make_axes_locatable  # noqa: E402 (module import not at top)
+import numpy as np  # noqa: E402 (module import not at top)
+from pysiaf import Siaf  # noqa: E402 (module import not at top)
+from sqlalchemy.sql.expression import and_  # noqa: E402 (module import not at top)
 
-from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory, NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats
-from jwql.instrument_monitors import pipeline_tools
-from jwql.utils import instrument_properties, monitor_utils
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.monitor_utils import update_monitor_table
-from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
-
+from jwql.database.database_interface import session, engine  # noqa: E402 (module import not at top)
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
+from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
+from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E402 (module import not at top)
+from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
+from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
+from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
+from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
+from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots  # noqa: E402 (module import not at top)
 
 
 class Bias():
@@ -344,7 +347,7 @@ class Bias():
         """
 
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E348 (comparison to true)
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
@@ -365,25 +368,24 @@ class Bias():
             List of filenames (including full paths) to the dark current
             files.
         """
+        logging.info("Creating calibration tasks")
+        outputs = run_parallel_pipeline(file_list, "uncal_0thgroup", "refpix", self.instrument)
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
+            if filename not in outputs:
+                processed_file = filename.replace("uncal_0thgroup", "refpix")
+                if not os.path.isfile(processed_file):
+                    logging.warning("Pipeline was unable to process {}".format(filename))
+                    logging.warning("File will be skipped.")
+                    continue
+            else:
+                processed_file = outputs[filename]
+
             # Get relevant header info for this file
             self.read_pattern = fits.getheader(filename, 0)['READPATT']
             self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
-
-            # Run the file through the necessary pipeline steps
-            pipeline_steps = self.determine_pipeline_steps()
-            logging.info('\tRunning pipeline on {}'.format(filename))
-            try:
-                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, pipeline_steps)
-                logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-                set_permissions(processed_file)
-            except:
-                logging.info('\tPipeline processing failed for {}'.format(filename))
-                os.remove(filename)
-                continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
@@ -428,7 +430,8 @@ class Bias():
                 bias_db_entry[key] = float(amp_medians[key])
 
             # Add this new entry to the bias database table
-            self.stats_table.__table__.insert().execute(bias_db_entry)
+            with engine.begin() as connection:
+                connection.execute(self.stats_table.__table__.insert(), bias_db_entry)
             logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
 
             # Remove the raw and calibrated files to save memory space
@@ -437,6 +440,7 @@ class Bias():
 
     @log_fail
     @log_info
+    @only_one(key='bias_monitor')
     def run(self):
         """The main method.  See module docstrings for further details."""
 
@@ -530,8 +534,12 @@ class Bias():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
+                with engine.begin() as connection:
+                    connection.execute(self.query_table.__table__.insert(), new_entry)
                 logging.info('\tUpdated the query history table')
+
+            # Update the bias monitor plots
+            BiasMonitorPlots(instrument)
 
         logging.info('Bias Monitor completed successfully.')
 

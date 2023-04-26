@@ -43,7 +43,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
         Path to directory used for testing
 
     Yields
-    -------
+    ------
     test_dir : str
         Path to directory used for testing
     """
@@ -51,7 +51,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
 
     yield test_dir
     if os.path.isdir(test_dir):
-        os.remove(test_dir)
+        os.rmdir(test_dir)
 
 
 def test_directory_permissions(test_directory):
@@ -85,7 +85,7 @@ def test_file(test_dir=TEST_DIRECTORY):
         Path to directory used for testing
 
     Yields
-    -------
+    ------
     filename : str
         Path of file used for testing
     """

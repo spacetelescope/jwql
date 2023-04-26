@@ -48,29 +48,21 @@ from collections import defaultdict
 import datetime
 import glob
 import os
+import logging
 
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from jwedb.edb_interface import is_valid_mnemonic
+from jwql.edb.engineering_database import is_valid_mnemonic
+from jwql.website.apps.jwql.models import Anomalies
 
-from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
-from jwql.utils.constants import APERTURES_PER_INSTRUMENT
-from jwql.utils.constants import DETECTOR_PER_INSTRUMENT
-from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
-from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import GENERIC_SUFFIX_TYPES
-from jwql.utils.constants import GRATING_PER_INSTRUMENT
-from jwql.utils.constants import GUIDER_FILENAME_TYPE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.constants import READPATT_PER_INSTRUMENT
-from jwql.utils.utils import get_config, get_rootnames_for_instrument_proposal, filename_parser
-from jwql.utils.utils import query_format
+
+from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT, EXP_TYPE_PER_INSTRUMENT,
+                                  FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT, GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE,
+                                  JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT)
+from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
 
 from wtforms import SubmitField, StringField
 
@@ -85,8 +77,8 @@ class BaseForm(forms.Form):
     resolve_submit = SubmitField('Resolve Target')
 
 
-class AnomalyQueryForm(BaseForm):
-    """Form validation for the anomaly viewing tool"""
+class JwqlQueryForm(BaseForm):
+    """Form validation for the JWQL Query viewing tool"""
 
     # Form submits
     calculate_submit = SubmitField()
@@ -101,9 +93,11 @@ class AnomalyQueryForm(BaseForm):
         params[instrument]['readpatt_list'] = []
         params[instrument]['exptype_list'] = []
         params[instrument]['grating_list'] = []
+        params[instrument]['subarray_list'] = []
+        params[instrument]['pupil_list'] = []
         params[instrument]['anomalies_list'] = []
         # Generate dynamic lists of apertures to use in forms
-        for aperture in APERTURES_PER_INSTRUMENT[instrument.upper()]:
+        for aperture in APERTURES_PER_INSTRUMENT[instrument.lower()]:
             params[instrument]['aperture_list'].append([query_format(aperture), query_format(aperture)])
         # Generate dynamic lists of filters to use in forms
         for filt in FILTERS_PER_INSTRUMENT[instrument]:
@@ -125,6 +119,14 @@ class AnomalyQueryForm(BaseForm):
         for grating in GRATING_PER_INSTRUMENT[instrument]:
             grating = query_format(grating)
             params[instrument]['grating_list'].append([grating, grating])
+        # Generate dynamic lists of subarray options to use in forms
+        for subarray in SUBARRAYS_PER_INSTRUMENT[instrument]:
+            subarray = query_format(subarray)
+            params[instrument]['subarray_list'].append([subarray, subarray])
+        # Generate dynamic lists of pupil options to use in forms
+        for pupil in PUPILS_PER_INSTRUMENT[instrument]:
+            pupil = query_format(pupil)
+            params[instrument]['pupil_list'].append([pupil, pupil])
         # Generate dynamic lists of anomalies to use in forms
         for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
             if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
@@ -180,6 +182,18 @@ class AnomalyQueryForm(BaseForm):
     nircam_grating = forms.MultipleChoiceField(required=False, choices=params['nircam']['grating_list'], widget=forms.CheckboxSelectMultiple)
     fgs_grating = forms.MultipleChoiceField(required=False, choices=params['fgs']['grating_list'], widget=forms.CheckboxSelectMultiple)
 
+    miri_subarray = forms.MultipleChoiceField(required=False, choices=params['miri']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_subarray = forms.MultipleChoiceField(required=False, choices=params['nirspec']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_subarray = forms.MultipleChoiceField(required=False, choices=params['niriss']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_subarray = forms.MultipleChoiceField(required=False, choices=params['nircam']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_subarray = forms.MultipleChoiceField(required=False, choices=params['fgs']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_pupil = forms.MultipleChoiceField(required=False, choices=params['miri']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_pupil = forms.MultipleChoiceField(required=False, choices=params['nirspec']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_pupil = forms.MultipleChoiceField(required=False, choices=params['niriss']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_pupil = forms.MultipleChoiceField(required=False, choices=params['nircam']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_pupil = forms.MultipleChoiceField(required=False, choices=params['fgs']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+
     def clean_inst(self):
 
         inst = self.cleaned_data['instrument']
@@ -193,41 +207,34 @@ class InstrumentAnomalySubmitForm(forms.Form):
     def __init__(self, *args, **kwargs):
         instrument = kwargs.pop('instrument')
         super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
-        self.fields['anomaly_choices'] = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
+        self.fields['anomaly_choices'] = forms.MultipleChoiceField(
+            choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument],
+            widget=forms.CheckboxSelectMultiple(), required=False)
         self.instrument = instrument
 
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
+    def update_anomaly_table(self, rootfileinfo, user, anomaly_choices):
+        """Update the ``Anomalies`` model associated with the sent RootFileInfo.
+        All 'anomaly_choices' should be marked 'True' and the rest should be 'False'
 
         Parameters
         ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
+        rootfileinfo : RootFileInfo
+            The RootFileInfo model object of the image to update
         user : str
             The user that is flagging the anomaly
         anomaly_choices : list
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
         """
+        default_dict = {'flag_date': datetime.datetime.now(),
+                        'user': user}
+        for anomaly in Anomalies.get_all_anomalies():
+            default_dict[anomaly] = (anomaly in anomaly_choices)
 
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        if self.instrument == 'fgs':
-            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'nirspec':
-            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'miri':
-            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'niriss':
-            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'nircam':
-            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
+        try:
+            Anomalies.objects.update_or_create(root_file_info=rootfileinfo, defaults=default_dict)
+        except Exception as e:
+            logging.warning('Unable to update anomaly table for {} due to {}'.format(rootfileinfo.root_name, e))
 
     def clean_anomalies(self):
 
@@ -281,8 +288,8 @@ class FileSearchForm(forms.Form):
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
 
-            # Ignore "original" files
-            all_files = [filename for filename in all_files if 'original' not in filename]
+            # Gather all files that do not have the 'IGNORED_SUFFIXES' in them
+            all_files = [filename for filename in all_files if not any(name in filename for name in IGNORED_SUFFIXES)]
 
             if len(all_files) > 0:
                 all_instruments = []
@@ -309,7 +316,7 @@ class FileSearchForm(forms.Form):
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
                     instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
-                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # nosec
 
                 self.instrument = all_instruments[0]
             else:
@@ -457,19 +464,17 @@ class MnemonicSearchForm(forms.Form):
 class MnemonicQueryForm(forms.Form):
     """A triple-field form to query mnemonic records in the DMS EDB."""
 
-    production_mode = False
+    production_mode = True
 
     if production_mode:
         # times for default query (one day one week ago)
         now = Time.now()
-        delta_day = -7.
-        range_day = 1.
-        default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
+        default_start_time = now + TimeDelta(3600., format='sec')
+        default_end_time = now
     else:
         # example for testing
-        default_start_time = Time('2019-04-02 00:00:00.000', format='iso')
-        default_end_time = Time('2019-04-02 00:01:00.000', format='iso')
+        default_start_time = Time('2022-06-20 00:00:00.000', format='iso')
+        default_end_time = Time('2022-06-21 00:00:00.000', format='iso')
 
     default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
 

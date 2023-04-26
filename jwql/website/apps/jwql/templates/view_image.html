@@ -18,16 +18,17 @@
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>
+            <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{file_root}}", "{{base_url}}");'>
     	</div>
     	FITS Filename: <a id="fits_filename"></a><br>
     	JPG Filename: <a id="jpg_filename"></a><br><br>
 
     	<!-- Allow the user to change the file type that is being displayed -->
-    	View File Type:
+    	<a id="view_file_type" data-current-suffix="">View File Type:</a>
     	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
-	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
+	    <form class="my-2">
 	    	{% for suffix in suffixes %}
 	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
@@ -46,18 +47,31 @@
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
-    		    	<img id="image_viewer"
-                         src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg'
+    		    	<img class="image_preview_viewer" id="image_viewer"
                          onerror="image_error(this, true);"
-                         alt='{{ file_root }}_cal_integ0.jpg'
                          title="Preview image for {{ file_root }}">
     		    </span>
 
                 <div class="int_changer">
-                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
-                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
-                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
+                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_integration("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
+                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_integration("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
+                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_integration("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
                     <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
+                </div>
+
+                <div class="previous-next-buttons">
+                    <span class="step-links">
+                        {% if file_root in file_root_list %}
+                            {% set index = file_root_list.index(file_root) %}
+                            {% if index != 0 %}
+                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[index-1] }}/" style="float: left;">< Previous</a>
+                            {% endif %}
+
+                            {% if index != file_root_list|length - 1 %}
+                                <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[index+1] }}/" style="float: right;">Next ></a>
+                            {% endif %}
+                        {% endif %}
+                    </span>
                 </div>
             </div>
 
@@ -85,9 +99,11 @@
 
                         <!--Show the field forms-->
                         {% for field in form %}
+                            <ul>
                             {% for subwidget in field.subwidgets %}
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
+                            </ul>
                         {% endfor %}
                         <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
                     </form>
@@ -95,11 +111,16 @@
             </div>
         </div>
 
+        {% if marked_viewed %}
+            <script>update_viewed_button(true)</script>
+        {% else %}
+            <script>update_viewed_button(false)</script>
+        {% endif %}
         <!-- Determine which filetype should be shown on load -->
-        {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
-        {% elif 'rate' in suffixes %}
+        {% if 'rate' in suffixes %}
             <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
+        {% elif 'dark' in suffixes %}
+            <script>change_filetype('dark', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
             <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}

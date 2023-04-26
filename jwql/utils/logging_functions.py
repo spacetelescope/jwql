@@ -65,6 +65,11 @@ import sys
 import time
 import traceback
 
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
 from functools import wraps
 
 from jwql.utils.permissions import set_permissions
@@ -159,7 +164,8 @@ def make_log_file(module):
 
     # Build filename
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
-    filename = '{0}_{1}.log'.format(module, timestamp)
+    hostname = socket.gethostname()
+    filename = '{0}_{1}_{2}.log'.format(module, hostname, timestamp)
 
     # Determine save location
     user = pwd.getpwuid(os.getuid()).pw_name
@@ -214,17 +220,14 @@ def log_info(func):
         logging.info('System: ' + socket.gethostname())
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
+        logging.info('Running as PID {}'.format(os.getpid()))
 
         # Read in setup.py file to build list of required modules
-        with open(get_config()['setup_file']) as f:
-            data = f.readlines()
+        toml_file = os.path.join(os.path.dirname(get_config()['setup_file']), 'pyproject.toml')
+        with open(toml_file, "rb") as f:
+            data = tomllib.load(f)
 
-        for i, line in enumerate(data):
-            if 'REQUIRES = [' in line:
-                begin = i + 1
-            elif 'setup(' in line:
-                end = i - 2
-        required_modules = data[begin:end]
+        required_modules = data['project']['dependencies']
 
         # Clean up the module list
         module_list = [item.strip().replace("'", "").replace(",", "").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]
@@ -233,16 +236,19 @@ def log_info(func):
         for module in module_list:
             try:
                 mod = importlib.import_module(module)
-                logging.info(module + ' Version: ' + mod.__version__)
+                logging.info(module + ' Version: ' + importlib.metadata.version(module))
                 logging.info(module + ' Path: ' + mod.__path__[0])
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
         # nosec comment added to ignore bandit security check
-        environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True) # nosec
-        logging.info('Environment:')
-        for line in environment.split('\n'):
-            logging.info(line)
+        try:
+            environment = subprocess.check_output('conda env export', universal_newlines=True, shell=True) # nosec
+            logging.info('Environment:')
+            for line in environment.split('\n'):
+                logging.info(line)
+        except Exception as err:   # catch any exception and report the entire traceback
+            logging.exception(err)
 
         # Call the function and time it
         t1_cpu = time.perf_counter()

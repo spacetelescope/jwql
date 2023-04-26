@@ -28,6 +28,7 @@ Authors
     - Bryan Hilbert
     - Misty Cracraft
     - Sara Ogaz
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -62,6 +63,7 @@ import os
 import socket
 import pandas as pd
 
+from sqlalchemy import BigInteger
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
@@ -73,11 +75,10 @@ from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
+from sqlalchemy import text
 from sqlalchemy import UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import text
 from sqlalchemy.types import ARRAY
 
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -92,7 +93,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 @property
 def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
-
+    # NOTE: this requires pandas>=2 if sqlalchemy>=2
     return pd.read_sql(self.statement, self.session.bind)
 
 
@@ -134,10 +135,10 @@ def load_connection(connection_string):
         https://github.com/spacetelescope/acsql/blob/master/acsql/database/database_interface.py
     """
     engine = create_engine(connection_string, echo=False)
-    base = declarative_base(engine)
+    base = declarative_base()
     Session = sessionmaker(bind=engine)
     session = Session()
-    meta = MetaData(engine)
+    meta = MetaData()
 
     return session, base, engine, meta
 
@@ -150,6 +151,23 @@ if all(word in socket.gethostname() for word in ('build', 'project')) or ON_GITH
 else:
     SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
+
+
+class FilesystemCharacteristics(base):
+    """ORM for table containing instrument-specific lists of the number of
+    obervations corresponding to various instrument characteristics (e.g.
+    filters)
+    """
+
+    # Name the table
+    __tablename__ = 'filesystem_characteristics'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_name_enum'), nullable=False)
+    filter_pupil = Column(ARRAY(String, dimensions=1))
+    obs_per_filter_pupil = Column(ARRAY(Integer, dimensions=1))
 
 
 class FilesystemGeneral(base):
@@ -287,6 +305,7 @@ def get_monitor_columns(data_dict, table_name):
 
     # Define column types
     data_type_dict = {'integer': Integer(),
+                      'bigint': BigInteger(),
                       'string': String(),
                       'float': Float(precision=32),
                       'decimal': Float(precision='13,8'),
@@ -354,6 +373,28 @@ def get_monitor_table_constraints(data_dict, table_name):
     return data_dict
 
 
+def get_unique_values_per_column(table, column_name):
+    """Return a list of the unique values from a particular column in the
+    given table.
+
+    Parameters
+    ----------
+    table : sqlalchemy.orm.decl_api.DeclarativeMeta
+        SQL table to be searched. (e.g. table = eval('NIRCamDarkPixelStats'))
+
+    column_name : str
+        Column name within the table to query
+
+    Returns
+    -------
+    distinct_colvals : list
+        List of unique values in the given column
+    """
+    colvals = session.query(eval(f'table.{column_name}')).distinct()
+    distinct_colvals = [eval(f'x.{column_name}') for x in colvals]
+    return sorted(distinct_colvals)
+
+
 def monitor_orm_factory(class_name):
     """Create a ``SQLAlchemy`` ORM Class for a ``jwql`` instrument
     monitor.
@@ -387,16 +428,6 @@ def monitor_orm_factory(class_name):
     data_dict = get_monitor_table_constraints(data_dict, data_dict['__tablename__'])
 
     return type(class_name, (base,), data_dict)
-
-
-def set_read_permissions():
-    """Set read permissions for db tables"""
-
-    db_username = SETTINGS['database']['user']
-    db_username = '_'.join(db_username.split('_')[:-1])
-    db_account = '{}_read'.format(db_username)
-    command = 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};'.format(db_account)
-    engine.execute(command)
 
 
 # Create tables from ORM factory
@@ -446,6 +477,100 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamEDBDailyStats = monitor_orm_factory('nircam_edb_daily_stats')
+NIRCamEDBBlockStats = monitor_orm_factory('nircam_edb_blocks_stats')
+NIRCamEDBTimeIntervalStats = monitor_orm_factory('nircam_edb_time_interval_stats')
+NIRCamEDBEveryChangeStats = monitor_orm_factory('nircam_edb_every_change_stats')
+MIRIEDBDailyStats = monitor_orm_factory('miri_edb_daily_stats')
+MIRIEDBBlockStats = monitor_orm_factory('miri_edb_blocks_stats')
+MIRIEDBTimeIntervalStats = monitor_orm_factory('miri_edb_time_interval_stats')
+MIRIEDBEveryChangeStats = monitor_orm_factory('miri_edb_every_change_stats')
+NIRISSEDBDailyStats = monitor_orm_factory('niriss_edb_daily_stats')
+NIRISSEDBBlockStats = monitor_orm_factory('niriss_edb_blocks_stats')
+NIRISSEDBTimeIntervalStats = monitor_orm_factory('niriss_edb_time_interval_stats')
+NIRISSEDBEveryChangeStats = monitor_orm_factory('niriss_edb_every_change_stats')
+FGSEDBDailyStats = monitor_orm_factory('fgs_edb_daily_stats')
+FGSEDBBlockStats = monitor_orm_factory('fgs_edb_blocks_stats')
+FGSEDBTimeIntervalStats = monitor_orm_factory('fgs_edb_time_interval_stats')
+FGSEDBEveryChangeStats = monitor_orm_factory('fgs_edb_every_change_stats')
+NIRSpecEDBDailyStats = monitor_orm_factory('nirspec_edb_daily_stats')
+NIRSpecEDBBlockStats = monitor_orm_factory('nirspec_edb_blocks_stats')
+NIRSpecEDBTimeIntervalStats = monitor_orm_factory('nirspec_edb_time_interval_stats')
+NIRSpecEDBEveryChangeStats = monitor_orm_factory('nirspec_edb_every_change_stats')
+NIRCamCosmicRayQueryHistory = monitor_orm_factory('nircam_cosmic_ray_query_history')
+NIRCamCosmicRayStats = monitor_orm_factory('nircam_cosmic_ray_stats')
+MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
+MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
+NIRISSCosmicRayQueryHistory = monitor_orm_factory('niriss_cosmic_ray_query_history')
+NIRISSCosmicRayStats = monitor_orm_factory('niriss_cosmic_ray_stats')
+FGSCosmicRayQueryHistory = monitor_orm_factory('fgs_cosmic_ray_query_history')
+FGSCosmicRayStats = monitor_orm_factory('fgs_cosmic_ray_stats')
+NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_history')
+NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
+NIRSpecTAQueryHistory = monitor_orm_factory('nirspec_ta_query_history')
+NIRSpecTAStats = monitor_orm_factory('nirspec_ta_stats')
+
+INSTRUMENT_TABLES = {
+    'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
+               NIRCamBiasQueryHistory, NIRCamBiasStats, NIRCamBadPixelQueryHistory,
+               NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
+               NIRCamAnomaly, NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats,
+               NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
+               NIRCamEDBEveryChangeStats],
+    'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+               NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
+               NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
+               NIRISSAnomaly, NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats,
+               NIRISSEDBDailyStats, NIRISSEDBBlockStats, NIRISSEDBTimeIntervalStats,
+               NIRISSEDBEveryChangeStats],
+    'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             MIRIBadPixelQueryHistory, MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
+             MIRIReadnoiseStats, MIRIAnomaly, MIRICosmicRayQueryHistory, MIRICosmicRayStats,
+             MIRIEDBDailyStats, MIRIEDBBlockStats, MIRIEDBTimeIntervalStats,
+             MIRIEDBEveryChangeStats],
+    'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+                NIRSpecBiasQueryHistory, NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
+                NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats,
+                NIRSpecAnomaly, NIRSpecTAQueryHistory, NIRSpecTAStats,
+                NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats,
+                NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
+                NIRSpecEDBEveryChangeStats],
+    'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
+            FGSBadPixelQueryHistory, FGSBadPixelStats, FGSReadnoiseQueryHistory,
+            FGSReadnoiseStats, FGSAnomaly, FGSCosmicRayQueryHistory, FGSCosmicRayStats,
+            FGSEDBDailyStats, FGSEDBBlockStats, FGSEDBTimeIntervalStats,
+            FGSEDBEveryChangeStats]}
+
+MONITOR_TABLES = {
+    'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly],
+    'cosmic_ray': [NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats,
+                   MIRICosmicRayQueryHistory, MIRICosmicRayStats,
+                   NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats,
+                   FGSCosmicRayQueryHistory, FGSCosmicRayStats,
+                   NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats],
+    'dark': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
+             NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+             NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+             MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent],
+    'bias': [NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory,
+             NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats],
+    'bad_pixel': [NIRCamBadPixelQueryHistory, NIRCamBadPixelStats, NIRISSBadPixelStats,
+                  NIRISSBadPixelQueryHistory, FGSBadPixelQueryHistory, FGSBadPixelStats,
+                  MIRIBadPixelQueryHistory, MIRIBadPixelStats, NIRSpecBadPixelQueryHistory,
+                  NIRSpecBadPixelStats],
+    'readnoise': [NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseStats,
+                  NIRISSReadnoiseQueryHistory, NIRSpecReadnoiseQueryHistory,
+                  NIRSpecReadnoiseStats, MIRIReadnoiseQueryHistory, MIRIReadnoiseStats,
+                  FGSReadnoiseQueryHistory, FGSReadnoiseStats],
+    'ta': [NIRSpecTAQueryHistory, NIRSpecTAStats],
+    'edb': [NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
+            NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats,
+            NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats,
+            MIRIEDBBlockStats, MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats,
+            NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
+            NIRSpecEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats,
+            FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats]}
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)
