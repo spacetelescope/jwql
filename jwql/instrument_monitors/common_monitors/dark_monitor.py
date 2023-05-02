@@ -978,6 +978,12 @@ class Dark():
                     # most recent previous search as the starting time
                     new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
 
+
+
+                    looks like the files above are not returned in chronological order. We need to do this somewhere. Maybe
+                    in the function above since the other monitors probably also assume the files are in order.
+
+
                     # Exclude ASIC tuning data
                     len_new_darks = len(new_entries)
                     new_entries = monitor_utils.exclude_asic_tuning(new_entries)
@@ -1033,8 +1039,20 @@ class Dark():
                     # Check to see if there are enough new integrations to meet the
                     # monitor's signal-to-noise requirements
                     logging.info((f'\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
-                                  f'{self.readpatt} has found {total_integrations} in {len(new_filenames)} files.'))
+                                  f'{self.readpatt} has found {total_integrations} integrations spread across {len(new_filenames)} files.'))
                     if total_integrations >= integration_count_threshold:
+
+
+
+                        # for testing
+                        logging.info('FULL BATCH STARTING TIMES:')
+                        logging.info(starting_times)
+                        logging.info('ENDING TIMES:')
+                        logging.info(ending_times)
+
+
+
+
                         logging.info(f'\tThis meets the threshold of {integration_count_threshold} integrations.')
                         monitor_run = True
 
@@ -1050,7 +1068,7 @@ class Dark():
                         # in order to produce results with roughly the same signal-to-noise. This
                         # also prevents the monitor running on a huge chunk of files in the case
                         # where it hasn't been run in a while and data have piled up in the meantime.
-                        self.split_files_into_sub_lists(new_filenames, integrations, starting_times, ending_times, integration_count_threshold)
+                        self.split_files_into_sub_lists(new_filenames, starting_times, ending_times, integrations, integration_count_threshold)
 
                         # Run the monitor once on each list
                         for new_file_list, batch_start_time, batch_end_time in zip(self.file_batches, self.start_time_batches, self.end_time_batches):
@@ -1075,6 +1093,15 @@ class Dark():
 
 
 
+                            # for testing
+                            logging.info('STARTING TIMES FOR BATCH:')
+                            logging.info(batch_start_time)
+                            logging.info('ENDING TIMES FOR BATCH:')
+                            logging.info(batch_end_time)
+
+
+
+
 
                             # Run the dark monitor
                             #self.process(dark_files)
@@ -1091,7 +1118,7 @@ class Dark():
                             new_entry = {'instrument': instrument,
                                          'aperture': aperture,
                                          'readpattern': self.readpatt,
-                                         'start_time_mjd': batch_start_time,
+                                         'start_time_mjd': batch_start_time, #-- something is wrong here. Seeing 0.0 and 2.0 in testing on server
                                          'end_time_mjd': batch_end_time,
                                          'files_found': len(dark_files),
                                          'run_monitor': monitor_run,

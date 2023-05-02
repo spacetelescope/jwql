@@ -143,6 +143,11 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
 
+    # Put the file entries in chronological order
+    expstarts = [e['expstart'] for e in query_results]
+    idx = np.argsort(expstarts)
+    query_results = list(np.array(query_results)[idx])
+
     return query_results
 
 
