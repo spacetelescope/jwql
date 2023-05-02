@@ -1055,7 +1055,18 @@ class Dark():
                         # Run the monitor once on each list
                         for new_file_list, batch_start_time, batch_end_time in zip(self.file_batches, self.start_time_batches, self.end_time_batches):
                             # Copy files from filesystem
-                            dark_files, not_copied = copy_files(new_file_list, self.data_dir)
+
+
+
+
+                            #dark_files, not_copied = copy_files(new_file_list, self.data_dir)
+                            # Fake dark_files and not_copied, for testing
+                            dark_files = new_file_list
+                            not_copied = []
+
+
+
+
 
                             logging.info('\tNew_filenames: {}'.format(new_file_list))
                             logging.info('\tData dir: {}'.format(self.data_dir))
