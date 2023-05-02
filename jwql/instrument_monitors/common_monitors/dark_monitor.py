@@ -1054,6 +1054,10 @@ class Dark():
                             # Run the dark monitor
                             self.process(dark_files)
 
+                            # Get the starting and ending time of the files in this monitor run
+                            batch_start_time  = np.min(np.array(batch_start_time))
+                            batch_end_time = np.max(np.array(batch_end_time))
+
                             # Update the query history once for each group of files
                             new_entry = {'instrument': instrument,
                                          'aperture': aperture,
