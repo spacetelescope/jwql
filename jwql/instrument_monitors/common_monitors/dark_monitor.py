@@ -960,7 +960,18 @@ class Dark():
                     logging.info('\tWorking on readout pattern: {}'.format(self.readpatt))
 
                     # Locate the record of the most recent MAST search
-                    self.query_start = self.most_recent_search()
+                    #self.query_start = self.most_recent_search()
+
+
+
+
+                    logging.info('SETTING SELF.QUERY_START TO 59500 (PRE-LAUNCH) FOR TESTING.')
+                    self.query_start = 59500.
+
+
+
+
+
                     logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
                     # Query MAST using the aperture and the time of the
@@ -1051,8 +1062,15 @@ class Dark():
                             logging.info('\tCopied to working dir: {}'.format(dark_files))
                             logging.info('\tNot copied: {}'.format(not_copied))
 
+
+
+
                             # Run the dark monitor
-                            self.process(dark_files)
+                            #self.process(dark_files)
+                            logging.info('HERE IS WHERE THE MONITOR WOULD RUN ON THE GIVEN BATCH OF FILES. THIS IS TURNED OFF FOR TESTING.')
+
+
+
 
                             # Get the starting and ending time of the files in this monitor run
                             batch_start_time  = np.min(np.array(batch_start_time))
@@ -1067,10 +1085,21 @@ class Dark():
                                          'files_found': len(dark_files),
                                          'run_monitor': monitor_run,
                                          'entry_date': datetime.datetime.now()}
-                            with engine.begin() as connection:
-                                connection.execute(
-                                    self.query_table.__table__.insert(), new_entry)
-                            logging.info('\tUpdated the query history table')
+
+
+
+                            #with engine.begin() as connection:
+                            #    connection.execute(
+                            #        self.query_table.__table__.insert(), new_entry)
+                            #logging.info('\tUpdated the query history table')
+                            logging.info('NEW ENTRY: ')
+                            logging.info(new_entry)
+                            logging.info('TURNED OFF DATABASE UPDATES DURING TESTING')
+
+
+
+
+
                     else:
                         logging.info(f'\tThis is below the threshold of {integration_count_threshold} integrations. Monitor not run.')
                         monitor_run = False
@@ -1084,10 +1113,23 @@ class Dark():
                                      'files_found': len(new_entries),
                                      'run_monitor': monitor_run,
                                      'entry_date': datetime.datetime.now()}
-                        with engine.begin() as connection:
-                            connection.execute(
-                                self.query_table.__table__.insert(), new_entry)
-                        logging.info('\tUpdated the query history table')
+
+
+
+
+                        #with engine.begin() as connection:
+                        #    connection.execute(
+                        #        self.query_table.__table__.insert(), new_entry)
+                        #logging.info('\tUpdated the query history table')
+                        logging.info('NEW ENTRY: ')
+                        logging.info(new_entry)
+                        logging.info('TURNED OFF DATABASE UPDATES DURING TESTING')
+
+
+
+
+
+
 
         logging.info('Dark Monitor completed successfully.')
 
