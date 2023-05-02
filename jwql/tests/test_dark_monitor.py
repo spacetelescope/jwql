@@ -142,7 +142,30 @@ def generate_data_for_file_splitting_test():
     expected = []
     test11 = (files, start_times, end_times, integration_list, threshold, expected)
 
-    return [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11]
+    deltat = [40., 39., 38., 37., 24., 23., 22., 21., 1., 0.]
+    start_times = [now - dt for dt in deltat]
+    end_times = [s+0.1 for s in start_times]
+    threshold = 6  # integrations
+    integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
+    expected = [['file_0.fits', 'file_1.fits'],
+                ['file_2.fits', 'file_3.fits'],
+                ['file_4.fits', 'file_5.fits', 'file_6.fits', 'file_7.fits']
+                ]
+    test12 = (files, start_times, end_times, integration_list, threshold, expected)
+
+    deltat = [50., 49., 48., 47., 34., 33., 32., 31., 20., 19.]
+    start_times = [now - dt for dt in deltat]
+    end_times = [s+0.1 for s in start_times]
+    threshold = 6  # integrations
+    integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
+    expected = [['file_0.fits', 'file_1.fits'],
+                ['file_2.fits', 'file_3.fits'],
+                ['file_4.fits', 'file_5.fits', 'file_6.fits', 'file_7.fits'],
+                ['file_8.fits', 'file_9.fits']
+                ]
+    test13 = (files, start_times, end_times, integration_list, threshold, expected)
+
+    return [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test12, test13]
 
 
 def test_find_hot_dead_pixels():

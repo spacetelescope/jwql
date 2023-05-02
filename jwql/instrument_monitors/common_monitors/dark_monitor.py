@@ -1266,15 +1266,16 @@ class Dark():
             # Calculate how many subgroups to break up the batch into,
             # based on the threshold, and under the assumption that we
             # don't want to skip running on any of the files.
-            n_subgroups = int(batch_int_sum / threshold)
+            n_subgroups = int(np.ceil(batch_int_sum / threshold))
 
 
             print('n_subgroups', n_subgroups)
+            print(batch_int_sum, threshold)
 
 
             if n_subgroups == 0:
 
-
+                print('IF N_SUBGROUPS USES NP.CEIL THEN IT IS NOT POSSIBLE TO HAVE N_SUBGROUPS == 0')
 
                 print('i and len(dividers)-1:', i, len(dividers) - 1, dividers)
 
@@ -1290,12 +1291,12 @@ class Dark():
                     self.end_time_batches.append(batch_end_times)
                     self.integration_batches.append(batch_ints)
                 else:
+                    print('do we need a smarter if statment, like the line commented below?')
                     #if (i == len(dividers) - 1) and (batchnum == (n_subgroups - 1))
                     # In this case, we are in the final epoch division AND we do not
                     # have enough integrations to subdivide the data. So we'll skip
                     # this data and wait for a future run of the monitor to bundle
                     # it with more, new data.
-                    print('subgroup 0 in final epoch does not have enough ints, and the final delta t is too small. skipping.')
                     pass
 
             #elif n_subgroups == 1:
@@ -1349,11 +1350,28 @@ class Dark():
                     # final subgroup of the final epoch. In that case, we don't know
                     # if more data are coming soon that may be able to be combined. So
                     # in that case, we ignore the files for this run of the monitor.
-                    if (i == len(dividers) - 1) and (batchnum == (n_subgroups - 1)):
+                    if (i == len(dividers) - 2) and (batchnum == (n_subgroups - 1)):
                         # Here we are in the final subgroup of the final epoch, where we
                         # mayb not necessarily know if there will be future data to combine
                         # with these data
-                        pass
+
+                        #Here..... we do not know for sure the epoch is over? Confirm that we do not know this.
+                        #If that is true, we can still check to see if we have reached the threshold number of
+                        #integrations and run if so.
+                        #print('final subgroup of final epoch. if the epoch is not over, so skipping files')
+
+                        if np.sum(subgroup_ints) >= threshold:
+                            print('ADDED - final subgroup of final epoch')
+                            self.file_batches.append(subgroup_files)
+                            self.start_time_batches.append(subgroup_start_times)
+                            self.end_time_batches.append(subgroup_end_times)
+                            self.integration_batches.append(subgroup_ints)
+                        else:
+                            # Here the final subgroup does not have enough integrations to reach the threshold
+                            # and we're not sure if the epoch is complete, so we skip these files and save them
+                            # for a future dark monitor run
+                            pass
+
                     else:
                         #if (i  < len(dividers) - 1) and (batchnum < (n_subgroups - 1)):
                         print('ADDED')
