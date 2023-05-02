@@ -978,12 +978,6 @@ class Dark():
                     # most recent previous search as the starting time
                     new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
 
-
-
-                    looks like the files above are not returned in chronological order. We need to do this somewhere. Maybe
-                    in the function above since the other monitors probably also assume the files are in order.
-
-
                     # Exclude ASIC tuning data
                     len_new_darks = len(new_entries)
                     new_entries = monitor_utils.exclude_asic_tuning(new_entries)

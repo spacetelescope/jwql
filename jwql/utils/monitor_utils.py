@@ -19,7 +19,7 @@ Use
 import datetime
 import os
 from astroquery.mast import Mast, Observations
-
+import numpy as np
 
 from jwql.database.database_interface import Monitor, engine
 from jwql.jwql_monitors import monitor_mast
