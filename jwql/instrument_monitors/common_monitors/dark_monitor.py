@@ -1016,7 +1016,9 @@ class Dark():
                             xsize = hdulist[0].header['SUBSIZE1']
                             ysize = hdulist[0].header['SUBSIZE2']
                             nints = hdulist[0].header['NINTS']
-                        if xsize == expected_xsize and ysize == expected_ysize:
+                        # If the array size matches expectataions, or if Siaf doesn't give an expected size, then
+                        # keep the file.
+                        if ((xsize == expected_xsize and ysize == expected_ysize) or expected_xsize is None or expected_ysize is None):
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
                             integrations.append(int(nints) - self.skipped_initial_ints)
@@ -1065,7 +1067,7 @@ class Dark():
                         self.split_files_into_sub_lists(new_filenames, starting_times, ending_times, integrations, integration_count_threshold)
 
                         # Run the monitor once on each list
-                        for new_file_list, batch_start_time, batch_end_time in zip(self.file_batches, self.start_time_batches, self.end_time_batches):
+                        for new_file_list, batch_start_time, batch_end_time, batch_integrations in zip(self.file_batches, self.start_time_batches, self.end_time_batches, self.integration_batches):
                             # Copy files from filesystem
 
 
@@ -1092,6 +1094,8 @@ class Dark():
                             logging.info(batch_start_time)
                             logging.info('ENDING TIMES FOR BATCH:')
                             logging.info(batch_end_time)
+                            logging.info('INTEGRATIONS FOR BATCH:')
+                            logging.info(batch_integrations)
 
 
 
