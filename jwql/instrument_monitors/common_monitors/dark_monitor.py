@@ -745,6 +745,7 @@ class Dark():
             # Read in all slope images and create a stack of ints (from rateints files)
             # or mean ints (from rate files)
             slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files, skipped_initial_ints=self.skipped_initial_ints)
+            logging.info(f'Shape of slope image stack: {slope_image_stack.shape}')
 
             # Calculate a mean slope image from the inputs
             slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
