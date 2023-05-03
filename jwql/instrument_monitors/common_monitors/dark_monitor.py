@@ -1331,7 +1331,7 @@ class Dark():
 
         # Loop over epochs.
         # Within each batch, divide up the integrations into multiple batches if the total
-        # number of integrations are above 2*threshold
+        # number of integrations are above 2*threshold.
         for i in range(len(dividers) - 1):
             batch_ints = integration_list[dividers[i]:dividers[i+1]]
             batch_files = files[dividers[i]:dividers[i+1]]

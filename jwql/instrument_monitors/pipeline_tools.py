@@ -198,7 +198,7 @@ def get_pipeline_steps(instrument):
 
 
 def image_stack(file_list, skipped_initial_ints=0):
-    """Given a list of fits files containing 2D images, read in all data
+    """Given a list of fits files containing 2D or 3D images, read in all data
     and place into a 3D stack
 
     Parameters
@@ -209,7 +209,9 @@ def image_stack(file_list, skipped_initial_ints=0):
     skipped_initial_ints : int
         Number of initial integrations from each file to skip over and
         not include in the stack. Only works with files containing 3D
-        arrays (e.g. rateints files).
+        arrays (e.g. rateints files). This is primarily for MIRI, where
+        we want to skip the first N integrations due to dark current
+        instability.
 
     Returns
     -------
