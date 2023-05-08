@@ -166,9 +166,6 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         # Default CR rejection threshold is too low
         #params['jump'] = dict(rejection_threshold=15)
 
-        # Turn off IPC step until it is put in the right place
-        params['ipc'] = dict(skip=True)
-
         # Set up to save jump step output
         params['jump']['save_results'] = True
         params['jump']['output_dir'] = work_directory
@@ -199,8 +196,23 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
             run_slope = False
             run_fitopt = False
 
+        # If the input file is dark.fits rather than uncal.fits, then skip
+        # all of the pipeline steps that are run prior to dark subtraction
+        if 'dark.fits' in input_file:
+            if instrument.lower() == 'miri':
+                steps_to_skip = ['group_scale', 'dq_init', 'saturation', 'ipc', 'firstframe',
+                                 'lastframe', 'reset', 'linearity', 'rscd']
+            else:
+                steps_to_skip = ['group_scale', 'dq_init', 'saturation', 'ipc', 'superbias',
+                                 'refpix', 'linearity']
+            for step in steps_to_skip:
+                params[step] = dict(skip: True)
+        else:
+            # Turn off IPC step until it is put in the right place
+            params['ipc'] = dict(skip=True)
+
         if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
-            model.call(datamodel, output_dir=work_directory)
+            model.call(datamodel, output_dir=work_directory, steps=params)
         else:
             print(("Files with all requested calibration states for {} already present in "
                    "output directory. Skipping pipeline call.".format(uncal_file)))
