@@ -43,17 +43,17 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
     status_file_name = short_name + "_status.txt"
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
-    
+
     with open(status_file, 'a+') as status_f:
         status_f.write("Running run_pipe\n")
         status_f.write("\t input_file_basename is {} ({})\n".format(input_file_basename, type(input_file_basename)))
         status_f.write("\t start_dir is {} ({})\n".format(start_dir, type(start_dir)))
         status_f.write("\t uncal_file is {} ({})\n".format(uncal_file, type(uncal_file)))
-    
+
     try:
         copy_files([input_file], work_directory)
         set_permissions(uncal_file)
-    
+
         steps = get_pipeline_steps(instrument)
         first_step_to_be_run = True
         for step_name in steps:
@@ -94,7 +94,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
                             # If the dither_points entry is not populated, then ignore this change
                             pass
                         model[0].save(output_file)
-                
+
                     done = True
                     for output in outputs:
                         output_name = "{}_{}.fits".format(short_name, output)
@@ -110,7 +110,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
             status_f.write("{}\n".format(e))
             status_f.write("FAILED")
         sys.exit(1)
-    
+
     with open(status_file, "a+") as status_f:
         status_f.write("SUCCEEDED")
     # Done.
@@ -130,7 +130,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
     sys.stderr.write("Starting pipeline\n")
     with open(status_file, 'a+') as status_f:
         status_f.write("Starting pipeline\n")
-    
+
     try:
         copy_files([input_file], work_directory)
         set_permissions(uncal_file)
@@ -157,51 +157,50 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         # and use the run() method so that we can set parameters
         # progammatically.
         model = Detector1Pipeline()
+        params = {}
 
         # Always true
         if instrument == 'nircam':
-            model.refpix.odd_even_rows = False
+            params['refpix'] = dict(odd_even_rows=False)
 
         # Default CR rejection threshold is too low
-        model.jump.rejection_threshold = 15
+        #params['jump'] = dict(rejection_threshold=15)
 
         # Turn off IPC step until it is put in the right place
-        model.ipc.skip = True
+        params['ipc'] = dict(skip=True)
 
-        model.jump.save_results = True
-        model.jump.output_dir = work_directory
-        model.jump.maximum_cores = max_cores
-        jump_output = uncal_file.replace('uncal', 'jump')
+        # Set up to save jump step output
+        params['jump']['save_results'] = True
+        params['jump']['output_dir'] = work_directory
+        params['jump']['maximum_cores'] = max_cores
+        jump_output = short_name + '_jump.fits'
 
         # Check to see if the jump version of the requested file is already
         # present
         run_jump = not os.path.isfile(jump_output)
 
         if ramp_fit:
-            model.ramp_fit.save_results = True
-            model.ramp_fit.maximum_cores = max_cores
-            # model.save_results = True
-            model.output_dir = work_directory
-            # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
-            pipe_output = uncal_file.replace('uncal', '0_ramp_fit')
+            params['ramp_fit'] = dict(save_results=True, maximum_cores=max_cores)
+
+            pipe_output = os.path.join(work_directory, short_name + '_0_ramp_fit.fits')
             run_slope = not os.path.isfile(pipe_output)
             if save_fitopt:
-                model.ramp_fit.save_opt = True
-                fitopt_output = uncal_file.replace('uncal', 'fitopt')
+                params['ramp_fit']['save_opt'] = True
+                fitopt_output = os.path.join(work_directory, short_name + '_fitopt.fits')
                 run_fitopt = not os.path.isfile(fitopt_output)
             else:
-                model.ramp_fit.save_opt = False
+                params['ramp_fit']['save_opt'] = False
                 fitopt_output = None
                 run_fitopt = False
         else:
-            model.ramp_fit.skip = True
+            params['ramp_fit']['skip'] = True
             pipe_output = None
             fitopt_output = None
             run_slope = False
             run_fitopt = False
 
         if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
-            model.run(datamodel)
+            model.call(datamodel, output_dir=work_directory)
         else:
             print(("Files with all requested calibration states for {} already present in "
                    "output directory. Skipping pipeline call.".format(uncal_file)))
@@ -211,7 +210,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
             status_f.write("{}\n".format(e))
             status_f.write("FAILED")
         sys.exit(1)
-    
+
     with open(status_file, "a+") as status_f:
         status_f.write("{}\n".format(jump_output))
         status_f.write("{}\n".format(pipe_output))
@@ -258,14 +257,14 @@ if __name__ == '__main__':
 
     with open(general_status_file, "a+") as status_file:
         status_file.write("Finished parsing args at {}\n".format(time.ctime()))
-    
+
     input_file = args.input_file
     instrument = args.instrument
     short_name = args.short_name
     working_path = args.working_path
     pipe_type = args.pipe
     outputs = args.outputs
-    
+
     status_file = os.path.join(working_path, short_name+"_status.txt")
     with open(status_file, 'w') as out_file:
         out_file.write("Starting Process\n")
@@ -275,10 +274,10 @@ if __name__ == '__main__':
         out_file.write("\tinstrument is {} ({})\n".format(instrument, type(instrument)))
         out_file.write("\tinput_file is {} ({})\n".format(input_file, type(input_file)))
         out_file.write("\tshort_name is {} ({})\n".format(short_name, type(short_name)))
-    
+
     if not os.path.isfile(args.input_file):
         raise FileNotFoundError("No input file {}".format(args.input_file))
-    
+
     if pipe_type not in ['jump', 'cal']:
         raise ValueError("Unknown calibration type {}".format(pipe_type))
 
