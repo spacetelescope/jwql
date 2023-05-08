@@ -27,7 +27,7 @@ from jwst.rscd import RscdStep
 from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
-from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, get_pipeline_steps
+from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, completed_pipeline_steps, get_pipeline_steps
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -55,15 +55,26 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         set_permissions(uncal_file)
 
         steps = get_pipeline_steps(instrument)
+
+        # If the input file is a file other than uncal.fits, then we may only need to run a
+        # subset of steps. Check the completed steps in the input file and set steps such
+        # that anything that is already complete is not re-run.
+        if 'uncal.fits' not in input_file:
+            completed_steps = completed_pipeline_steps(filename)
+            for step in steps:
+                if step in completed_steps:
+                    if completed_steps[step]:
+                        steps[step] = False
+
         first_step_to_be_run = True
         for step_name in steps:
-            sys.stderr.write("Running step {}\n".format(step_name))
-            with open(status_file, 'a+') as status_f:
-                status_f.write("Running step {}\n".format(step_name))
             kwargs = {}
             if step_name in ['jump', 'rate']:
                 kwargs = {'maximum_cores': max_cores}
             if steps[step_name]:
+                sys.stderr.write("Running step {}\n".format(step_name))
+                with open(status_file, 'a+') as status_f:
+                    status_f.write("Running step {}\n".format(step_name))
                 output_file_name = short_name + "_{}.fits".format(step_name)
                 output_file = os.path.join(work_directory, output_file_name)
                 # skip already-done steps
@@ -104,6 +115,11 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
                     if done:
                         sys.stderr.write("Done pipeline.\n")
                         break
+            else:
+                sys.stderr.write("Skipping step {}\n".format(step_name))
+                with open(status_file, 'a+') as status_f:
+                    status_f.write("Skipping step {}\n".format(step_name))
+
     except Exception as e:
         with open(status_file, "a+") as status_f:
             status_f.write("EXCEPTION\n")
