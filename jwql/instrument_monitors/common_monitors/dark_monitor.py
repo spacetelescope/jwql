@@ -712,7 +712,7 @@ class Dark():
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
 
-        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate", "rateints"], self.instrument)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
             if processed_file not in slope_files and os.path.isfile(processed_file):

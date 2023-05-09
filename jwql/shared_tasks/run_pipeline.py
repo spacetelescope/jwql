@@ -60,7 +60,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         # subset of steps. Check the completed steps in the input file. Find the latest step
         # that has been completed, and skip that plus all prior steps
         if 'uncal.fits' not in input_file:
-            completed_steps = completed_pipeline_steps(filename)
+            completed_steps = completed_pipeline_steps(input_file)
             for step in steps:
                 steps[step] = not completed_steps[step]
 
@@ -109,6 +109,8 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
                             # If the dither_points entry is not populated, then ignore this change
                             pass
                         model[0].save(output_file)
+                        if 'rateints' in outputs:
+                            model[1].save(output_file.replace('rate', 'rateints'))
 
                     done = True
                     for output in outputs:
