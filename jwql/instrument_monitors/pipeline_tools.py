@@ -165,12 +165,8 @@ def get_pipeline_steps(instrument):
 
     # Order is important in 'steps' lists below!!
     if instrument == 'MIRI':
-        steps = ['group_scale', 'dq_init', 'saturation', 'ipc', 'firstframe', 'lastframe',
-                 'linearity', 'rscd', 'dark_current', 'refpix', 'persistence', 'jump', 'rate']
-        # No persistence correction for MIRI
-        steps.remove('persistence')
-        # MIRI is limited to one frame per group
-        steps.remove('group_scale')
+        steps = ['group_scale', 'dq_init', 'saturation', 'ipc', 'firstframe', 'lastframe', 'reset',
+                 'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate', 'gain_scale']
     else:
         steps = ['group_scale', 'dq_init', 'saturation', 'ipc', 'superbias', 'refpix', 'linearity',
                  'persistence', 'dark_current', 'jump', 'rate']
