@@ -57,15 +57,19 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         steps = get_pipeline_steps(instrument)
 
         # If the input file is a file other than uncal.fits, then we may only need to run a
-        # subset of steps. Check the completed steps in the input file and set steps such
-        # that anything that is already complete is not re-run.
+        # subset of steps. Check the completed steps in the input file. Find the latest step
+        # that has been completed, and skip that plus all prior steps
         if 'uncal.fits' not in input_file:
             completed_steps = completed_pipeline_steps(filename)
             for step in steps:
-                if step in completed_steps:
-                    if completed_steps[step]:
-                        steps[step] = False
+                steps[step] = not completed_steps[step]
 
+        # Special case: if the input file is a dark.fits file, then we want to skip the
+        # dark_current subtraction step
+        if 'dark.fits' in input_file:
+            step['dark_current'] = False
+
+        # Run each specified step
         first_step_to_be_run = True
         for step_name in steps:
             kwargs = {}
