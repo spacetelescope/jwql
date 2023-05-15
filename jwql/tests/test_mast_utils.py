@@ -21,7 +21,6 @@ import os
 
 from astroquery.mast import Mast
 
-from jwql.jwql_monitors import monitor_mast as mm
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils import mast_utils as mu
 from jwql.utils.utils import get_config
