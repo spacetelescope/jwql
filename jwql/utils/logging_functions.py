@@ -223,7 +223,8 @@ def log_info(func):
         logging.info('Running as PID {}'.format(os.getpid()))
 
         # Read in setup.py file to build list of required modules
-        with open("pyproject.toml", "rb") as f:
+        toml_file = os.path.join(os.path.dirname(get_config()['setup_file']), 'pyproject.toml')
+        with open(toml_file, "rb") as f:
             data = tomllib.load(f)
 
         required_modules = data['project']['dependencies']
