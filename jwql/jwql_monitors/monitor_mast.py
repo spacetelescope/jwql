@@ -35,7 +35,6 @@ from jwql.utils.plotting import bar_chart
 from jwql.utils.protect_module import lock_module
 
 
-# Temporary until JWST operations: switch to test string for MAST request URL
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
