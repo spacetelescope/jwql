@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Tests for the ``monitor_mast`` module.
+"""Tests for the ``mast_utils`` module.
 
 Authors
 -------
@@ -14,7 +14,7 @@ Use
     suppress verbose output to stdout):
     ::
 
-        pytest -s test_monitor_mast.py
+        pytest -s test_mast_utils.py
 """
 
 import os
