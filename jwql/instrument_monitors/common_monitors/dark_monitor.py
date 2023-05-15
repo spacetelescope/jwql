@@ -100,9 +100,8 @@ from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixel
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
-from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
-from jwql.utils import calculations, instrument_properties, monitor_utils
+from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
@@ -402,11 +401,11 @@ class Dark():
         new_pixels_y : list
             List of y coordinates of new bad pixels
         """
-        
+
         if len(badpix[0]) == 0:
             logging.warning("\tNo new {} pixels to check.".format(pixel_type))
             return ([], [])
-        
+
         logging.info("\tChecking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
@@ -440,7 +439,7 @@ class Dark():
             if len(np.intersect1d(ind_x[0], ind_y[0])) == 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
-        
+
         logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
 #             pixel = (x, y)
 #             if pixel not in already_found:
@@ -810,7 +809,7 @@ class Dark():
                 # Add new noisy pixels to the database
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-            
+
             logging.info("Creating Mean Slope Image {}".format(slope_image))
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,

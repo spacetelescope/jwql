@@ -54,7 +54,6 @@ from jwql.utils import monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
-from jwql.jwql_monitors import monitor_mast
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
 
 
