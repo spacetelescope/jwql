@@ -11,6 +11,7 @@ Authors
     - Mike Engesser
     - Maria Pena-Guerrero
     - Rachel Cooper
+    - Brad Sappington
 
 Use
 ---
@@ -88,18 +89,18 @@ ANOMALIES_PER_INSTRUMENT = {
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 # anomalies that shouldn't be 'titleized'
-special_cases = ['Dominant_MSA_Leakage','MRS_Glow','MRS_Zipper','LRS_Contamination']
+special_cases = ['Dominant_MSA_Leakage', 'MRS_Glow', 'MRS_Zipper', 'LRS_Contamination']
 
 # Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                        else (anomaly, anomaly.replace('_',' '))
-                        for anomaly in ANOMALIES_PER_INSTRUMENT]
+                   else (anomaly, anomaly.replace('_', ' '))
+                   for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                        if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                        else (anomaly, anomaly.replace('_',' '))
+                        else (anomaly, anomaly.replace('_', ' '))
                         for anomaly in ANOMALIES_PER_INSTRUMENT
                         if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
@@ -110,9 +111,9 @@ ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in
                           if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                            else (anomaly, anomaly.replace('_',' '))
-                            for anomaly in ANOMALIES_PER_INSTRUMENT
-                            if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+                           else (anomaly, anomaly.replace('_', ' '))
+                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'miri': ANOMALY_CHOICES_MIRI,
@@ -121,18 +122,12 @@ ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'nirspec': ANOMALY_CHOICES_NIRSPEC
                                   }
 
-APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
-                                       'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
-                                       'NRCB4_FULL', 'NRCB5_FULL'],
-                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_AMI1',
-                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96',
-                                       'NIS_SUB64', 'NIS_SUB128', 'NIS_SUB256'],
-                            'NIRSPEC': ['NRS_FULL_MSA', 'NRS_FULL_IFU', 'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT',
+APERTURES_PER_INSTRUMENT = {'nircam': [],  # NIRCAM aperture redundant, can just use Subarray + Detector
+                            'niriss': [],  # NIRISS preferred subarray only
+                            'nirspec': ['NRS_FULL_MSA', 'NRS_FULL_IFU', 'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT',
                                         'NRS_S400A1_SLIT', 'NRS_S1600A1_SLIT', 'NRS_S200B1_SLIT'],
-                            'MIRI': ['MIRIM_SUB64', 'MIRIM_SUB128', 'MIRIM_SUB256', 'MIRIM_MASK1140',
-                                     'MIRIM_MASK1065', 'MIRIM_MASK1550', 'MIRIM_MASKLYOT',
-                                     'MIRIM_BRIGHTSKY', 'MIRIM_SLITLESSPRISM'],
-                            'FGS': ['FGS1_FULL', 'FGS2_FULL']}
+                            'miri': [],   # MIRI preferred subarray only
+                            'fgs': ['FGS1_FULL', 'FGS2_FULL']}
 
 # Observing templates used for ASIC tuning. MAST query results that
 # have one of these templates will be ignored
@@ -238,16 +233,12 @@ FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
 FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'preview_images', 'thumbnails', 'all']
 
 FILTERS_PER_INSTRUMENT = {'fgs': [],
-                          'miri': ['F1000W', 'F1130W', 'F1280W', 'OPAQUE', 'F2300C', 'F560W', 'P750L',
-                                   'F1500W', 'F2550W', 'F770W', 'FLENS', 'FND', 'F2100W', 'F1800W',
-                                   'F1550C', 'F1140C', 'F2550WR', 'F1065C'],
-                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M',
-                                     'F187N', 'F200W', 'F210M', 'F212N', 'F250M', 'F277W', 'F300M',
-                                     'F322W2', 'F335M', 'F356W', 'F360M', 'F410M', 'F430M', 'F444W',
-                                     'F460M', 'F480M'],
-                          'niriss': ['CLEAR', 'F380M', 'F480M', 'GR150R', 'F430M', 'GR150C', 'F444W',
-                                     'F356W', 'F277W'],
-                          'nirspec': ['F290LP', 'F170LP', 'OPAQUE', 'F100LP', 'F070LP', 'F140X', 'CLEAR', 'F110W']}
+                          'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W', 'F1500W',
+                                   'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W', 'F2550WR', 'FLENS', 'FND', 'OPAQUE', 'P750L'],
+                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M', 'F187N', 'F200W', 'F210M', 'F212N',
+                                     'WLP4', 'F277W', 'F356W', 'F444W', 'F300M', 'F335M', 'F360M', 'F410M', 'F430M', 'F460M', 'F480M', 'F250M', 'F322W2'],
+                          'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F200W', 'F277W', 'F356W', 'F380M', 'F430M', 'F444W', 'F480M', 'GR150C', 'GR150R'],
+                          'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F110W', 'F140X', 'F170LP', 'F290LP', 'OPAQUE', 'P750L']}
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
@@ -272,7 +263,7 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                           'nircam': [],
                           'niriss': [],
                           'nirspec': ['G140M', 'G235M', 'G395M', 'G140H',
-                                      'G235H', 'G395H', 'PRISM']
+                                      'G235H', 'G395H', 'PRISM', 'MIRROR']
                           }
 
 # Filename extensions for guider data
@@ -356,15 +347,15 @@ MIRI_POS_RATIO_VALUES = {'FW': {'FND': (-164.8728073, 0.204655346),
                                 },
                          'CCC': {'CLOSED': (398.0376386, 0.173703628),
                                  'OPEN': (504.0482685, 0.328112274)
-                                },
+                                 },
                          'GW14': {'SHORT': (626.9411005, 0.116034024),
                                   'MEDIUM': (342.8685233, 0.127123169),
                                   'LONG': (408.8339259, 0.117079193)
-                                 },
+                                  },
                          'GW23': {'SHORT': (619.7948107, 0.215417336),
                                   'MEDIUM': (373.1697309, 0.204314122),
                                   'LONG': (441.6632325, 0.349161169)
-                                 }
+                                  }
                          }
 
 # Suffix for msa files
@@ -427,6 +418,13 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
 
+PUPILS_PER_INSTRUMENT = {'nircam': ['CLEAR', 'FLAT', 'F162M', 'F164N', 'GDHS0', 'GDHS60', 'MASKBAR', 'MASKIPR', 'MASKRND',
+                                    'PINHOLES', 'WLM8', 'WLP8', 'F323N', 'F405N', 'F466N', 'F470N', 'GRISMC', 'GRISMR', 'GRISMV2', 'GRISMV3'],
+                         'niriss': ['CLEARP', 'F090W', 'F115W', 'F140M', 'F150W', 'F158M', 'F200W', 'GR700XD', 'NRM'],
+                         'nirspec': [],
+                         'miri': [],
+                         'fgs': []}
+
 
 # Keep keys defined via class as they are used many places with potential mispellings
 class QUERY_CONFIG_KEYS:
@@ -439,7 +437,9 @@ class QUERY_CONFIG_KEYS:
     FILTERS = "FILTERS"
     GRATINGS = "GRATINGS"
     INSTRUMENTS = "INSTRUMENTS"
+    PUPILS = "PUPILS"
     READ_PATTS = "READ_PATTS"
+    SUBARRAYS = "SUBARRAYS"
     THUMBNAILS = "THUMBNAILS"
 
 
@@ -454,7 +454,9 @@ QUERY_CONFIG_TEMPLATE = {
     QUERY_CONFIG_KEYS.FILTERS: {},
     QUERY_CONFIG_KEYS.GRATINGS: {},
     QUERY_CONFIG_KEYS.INSTRUMENTS: [],
+    QUERY_CONFIG_KEYS.PUPILS: {},
     QUERY_CONFIG_KEYS.READ_PATTS: {},
+    QUERY_CONFIG_KEYS.SUBARRAYS: {},
     QUERY_CONFIG_KEYS.THUMBNAILS: []
     }
 
@@ -495,6 +497,16 @@ REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'exp_type',
                                           'read_patt_num', 'viewed']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+SUBARRAYS_PER_INSTRUMENT = {'nircam': ['FULL', 'FULLP', 'SUB640', 'SUB320', 'SUB160', 'SUB400P', 'SUB160P', 'SUB64P',
+                                       'SUB32TATS', 'SUB640A210R', 'SUB640ASWB', 'SUB320A335R', 'SUB320A430R', 'SUB320ALWB',
+                                       'SUBGRISM256', 'SUBGRISM128', 'SUBGRISM64', 'SUB32TATSGRISM'],
+                            'niriss': ['FULL', 'SUBSTRIP96', 'SUBSTRIP256', 'SUB80', 'SUB64', 'SUB128', 'SUB256',
+                                       'WFSS64R', 'WFSS128R', 'WFSS64C', 'WFSS128C', 'SUBAMPCAL', 'SUBTAAMI', 'SUBTASOSS'],
+                            'nirspec': [],
+                            'miri': ['BRIGHTSKY', 'FULL', 'MASK1065', 'MASK1140', 'MASK1550', 'MASKLYOT', 'SLITLESSPRISM',
+                                     'SUB64', 'SUB128', 'SUB256'],
+                            'fgs': []}
 
 # Filename suffixes that need to include the association value in the suffix in
 # order to identify the preview image file. This should only be crf and crfints,

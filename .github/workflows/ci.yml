@@ -29,19 +29,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.9]
+        python-version: [3.9, "3.10"]
 
     steps:
       - uses: actions/checkout@v3
 
-      - run: |
-            echo "major=$(echo ${{ matrix.python-version }} | head -c 1)" >> $GITHUB_OUTPUT
-            echo "minor=$(echo ${{ matrix.python-version }} | tail -c 2)" >> $GITHUB_OUTPUT
-        id: python
-
       - uses: mamba-org/provision-with-micromamba@v15
         with:
-          environment-file: ./environment_python_${{ steps.python.outputs.major }}_${{ steps.python.outputs.minor }}.yml
+          environment-file: ./environment_python_${{ matrix.python-version }}.yml
           cache-env: true
           cache-downloads: true
 
