@@ -2,7 +2,7 @@ sphinx_automodapi==0.14.1
 bokeh==2.4.3
 celery==5.2.7
 cython==0.29.33
-django==4.1.7
+django==4.1.9
 docutils==0.18.1
 flake8==6.0.0
 jwst==1.10.0

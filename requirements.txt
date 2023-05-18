@@ -5,7 +5,7 @@ beautifulsoup4==4.11.2
 bokeh==2.4.3
 celery==5.2.7
 cryptography==39.0.1
-django==4.1.7
+django==4.1.9
 flake8==6.0.0
 inflection==0.5.1
 ipython==8.10.0
