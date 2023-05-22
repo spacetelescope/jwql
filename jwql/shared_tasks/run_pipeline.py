@@ -256,10 +256,21 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
                 steps_to_skip = ['group_scale', 'dq_init', 'saturation', 'ipc', 'superbias',
                                  'refpix', 'linearity']
             for step in steps_to_skip:
-                params[step] = dict(skip=True)
+                step_dict = dict(skip=True)
+                if step in params:
+                    params[step] = params[step].update(step_dict)
+                else:
+                    params[step] = dict(skip=True)
         else:
             # Turn off IPC step until it is put in the right place
             params['ipc'] = dict(skip=True)
+
+        # Include any user-specified parameters
+        for step_name in step_args:
+            if step_name in params:
+                params[step_name] = params[step_name].update(step_args[step_name])
+            else:
+                params[step_name] = step_args[step_name]
 
         if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
             model.call(datamodel, output_dir=work_directory, steps=params)

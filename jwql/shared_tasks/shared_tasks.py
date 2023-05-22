@@ -332,8 +332,13 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
     if "all" in ext_or_exts:
         logging.info("All outputs requested")
-        out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
-                    "persistence", "dark_current", "jump", "rate"]
+        if instrument.lower() != 'miri':
+            out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
+                        "persistence", "dark_current", "jump", "rate"]
+        else:
+            out_exts = ["group_scale", "dq_init", "saturation", "firstframe", "lastframe", "reset",
+                        "linearity", "rscd", "dark_current", "refpix", "jump", "rate", "gain_scale"]
+
         calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in out_exts]
         logging.info("Requesting {}".format(calibrated_files))
     else:
