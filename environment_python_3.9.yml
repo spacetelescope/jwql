@@ -22,36 +22,36 @@ channels:
   - defaults
 
 dependencies:
-  - astropy=5.2.1
+  - astropy=5.2.2
   - bokeh=2.4.3
-  - beautifulsoup4=4.11.2
+  - beautifulsoup4=4.12.2
   - celery=5.2.7
-  - cryptography=39.0.1
-  - django=4.1.7
+  - cryptography=40.0.2
+  - django=4.2.1
   - flake8=6.0.0
   - inflection=0.5.1
-  - ipython=8.10.0
+  - ipython=8.13.2
   - jinja2=3.1.2
   - jsonschema=4.17.3
   - matplotlib=3.7.0
-  - nodejs=18.12.1
-  - numpy=1.24.2
+  - nodejs=18.15.0
+  - numpy=1.24.3
   - numpydoc=1.5.0
-  - pandas=2.0.0
-  - pip=23.0
+  - pandas=2.0.1
+  - pip=23.1.2
   - postgresql=15.2
   - psycopg2=2.9.3
-  - pytest=7.2.1
+  - pytest=7.3.1
   - pytest-cov=4.0.0
   - pytest-mock=3.10.0
   - python=3.9.16
   - pyyaml=6.0
   - redis
-  - scipy=1.9.3
-  - setuptools=67.3.1
-  - sphinx=6.1.3
+  - scipy=1.10.1
+  - setuptools=67.7.2
+  - sphinx=6.2.1
   - sphinx_rtd_theme=1.2.0
-  - sqlalchemy=2.0.8
+  - sqlalchemy=2.0.15
   - twine=4.0.2
   - wtforms=3.0.1
 
