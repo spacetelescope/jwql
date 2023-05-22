@@ -5,6 +5,7 @@ from astropy.io import fits
 from collections import OrderedDict
 from copy import deepcopy
 from glob import glob
+import json
 import os
 import shutil
 import sys
@@ -33,7 +34,7 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 
-def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_cores='all'):
+def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_cores='all', step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
@@ -61,20 +62,47 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         # that has been completed, and skip that plus all prior steps
         if 'uncal.fits' not in input_file:
             completed_steps = completed_pipeline_steps(input_file)
+
+            # Reverse the boolean value, so that now steps answers the question: "Do we need
+            # to run this step?""
             for step in steps:
                 steps[step] = not completed_steps[step]
 
         # Special case: if the input file is a dark.fits file, then we want to skip the
         # dark_current subtraction step
-        if 'dark.fits' in input_file:
-            step['dark_current'] = False
+        #if 'dark.fits' in input_file:
+        #    steps['dark_current'] = False
+
+        # Make sure we don't run steps out of order. Find the latest step that has been
+        # run, and only run subsequent steps. This protects against cases where some early
+        # step was not run. In that case, we don't want to go back and run it because running
+        # pipeline steps out of order doesn't work.
+        last_run = 'group_scale'  # initialize to the first step
+        for step in steps:
+            if not steps[step]:
+                last_run = deepcopy(step)
+
+        for step in steps:
+            if step == last_run:
+                break
+            if step != last_run:
+                steps[step] = False
+
+        # Set any steps the user specifically asks to skip
+        for step, step_dict in step_args.items():
+            if 'skip' in step_dict:
+                print(f'SKIP the {step}!!')
+                if step_dict['skip']:
+                    steps[step] = False
 
         # Run each specified step
         first_step_to_be_run = True
         for step_name in steps:
             kwargs = {}
+            if step_name in step_args:
+                kwargs = step_args[step_name]
             if step_name in ['jump', 'rate']:
-                kwargs = {'maximum_cores': max_cores}
+                kwargs['maximum_cores'] = max_cores
             if steps[step_name]:
                 sys.stderr.write("Running step {}\n".format(step_name))
                 with open(status_file, 'a+') as status_f:
@@ -138,7 +166,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
     # Done.
 
 
-def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=True, save_fitopt=True, max_cores='all'):
+def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=True, save_fitopt=True, max_cores='all', step_args={}):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -228,7 +256,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
                 steps_to_skip = ['group_scale', 'dq_init', 'saturation', 'ipc', 'superbias',
                                  'refpix', 'linearity']
             for step in steps_to_skip:
-                params[step] = dict(skip: True)
+                params[step] = dict(skip=True)
         else:
             # Turn off IPC step until it is put in the right place
             params['ipc'] = dict(skip=True)
@@ -269,6 +297,7 @@ if __name__ == '__main__':
     out_help = 'Comma-separated list of output extensions (for cal only, otherwise just "all")'
     name_help = 'Input file name with no path or extensions'
     cores_help = 'Maximum cores to use (default "all")'
+    step_args_help = 'Step-specific parameter value nested dictionary'
     parser = argparse.ArgumentParser(description='Run local calibration')
     parser.add_argument('pipe', metavar='PIPE', type=str, help=pipe_help)
     parser.add_argument('outputs', metavar='OUTPUTS', type=str, help=out_help)
@@ -277,6 +306,7 @@ if __name__ == '__main__':
     parser.add_argument('input_file', metavar='FILE', type=str, help=file_help)
     parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
     parser.add_argument('max_cores', metavar='CORES', type=str, help=cores_help)
+    parser.add_argument('step_args', metavar='STEP_ARGS', type=json.loads, help=step_args_help)
 
     with open(general_status_file, "a+") as status_file:
         status_file.write("Created argument parser at {}\n".format(time.ctime()))
@@ -319,12 +349,12 @@ if __name__ == '__main__':
         if pipe_type == 'jump':
             with open(status_file, 'a+') as out_file:
                 out_file.write("Running jump pipeline.\n")
-            run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True, max_cores=args.max_cores)
+            run_save_jump(input_file, short_name, working_path, instrument, ramp_fit=True, save_fitopt=True, max_cores=args.max_cores, step_args=args.step_args)
         elif pipe_type == 'cal':
             with open(status_file, 'a+') as out_file:
                 out_file.write("Running cal pipeline.\n")
             outputs = outputs.split(",")
-            run_pipe(input_file, short_name, working_path, instrument, outputs, max_cores=args.max_cores)
+            run_pipe(input_file, short_name, working_path, instrument, outputs, max_cores=args.max_cores, step_args=args.step_args)
     except Exception as e:
         with open(status_file, 'a+') as out_file:
             out_file.write("Exception when starting pipeline.\n")

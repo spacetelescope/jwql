@@ -224,9 +224,42 @@ def collect_after_task(**kwargs):
     gc.collect()
 
 
-def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores):
-    command = "{} {} {} '{}' {} {} {} {}"
-    command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores)
+def convert_step_args_to_string(args_dict):
+    """Convert the nested dictionary containing pipeline step parameter keyword/value pairs
+    to a string so that it can be passed via command line
+
+    Parameters
+    ----------
+    args_dict : dict
+        Nested dictionary. Top level keys are pipeline step names. Values are dictionaries containing
+        keyword value pairs for that step.
+
+    Returns
+    -------
+    args_str : str
+        String representation of ``args_dict``
+    """
+    args_str='{'
+
+    for i, step in enumerate(args_dict):
+        args_str += f'"{step}":'
+        args_str += '{'
+        for j, (param, val) in enumerate(args_dict[step].items()):
+            args_str += f'"{param}":"{val}"'
+            if j < len(args_dict[step])-1:
+                args_str += ', '
+        args_str += '}'
+        if i < len(args_dict)-1:
+            args_str += ','
+    return args_str
+
+
+def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores, step_args):
+    # Convert step_args dictionary to a string so that it can be passed via command line
+    step_args_str = convert_step_args_to_string(step_args)
+
+    command = "{} {} {} '{}' {} {} {} {} {}"
+    command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
     logging.info("Running {}".format(command))
     process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)
     with process.stderr:
@@ -309,7 +342,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
 
     cores = 'all'
     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file,
-                            short_name, result_file, cores)
+                            short_name, result_file, cores, step_args)
 
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
@@ -324,7 +357,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         if core_fail:
             cores = "half"
             status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
-                                    input_file, short_name, result_file, cores)
+                                    input_file, short_name, result_file, cores, step_args)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
                 managed = True
@@ -338,7 +371,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                 if core_fail:
                     cores = "none"
                     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
-                                            input_file, short_name, result_file, cores)
+                                            input_file, short_name, result_file, cores, step_args)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                         managed = True
@@ -554,7 +587,7 @@ def prep_file(input_file, in_ext):
     return short_name, cal_lock, os.path.join(send_path, uncal_name)
 
 
-def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False):
+def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False, step_args={}):
     """Starts the standard or save_jump pipeline for the provided file.
 
     .. warning::
@@ -591,6 +624,11 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
+    step_args : dict
+        Pipeline step arguments to be passed to the pipeline call. Nested dictionary with keys that
+        are the step names (as seen in pipeline_tools.PIPELINE_STEP_MAPPING). Each value is a
+        dictionary of keyword value pairs that are relevant for that step.
+
     Returns
     -------
     result : celery.result.AsyncResult
@@ -606,9 +644,9 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
                 ramp_fit = True
             elif "fitopt" in ext:
                 save_fitopt = True
-        result = calwebb_detector1_save_jump.delay(input_file, instrument, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
+        result = calwebb_detector1_save_jump.delay(input_file, instrument, ramp_fit=ramp_fit, save_fitopt=save_fitopt, step_args=step_args)
     else:
-        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument)
+        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument, step_args=step_args)
     return result
 
 
@@ -716,7 +754,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     return output
 
 
-def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False):
+def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False, step_args={}):
     """Convenience function for using the ``run_calwebb_detector1`` function on a list of
     data files, breaking them into parallel celery calls, collecting the results together,
     and returning the results as another list. In particular, this function will do the
@@ -757,6 +795,11 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
+    step_args : dict
+        Pipeline step arguments to be passed to the pipeline call. Nested dictionary with keys that
+        are the step names (as seen in pipeline_tools.PIPELINE_STEP_MAPPING). Each value is a
+        dictionary of keyword value pairs that are relevant for that step.
+
     Returns
     -------
     file_or_files : str or list-of-str
@@ -782,7 +825,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
             locks[short_name] = cal_lock
-            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
+            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe, step_args=step_args)
             logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
         logging.info("Celery tasks submitted.")
         logging.info("Waiting for task results")

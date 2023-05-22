@@ -25,6 +25,7 @@ from jwst import datamodels
 from jwst.dq_init import DQInitStep
 from jwst.dark_current import DarkCurrentStep
 from jwst.firstframe import FirstFrameStep
+from jwst.gain_scale import GainScaleStep
 from jwst.group_scale import GroupScaleStep
 from jwst.ipc import IPCStep
 from jwst.jump import JumpStep
@@ -34,6 +35,7 @@ from jwst.persistence import PersistenceStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
+from jwst.reset import ResetStep
 from jwst.rscd import RscdStep
 from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
@@ -43,16 +45,17 @@ import pysiaf
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
-                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias',
+                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias', 'S_RESET': 'reset',
                  'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearity',
                  'S_FRSTFR': 'firstframe', 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd',
-                 'S_JUMP': 'jump', 'S_RAMP': 'rate'}
+                 'S_JUMP': 'jump', 'S_RAMP': 'rate', 'S_GANSCL': 'gain_scale', 'S_IPC': 'ipc'}
 
 PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
-                         'firstframe': FirstFrameStep, 'group_scale': GroupScaleStep,
-                         'ipc': IPCStep, 'jump': JumpStep, 'lastframe': LastFrameStep,
-                         'linearity': LinearityStep, 'persistence': PersistenceStep,
-                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RscdStep,
+                         'firstframe': FirstFrameStep, 'gain_scale': GainScaleStep,
+                         'group_scale': GroupScaleStep, 'ipc': IPCStep, 'jump': JumpStep,
+                         'lastframe': LastFrameStep, 'linearity': LinearityStep,
+                         'persistence': PersistenceStep, 'rate': RampFitStep,
+                         'refpix': RefPixStep, 'reset': ResetStep, 'rscd': RscdStep,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
 
 # Readout patterns that have nframes != a power of 2. These readout patterns
@@ -182,13 +185,13 @@ def get_pipeline_steps(instrument):
     # IPC correction currently not done for any instrument
     steps.remove('ipc')
 
-    # Initialize using PIPE_KEYWORDS so the steps will be in the right order
+    # Initialize using OrderedDict so the steps will be in the right order
     required_steps = OrderedDict({})
     for key in steps:
         required_steps[key] = True
-    for key in PIPE_KEYWORDS.values():
-        if key not in required_steps.keys():
-            required_steps[key] = False
+    #for key in PIPE_KEYWORDS.values():
+    #    if key not in required_steps.keys():
+    #        required_steps[key] = False
 
     return required_steps
 
