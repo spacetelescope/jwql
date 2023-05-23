@@ -189,9 +189,6 @@ def get_pipeline_steps(instrument):
     required_steps = OrderedDict({})
     for key in steps:
         required_steps[key] = True
-    #for key in PIPE_KEYWORDS.values():
-    #    if key not in required_steps.keys():
-    #        required_steps[key] = False
 
     return required_steps
 

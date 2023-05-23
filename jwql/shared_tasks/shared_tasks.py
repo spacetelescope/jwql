@@ -258,7 +258,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
     # Convert step_args dictionary to a string so that it can be passed via command line
     step_args_str = convert_step_args_to_string(step_args)
 
-    command = "{} {} {} '{}' {} {} {} {} {}"
+    command = "{} {} {} '{}' {} {} {} {} --step_args {}"
     command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
     logging.info("Running {}".format(command))
     process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)

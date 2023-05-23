@@ -68,11 +68,6 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
             for step in steps:
                 steps[step] = not completed_steps[step]
 
-        # Special case: if the input file is a dark.fits file, then we want to skip the
-        # dark_current subtraction step
-        #if 'dark.fits' in input_file:
-        #    steps['dark_current'] = False
-
         # Make sure we don't run steps out of order. Find the latest step that has been
         # run, and only run subsequent steps. This protects against cases where some early
         # step was not run. In that case, we don't want to go back and run it because running
