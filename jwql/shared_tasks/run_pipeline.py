@@ -317,7 +317,7 @@ if __name__ == '__main__':
     parser.add_argument('input_file', metavar='FILE', type=str, help=file_help)
     parser.add_argument('short_name', metavar='NAME', type=str, help=name_help)
     parser.add_argument('max_cores', metavar='CORES', type=str, help=cores_help)
-    parser.add_argument('step_args', metavar='STEP_ARGS', type=json.loads, help=step_args_help)
+    parser.add_argument('--step_args', metavar='STEP_ARGS', type=json.loads, default='{}', help=step_args_help)
 
     with open(general_status_file, "a+") as status_file:
         status_file.write("Created argument parser at {}\n".format(time.ctime()))
