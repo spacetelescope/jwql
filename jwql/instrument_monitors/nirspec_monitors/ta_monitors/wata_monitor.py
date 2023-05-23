@@ -702,27 +702,6 @@ class WATA():
                 good_files.append(filename)
         return good_files
 
-    def get_uncal_names(self, file_list):
-        """Replace the last suffix for _uncal and return list.
-        Parameters
-        ----------
-        file_list : list
-            List of fits files
-        Returns
-        -------
-        good_files : list
-            Filtered list of uncal file names
-        """
-        good_files = []
-        for filename in file_list:
-            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
-            if '_uncal' not in filename:
-                suffix2replace = filename.split('_')[-1]
-                filename = filename.replace(suffix2replace, 'uncal.fits')
-            if filename not in good_files:
-                good_files.append(filename)
-        return good_files
-
     def update_ta_success_txtfile(self):
         """Create a text file with all the failed and successful WATA.
         Parameters
