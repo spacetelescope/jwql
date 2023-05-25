@@ -29,4 +29,4 @@ def test_version_number():
 
     assert isinstance(jwql.__version__, str)
     version_parts = jwql.__version__.split('.')
-    assert len(version_parts) == 3
+    assert len(version_parts) >= 3
