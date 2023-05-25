@@ -34,11 +34,13 @@ Use
 
 
 # general imports
+import json
 import os
 import logging
+import shutil
+
 import numpy as np
 import pandas as pd
-import json
 from bs4 import BeautifulSoup
 from datetime import datetime
 from astropy.time import Time
@@ -154,8 +156,6 @@ class MSATA():
                     msata = True
                     break
             if not msata:
-                # print('\n WARNING! This file is not MSATA: ', fits_file)
-                # print('  Skiping msata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
             try:
@@ -988,6 +988,8 @@ class MSATA():
         for list_element in file_info:
             if 'filename' in list_element:
                 files.append(list_element['filename'])
+            elif 'root_name' in list_element:
+                files.append(list_element['root_name'])
         return files
 
     def get_uncal_names(self, file_list):
@@ -1003,10 +1005,13 @@ class MSATA():
         """
         good_files = []
         for filename in file_list:
-            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
-            if '_uncal' not in filename:
+            if filename.endswith('.fits'):
+                # MAST names look like: jw01133003001_02101_00001_nrs2_cal.fits
                 suffix2replace = filename.split('_')[-1]
                 filename = filename.replace(suffix2replace, 'uncal.fits')
+            else:
+                # rootnames look like: jw01133003001_02101_00001_nrs2
+                filename += '_uncal.fits'
             if filename not in good_files:
                 good_files.append(filename)
         return good_files
@@ -1072,7 +1077,7 @@ class MSATA():
 
         self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
         if not os.path.isfile(self.output_file_name):
-            return
+            return 'No MSATA data available', '', ''
 
         # open the html file and get the contents
         with open(self.output_file_name, "r") as html_file:
@@ -1123,7 +1128,7 @@ class MSATA():
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
             # move this plot to a previous version
-            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
+            shutil.copyfile(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
         # fail save - start from the beginning if there is no html file
         else:
             self.query_start = self.query_very_beginning
@@ -1133,11 +1138,18 @@ class MSATA():
         self.query_end = Time.now().mjd
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
-        # Query MAST using the aperture and the time of the
+        # Query for data using the aperture and the time of the
         # most recent previous search as the starting time
-        new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
+
+        # via MAST:
+        # new_entries = monitor_utils.mast_query_ta(
+        #     self.instrument, self.aperture, self.query_start, self.query_end)
+
+        # via django model:
+        new_entries = monitor_utils.model_query_ta(
+            self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} MSATA files for {}, {}.'.format(msata_entries, self.instrument, self.aperture))
+        logging.info('\tQuery has returned {} MSATA files for {}, {}.'.format(msata_entries, self.instrument, self.aperture))
 
         # Filter new entries to only keep uncal files
         new_entries = self.pull_filenames(new_entries)
@@ -1148,6 +1160,10 @@ class MSATA():
         # Get full paths to the files
         new_filenames = []
         for filename_of_interest in new_entries:
+            if (self.prev_data is not None
+                    and filename_of_interest in self.prev_data['filename'].values):
+                logging.warning('\t\tFile {} already in previous data. Skipping.'.format(filename_of_interest))
+                continue
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
                 logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
