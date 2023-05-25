@@ -13,22 +13,9 @@
 		<h1>{{ inst }} WATA Monitor</h1>
         <!--Horizontal line-->
         <hr>
-        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
-        <div style="text-align: center">
-          <img src={{ static('img/jwql_logo_full_transparent.png') }}
-               width=20%
-               alt="JWQL Logo"
-               title="JWQL Logo">
-        </div>
-
         <p id= "description">
-          <h2>Updates to this monitor only occur with new data</h2>
           This monitor uses all WATA data available and the plots include all data.
-          The plots will only be updated if new WATA data is in MAST, otherwise, the
-          monitor will show all data previously obtained.
-          <br>
-          <br>
-
+          The plots are updated regularly from new data in MAST.
         </p>
 
         <!-- Loading animation -->
@@ -44,7 +31,7 @@
                         </div>
                     </div>
                 </div>
-                Searching MAST ...
+                Loading ...
             </div>
         </div>
 

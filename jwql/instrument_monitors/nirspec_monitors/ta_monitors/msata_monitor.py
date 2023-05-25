@@ -1062,6 +1062,32 @@ class MSATA():
                 line = "{:<50} {:<50} {:<50}".format(suc, ta_inprogress[idx], ta_failure[idx])
                 txt.write(line + "\n")
 
+    def read_existing_html(self):
+        """
+        This function gets the data from the Bokeh html file created with
+        the NIRSpec TA monitor script.
+        """
+        self.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor')
+        ensure_dir_exists(self.output_dir)
+
+        self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
+        if not os.path.isfile(self.output_file_name):
+            return
+
+        # open the html file and get the contents
+        with open(self.output_file_name, "r") as html_file:
+            contents = html_file.read()
+
+        soup = BeautifulSoup(contents, 'html.parser').body
+
+        # find the script elements
+        script1 = str(soup.find('script', type='text/javascript'))
+        script2 = str(soup.find('script', type='application/json'))
+
+        # find the div element
+        div = str(soup.find('div', class_='bk-root'))
+        return div, script1, script2
+
     @log_fail
     @log_info
     def run(self):
@@ -1164,7 +1190,7 @@ class MSATA():
             logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
-            logging.info('\t{} MSATA status file was updated')
+            logging.info('\tMSATA status file was updated')
         else:
             logging.info('\tMSATA monitor skipped.')
 
