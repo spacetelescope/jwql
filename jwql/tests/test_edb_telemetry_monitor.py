@@ -25,7 +25,7 @@ from types import SimpleNamespace
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 from astropy.table.column import Column
-from astropy.time import Time, TimeDelta
+from astropy.time import Time
 import astropy.units as u
 import datetime
 import numpy as np
@@ -197,7 +197,7 @@ def test_get_averaging_time_duration():
 
     bad_strings = ["7_years", "nonsense"]
     for inval in bad_strings:
-        with pytest.raises(ValueError) as e_info:
+        with pytest.raises(ValueError):
             output = etm_utils.get_averaging_time_duration(inval)
 
 
@@ -211,7 +211,7 @@ def test_get_query_duration():
         output = etm_utils.get_query_duration(inval)
         assert output == outval
 
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         output = etm_utils.get_query_duration("bad_string")
 
 

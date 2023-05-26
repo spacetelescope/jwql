@@ -85,7 +85,7 @@ from astropy.modeling import models
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.io import export_png
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
+from bokeh.models import ColorBar, ColumnDataSource, Legend
 from bokeh.models import LinearColorMapper
 from bokeh.plotting import figure
 import numpy as np
@@ -94,17 +94,11 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
-from jwql.jwql_monitors import monitor_mast
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
+from jwql.utils.constants import DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -287,7 +281,7 @@ class Dark():
             mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
             # Plot image and add color bar
-            imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+            self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
                                       color_mapper=mapper, level="image")
 
             color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
@@ -554,7 +548,7 @@ class Dark():
         """
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
                                                        self.query_table.readpattern == self.readpatt). \
-                filter(self.query_table.run_monitor == True)  # noqa: E348 (comparison to true)
+                filter(self.query_table.run_monitor is True)  # noqa: E348 (comparison to true)
 
         dates = np.zeros(0)
         for instance in query:
@@ -635,7 +629,6 @@ class Dark():
         adjective = {"hot": "hotter", "dead": "lower", "noisy": "noisier"}
         sources = {}
         badpixplots = {}
-        hover_tools = {}
 
         # Need to make sources a dict because we can't use the same variable name
         # for multiple ColumnDataSources
@@ -656,7 +649,7 @@ class Dark():
                                              )
 
         # Overplot the bad pixel locations
-        badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
+        badpixplots[pix_type] = self.plot.circle(x='pixels_x', y='pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
 
         # Create hover tools for the bad pixel types
@@ -712,7 +705,7 @@ class Dark():
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
 
-        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
             if processed_file not in slope_files and os.path.isfile(processed_file):

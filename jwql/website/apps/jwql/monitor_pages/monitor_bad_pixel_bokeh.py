@@ -18,13 +18,10 @@ Use
 
 import os
 
-from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
-from astropy.time import Time
 from bokeh.embed import components, file_html
-from bokeh.io import export_png, show
+from bokeh.io import export_png
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, Panel, Tabs, Text
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
@@ -32,15 +29,10 @@ import numpy as np
 from sqlalchemy import and_, func
 
 from jwql.database.database_interface import get_unique_values_per_column, session
-from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
-from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
-from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
-from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
-from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
-from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
-from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT
+from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import filesystem_path, get_config, read_png
+from jwql.utils.utils import get_config, read_png
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = get_config()['outputs']
@@ -320,14 +312,13 @@ class BadPixelData():
         times = []
         for i, row in enumerate(all_entries_by_type):
             if i == 0:
-                badtype = row[0]
+                row[0]
                 detector = row[1]
             num_pix.append(row[2])
             times.append(row[3])
 
         # If there was no data in the database, create an empty entry
         if len(num_pix) == 0:
-            badtype = badpix_type
             detector = self.detector
             num_pix = [0]
             times = [datetime.datetime.today()]
@@ -558,7 +549,6 @@ class NewBadPixPlot():
         if len(self.coords[0]) < 50:
             radius = 1.0
         pink = '#EC04FF'
-        green = '#07FF1F'
         badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, fill_color=pink, line_color=pink,
                                        fill_alpha=1.0, line_alpha=1.0, radius=radius)
 

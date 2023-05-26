@@ -74,7 +74,6 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_instrument_looks
 from .data_containers import get_rootnames_from_query
-from .data_containers import get_thumbnail_by_rootname
 from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax

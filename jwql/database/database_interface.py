@@ -75,7 +75,6 @@ from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
-from sqlalchemy import text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.query import Query

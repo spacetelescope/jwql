@@ -46,7 +46,7 @@ from sqlalchemy import func, and_
 
 import jwql.database.database_interface as di
 from jwql.database.database_interface import CentralStore
-from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
 
@@ -291,7 +291,7 @@ class GeneralDashboard:
                 plot.line(x='date', y='used', source=source, line_color=color, line_dash='dashed', legend_label=area, line_width=3)
                 plot.circle(x='date', y='used', source=source, color=color, size=10)
 
-                hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
+                hover_tool = HoverTool(tooltips=[('Used:', '@used TB'),
                                                  ('Date:', '@date{%d %b %Y}')
                                                  ])
                 hover_tool.formatters = {'@date': 'datetime'}
@@ -340,7 +340,7 @@ class GeneralDashboard:
             cen_store_plot.xaxis.major_label_orientation = pi / 4
             cen_store_plot.legend.location = 'top_left'
 
-            hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
+            hover_tool = HoverTool(tooltips=[('Used:', '@used TB'),
                                              ('Date:', '@date{%d %b %Y}')
                                              ])
             hover_tool.formatters = {'@date': 'datetime'}

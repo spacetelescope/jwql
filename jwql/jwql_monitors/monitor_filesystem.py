@@ -34,18 +34,12 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
-from collections import defaultdict
 import datetime
-import itertools
 import logging
 import os
 import subprocess
 
 from astroquery.mast import Mast, Observations
-from bokeh.embed import components
-from bokeh.layouts import gridplot
-from bokeh.palettes import Category20_20 as palette
-from bokeh.plotting import figure, output_file, save
 import numpy as np
 from sqlalchemy.exc import DataError
 
@@ -56,8 +50,7 @@ from jwql.database.database_interface import FilesystemGeneral
 from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.permissions import set_permissions
-from jwql.utils.constants import FILESYSTEM_MONITOR_SUBDIRS, FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
+from jwql.utils.constants import FILESYSTEM_MONITOR_SUBDIRS, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
@@ -98,7 +91,7 @@ def files_per_filter():
 
             obs_table = [Observations.get_product_list(batch) for batch in batches]
             products = unique(vstack(obs_table), keys='productFilename')
-            filtered_products = Observations.filter_products(products, productType=["SCIENCE"], productSubGroupDescription=['UNCAL'], extension="fits")
+            Observations.filter_products(products, productType=["SCIENCE"], productSubGroupDescription=['UNCAL'], extension="fits")
 
             n_files[instrument][fname] = obs
     return n_files

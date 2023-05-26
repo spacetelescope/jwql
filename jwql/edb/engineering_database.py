@@ -43,7 +43,6 @@ Notes
     data that include the datapoint preceding the requested start time
     and the datapoint that follows the requested end time.
 """
-import calendar
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from numbers import Number
@@ -279,7 +278,7 @@ class EdbMnemonic:
         new_blocks = [0]
         for block in self.blocks:
             try:
-                prev_date = self.data['dates'][block]
+                self.data['dates'][block]
                 before = np.where(common_dates == self.data['dates'][block])[0]
 
                 if len(before) > 0:
@@ -366,10 +365,8 @@ class EdbMnemonic:
                     if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                         block = self.data["euvalues"].data[index:self.blocks[i + 1]]
 
-                        empty_block = False
                         uvals = np.unique(block)
                         if np.array_equal(np.array(sorted(ignore_vals)), uvals):
-                            empty_block = True
                             meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
 
                             # If the block is composed entirely of data to be ignored, then we don't
@@ -485,10 +482,8 @@ class EdbMnemonic:
                         max_value = nominal_value + sigma * std_value
                         min_value = nominal_value - sigma * std_value
 
-                        empty_block = False
                         good = np.where((block <= max_value) & (block >= min_value))[0]
                         if len(good) == 0:
-                            empty_block = True
                             meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
 
                             # If the block is composed entirely of data to be ignored, then we don't
@@ -677,7 +672,7 @@ class EdbMnemonic:
 
         if plot_data:
             data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
-            data_line = fig.line(x='x', y='y', line_width=1, line_color='blue', source=source)
+            fig.line(x='x', y='y', line_width=1, line_color='blue', source=source)
             hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                              ('Date', '@x{%d %b %Y %H:%M:%S}')
                                              ], mode='mouse', renderers=[data])
@@ -718,7 +713,7 @@ class EdbMnemonic:
                 if plot_min:
                     source_min = ColumnDataSource(data={'min_x': self.median_times, 'min_y': self.min})
                     min_data = fig.scatter(x='min_x', y='min_y', line_width=1, color='black', line_color='black', source=source_min)
-                    minn_hover_tool = HoverTool(tooltips=[('Min', '@min_y'),
+                    HoverTool(tooltips=[('Min', '@min_y'),
                                                           ('Date', '@min_x{%d %b %Y %H:%M:%S}')
                                                          ], mode='mouse', renderers=[min_data])
                     min_hover_tool.formatters = {'@min_x': 'datetime'}
@@ -859,7 +854,6 @@ class EdbMnemonic:
                 min_date = np.min(self.data["dates"])
                 date_range = np.max(self.data["dates"]) - min_date
                 num_days = date_range.days
-                num_seconds = date_range.seconds
                 range_days = num_days + 1
 
                 # Generate a list of times to use as boundaries for calculating means
@@ -1142,7 +1136,7 @@ class EdbMnemonic:
                 else:
                     meanvals = self.mean
 
-                mean_data = fig.line(self.median_times, meanvals, line_width=1, line_color='orange', alpha=0.75)
+                fig.line(self.median_times, meanvals, line_width=1, line_color='orange', alpha=0.75)
 
                 # If the max and min arrays are to be plotted, create columndata sources for them as well
                 if plot_max:

@@ -45,7 +45,6 @@ Use
     the data that matches the list of conditions
 """
 from astropy.table import Table
-from copy import deepcopy  # only needed for development
 import numpy as np
 
 
@@ -399,7 +398,7 @@ class relation_test():
         a_change_indexes = np.where(all_vals[:-1] != all_vals[1:])[0]
         change_indexes = a_change_indexes + 1
         change_indexes = np.insert(change_indexes, 0, 0)
-        change_len = len(change_indexes) + 1
+        len(change_indexes) + 1
 
         # Now create tuples of the start and end times where the values change
         # We need to know if the first element of the data is True or False,

@@ -87,7 +87,6 @@ import datetime
 from glob import glob
 import logging
 import os
-from time import sleep
 
 from astropy.io import ascii, fits
 from astropy.time import Time
@@ -96,13 +95,8 @@ from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
 
 from jwql.database.database_interface import engine, session
-from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
-from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
-from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
-from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
-from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -1080,11 +1074,11 @@ class BadPixels():
             if bad_type in FLATS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
-                flat_png = create_png_from_fits(illuminated_slope_files[0], self.output_dir)
+                create_png_from_fits(illuminated_slope_files[0], self.output_dir)
             elif bad_type in DARKS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
-                dark_png = create_png_from_fits(dark_slope_files[0], self.output_dir)
+                create_png_from_fits(dark_slope_files[0], self.output_dir)
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 

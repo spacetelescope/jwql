@@ -41,7 +41,7 @@ import jsonschema
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from bokeh.io import export_png
-from bokeh.models import LinearColorMapper, LogColorMapper
+from bokeh.models import LogColorMapper
 from bokeh.plotting import figure
 import numpy as np
 from PIL import Image
@@ -161,7 +161,7 @@ def create_png_from_fits(filename, outdir):
         mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
         # Plot image
-        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+        plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
                              color_mapper=mapper, level="image")
 
         # Turn off the axes, in order to make embedding in another figure easier

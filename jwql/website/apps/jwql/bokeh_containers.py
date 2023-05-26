@@ -31,7 +31,7 @@ import pysiaf
 
 from jwql.website.apps.jwql import monitor_pages
 from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
-from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
+from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -227,7 +227,7 @@ def edb_monitor_tabs(instrument):
     script : str
         The JS script to render dark monitor plots
     """
-    html_file_list = file_list[instrument]
+    file_list[instrument]
     print('read in html files')
 
 

@@ -45,7 +45,7 @@ from astropy.time import Time
 from astropy.io import fits
 from random import randint
 from sqlalchemy.sql.expression import and_
-from bokeh.plotting import figure, output_file, show, save
+from bokeh.plotting import figure, output_file, save
 from bokeh.models import ColumnDataSource, Range1d
 from bokeh.models.tools import HoverTool
 from bokeh.layouts import gridplot
@@ -57,9 +57,7 @@ from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
-from jwql.jwql_monitors import monitor_mast
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class MSATA():
@@ -257,7 +255,7 @@ class MSATA():
         # check if this column exists in the data already (the other 2 will exist too), else create it
         try:
             time_arr = self.source.data['time_arr']
-            bool_status = self.source.data['bool_status']
+            self.source.data['bool_status']
             status_colors = self.source.data['status_colors']
         except KeyError:
             # bokeh does not like to plot strings, turn  into numbers
@@ -654,7 +652,7 @@ class MSATA():
         # get the number of stars per array
         visit_id = self.source.data['visit_id']
         reference_star_number = self.source.data['reference_star_number']
-        stars_in_fit = self.source.data['stars_in_fit']
+        self.source.data['stars_in_fit']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         # check if this column exists in the data already (the other 2 will exist too), else create it
         try:
@@ -715,7 +713,7 @@ class MSATA():
         planned_v2 = self.source.data['planned_v2']
         planned_v3 = self.source.data['planned_v3']
         reference_star_number = self.source.data['reference_star_number']
-        visits_stars_mags = self.source.data['reference_star_mag']
+        self.source.data['reference_star_mag']
         box_peak_value = self.source.data['box_peak_value']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         colors_list = self.source.data['colors_list']
@@ -836,7 +834,7 @@ class MSATA():
             where the msata monitor was run.
         """
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                                                            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+                                                            self.query_table.run_monitor is True)).order_by(self.query_table.end_time_mjd).all()
 
         dates = np.zeros(0)
         for instance in query:

@@ -35,7 +35,6 @@ from collections import OrderedDict
 import datetime
 import logging
 import os
-from time import sleep
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
@@ -50,16 +49,13 @@ from pysiaf import Siaf  # noqa: E402 (module import not at top)
 from sqlalchemy.sql.expression import and_  # noqa: E402 (module import not at top)
 
 from jwql.database.database_interface import session, engine  # noqa: E402 (module import not at top)
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
-from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline  # noqa: E402 (module import not at top)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
-from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
-from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
 from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots  # noqa: E402 (module import not at top)
 
 
@@ -347,7 +343,7 @@ class Bias():
         """
 
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E348 (comparison to true)
+                self.query_table.run_monitor is True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E348 (comparison to true)
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)

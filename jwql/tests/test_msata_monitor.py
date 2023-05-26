@@ -19,7 +19,6 @@
 
 import os
 import pandas as pd
-import numpy as np
 import pytest
 from random import randint
 from datetime import datetime

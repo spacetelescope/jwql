@@ -49,7 +49,8 @@ def two_arg_function(name: str, num: float = 0.0) -> None:
 # same variable syntax
 
 func_alias: Callable[[str, float], None] = two_arg_function
-anon_func: Callable[[Any], int] = lambda x: 1
+def anon_func(x: Any) -> int:
+    return 1
 
 
 # Generators are just functions which return iterables:

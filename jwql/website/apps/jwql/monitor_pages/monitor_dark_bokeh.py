@@ -21,21 +21,14 @@ Use
 import os
 
 from astropy.time import Time
-from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, LinearAxis
 from bokeh.models import Range1d, Text, Whisker
 from bokeh.plotting import figure
-from datetime import datetime, timedelta
+from datetime import timedelta
 import numpy as np
-from PIL import Image
 from sqlalchemy import func
-from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import get_unique_values_per_column, session
-from jwql.database.database_interface import NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, read_png
@@ -119,7 +112,6 @@ class DarkHistPlot():
                 # correctly. The data are identical for the full aperture and all amps. So
                 # for the moment, show only the full aperture data (by setting per_amp=False).
                 per_amp = False
-                main_label = 'Full Aperture'
 
                 # Colors to use for the amp-dpendent plots
                 colors = ['red', 'orange', 'green', 'gray']
@@ -234,7 +226,7 @@ class DarkImagePlot():
 
                 # Display the 32-bit RGBA image
                 ydim, xdim = view.shape
-                dim = max(xdim, ydim)
+                max(xdim, ydim)
                 self.plot = figure(x_range=(0, xdim), y_range=(0, ydim), tools='pan,box_zoom,reset,wheel_zoom,save')
                 self.plot.image_rgba(image=[view], x=0, y=0, dw=xdim, dh=ydim)
                 self.plot.xaxis.visible = False
@@ -455,7 +447,7 @@ class DarkMonitorPlots():
         self.ensure_all_full_frame_apertures()
 
         # List of full frame aperture names
-        full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+        FULL_FRAME_APERTURES[instrument.upper()]
 
         for aperture in self.available_apertures:
             self.aperture = aperture
@@ -662,7 +654,6 @@ class DarkTrendPlot():
                 # correctly. The data are identical for the full aperture and all amps. So
                 # for the moment, show only the full aperture data (by setting per_amp=False).
                 per_amp = False
-                main_label = 'Full Aperture'
 
                 # Colors to use for the amp-dpendent plots
                 colors = ['red', 'orange', 'green', 'grey']

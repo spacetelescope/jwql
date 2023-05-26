@@ -18,14 +18,13 @@ Use
  """
 import datetime
 import os
-from astroquery.mast import Mast, Observations
+from astroquery.mast import Mast
 
 
 from jwql.database.database_interface import Monitor, engine
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
-from jwql.utils.utils import filename_parser
 
 
 # Increase the limit on the number of entries that can be returned by

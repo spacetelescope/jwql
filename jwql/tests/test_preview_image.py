@@ -24,13 +24,12 @@ import glob
 import numpy as np
 import os
 import pytest
-import shutil
 
 from astropy.io import fits
 from jwst.datamodels import dqflags
 
 from jwql.utils.preview_image import PreviewImage, crop_to_subarray
-from jwql.utils.utils import get_config, ensure_dir_exists
+from jwql.utils.utils import get_config
 
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')

@@ -144,7 +144,7 @@ def monitor_template_main():
 
     # Perform any other necessary code
     well_named_variable = "Function does something."
-    result_of_second_function = second_function(well_named_variable)
+    second_function(well_named_variable)
 
 
 def second_function(input_value):

@@ -24,7 +24,6 @@ Dependencies
 import logging
 import django
 import os
-import datetime
 
 # These lines are needed in order to use the Django models in a standalone
 # script (as opposed to code run as a result of a webpage request). If these
@@ -32,7 +31,6 @@ import datetime
 # Django models in the line below.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 django.setup()
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import make_aware
 
@@ -40,7 +38,6 @@ from jwql.database import database_interface as di
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import initialize_instrument_monitor
-from jwql.utils.utils import filesystem_path, get_config
 from jwql.website.apps.jwql.models import RootFileInfo, Anomalies
 
 

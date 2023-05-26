@@ -1,36 +1,16 @@
 #!/usr/bin/env python
 
 import argparse
-from astropy.io import fits
-from collections import OrderedDict
-from copy import deepcopy
-from glob import glob
 import os
-import shutil
 import sys
 import time
 
 from jwst import datamodels
-from jwst.dq_init import DQInitStep
-from jwst.dark_current import DarkCurrentStep
-from jwst.firstframe import FirstFrameStep
-from jwst.group_scale import GroupScaleStep
-from jwst.ipc import IPCStep
-from jwst.jump import JumpStep
-from jwst.lastframe import LastFrameStep
-from jwst.linearity import LinearityStep
-from jwst.persistence import PersistenceStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
-from jwst.ramp_fitting import RampFitStep
-from jwst.refpix import RefPixStep
-from jwst.rscd import RscdStep
-from jwst.saturation import SaturationStep
-from jwst.superbias import SuperBiasStep
 
 from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, get_pipeline_steps
-from jwql.utils.logging_functions import configure_logging
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, get_config
 
 
 def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_cores='all'):
@@ -122,7 +102,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
     run the ``ramp_fit`` step and save the resulting slope file as well.
     """
     input_file_basename = os.path.basename(input_file)
-    start_dir = os.path.dirname(input_file)
+    os.path.dirname(input_file)
     status_file_name = short_name + "_status.txt"
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)

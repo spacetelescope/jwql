@@ -70,39 +70,16 @@ There are many other ways to call and use tasks, including ways to group tasks, 
 synchronously, run a group of tasks with a final callback function, etc. These are best
 explained by the celery documentation itself.
 """
-from astropy.io import fits
-from collections import OrderedDict
-from copy import deepcopy
 import gc
 from glob import glob
 import logging
-from logging import FileHandler, StreamHandler
+from logging import FileHandler
 import os
 import redis
-import shutil
-from subprocess import Popen, PIPE, run, STDOUT
-import sys
+from subprocess import Popen, PIPE
 
-from astropy.io import fits
 
-from jwst import datamodels
-from jwst.dq_init import DQInitStep
-from jwst.dark_current import DarkCurrentStep
-from jwst.firstframe import FirstFrameStep
-from jwst.group_scale import GroupScaleStep
-from jwst.ipc import IPCStep
-from jwst.jump import JumpStep
-from jwst.lastframe import LastFrameStep
-from jwst.linearity import LinearityStep
-from jwst.persistence import PersistenceStep
-from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
-from jwst.ramp_fitting import RampFitStep
-from jwst.refpix import RefPixStep
-from jwst.rscd import RscdStep
-from jwst.saturation import SaturationStep
-from jwst.superbias import SuperBiasStep
 
-from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, get_pipeline_steps
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -110,12 +87,11 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 from celery import Celery
 from celery.app.log import TaskFormatter
 from celery.signals import after_setup_logger, after_setup_task_logger, task_postrun
-from celery.utils.log import get_task_logger
 
 try:
     REDIS_HOST = get_config()["redis_host"]
     REDIS_PORT = get_config()["redis_port"]
-except FileNotFoundError as e:
+except FileNotFoundError:
     REDIS_HOST = "127.0.0.1"
     REDIS_PORT = "6379"
 REDIS_URL = "redis://{}:{}".format(REDIS_HOST, REDIS_PORT)
@@ -539,7 +515,6 @@ def prep_file(input_file, in_ext):
     if not os.path.isfile(uncal_file):
         raise FileNotFoundError("Input File {} does not exist.".format(uncal_file))
 
-    output_file_or_files = []
     short_name = input_name.replace("_" + in_ext, "").replace(".fits", "")
     logging.info("\tLocking {}".format(short_name))
     cal_lock = REDIS_CLIENT.lock(short_name)
@@ -648,7 +623,7 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
         ext_or_exts = [ext_or_exts]
     file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
     output_file_or_files = [os.path.join(dest_dir, x) for x in file_or_files]
-    transfer_file_or_files = [os.path.join(receive_path, x) for x in file_or_files]
+    [os.path.join(receive_path, x) for x in file_or_files]
     logging.info("\t\tCopying {} to {}".format(file_or_files, dest_dir))
     copy_files([os.path.join(receive_path, x) for x in file_or_files], dest_dir)
     logging.info("\t\tClearing Transfer Files")
@@ -702,7 +677,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
         uncal_name = os.path.basename(uncal_file)
         result = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
         logging.info("\t\tStarting with ID {}".format(result.id))
-        processed_path = result.get()
+        result.get()
         logging.info("\t\tPipeline Complete")
         output = retrieve_files(short_name, ext_or_exts, retrieve_dir)
     except Exception as e:
@@ -789,7 +764,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
         for short_name in results:
             try:
                 logging.info("\tWaiting for {} ({})".format(short_name, results[short_name].id))
-                processed_path = results[short_name].get()
+                results[short_name].get()
                 logging.info("\t{} retrieved".format(short_name))
                 outputs[input_file_paths[short_name]] = retrieve_files(short_name, ext_or_exts, output_dirs[short_name])
                 logging.info("\tFiles copied for {}".format(short_name))

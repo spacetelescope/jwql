@@ -56,17 +56,10 @@ Notes
 """
 
 import argparse
-import glob
 import logging
 import os
-import sys
-from typing import List, Union, Tuple, Optional, Any, Dict
+from typing import List, Tuple, Any, Dict
 
-from astropy.io import fits
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy
-from sqlalchemy import Float, Integer, String
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail, log_timing
 

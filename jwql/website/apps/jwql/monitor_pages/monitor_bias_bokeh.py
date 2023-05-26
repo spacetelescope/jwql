@@ -20,25 +20,22 @@ Use
         monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL')
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
-from astropy.stats import sigma_clip
 
 from bokeh.embed import components, file_html
 from bokeh.layouts import layout
-from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
 import pandas as pd
-from PIL import Image
 from sqlalchemy import func
 
-from jwql.bokeh_templating import BokehTemplate
-from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
+from jwql.database.database_interface import get_unique_values_per_column, session
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import read_png
@@ -402,7 +399,7 @@ class HistogramPlot():
             self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
                            fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
-            hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
+            hover_tool = HoverTool(tooltips='@bin_centers DN: @counts')
             self.plot.tools.append(hover_tool)
             self.plot.xaxis.axis_label = x_label
             self.plot.yaxis.axis_label = y_label
@@ -631,7 +628,7 @@ class ZerothGroupImage():
 
                 # Display the 32-bit RGBA image
                 ydim, xdim = image.shape
-                dim = max(xdim, ydim)
+                max(xdim, ydim)
                 self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
                                      tools='pan,box_zoom,reset,wheel_zoom,save')
                 self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)
