@@ -38,28 +38,27 @@ import json
 import os
 import logging
 import shutil
+from random import randint
 
 import numpy as np
 import pandas as pd
-from bs4 import BeautifulSoup
-from datetime import datetime
 from astropy.time import Time
 from astropy.io import fits
-from random import randint
-from sqlalchemy.sql.expression import and_
-from bokeh.plotting import figure, output_file, show, save
-from bokeh.models import ColumnDataSource, Range1d
-from bokeh.models.tools import HoverTool
-from bokeh.layouts import gridplot
-from bokeh.models import Span, Label
 from bokeh.embed import components
+from bokeh.plotting import figure, output_file, save
+from bokeh.layouts import gridplot
+from bokeh.models import ColumnDataSource, Range1d, Span, Label
+from bokeh.models.tools import HoverTool
+from bs4 import BeautifulSoup
+from datetime import datetime
+from sqlalchemy.sql.expression import and_
 
 # jwql imports
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils import monitor_utils
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
+from jwql.utils import monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
 
 
@@ -279,19 +278,21 @@ class MSATA():
             self.source.data["number_status"] = number_status
             self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
-        plot = figure(title="MSATA Status [Succes=1, In_Progress=0.5, Fail=0]", x_axis_label='Time',
+        plot = figure(title="MSATA Status [Success=1, In Progress=0.5, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='number_status', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.3)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Subarray', '@subarray')]
+                          ('Subarray', '@subarray'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -326,7 +327,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -334,7 +336,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -362,7 +365,8 @@ class MSATA():
         hflabel = Label(x=time_arr[-1], y=-1 * v2halffacet[0], y_units='data', text='-V2 half-facet value')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -370,7 +374,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -398,7 +403,8 @@ class MSATA():
         hflabel = Label(x=time_arr[-1], y=-1 * v3halffacet[0], y_units='data', text='-V3 half-facet value')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -406,7 +412,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -433,7 +440,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -443,7 +451,8 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V2 sigma', '@lsv2sigma'),
                           ('LS V3 offset', '@lsv3offset'),
-                          ('LS V3 sigma', '@lsv3sigma')]
+                          ('LS V3 sigma', '@lsv3sigma'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -492,7 +501,8 @@ class MSATA():
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -502,7 +512,8 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('V2 half-facet', '@v2halffacet'),
-                          ('V3 half-facet', '@v3halffacet')]
+                          ('V3 half-facet', '@v3halffacet'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -526,14 +537,16 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
                           ('Subarray', '@subarray'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V2 sigma', '@lsv2sigma')]
+                          ('LS V2 sigma', '@lsv2sigma'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -557,7 +570,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -565,7 +579,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V3 offset', '@lsv3offset'),
-                          ('LS V3 sigma', '@lsv3sigma')]
+                          ('LS V3 sigma', '@lsv3sigma'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -595,7 +610,8 @@ class MSATA():
         plot.add_layout(arlabel)
         plot.renderers.extend([hline, arlinepos, arlineneg])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -603,7 +619,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -627,7 +644,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -636,7 +654,8 @@ class MSATA():
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS slew mag offset', '@lsoffsetmag'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -682,7 +701,8 @@ class MSATA():
                       color='black', size=7, fill_alpha=0.3)
         plot.y_range = Range1d(0.0, 40.0)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -692,7 +712,8 @@ class MSATA():
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS slew mag offset', '@lsoffsetmag'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -774,14 +795,16 @@ class MSATA():
         plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@vid'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@vid'),
                           ('Detector', '@det'),
                           ('Star No.', '@star_no'),
                           ('LS Status', '@status'),
                           ('Date-Obs', '@dobs'),
                           ('Box peak', '@peaks'),
                           ('Measured V2', '@stars_v2'),
-                          ('Measured V3', '@stars_v3')]
+                          ('Measured V3', '@stars_v3'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot

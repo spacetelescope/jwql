@@ -240,12 +240,14 @@ class WATA():
                     color='status_colors', size=7, fill_alpha=0.3)
         # output_file("wata_status.html")
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -271,12 +273,14 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -300,12 +304,14 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -329,12 +335,14 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -446,12 +454,14 @@ class WATA():
         plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Box peak', '@max_val_box')]
+                          ('Box peak', '@max_val_box'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -510,7 +520,8 @@ class WATA():
         plot.x_range = Range1d(0.0, 32.0)
         plot.y_range = Range1d(0.0, 32.0)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -519,7 +530,8 @@ class WATA():
                           ('Box Centr Col', '@corr_col'),
                           ('Box Centr Row', '@corr_row'),
                           ('Det Centr Col', '@detector_final_col'),
-                          ('Det Centr Row', '@detector_final_row')]
+                          ('Det Centr Row', '@detector_final_row'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
