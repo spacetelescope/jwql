@@ -544,7 +544,7 @@ class CosmicRay:
             files
         """
         for file_chunk in grouper(file_list, 100):
-        
+
             input_files = []
             in_ext = "uncal"
             out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
@@ -609,7 +609,7 @@ class CosmicRay:
 
                 dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
-                
+
                 if file_name not in output_files:
                     skip = False
                     head = fits.getheader(file_name)
@@ -831,9 +831,9 @@ class CosmicRay:
         data_product = JWST_DATAPRODUCTS
         parameters = {"date_obs_mjd": {"min": self.query_start, "max": self.query_end}, "apername": self.aperture}
 
-        result = monitor_mast.instrument_inventory(self.instrument, data_product,
-                                                   add_filters=parameters,
-                                                   return_data=True)
+        result = mast_utils.instrument_inventory(self.instrument, data_product,
+                                                 add_filters=parameters,
+                                                 return_data=True)
 
         return result
 
