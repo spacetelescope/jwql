@@ -18,6 +18,8 @@
     """
 
 import os
+import warnings
+
 import pandas as pd
 import numpy as np
 import pytest
@@ -108,7 +110,7 @@ def define_testdata():
             number_status.append(1.0)
             status_colors.append('blue')
         # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-        t = datetime.fromisoformat(do_str)
+        t = datetime.fromisoformat(do_str).timestamp()
         time_arr.append(t)
     # add these to the bokeh data structure
     msata_dict['time_arr'] = time_arr
@@ -313,7 +315,9 @@ def test_mk_plt_layout():
 
     ta.output_file_name = os.path.join(ta.output_dir, "msata_layout.html")
     ta.msata_data = define_testdata()
-    script, div = ta.mk_plt_layout()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        script, div = ta.mk_plt_layout()
 
     # set group write permission for the test file
     # to make sure others can overwrite it

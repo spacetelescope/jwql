@@ -93,7 +93,7 @@ class WATA():
 
         # structure to define required keywords to extract and where they live
         self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
-                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
+                               'DATE-BEG': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
                                'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},

@@ -102,7 +102,7 @@ def define_testdata():
             bool_status.append(0)
             status_colors.append('red')
         # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-        t = datetime.fromisoformat(do_str)
+        t = datetime.fromisoformat(do_str).timestamp()
         time_arr.append(t)
     # add these to the bokeh data structure
     wata_dict['time_arr'] = time_arr
