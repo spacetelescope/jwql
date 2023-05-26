@@ -22,9 +22,9 @@ from astroquery.mast import Mast, Observations
 
 
 from jwql.database.database_interface import Monitor, engine
-from jwql.jwql_monitors import monitor_mast
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
+from jwql.utils import mast_utils
 from jwql.utils.utils import filename_parser
 
 
@@ -121,7 +121,7 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
         instrument = 'MIRI'
         dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
 
-    # monitor_mast.instrument_inventory does not allow list inputs to
+    # instrument_inventory does not allow list inputs to
     # the added_filters input (or at least if you do provide a list, then
     # it becomes a nested list when it sends the query to MAST. The
     # nested list is subsequently ignored by MAST.)
@@ -137,8 +137,8 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
         if readpatt is not None:
             parameters["readpatt"] = readpatt
 
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
+        query = mast_utils.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                add_filters=parameters, return_data=True, caom=False)
         if 'data' in query.keys():
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
@@ -181,7 +181,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
         else:
             exp_types = ['NRS_TACQ', 'NRS_MSATA']
 
-    # monitor_mast.instrument_inventory does not allow list inputs to
+    # instrument_inventory does not allow list inputs to
     # the added_filters input (or at least if you do provide a list, then
     # it becomes a nested list when it sends the query to MAST. The
     # nested list is subsequently ignored by MAST.)
@@ -197,8 +197,8 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
         if readpatt is not None:
             parameters["readpatt"] = readpatt
 
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
+        query = mast_utils.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                add_filters=parameters, return_data=True, caom=False)
         if 'data' in query.keys():
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
