@@ -128,9 +128,19 @@ def test_mast_query_ta():
     query_start = 59833.0
     query_end = 59844.6
 
+    # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
-
     assert len(result) == 4
+
+    # query local model
+    alternate = monitor_utils.model_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
+    assert len(alternate) == len(result)
+
+    # check that filenames match up - model returns rootfiles, mast returns filenames
+    result = sorted(result, key=lambda x: x['filename'])
+    alternate = sorted(alternate, key=lambda x: x['root_name'])
+    for i, rootfile in enumerate(alternate):
+        assert rootfile['root_name'] in result[i]['filename']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
