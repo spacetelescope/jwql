@@ -29,9 +29,13 @@ Use
         python clean_locks.py -p "/directory/to/check"
 """
 import argparse
+import getpass
 import glob
 import os
+import smtplib
+import socket
 
+from email.mime.text import MIMEText
 from jwql.utils.protect_module import PID_LOCKFILE_KEY
 from psutil import pid_exists
 
@@ -51,6 +55,19 @@ def clean_lock_file(filename):
 
 
 def get_all_lock_files(search_path="."):
+    '''This function returns a list of all lock files in a given directory.
+
+    Parameters
+    ----------
+    search_path, optional
+        The directory path where the function will search for lock files. By default, it is set to the
+        current directory (".") but it can be changed to any other directory path.
+
+    Returns
+    -------
+        list: file paths for all files with the extension ".lock" in the search path
+
+    '''
     lock_files = glob.glob(search_path + "/*.lock")
     return lock_files
 
@@ -58,14 +75,14 @@ def get_all_lock_files(search_path="."):
 def parse_args():
     """ Parse command line arguments.
 
-    Parameters:
+    Parameters
+    ----------
+        None
 
-    Returns:
-        arguments: argparse.Namespace object
-            An object containing all of the added arguments.
+    Returns
+    ----------
+        argparse.Namespace object: An object containing all of the added arguments.
 
-    Outputs:
-        Nothing
     """
     path_help = ('Directory where you would like to search for *.lock files.'
                  ' Default is current directory')
@@ -84,6 +101,21 @@ def parse_args():
 
 
 def retreive_pid_from_lock_file(filename):
+    '''This function retrieves a process ID from a lock file.
+
+    Parameters
+    ----------
+    filename
+        The filename parameter is a string that represents the name of the lock file from which the process
+        ID (PID) needs to be retrieved.
+
+    Returns
+    -------
+        int: The process ID (PID)
+        or
+        SyntaxError: Indicating that the file should be manually investigated and deleted if appropriate.
+
+    '''
     # Lock file format is established in `jwql/utils/protect_module.py::lock_module`
     with open(filename, 'r') as file:
         for line in file:
@@ -95,32 +127,41 @@ def retreive_pid_from_lock_file(filename):
     raise SyntaxError(f"No PID found in {filename} - Please manually investigate and delete if appropriate")
 
 
+def send_notification(message):
+    '''Sends an email notification to JWQL team alerting them of script actually solving issue (or not)
+
+    Parameters
+    ----------
+    message
+        The message to be included in the email notification that will be sent out.
+
+    '''
+
+    user = getpass.getuser()
+    hostname = socket.gethostname()
+    deliverer = '{}@stsci.edu'.format(user)
+
+    message = MIMEText(message)
+    message['Subject'] = f'JWQL ALERT FOR `CLEAN_LOCKS` SCRIPT ON {hostname}'
+    message['From'] = deliverer
+    message['To'] = 'bsappington@stsci.edu'  # SAPP TODO - CHANGE TO JWQL@stsci.edu after testing
+
+    s = smtplib.SMTP('smtp.stsci.edu')
+    s.send_message(message)
+    s.quit()
+
+
 if __name__ == '__main__':
-    email_data = "The JWQL project CLEAN_LOCKS.PY has recently run and performed actions that you should be aware of:\n"
+    email_data = "The JWQL project's CLEAN_LOCKS.PY has recently run and performed actions that you should be aware of:\n\n"
     args = parse_args()
     lock_files = get_all_lock_files(args.p)
+    notify_team = False
 
     for file in lock_files:
         notify_str = clean_lock_file(file)
         if len(notify_str):
+            notify_team = True
             email_data = email_data + notify_str + "\n"
 
-    # Email all lock files that were deleted
-    # SAPP TODO - create email to send out!
-    print("EMAIL THIS: ")
-    print(email_data)
-
-    # SAPP TODO - implement this
-"""
-        deliverer = '{}@stsci.edu'.format(user)
-
-        message = MIMEText(success_message)
-        message['Subject'] = 'JWQL ACTION FROM `CLEAN_LOCKS` SCRIPT'
-        message['From'] = deliverer
-        message['To'] = 'redcat@stsci.edu'
-        message['CC'] = deliverer
-
-        s = smtplib.SMTP('smtp.stsci.edu')
-        s.send_message(message)
-        s.quit()
-    """
+    if notify_team:
+        send_notification(email_data)
