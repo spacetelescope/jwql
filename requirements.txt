@@ -24,7 +24,7 @@ pytest-cov==4.0.0
 pytest-mock==3.10.0
 pyvo==1.4.1
 pyyaml==6.0
-redis==4.5.1
+redis==4.5.5
 ruff==0.0.269
 scipy==1.9.3
 selenium==4.9.1
