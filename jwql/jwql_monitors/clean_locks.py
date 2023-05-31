@@ -32,9 +32,8 @@ import argparse
 import glob
 import os
 
+from jwql.utils.protect_module import PID_LOCKFILE_KEY
 from psutil import pid_exists
-
-# SAPP TODO - Consider making LOCK_FILE_PID_KEY in protect_module.py to keep this method safe if there is ever a change to "Process Id = ".
 
 
 def clean_lock_file(filename):
@@ -44,7 +43,6 @@ def clean_lock_file(filename):
             # if PID associated with the lock file is no longer running, then lock file should not exist, delete it.
             if os.path.exists(filename):
                 os.remove(filename)
-                print(f"File '{filename}' deleted successfully.")  # SAPP TODO -DEL THIS
                 return f"File '{filename}' was never deleted and associated PID no longer running, deleted successfully."
         return ""
     except SyntaxError as e:
@@ -88,8 +86,8 @@ def retreive_pid_from_lock_file(filename):
     # Lock file format is established in `jwql/utils/protect_module.py::lock_module`
     with open(filename, 'r') as file:
         for line in file:
-            if "Process Id = " in line:
-                number_index = line.index("Process Id = ") + len("Process Id = ")
+            if PID_LOCKFILE_KEY in line:
+                number_index = line.index(PID_LOCKFILE_KEY) + len(PID_LOCKFILE_KEY)
                 number = line[number_index:].strip()
                 return int(number)
 

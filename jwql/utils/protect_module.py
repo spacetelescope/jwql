@@ -58,6 +58,10 @@ import inspect
 from functools import wraps
 
 
+# This key is defined here because it is utilized in other modules
+PID_LOCKFILE_KEY = "Process Id = "
+
+
 def lock_module(func):
     """Decorator to prevent more than 1 instance of a module.
 
@@ -75,6 +79,7 @@ def lock_module(func):
     wrapped : func
         The wrapped function.
     """
+
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -96,7 +101,7 @@ def lock_module(func):
         else:
             try:
                 with open(module_lock, "w") as lock_file:
-                    lock_file.write(f"Process Id = {os.getpid()}\n")
+                    lock_file.write(f"{PID_LOCKFILE_KEY}{os.getpid()}\n")
                 return func(*args, **kwargs)
             finally:
                 try:
