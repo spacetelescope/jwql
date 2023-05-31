@@ -19,7 +19,7 @@ Use
     ::
         from .bokeh_containers import dark_monitor_tabs
 """
-
+# ruff: noqa
 import os
 
 from bokeh.embed import components

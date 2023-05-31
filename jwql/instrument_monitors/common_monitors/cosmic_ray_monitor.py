@@ -28,7 +28,7 @@ Use
     ::
         python cosmic_ray_monitor.py
 """
-
+# ruff: noqa
 # Native Imports
 from collections import defaultdict
 import datetime
