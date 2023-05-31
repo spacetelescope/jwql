@@ -2,12 +2,11 @@ sphinx_automodapi==0.14.1
 bokeh==2.4.3
 celery==5.2.7
 cython==0.29.33
-django==4.1.7
+django==4.2.1
 docutils==0.18.1
-flake8==6.0.0
-jwst==1.10.0
+jwst==1.10.2
 pygments==2.14.0
-pytest==7.2.1
+pytest==7.3.1
 redis==4.5.1
 sphinx>=2
 sphinx_rtd_theme==1.2.0

@@ -47,7 +47,7 @@ dependencies:
   - pyyaml=6.0
   - redis
   - ruff=0.0.269
-  - scipy=1.10.1
+  - scipy=1.9.3
   - setuptools=67.7.2
   - sphinx=6.2.1
   - sphinx_rtd_theme=1.2.0
