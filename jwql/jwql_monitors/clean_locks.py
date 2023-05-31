@@ -43,7 +43,8 @@ def clean_lock_file(filename):
             # if PID associated with the lock file is no longer running, then lock file should not exist, delete it.
             if os.path.exists(filename):
                 os.remove(filename)
-                return f"File '{filename}' was never deleted and associated PID no longer running, deleted successfully."
+                return (f"DELETED FILE `{filename}` - This file's associated PID was no longer running.\n"
+                        f"This lock file would have blocked future instances of `{filename.replace('.lock', '.py')}`")
         return ""
     except SyntaxError as e:
         return str(e)
@@ -95,22 +96,21 @@ def retreive_pid_from_lock_file(filename):
 
 
 if __name__ == '__main__':
-    email_data = []
+    email_data = "The JWQL project CLEAN_LOCKS.PY has recently run and performed actions that you should be aware of:\n"
     args = parse_args()
     lock_files = get_all_lock_files(args.p)
 
     for file in lock_files:
         notify_str = clean_lock_file(file)
         if len(notify_str):
-            email_data.append(notify_str)
+            email_data = email_data + notify_str + "\n"
 
     # Email all lock files that were deleted
     # SAPP TODO - create email to send out!
     print("EMAIL THIS: ")
-    for line in email_data:
-        print(line)
+    print(email_data)
 
-        # SAPP TODO - implement this
+    # SAPP TODO - implement this
 """
         deliverer = '{}@stsci.edu'.format(user)
 
