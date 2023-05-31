@@ -80,7 +80,6 @@ def lock_module(func):
         The wrapped function.
     """
 
-
     @wraps(func)
     def wrapped(*args, **kwargs):
 
