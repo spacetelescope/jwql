@@ -86,13 +86,13 @@ source activate base/root
 Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3_9.yml`, for python 3.9, and `environment_python_3.10.yml`, for python 3.10, are supported by `jwql`):
 
 ```
-conda env create -f environment_python_3_8.yml
+conda env create -f environment_python_3_9.yml
 ```
 
 or
 
 ```
-conda env create -f environment_python_3_9.yml
+conda env create -f environment_python_3_10.yml
 ```
 
 ### Configuration File
