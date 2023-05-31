@@ -71,4 +71,6 @@ namespaces = false
 
 [tool.pytest]
 junit_family = "xunit2"
-addopts = "--ignore=jwql/website/apps/jwql/static"
+
+[tool.pytest.ini_options]
+norecursedirs = ["jwql/website/apps/jwql/static"]
