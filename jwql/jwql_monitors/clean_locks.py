@@ -50,10 +50,7 @@ def clean_lock_file(filename):
         return e
 
 
-def get_all_lock_files(search_path):
-    if search_path is None:
-        search_path = "."
-
+def get_all_lock_files(search_path="."):
     lock_files = glob.glob(search_path + "/*.lock")
     return lock_files
 
