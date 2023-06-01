@@ -17,6 +17,8 @@
         pytest -s test_msata_monitor.py
     """
 
+# ruff: noqa
+
 import os
 import pandas as pd
 import numpy as np

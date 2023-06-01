@@ -31,16 +31,16 @@ import numpy as np
 import pandas as pd
 import pytest
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
-
 # Skip testing this module if on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
 from jwql.tests.resources import (
     MockPostRequest)
 
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')

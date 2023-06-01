@@ -386,6 +386,7 @@ from bokeh.palettes import Turbo256
 from jwql.database import database_interface
 from jwql.database.database_interface import session, engine
 from jwql.edb import engineering_database as ed
+from jwql.edb.engineering_database import add_limit_boxes
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
 from jwql.shared_tasks.shared_tasks import only_one
@@ -847,7 +848,7 @@ class EdbMnemonicMonitor():
         # *should* never end up in here, as missing dependency data should zero out the main
         # mnemonic in there.
         if len(dependency) == 0:
-            mnem_data.blocks = [0, len(mnem)]
+            mnem_data.blocks = [0, len(mnem_data)]
             mnem_data.every_change_values = [np.nan]
 
         # Make sure the data values for the dependency are strings.
@@ -1360,7 +1361,7 @@ class EdbMnemonicMonitor():
                         if product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
                             # If both mnemonics are change-only, then we need to translate them both
                             # to all-points.
-                            delta_t = timedelta(seconds=1.)
+                            delta_t = datetime.timedelta(seconds=1.)
                             mnem_numpts = (mnemonic_info.data["dates"][-1] - mnemonic_info.data["dates"][0]) / delta_t + 1
                             mnem_new_dates = [mnemonic_info.data["dates"][0] + i * delta_t for i in range(len(mnem_numpts))]
 

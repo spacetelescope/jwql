@@ -51,7 +51,7 @@ from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.constants import FILESYSTEM_MONITOR_SUBDIRS, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table

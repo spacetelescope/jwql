@@ -6,6 +6,9 @@ mypy + typing demo for JWQL dev meeting 2018-1-3
 Part 2: More advanced techniques
 """
 
+# ruff: noqa
+
+
 from typing import (Iterable, Mapping, MutableMapping, Any, List,
                     Tuple, IO, ClassVar, NewType, Set, Union)
 from astropy.io import fits

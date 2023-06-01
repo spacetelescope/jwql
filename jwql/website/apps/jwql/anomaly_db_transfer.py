@@ -25,12 +25,6 @@ import logging
 import django
 import os
 
-# These lines are needed in order to use the Django models in a standalone
-# script (as opposed to code run as a result of a webpage request). If these
-# lines are not run, the script will crash when attempting to import the
-# Django models in the line below.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
-django.setup()
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import make_aware
 
@@ -40,8 +34,12 @@ from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import initialize_instrument_monitor
 from jwql.website.apps.jwql.models import RootFileInfo, Anomalies
 
-
-
+# These lines are needed in order to use the Django models in a standalone
+# script (as opposed to code run as a result of a webpage request). If these
+# lines are not run, the script will crash when attempting to import the
+# Django models in the line below.
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+django.setup()
 
 
 @log_info

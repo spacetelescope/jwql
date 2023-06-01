@@ -681,7 +681,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
         logging.info("\t\tPipeline Complete")
         output = retrieve_files(short_name, ext_or_exts, retrieve_dir)
     except Exception as e:
-        logging.error('\tPipeline processing failed for {}'.format(input_name))
+        logging.error('\tPipeline processing failed for {}'.format(input_file))
         logging.error('\tProcessing raised {}'.format(e))
     finally:
         cal_lock.release()

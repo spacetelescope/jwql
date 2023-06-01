@@ -94,8 +94,8 @@ def build_table_latest_entry(tablename):
 
     # Build list of column data based on column name.
     data = []
-    for column in column_names:
-        column_data = list(map(itemgetter(column), result_dict))
+    for col in column_names:
+        column_data = list(map(itemgetter(col), result_dict))
         data.append(column_data)
 
     data = dict(zip(column_names, data))

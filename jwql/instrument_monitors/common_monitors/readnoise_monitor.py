@@ -43,11 +43,10 @@ from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import crds
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
-import numpy as np  # noqa: E348 (comparison to true)
-from pysiaf import Siaf  # noqa: E348 (comparison to true)
-from sqlalchemy.sql.expression import and_  # noqa: E348 (comparison to true)
+import matplotlib.pyplot as plt  # noqa: E348
+import numpy as np  # noqa: E348
+from pysiaf import Siaf  # noqa: E348
+from sqlalchemy.sql.expression import and_  # noqa: E348
 
 from jwql.database.database_interface import session, engine  # noqa: E348 (comparison to true)
 from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline  # noqa: E348 (comparison to true)
@@ -57,6 +56,8 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MI
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
 from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E348 (comparison to true)
+
+matplotlib.use('Agg')
 
 
 class Readnoise():

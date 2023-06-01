@@ -44,6 +44,7 @@ Notes
     and the datapoint that follows the requested end time.
 """
 from collections import OrderedDict
+import copy
 from datetime import datetime, timedelta
 from numbers import Number
 import os
@@ -60,6 +61,7 @@ from bokeh.layouts import column
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
 from bokeh.plotting import figure, output_file, show, save
 import numpy as np
+import tempfile
 
 from jwst.lib.engdb_tools import ENGDB_Service
 from jwql.utils.constants import MIRI_POS_RATIO_VALUES
@@ -713,7 +715,7 @@ class EdbMnemonic:
                 if plot_min:
                     source_min = ColumnDataSource(data={'min_x': self.median_times, 'min_y': self.min})
                     min_data = fig.scatter(x='min_x', y='min_y', line_width=1, color='black', line_color='black', source=source_min)
-                    HoverTool(tooltips=[('Min', '@min_y'),
+                    min_hover_tool = HoverTool(tooltips=[('Min', '@min_y'),
                                                           ('Date', '@min_x{%d %b %Y %H:%M:%S}')
                                                          ], mode='mouse', renderers=[min_data])
                     min_hover_tool.formatters = {'@min_x': 'datetime'}

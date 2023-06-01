@@ -28,6 +28,7 @@ Use
 
 """
 
+# ruff: noqa
 
 # general imports
 import os

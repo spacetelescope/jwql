@@ -6,6 +6,8 @@ mypy + typing demo for JWQL dev meeting 2018-1-3
 Part 1: Intro
 """
 
+# ruff: noqa
+
 import sys
 from typing import (List, Set, Dict, Tuple, Union, Optional, Callable,
                     Iterable, Any)

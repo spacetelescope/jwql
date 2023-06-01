@@ -8,6 +8,8 @@ Part 3: mypy for type checking
 Many thanks to Tommy Tutone...
 """
 
+# ruff: noqa
+
 from typing import NewType
 
 # mypy can check for incorrectly-typed variables

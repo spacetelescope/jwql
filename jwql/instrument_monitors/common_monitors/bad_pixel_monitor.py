@@ -1053,8 +1053,8 @@ class BadPixels():
         if 'NOT FOUND' in baseline_file:
             logging.warning(('\tNo baseline bad pixel file for {} {}. Any bad '
                              'pixels found as part of this search will be considered new'.format(self.instrument, self.aperture)))
-            baseline_file = new_badpix_file
-            yd, xd = badpix_mask.shape
+            baseline_file = output_file
+            yd, xd = badpix_map.shape
             baseline_badpix_mask = np.zeros((yd, xd), type=np.int)
         else:
             logging.info('\tBaseline bad pixel file is {}'.format(baseline_file))

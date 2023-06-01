@@ -48,7 +48,6 @@ from sqlalchemy.sql.expression import and_
 
 # Local imports
 from jwql.database.database_interface import session, engine
-from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging
@@ -131,7 +130,7 @@ class CosmicRay:
             # without the jw). If there aren't any, then it's not a stage 3 product and
             # we can continue.
             substr = filename[2:13]
-            letters = re.findall("\D", substr)  # noqa: W605
+            letters = re.findall("\D", substr)  # ruff: noqa: W605
             if len(letters) == 0:
                 rev = filename[::-1]
                 under = rev.find('_')
