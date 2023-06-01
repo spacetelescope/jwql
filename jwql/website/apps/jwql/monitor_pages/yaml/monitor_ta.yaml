@@ -1,0 +1,39 @@
+# YAML file defining bokeh figures for the TA Monitor
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# TA Histogram Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &ta_history_source
+  ref: "ta_history_source"
+  data:
+    bin_center: !self.bin_center
+    amplitude: !self.amplitude
+    bottom: !self.bottom
+    bin_width: !self.bin_width
+
+- !Range1d: &hist_x_range
+  ref: "hist_x_range"
+  #start: 0
+  #end: 1
+  #bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &hist_y_range
+  ref: "hist_y_range"
+  #start: 0
+  #end: 1
+  #bounds: !!python/tuple [0, 1]
+
+- !Figure: &ta_histogram
+  ref: "ta_histogram"
+  x_axis_label: "Offset Magnitude (arcseconds)"
+  y_axis_label: "Number"
+  x_range: *hist_x_range
+  y_range: *hist_y_range
+  elements:
+    - {'kind': 'vbar', 'x': 'bin_center', 'y': 'bin_width', 'top': 'amplitude', 'bottom': 'bottom',  'source': *ta_history_source}
+#    - {'kind': 'text', 'x': 0, 'y': 20000, 'id': 1001}
+
+- !Document:
+ # - !row:
+ #   - *cosmic_ray_history_figure
+ - !row:
+   - *ta_histogram

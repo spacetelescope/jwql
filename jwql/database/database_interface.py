@@ -29,6 +29,8 @@ Authors
     - Misty Cracraft
     - Sara Ogaz
     - Maria Pena-Guerrero
+    - Mike Engesser
+
 
 Use
 ---
@@ -509,6 +511,8 @@ NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_his
 NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
 NIRSpecTAQueryHistory = monitor_orm_factory('nirspec_ta_query_history')
 NIRSpecTAStats = monitor_orm_factory('nirspec_ta_stats')
+MIRITAHistory = monitor_orm_factory('miri_ta_query_history')
+MIRITAStats = monitor_orm_factory('miri_ta_stats')
 
 INSTRUMENT_TABLES = {
     'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,

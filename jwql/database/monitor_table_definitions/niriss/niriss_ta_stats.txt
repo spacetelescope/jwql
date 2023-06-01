@@ -1,0 +1,10 @@
+CAL_FILE_NAME, string
+OBS_END_TIME, datetime
+EXP_TYPE, string
+APERTURE, string
+DETECTOR, string
+TARGX, float
+TARGY, float
+OFFSET, float
+FULL_IM_PATH, string
+ZOOM_IM_PATH, string
