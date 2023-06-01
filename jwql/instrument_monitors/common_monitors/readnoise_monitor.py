@@ -53,14 +53,14 @@ from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIRead
 from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats  # ruff: noqa
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # ruff: noqa
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # ruff: noqa
-from jwql.database.database_interface import session, engine  # ruff: noqa
-from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline  # ruff: noqa
-from jwql.instrument_monitors import pipeline_tools  # ruff: noqa
-from jwql.utils import instrument_properties, monitor_utils  # ruff: noqa
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # ruff: noqa
-from jwql.utils.logging_functions import log_info, log_fail  # ruff: noqa
-from jwql.utils.permissions import set_permissions  # ruff: noqa
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # ruff: noqa
+from jwql.database.database_interface import session, engine
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline
+from jwql.instrument_monitors import pipeline_tools
+from jwql.utils import instrument_properties, monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.permissions import set_permissions
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 matplotlib.use('Agg')
 

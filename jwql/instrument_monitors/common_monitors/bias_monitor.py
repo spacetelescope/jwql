@@ -47,6 +47,7 @@ import numpy as np
 from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory # ruff: noqa
 from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # ruff: noqa
 from jwql.database.database_interface import session, engine
 from jwql.instrument_monitors import pipeline_tools
