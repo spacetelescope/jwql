@@ -23,7 +23,7 @@ import os
 import pytest
 
 from jwst.datamodels import dqflags
-
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBadPixelStats # ruff: noqa
 from jwql.database.database_interface import session
 from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 from jwql.tests.resources import has_test_db
