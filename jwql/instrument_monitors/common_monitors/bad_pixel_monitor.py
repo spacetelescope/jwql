@@ -94,11 +94,11 @@ from jwst.datamodels import dqflags
 from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
 
-from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats  # ruff: noqa
-from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats  # ruff: noqa
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats  # ruff: noqa
-from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # ruff: noqa
-from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # ruff: noqa
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats  # ruff: noqa
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats  # ruff: noqa
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats  # ruff: noqa
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats  # ruff: noqa
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats  # ruff: noqa
 from jwql.database.database_interface import engine, session
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline
