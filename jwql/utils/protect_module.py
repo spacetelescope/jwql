@@ -52,14 +52,90 @@ References
 
     None
 """
-
-import os
 import inspect
+import getpass
+import os
+import smtplib
+import socket
+
+from email.mime.text import MIMEText
 from functools import wraps
+from psutil import pid_exists
+
+_PID_LOCKFILE_KEY = "Process Id = "
 
 
-# This key is defined here because it is utilized in other modules
-PID_LOCKFILE_KEY = "Process Id = "
+def _clean_lock_file(filename, module):
+    locked = True
+    try:
+        pid = _retreive_pid_from_lock_file(filename)
+        notify_str = ""
+        if not pid_exists(pid):
+            # if PID associated with the lock file is no longer running, then lock file should not exist, delete it.
+            if os.path.exists(filename):
+                try:
+                    os.remove(filename)
+                    notify_str = (f"DELETED FILE `{filename}`\nThis file's associated PID was no longer running.\n\n"
+                                  f"This implies the previous instance of {module} may not have completed successfully.\n\n"
+                                  f"New instance starting now.")
+                    locked = False
+                except Exception as e:
+                    notify_str = f"Exception {e} \n {type(e).__name__}\n{e.args}\n\n"
+                    notify_str = notify_str + filename + " delete failed, Please Manually Delete"
+        return notify_str, locked
+    except SyntaxError as e:
+        return str(e), locked
+
+
+def _retreive_pid_from_lock_file(filename):
+    '''This function retrieves a process ID from a lock file.
+
+    Parameters
+    ----------
+    filename
+        The filename parameter is a string that represents the name of the lock file from which the process
+        ID (PID) needs to be retrieved.
+
+    Returns
+    -------
+        int: The process ID (PID)
+        or
+        SyntaxError: Indicating that the file should be manually investigated and deleted if appropriate.
+
+    '''
+    # Lock file format is established in `jwql/utils/protect_module.py::lock_module`
+    with open(filename, 'r') as file:
+        for line in file:
+            if _PID_LOCKFILE_KEY in line:
+                number_index = line.index(_PID_LOCKFILE_KEY) + len(_PID_LOCKFILE_KEY)
+                number = line[number_index:].strip()
+                return int(number)
+
+    raise SyntaxError(f"No PID found in {filename} - Please manually investigate and delete if appropriate")
+
+
+def _send_notification(message):
+    '''Sends an email notification to JWQL team alerting them of script actually solving issue (or not)
+
+    Parameters
+    ----------
+    message
+        The message to be included in the email notification that will be sent out.
+
+    '''
+
+    user = getpass.getuser()
+    hostname = socket.gethostname()
+    deliverer = '{}@stsci.edu'.format(user)
+
+    message = MIMEText(message)
+    message['Subject'] = f'JWQL ALERT FOR LOCK_MODULE ON {hostname}'
+    message['From'] = deliverer
+    message['To'] = 'bsappington@stsci.edu'  # SAPP TODO - CHANGE TO JWQL@stsci.edu after testing
+
+    s = smtplib.SMTP('smtp.stsci.edu')
+    s.send_message(message)
+    s.quit()
 
 
 def lock_module(func):
@@ -84,6 +160,8 @@ def lock_module(func):
     def wrapped(*args, **kwargs):
 
         # Get the module name of the calling method
+        existing_lock = False
+        notify_str = ""
         frame = inspect.stack()[1]
         mod = inspect.getmodule(frame[0])
         module = mod.__file__
@@ -92,21 +170,22 @@ def lock_module(func):
         module_lock = module.replace('.py', '.lock')
 
         if os.path.exists(module_lock):
-            indent = " " * 4
-            print(indent + "ERROR!! Instance of protected module already running for:")
-            print(indent + module)
-            print(indent + f"Check PID in {module_lock} and verify process is still running")
-            print(indent + "If logged PID is not currently running, delete lock file and run again")
-        else:
+            notify_str, existing_lock = _clean_lock_file(module_lock, module)
+        if not existing_lock:
+            if notify_str:
+                _send_notification(notify_str)
+                notify_str = ""
+
             try:
                 with open(module_lock, "w") as lock_file:
-                    lock_file.write(f"{PID_LOCKFILE_KEY}{os.getpid()}\n")
+                    lock_file.write(f"{_PID_LOCKFILE_KEY}{os.getpid()}\n")
                 return func(*args, **kwargs)
             finally:
                 try:
                     os.remove(module_lock)
                 except Exception as e:
-                    print(e, type(e).__name__, e.args)
-                    print(module_lock + ' delete failed, Please Manually Delete')
-                    pass
+                    notify_str = f"Exception {e} \n {type(e).__name__}\n{e.args}\n"
+                    notify_str = notify_str + module_lock + " delete failed, please investigate cause"
+        if len(notify_str):
+            _send_notification(notify_str)
     return wrapped

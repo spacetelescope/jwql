@@ -28,6 +28,8 @@ Use
         or
         python clean_locks.py -p "/directory/to/check"
 """
+# SAPP TODO - NO LONGER NEED THIS MODULE!
+
 import argparse
 import getpass
 import glob
@@ -36,12 +38,14 @@ import smtplib
 import socket
 
 from email.mime.text import MIMEText
+from jwql.utils import permissions
 from jwql.utils.protect_module import PID_LOCKFILE_KEY
 from psutil import pid_exists
 
 
 def clean_lock_file(filename):
     try:
+        permissions.set_permissions(filename)
         pid = retreive_pid_from_lock_file(filename)
         if not pid_exists(pid):
             # if PID associated with the lock file is no longer running, then lock file should not exist, delete it.
