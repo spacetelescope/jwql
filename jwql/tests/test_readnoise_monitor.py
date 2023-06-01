@@ -24,7 +24,7 @@ from astropy.io import fits
 import numpy as np
 import pytest
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, session # ruff: noqa
 from jwql.instrument_monitors.common_monitors import readnoise_monitor
 from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
