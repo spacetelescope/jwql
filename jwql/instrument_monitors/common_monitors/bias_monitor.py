@@ -41,23 +41,24 @@ from astropy.stats import sigma_clip, sigma_clipped_stats
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import matplotlib
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
+from pysiaf import Siaf
+from sqlalchemy.sql.expression import and_
+
+from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # ruff: noqa
+from jwql.database.database_interface import session, engine
+from jwql.instrument_monitors import pipeline_tools
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline
+from jwql.utils import instrument_properties, monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.permissions import set_permissions
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E402 (module import not at top)
-from mpl_toolkits.axes_grid1 import make_axes_locatable  # noqa: E402 (module import not at top)
-import numpy as np  # noqa: E402 (module import not at top)
-from pysiaf import Siaf  # noqa: E402 (module import not at top)
-from sqlalchemy.sql.expression import and_  # noqa: E402 (module import not at top)
-
-from jwql.database.database_interface import session, engine  # noqa: E402 (module import not at top)
-from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline  # noqa: E402 (module import not at top)
-from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
-from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
-from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
-from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots  # noqa: E402 (module import not at top)
-
 
 class Bias():
     """Class for executing the bias monitor.
