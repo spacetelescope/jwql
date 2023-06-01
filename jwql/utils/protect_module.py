@@ -9,6 +9,8 @@ If there is already a lock file created for that module, the decorator will exit
 
 The file will also contain the process id for reference, in case a lock file exists and
 the user does not think it should (i.e. module exited unexpectedly without proper closure)
+If this scenario arises and the locked module is run again, it will verify that the PID in the current lock file is not actively running.
+If the PID is not actively running the module will delete the file, alert the dev team, and carry on with a new lock file/PID.
 
 This decorator is designed for use with JWQL Monitors and Generate functions.
 It should decorate a function called "protected_code" which contains the main functionality where locking is required.
@@ -131,7 +133,7 @@ def _send_notification(message):
     message = MIMEText(message)
     message['Subject'] = f'JWQL ALERT FOR LOCK_MODULE ON {hostname}'
     message['From'] = deliverer
-    message['To'] = 'bsappington@stsci.edu'  # SAPP TODO - CHANGE TO JWQL@stsci.edu after testing
+    message['To'] = 'jwql@stsci.edu'
 
     s = smtplib.SMTP('smtp.stsci.edu')
     s.send_message(message)
