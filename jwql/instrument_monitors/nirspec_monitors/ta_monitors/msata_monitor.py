@@ -38,6 +38,7 @@ import json
 import os
 import logging
 import shutil
+from datetime import datetime, timezone, timedelta
 from random import randint
 
 import numpy as np
@@ -45,12 +46,13 @@ import pandas as pd
 from astropy.time import Time
 from astropy.io import fits
 from bokeh.embed import components
-from bokeh.plotting import figure, output_file, save
-from bokeh.layouts import gridplot
-from bokeh.models import ColumnDataSource, Range1d, Span, Label
-from bokeh.models.tools import HoverTool
+from bokeh.layouts import gridplot, layout
+from bokeh.models import (
+    ColumnDataSource, Range1d, CustomJS, CustomJSFilter, CDSView,
+    Span, Label, DateRangeSlider)
+from bokeh.models.tools import HoverTool, BoxSelectTool
+from bokeh.plotting import figure, save, output_file
 from bs4 import BeautifulSoup
-from datetime import datetime
 from sqlalchemy.sql.expression import and_
 
 # jwql imports
@@ -135,6 +137,13 @@ class MSATA():
                                'planned_v2': {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2', 'type': float},
                                'planned_v3': {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3', 'type': float},
                                'FITTARGS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stars_in_fit', 'type': int}}
+
+        # initialize attributes to be set later
+        self.source = None
+        self.share_tools = []
+        self.date_range = None
+        self.date_filter = None
+        self.date_view = None
 
     def get_tainfo_from_fits(self, fits_file):
         """ Get the TA information from the fits file
@@ -240,6 +249,19 @@ class MSATA():
         msata_df = pd.DataFrame(msata_dict)
         return msata_df, no_ta_ext_msgs
 
+    def add_time_column(self):
+        """Add time column to data source, to be used by all plots."""
+        date_obs = self.source.data['date_obs']
+        if 'time_arr' not in self.source.data:
+            time_arr = []
+            for do_str in date_obs:
+                # convert time string into an array of time (this is in UT)
+                t = datetime.fromisoformat(do_str)
+                time_arr.append(t)
+
+            # add to the bokeh data structure
+            self.source.data["time_arr"] = time_arr
+
     def plt_status(self):
         """ Plot the MSATA status versus time.
         Parameters
@@ -249,18 +271,12 @@ class MSATA():
         -------
             plot: bokeh plot object
         """
-        # ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
-        date_obs = self.source.data['date_obs']
         ta_status = self.source.data['ta_status']
         # check if this column exists in the data already (the other 2 will exist too), else create it
-        try:
-            time_arr = self.source.data['time_arr']
-            bool_status = self.source.data['bool_status']
-            status_colors = self.source.data['status_colors']
-        except KeyError:
-            # bokeh does not like to plot strings, turn  into numbers
-            number_status, time_arr, status_colors = [], [], []
-            for tas, do_str in zip(ta_status, date_obs):
+        if 'bool_status' not in self.source.data:
+            # bokeh does not like to plot strings, turn into numbers
+            number_status, status_colors = [], []
+            for tas in ta_status:
                 if tas.lower() == 'unsuccessful':
                     number_status.append(0.0)
                     status_colors.append('red')
@@ -270,19 +286,19 @@ class MSATA():
                 else:
                     number_status.append(1.0)
                     status_colors.append('blue')
-                # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-                t = datetime.fromisoformat(do_str)
-                time_arr.append(t)
+
             # add these to the bokeh data structure
-            self.source.data["time_arr"] = time_arr
             self.source.data["number_status"] = number_status
             self.source.data["status_colors"] = status_colors
+
         # create a new bokeh plot
         plot = figure(title="MSATA Status [Success=1, In Progress=0.5, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='number_status', source=self.source,
-                    color='status_colors', size=7, fill_alpha=0.3)
+                    color='status_colors', size=7, fill_alpha=0.3, view=self.date_view)
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -293,8 +309,11 @@ class MSATA():
                           ('Date-Obs', '@date_obs'),
                           ('Subarray', '@subarray'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_residual_offsets(self):
@@ -311,7 +330,8 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Offset',
                       y_axis_label='Least Squares Residual V3 Offset')
         plot.circle(x='lsv2offset', y='lsv3offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
+
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
         xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
         plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg",
@@ -322,10 +342,13 @@ class MSATA():
         plot.add_layout(hflabel)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
+
         # mark origin lines
         vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -338,8 +361,11 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_v2offset_time(self):
@@ -355,8 +381,9 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V2 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(-0.5, 0.5)
+
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         time_arr, v2halffacet = self.source.data['time_arr'], self.source.data['v2halffacet']
@@ -364,6 +391,8 @@ class MSATA():
         plot.renderers.extend([hline, hfline])
         hflabel = Label(x=time_arr[-1], y=-1 * v2halffacet[0], y_units='data', text='-V2 half-facet value')
         plot.add_layout(hflabel)
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -376,8 +405,11 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_v3offset_time(self):
@@ -393,8 +425,9 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V3 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(-0.5, 0.5)
+
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         time_arr, v3halffacet = self.source.data['time_arr'], self.source.data['v3halffacet']
@@ -402,6 +435,8 @@ class MSATA():
         plot.renderers.extend([hline, hfline])
         hflabel = Label(x=time_arr[-1], y=-1 * v3halffacet[0], y_units='data', text='-V3 half-facet value')
         plot.add_layout(hflabel)
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -414,8 +449,11 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_lsv2v3offsetsigma(self):
@@ -432,13 +470,16 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Sigma Offset',
                       y_axis_label='Least Squares Residual V3 Sigma Offset')
         plot.circle(x='lsv2sigma', y='lsv3sigma', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.x_range = Range1d(-0.1, 0.1)
         plot.y_range = Range1d(-0.1, 0.1)
+
         # mark origin lines
         vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -453,8 +494,11 @@ class MSATA():
                           ('LS V3 offset', '@lsv3offset'),
                           ('LS V3 sigma', '@lsv3sigma'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_res_offsets_corrected(self):
@@ -466,29 +510,30 @@ class MSATA():
         -------
             plot: bokeh plot object
         """
-        # create a new bokeh plot
         lsv2offset, lsv3offset = self.source.data['lsv2offset'], self.source.data['lsv3offset']
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
-        # check if this column exists in the data already (the other 2 will exist too), else create it
-        try:
-            v2_half_fac_corr = self.source.data['v2_half_fac_corr']
-            v3_half_fac_corr = self.source.data['v3_half_fac_corr']
-        except KeyError:
+
+        # check if this column exists in the data already, else create it
+        if 'v2_half_fac_corr' not in self.source.data:
             v2_half_fac_corr, v3_half_fac_corr = [], []
             for idx, v2hf in enumerate(v2halffacet):
                 v3hf = v3halffacet[idx]
                 v2_half_fac_corr.append(lsv2offset[idx] + v2hf)
                 v3_half_fac_corr.append(lsv3offset[idx] + v3hf)
+
             # add these to the bokeh data structure
             self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
             self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
+
+        # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
                       x_axis_label='Least Squares Residual V2 Offset + half-facet',
                       y_axis_label='Least Squares Residual V3 Offset + half-facet')
         plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
+
         # mark origin lines
         vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -500,6 +545,8 @@ class MSATA():
                  angle=90, line_color='purple', line_width=3)
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -514,15 +561,16 @@ class MSATA():
                           ('V2 half-facet', '@v2halffacet'),
                           ('V3 half-facet', '@v3halffacet'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_v2offsigma_time(self):
-        """ Plot the residual Least Squares V2 sigma Offset versus time
-        Parameters
-        ----------
-            None
+        """Plot the residual Least Squares V2 sigma Offset versus time
+
         Returns
         -------
             plot: bokeh plot object
@@ -531,11 +579,14 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V2 Sigma Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2sigma', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(-0.1, 0.1)
+
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -547,28 +598,34 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V2 sigma', '@lsv2sigma'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_v3offsigma_time(self):
-        """ Plot the residual Least Squares V3 Offset versus time
-        Parameters
-        ----------
-            None
+        """Plot the residual Least Squares V3 Offset versus time
+
         Returns
         -------
             p: bokeh plot object
         """
         # create a new bokeh plot
-        plot = figure(title="MSATA Least Squares V3 Sigma Offset vs Time", x_axis_label='Time',
-                      y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
+        plot = figure(title="MSATA Least Squares V3 Sigma Offset vs Time",
+                      x_axis_label='Time',
+                      y_axis_label='Least Squares Residual V3 Sigma Offset',
+                      x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3sigma', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(-0.1, 0.1)
+
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -581,8 +638,11 @@ class MSATA():
                           ('LS V3 offset', '@lsv3offset'),
                           ('LS V3 sigma', '@lsv3sigma'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_roll_offset(self):
@@ -598,10 +658,12 @@ class MSATA():
         plot = figure(title="MSATA Least Squares Roll Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsrolloffset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(-600.0, 600.0)
+
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+
         # Maximum accepted roll line and label
         time_arr = self.source.data['time_arr']
         arlinepos = Span(location=120, dimension='width', line_color='green', line_width=3)
@@ -609,6 +671,8 @@ class MSATA():
         arlabel = Label(x=time_arr[-1], y=125, y_units='data', text='Max accepted roll')
         plot.add_layout(arlabel)
         plot.renderers.extend([hline, arlinepos, arlineneg])
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -621,8 +685,11 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_lsoffsetmag(self):
@@ -638,11 +705,14 @@ class MSATA():
         plot = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
                       y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsoffsetmag', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3)
+                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(-0.5, 0.5)
+
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -656,8 +726,11 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
+        # add shared selection tools
+        for tool in self.share_tools:
+            plot.add_tools(tool)
         return plot
 
     def plt_tot_number_of_stars(self):
@@ -672,34 +745,34 @@ class MSATA():
         # get the number of stars per array
         visit_id = self.source.data['visit_id']
         reference_star_number = self.source.data['reference_star_number']
-        stars_in_fit = self.source.data['stars_in_fit']
-        date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
-        # check if this column exists in the data already (the other 2 will exist too), else create it
-        try:
-            tot_number_of_stars = self.source.data['tot_number_of_stars']
-            colors_list = self.source.data['colors_list']
-        except KeyError:
+
+        # check if this column exists in the data already, else create it
+        if 'tot_number_of_stars' not in self.source.data:
             # create the list of color per visit and tot_number_of_stars
             colors_list, tot_number_of_stars = [], []
             color_dict = {}
-            for i, _ in enumerate(visit_id):
+            for i, vid in enumerate(visit_id):
                 tot_stars = len(reference_star_number[i])
                 tot_number_of_stars.append(tot_stars)
                 ci = '#%06X' % randint(0, 0xFFFFFF)
-                if visit_id[i] not in color_dict:
-                    color_dict[visit_id[i]] = ci
-                colors_list.append(color_dict[visit_id[i]])
+                if vid not in color_dict:
+                    color_dict[vid] = ci
+                colors_list.append(color_dict[vid])
+
             # add these to the bokeh data structure
             self.source.data["tot_number_of_stars"] = tot_number_of_stars
             self.source.data["colors_list"] = colors_list
+
         # create a new bokeh plot
         plot = figure(title="Total Number of Measurements vs Time", x_axis_label='Time',
                       y_axis_label='Total number of measurements', x_axis_type='datetime')
         plot.circle(x='time_arr', y='tot_number_of_stars', source=self.source,
-                    color='colors_list', size=7, fill_alpha=0.3)
+                    color='colors_list', size=7, fill_alpha=0.3, view=self.date_view)
         plot.triangle(x='time_arr', y='stars_in_fit', source=self.source,
-                      color='black', size=7, fill_alpha=0.3)
+                      color='black', size=7, fill_alpha=0.3, view=self.date_view)
         plot.y_range = Range1d(0.0, 40.0)
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@visit_id'),
@@ -714,8 +787,8 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
         return plot
 
     def plt_mags_time(self):
@@ -735,22 +808,24 @@ class MSATA():
         planned_v2 = self.source.data['planned_v2']
         planned_v3 = self.source.data['planned_v3']
         reference_star_number = self.source.data['reference_star_number']
-        visits_stars_mags = self.source.data['reference_star_mag']
         box_peak_value = self.source.data['box_peak_value']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         colors_list = self.source.data['colors_list']
         detector_list = self.source.data['detector']
+        filename = self.source.data['filename']
+
         # create the structure matching the number of visits and reference stars
         new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
-        peaks, stars_v2, stars_v3, det = [], [], [], []
+        peaks, stars_v2, stars_v3, det, fnames = [], [], [], [], []
         for i, _ in enumerate(visit_id):
-            v, d, t, c, s, x, y, dt = [], [], [], [], [], [], [], []
+            v, d, t, c, s, x, y, dt, fn = [], [], [], [], [], [], [], [], []
             for j in range(len(reference_star_number[i])):
                 v.append(visit_id[i])
                 d.append(date_obs[i])
                 t.append(time_arr[i])
                 c.append(colors_list[i])
                 dt.append(detector_list[i])
+                fn.append(filename[i])
                 if 'not_removed' in lsf_removed_status[i][j]:
                     s.append('SUCCESS')
                     x.append(planned_v2[i][j])
@@ -769,17 +844,29 @@ class MSATA():
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
             det.extend(dt)
+            fnames.extend(fn)
+
         # now create the mini ColumnDataSource for this particular plot
         mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
-                       'dobs': dobs, 'tarr': tarr, 'det': det,
+                       'dobs': dobs, 'time_arr': tarr, 'det': det, 'filename': fnames,
                        'peaks': peaks, 'colors_list': new_colors_list,
                        'stars_v2': stars_v2, 'stars_v3': stars_v3}
         mini_source = ColumnDataSource(data=mini_source)
-        # create a the bokeh plot
-        plot = figure(title="MSATA Counts vs Time", x_axis_label='Time', y_axis_label='box_peak [Counts]',
+
+        # hook up the date range slider to this source as well
+        callback = CustomJS(args=dict(s=mini_source), code="""
+            s.change.emit();
+        """)
+        self.date_range.js_on_change('value', callback)
+        mini_view = CDSView(source=mini_source, filters=[self.date_filter])
+
+        # create the bokeh plot
+        plot = figure(title="MSATA Counts vs Time", x_axis_label='Time',
+                      y_axis_label='box_peak [Counts]',
                       x_axis_type='datetime')
-        plot.circle(x='tarr', y='peaks', source=mini_source,
-                    color='colors_list', size=7, fill_alpha=0.3)
+        plot.circle(x='time_arr', y='peaks', source=mini_source,
+                    color='colors_list', size=7, fill_alpha=0.3, view=mini_view)
+
         # add count saturation warning lines
         loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
@@ -793,7 +880,8 @@ class MSATA():
         plot.add_layout(label2)
         plot.add_layout(label3)
         plot.y_range = Range1d(-1000.0, 62000.0)
-        # add hover
+
+        # add tooltips
         hover = HoverTool()
         hover.tooltips = [('File name', '@filename'),
                           ('Visit ID', '@vid'),
@@ -805,18 +893,69 @@ class MSATA():
                           ('Measured V2', '@stars_v2'),
                           ('Measured V3', '@stars_v3'),
                           ('--------', '----------------')]
-
         plot.add_tools(hover)
+
         return plot
+
+    def setup_date_range(self):
+        """Set up a date range filter, defaulting to the last week of data."""
+        end_date = datetime.now(tz=timezone.utc)
+        one_week_ago = end_date.date() - timedelta(days=7)
+        first_data_point = np.min(self.source.data['time_arr']).date()
+        last_data_point = np.max(self.source.data['time_arr']).date()
+        if last_data_point < one_week_ago:
+            # keep at least one point in the plot if there was
+            # no TA data this week
+            start_date = last_data_point
+        else:
+            start_date = one_week_ago
+
+        # allowed range is from the first ever data point to today
+        self.date_range = DateRangeSlider(
+            title="Date range displayed", start=first_data_point,
+            end=end_date, value=(start_date, end_date), step=1)
+
+        callback = CustomJS(args=dict(s=self.source), code="""
+            s.change.emit();
+        """)
+        self.date_range.js_on_change('value', callback)
+
+        self.date_filter = CustomJSFilter(args=dict(slider=self.date_range), code="""
+                var indices = [];
+                var start = slider.value[0];
+                var end = slider.value[1];
+
+                for (var i=0; i < source.get_length(); i++) {
+                    if (source.data['time_arr'][i] >= start 
+                            && source.data['time_arr'][i] <= end) {
+                        indices.push(true);
+                    } else {
+                        indices.push(false);
+                    }
+                }
+                return indices;
+                """)
+        self.date_view = CDSView(source=self.source, filters=[self.date_filter])
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
         self.source = ColumnDataSource(data=self.msata_data)
+
         # make sure all arrays are lists in order to later be able to read the data
         # from the html file
         for item in self.source.data:
             if not isinstance(self.source.data[item], (str, float, int, list)):
                 self.source.data[item] = self.source.data[item].tolist()
+
+        # add a time array to the data source
+        self.add_time_column()
+
+        # set up selection tools to share
+        self.share_tools = [BoxSelectTool()]
+
+        # set up a date range filter widget
+        self.setup_date_range()
+
         # set the output html file name and create the plot grid
         output_file(self.output_file_name)
         p1 = self.plt_status()
@@ -831,13 +970,15 @@ class MSATA():
         p10 = self.plt_lsoffsetmag()
         p12 = self.plt_tot_number_of_stars()
         p11 = self.plt_mags_time()
+
         # make grid
         grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12],
                         ncols=2, merge_tools=False)
-        # show(grid)
-        save(grid)
-        # return the needed components for embeding the results in the MSATA html template
-        script, div = components(grid)
+        box_layout = layout(children=[self.date_range, grid])
+        save(box_layout)
+
+        # return the needed components for embedding the results in the MSATA html template
+        script, div = components(box_layout)
         return script, div
 
     def identify_tables(self):
@@ -961,7 +1102,7 @@ class MSATA():
             Date of the latest observation in the previously plotted data
         """
         # remember that the time array created is in milliseconds, removing to get time object
-        time_in_millis = max(prev_data_dict['tarr'])
+        time_in_millis = max(prev_data_dict['time_arr'])
         latest_prev_obs = Time(time_in_millis / 1000., format='unix')
         latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
