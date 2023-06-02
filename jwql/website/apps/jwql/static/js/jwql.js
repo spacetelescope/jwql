@@ -1001,7 +1001,8 @@ function update_msata_page(base_url) {
 
             // Build div content
             var content = data["div"];
-            content += data["script"];
+            content += data["script1"];
+            content += data["script2"];
 
             /* Add the content to the div
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
@@ -1033,7 +1034,8 @@ function update_wata_page(base_url) {
 
             // Build div content
             var content = data["div"];
-            content += data["script"];
+            content += data["script1"];
+            content += data["script2"];
 
             /* Add the content to the div
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.

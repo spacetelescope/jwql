@@ -18,6 +18,8 @@
     """
 
 import os
+import warnings
+
 import pandas as pd
 import numpy as np
 import pytest
@@ -108,7 +110,7 @@ def define_testdata():
             number_status.append(1.0)
             status_colors.append('blue')
         # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-        t = datetime.fromisoformat(do_str)
+        t = datetime.fromisoformat(do_str).timestamp()
         time_arr.append(t)
     # add these to the bokeh data structure
     msata_dict['time_arr'] = time_arr
@@ -126,9 +128,19 @@ def test_mast_query_ta():
     query_start = 59833.0
     query_end = 59844.6
 
+    # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
-
     assert len(result) == 4
+
+    # query local model
+    alternate = monitor_utils.model_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
+    assert len(alternate) == len(result)
+
+    # check that filenames match up - model returns rootfiles, mast returns filenames
+    result = sorted(result, key=lambda x: x['filename'])
+    alternate = sorted(alternate, key=lambda x: x['root_name'])
+    for i, rootfile in enumerate(alternate):
+        assert rootfile['root_name'] in result[i]['filename']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -313,7 +325,9 @@ def test_mk_plt_layout():
 
     ta.output_file_name = os.path.join(ta.output_dir, "msata_layout.html")
     ta.msata_data = define_testdata()
-    script, div = ta.mk_plt_layout()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        script, div = ta.mk_plt_layout()
 
     # set group write permission for the test file
     # to make sure others can overwrite it

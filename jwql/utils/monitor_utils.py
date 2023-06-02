@@ -19,6 +19,7 @@ Use
 import datetime
 import os
 from astroquery.mast import Mast, Observations
+from django import setup
 
 
 from jwql.database.database_interface import Monitor, engine
@@ -31,6 +32,21 @@ from jwql.utils.utils import filename_parser
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
+
+# Determine if the code is being run as part of a github action or Readthedocs build
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # These lines are needed in order to use the Django models in a standalone
+    # script (as opposed to code run as a result of a webpage request). If these
+    # lines are not run, the script will crash when attempting to import the
+    # Django models in the line below.
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    setup()
+    from jwql.website.apps.jwql.models import RootFileInfo
 
 
 def exclude_asic_tuning(mast_results):
@@ -204,6 +220,50 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
                 query_results.extend(query['data'])
 
     return query_results
+
+
+def model_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
+    """Use local Django model to search for TA data.
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name (e.g. ``nirspec``)
+    aperture : str
+        Detector aperture to search for (e.g. ``NRS_S1600A1_SLIT``)
+    start_date : float
+        Starting date for the search in MJD
+    end_date : float
+        Ending date for the search in MJD
+    readpatt : str
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+    if aperture == 'NRS_S1600A1_SLIT':
+        exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
+    else:
+        exp_types = ['NRS_TACQ', 'NRS_MSATA']
+
+    filter_kwargs = {
+        'instrument__iexact': instrument,
+        'aperture__iexact': aperture,
+        'exp_type__in': exp_types,
+        'expstart__gte': start_date,
+        'expstart__lte': end_date
+    }
+
+    if readpatt is not None:
+        filter_kwargs['readpatt'] = readpatt
+
+    # get file info by instrument from local model
+    root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
+
+    return root_file_info.values()
 
 
 def update_monitor_table(module, start_time, log_file):
