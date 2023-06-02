@@ -64,7 +64,9 @@ from email.mime.text import MIMEText
 from functools import wraps
 from psutil import pid_exists
 
+_ALERT_ADDRESS = "jwql@stsci.edu"
 _PID_LOCKFILE_KEY = "Process Id = "
+ALERT_EMAIL = True  # Global to be turned off in tests
 
 
 def _clean_lock_file(filename, module):
@@ -125,19 +127,19 @@ def _send_notification(message):
         The message to be included in the email notification that will be sent out.
 
     '''
+    if ALERT_EMAIL:
+        user = getpass.getuser()
+        hostname = socket.gethostname()
+        deliverer = '{}@stsci.edu'.format(user)
 
-    user = getpass.getuser()
-    hostname = socket.gethostname()
-    deliverer = '{}@stsci.edu'.format(user)
+        message = MIMEText(message)
+        message['Subject'] = f'JWQL ALERT FOR LOCK_MODULE ON {hostname}'
+        message['From'] = deliverer
+        message['To'] = _ALERT_ADDRESS
 
-    message = MIMEText(message)
-    message['Subject'] = f'JWQL ALERT FOR LOCK_MODULE ON {hostname}'
-    message['From'] = deliverer
-    message['To'] = 'jwql@stsci.edu'
-
-    s = smtplib.SMTP('smtp.stsci.edu')
-    s.send_message(message)
-    s.quit()
+        s = smtplib.SMTP('smtp.stsci.edu')
+        s.send_message(message)
+        s.quit()
 
 
 def lock_module(func):
