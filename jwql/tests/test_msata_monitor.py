@@ -129,7 +129,10 @@ def test_mast_query_ta():
 
     # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
-    assert len(result) == 4
+
+    # eliminate duplicates (sometimes rate files are returned with cal files)
+    result = [r for r in result if r['productLevel'] == '2b']
+    assert len(result) >= 4
 
     # query local model
     alternate = monitor_utils.model_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)

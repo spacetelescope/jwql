@@ -61,11 +61,11 @@ from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTASta
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class MSATA():
-    """ Class for executint the NIRSpec MSATA monitor.
+    """ Class for executing the NIRSpec MSATA monitor.
 
     This class will search for new MSATA current files in the file systems
     for NIRSpec and will run the monitor on these files. The monitor will
@@ -848,7 +848,7 @@ class MSATA():
 
         # now create the mini ColumnDataSource for this particular plot
         mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
-                       'dobs': dobs, 'time_arr': tarr, 'det': det, 'filename': fnames,
+                       'dobs': dobs, 'time_arr': tarr, 'det': det, 'fname': fnames,
                        'peaks': peaks, 'colors_list': new_colors_list,
                        'stars_v2': stars_v2, 'stars_v3': stars_v3}
         mini_source = ColumnDataSource(data=mini_source)
@@ -883,7 +883,7 @@ class MSATA():
 
         # add tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
+        hover.tooltips = [('File name', '@fname'),
                           ('Visit ID', '@vid'),
                           ('Detector', '@det'),
                           ('Star No.', '@star_no'),

@@ -120,11 +120,14 @@ def test_query_ta():
 
     # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
+
+    # eliminate duplicates (sometimes rate files are returned with cal files)
+    result = [r for r in result if r['productLevel'] == '2b']
     assert len(result) == 16
 
     # query local model
     alternate = monitor_utils.model_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
-    assert len(alternate) == len(result)
+    assert len(alternate) == 16
 
     # check that filenames match up - model returns rootfiles, mast returns filenames
     result = sorted(result, key=lambda x: x['filename'])
