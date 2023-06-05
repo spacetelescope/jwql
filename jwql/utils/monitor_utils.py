@@ -208,7 +208,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
 
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name }
+                      "apername": aperture, "exp_type": template_name}
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt

@@ -24,6 +24,7 @@ This monitor also displays V2, V3, and roll offsets over time.
 Author
 ______
     - Maria Pena-Guerrero
+    - Melanie Clarke
 
 Use
 ---
@@ -1025,7 +1026,7 @@ class MSATA():
             File created by the monitor script
         Returns
         -------
-        prev_data_dict: dictionary
+        prev_data_dict: dict
             Dictionary containing all data used in the plots
         """
 
@@ -1192,13 +1193,13 @@ class MSATA():
         output_success_ta_txtfile = os.path.join(self.output_dir, "msata_success.txt")
         # check if previous file exsists and read the data from it
         if os.path.isfile(output_success_ta_txtfile):
-            # now rename the the previous file, for backup
+            # now rename the previous file, for backup
             os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_msata_success.txt"))
         # get the new data
         ta_success, ta_inprogress, ta_failure = [], [], []
         filenames, ta_status = self.msata_data.loc[:,'filename'], self.msata_data.loc[:,'ta_status']
         for fname, ta_stat in zip(filenames, ta_status):
-            # select the appriopriate list to append to
+            # select the appropriate list to append to
             if ta_stat == 'SUCCESSFUL':
                 ta_success.append(fname)
             elif ta_stat == 'IN_PROGRESS':

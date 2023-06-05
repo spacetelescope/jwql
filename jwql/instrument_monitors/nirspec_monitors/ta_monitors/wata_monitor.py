@@ -10,7 +10,7 @@
 
 
 """
-This module contains the code for NIRSpec the Wide Aperture Target
+This module contains the code for the NIRSpec Wide Aperture Target
 Acquisition (WATA) monitor, which monitors the TA offsets.
 
 This monitor displays the comparison of desired versus measured TA.
@@ -20,6 +20,7 @@ This monitor also displays V2, V3 offsets over time.
 Author
 ______
     - Maria Pena-Guerrero
+    - Melanie Clarke
 
 Use
 ---
@@ -61,7 +62,7 @@ from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, fil
 
 
 class WATA():
-    """ Class for executint the NIRSpec WATA monitor.
+    """ Class for executing the NIRSpec WATA monitor.
 
     This class will search for new WATA current files in the file systems
     for NIRSpec and will run the monitor on these files. The monitor will
@@ -828,15 +829,15 @@ class WATA():
             Nothing
         """
         output_success_ta_txtfile = os.path.join(self.output_dir, "wata_success.txt")
-        # check if previous file exsists and read the data from it
+        # check if previous file exists and read the data from it
         if os.path.isfile(output_success_ta_txtfile):
-            # now rename the the previous file, for backup
+            # now rename the previous file, for backup
             os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_wata_success.txt"))
         # get the new data
         ta_success, ta_failure = [], []
         filenames, ta_status = self.wata_data.loc[:,'filename'], self.wata_data.loc[:,'ta_status']
         for fname, ta_stat in zip(filenames, ta_status):
-            # select the appriopriate list to append to
+            # select the appropriate list to append to
             if ta_stat == 'SUCCESSFUL':
                 ta_success.append(fname)
             else:

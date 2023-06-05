@@ -127,7 +127,7 @@ def test_query_ta():
 
     # query local model
     alternate = monitor_utils.model_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
-    assert len(alternate) == 16
+    assert len(alternate) == len(result)
 
     # check that filenames match up - model returns rootfiles, mast returns filenames
     result = sorted(result, key=lambda x: x['filename'])
