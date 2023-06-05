@@ -478,9 +478,23 @@ def archive_thumbnails_query_ajax(request):
 
     parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
     filtered_rootnames = get_rootnames_from_query(parameters)
-    data = thumbnails_query_ajax(filtered_rootnames)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+
+    paginator = Paginator(filtered_rootnames, 500)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    data = thumbnails_query_ajax(page_obj.object_list)
+    data['thumbnail_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
+
+    # pass pagination info
+    if page_obj.has_previous():
+        data['previous_page'] = page_obj.previous_page_number()
+    data['current_page'] = page_obj.number
+    if page_obj.has_next():
+        data['next_page'] = page_obj.next_page_number()
+    data['total_pages'] = paginator.num_pages
+    data['total_files'] = paginator.count
 
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
@@ -834,11 +848,12 @@ def query_submit(request):
     template = 'query_submit.html'
     sort_type = request.session.get('image_sort', 'Ascending')
     group_type = request.session.get('image_group', 'Exposure')
+    page_number = request.GET.get("page", 1)
     context = {'inst': '',
                'base_url': get_base_url(),
                'sort': sort_type,
-               'group': group_type
-               }
+               'group': group_type,
+               'page': page_number}
 
     return render(request, template, context)
 

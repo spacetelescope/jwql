@@ -1563,14 +1563,14 @@ def get_rootnames_from_query(parameters):
         #      >>>  END CODE PRE DB MIGRATION HERE  <<<
 
         # sort as desired
-        if sort_type == 'DESCENDING':
-            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
-        elif sort_type == 'ASCENDING':
+        if sort_type.upper() == 'ASCENDING':
             current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('root_name')
-        elif sort_type == 'RECENT':
+        elif sort_type.upper() == 'RECENT':
             current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-expstart', 'root_name')
-        elif sort_type == 'OLDEST':
+        elif sort_type.upper() == 'OLDEST':
             current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('expstart', 'root_name')
+        else:
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
 
         rootnames = [name[0] for name in current_ins_rootfileinfos.values_list("root_name")]
         filtered_rootnames.extend(rootnames)

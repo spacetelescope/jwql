@@ -1225,6 +1225,29 @@ function update_obs_options(data, inst, prop, observation) {
 }
 
 /**
+ * Update the pagination div with navigation links
+ * @param {Object} data - The data returned by the query_submit AJAX method
+ */
+function update_pagination(data) {
+    var content = '<span class="step-links">'
+    if ('previous_page' in data) {
+        content += '<a href="?page=1">&laquo; first</a> ' +
+            '<a href="?page=' + data.previous_page + '">previous</a>';
+    }
+    content += '<span class="current">Page ' + data.current_page + ' of ' + data.total_pages + '</span>'
+
+    if ('next_page' in data) {
+        content += '<a href="?page=' + data.next_page + '">next</a> ' +
+            '<a href="?page=' + data.total_pages + '">last &raquo;</a>';
+    }
+    content += '</span>';
+    $("#pagination")[0].innerHTML = content;
+
+    // Add the total file count to the img_show_count banner
+    $("#query_total")[0].innerHTML = '<p>Query returned ' + data.total_files + ' files total.</p>';
+}
+
+/**
  * Updates the img_show_count component
  * @param {Integer} count - The count to display
  * @param {String} type - The type of the count (e.g. "activities")
@@ -1233,6 +1256,7 @@ function update_show_count(count, type) {
     var content = 'Showing <a id="img_shown">' + count + '</a> / <a id="img_total">' + count + '</a> <a id="img_type">' + type + '</a>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
+    content += '<span id="query_total"></span>';
     $("#img_show_count")[0].innerHTML = content;
 }
 
@@ -1426,10 +1450,11 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {String} sort - Sort method string saved in session data image_sort
+ * @param {Int} page - Page number to load
  */
-function update_thumbnails_query_page(base_url, sort, group) {
+function update_thumbnails_query_page(base_url, sort, group, page) {
     $.ajax({
-        url: base_url + '/ajax/query_submit/',
+        url: base_url + '/ajax/query_submit/?page=' + page,
         success: function(data){
             // Perform various updates to divs
             var num_thumbnails = Object.keys(data.file_data).length;
@@ -1438,6 +1463,7 @@ function update_thumbnails_query_page(base_url, sort, group) {
             update_filter_options(data, base_url, 'thumbnail');
             update_group_options(data, base_url);
             update_sort_options(data, base_url);
+            update_pagination(data);
 
             // Do initial sort and group to match sort button display
             group_by_thumbnails(group, base_url);

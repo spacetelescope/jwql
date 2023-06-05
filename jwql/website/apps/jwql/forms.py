@@ -148,7 +148,7 @@ class JwqlQueryForm(BaseForm):
     cat_type = forms.MultipleChoiceField(
         required=False, choices=cat_choices, widget=forms.CheckboxSelectMultiple)
 
-    sort_choices = [(query_format(choice), query_format(choice)) for choice in SORT_OPTIONS]
+    sort_choices = [(choice, choice) for choice in SORT_OPTIONS]
     sort_type = forms.ChoiceField(
         required=True,
         choices=sort_choices, initial=sort_choices[2],
