@@ -30,11 +30,13 @@ Use
 
 
 # general imports
+import json
 import os
 import logging
+import shutil
+
 import numpy as np
 import pandas as pd
-import json
 from bs4 import BeautifulSoup
 from datetime import datetime
 from astropy.time import Time
@@ -91,7 +93,7 @@ class WATA():
 
         # structure to define required keywords to extract and where they live
         self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
-                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
+                               'DATE-BEG': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
                                'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
@@ -148,8 +150,6 @@ class WATA():
                     wata = True
                     break
             if not wata:
-                # print('\n WARNING! This file is not WATA: ', fits_file)
-                # print('  Skiping wata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
             try:
@@ -240,12 +240,14 @@ class WATA():
                     color='status_colors', size=7, fill_alpha=0.3)
         # output_file("wata_status.html")
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -271,12 +273,14 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -300,12 +304,14 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -329,12 +335,14 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag')]
+                          ('Magnitude', '@star_mag'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -446,12 +454,14 @@ class WATA():
         plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Box peak', '@max_val_box')]
+                          ('Box peak', '@max_val_box'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -510,7 +520,8 @@ class WATA():
         plot.x_range = Range1d(0.0, 32.0)
         plot.y_range = Range1d(0.0, 32.0)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -519,7 +530,8 @@ class WATA():
                           ('Box Centr Col', '@corr_col'),
                           ('Box Centr Row', '@corr_row'),
                           ('Det Centr Col', '@detector_final_col'),
-                          ('Det Centr Row', '@detector_final_row')]
+                          ('Det Centr Row', '@detector_final_row'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -679,6 +691,8 @@ class WATA():
         for list_element in file_info:
             if 'filename' in list_element:
                 files.append(list_element['filename'])
+            elif 'root_name' in list_element:
+                files.append(list_element['root_name'])
         return files
 
     def get_uncal_names(self, file_list):
@@ -694,31 +708,13 @@ class WATA():
         """
         good_files = []
         for filename in file_list:
-            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
-            if '_uncal' not in filename:
+            if filename.endswith('.fits'):
+                # MAST names look like: jw01133003001_02101_00001_nrs2_cal.fits
                 suffix2replace = filename.split('_')[-1]
                 filename = filename.replace(suffix2replace, 'uncal.fits')
-            if filename not in good_files:
-                good_files.append(filename)
-        return good_files
-
-    def get_uncal_names(self, file_list):
-        """Replace the last suffix for _uncal and return list.
-        Parameters
-        ----------
-        file_list : list
-            List of fits files
-        Returns
-        -------
-        good_files : list
-            Filtered list of uncal file names
-        """
-        good_files = []
-        for filename in file_list:
-            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
-            if '_uncal' not in filename:
-                suffix2replace = filename.split('_')[-1]
-                filename = filename.replace(suffix2replace, 'uncal.fits')
+            else:
+                # rootnames look like: jw01133003001_02101_00001_nrs2
+                filename += '_uncal.fits'
             if filename not in good_files:
                 good_files.append(filename)
         return good_files
@@ -770,6 +766,32 @@ class WATA():
                 line = "{:<50} {:<50}".format(suc, ta_failure[idx])
                 txt.write(line + "\n")
 
+    def read_existing_html(self):
+        """
+        This function gets the data from the Bokeh html file created with
+        the NIRSpec TA monitor script.
+        """
+        self.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor')
+        ensure_dir_exists(self.output_dir)
+
+        self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
+        if not os.path.isfile(self.output_file_name):
+            return 'No WATA data available', '', ''
+
+        # open the html file and get the contents
+        with open(self.output_file_name, "r") as html_file:
+            contents = html_file.read()
+
+        soup = BeautifulSoup(contents, 'html.parser').body
+
+        # find the script elements
+        script1 = str(soup.find('script', type='text/javascript'))
+        script2 = str(soup.find('script', type='application/json'))
+
+        # find the div element
+        div = str(soup.find('div', class_='bk-root'))
+        return div, script1, script2
+
     @log_fail
     @log_info
     def run(self):
@@ -803,8 +825,8 @@ class WATA():
         if os.path.isfile(self.output_file_name):
             self.prev_data, self.query_start = self.get_data_from_html(self.output_file_name)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
-            # move this plot to a previous version
-            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_wata_layout.html"))
+            # copy this plot to a previous version
+            shutil.copyfile(self.output_file_name, os.path.join(self.output_dir, "prev_wata_layout.html"))
         # fail save - start from the beginning if there is no html file
         else:
             self.query_start = self.query_very_beginning
@@ -814,11 +836,18 @@ class WATA():
         self.query_end = Time.now().mjd
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
-        # Query MAST using the aperture and the time of the
+        # Query for data using the aperture and the time of the
         # most recent previous search as the starting time
-        new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
+
+        # via MAST:
+        # new_entries = monitor_utils.mast_query_ta(
+        #     self.instrument, self.aperture, self.query_start, self.query_end)
+
+        # via django model:
+        new_entries = monitor_utils.model_query_ta(
+            self.instrument, self.aperture, self.query_start, self.query_end)
         wata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} WATA files for {}, {}.'.format(wata_entries, self.instrument, self.aperture))
+        logging.info('\tQuery has returned {} WATA files for {}, {}.'.format(wata_entries, self.instrument, self.aperture))
 
         # Filter new entries to only keep uncal files
         new_entries = self.pull_filenames(new_entries)
@@ -829,6 +858,10 @@ class WATA():
         # Get full paths to the files
         new_filenames = []
         for filename_of_interest in new_entries:
+            if (self.prev_data is not None
+                    and filename_of_interest in self.prev_data['filename'].values):
+                logging.warning('\t\tFile {} already in previous data. Skipping.'.format(filename_of_interest))
+                continue
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
                 logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
@@ -870,7 +903,7 @@ class WATA():
             logging.info('\t{} WATA files were used to make plots.'.format(wata_files_used4plots))
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
-            logging.info('\t{} WATA status file was updated')
+            logging.info('\tWATA status file was updated')
         else:
             logging.info('\tWATA monitor skipped.')
 

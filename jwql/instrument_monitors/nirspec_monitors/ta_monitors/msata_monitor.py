@@ -34,30 +34,31 @@ Use
 
 
 # general imports
+import json
 import os
 import logging
+import shutil
+from random import randint
+
 import numpy as np
 import pandas as pd
-import json
-from bs4 import BeautifulSoup
-from datetime import datetime
 from astropy.time import Time
 from astropy.io import fits
-from random import randint
-from sqlalchemy.sql.expression import and_
-from bokeh.plotting import figure, output_file, show, save
-from bokeh.models import ColumnDataSource, Range1d
-from bokeh.models.tools import HoverTool
-from bokeh.layouts import gridplot
-from bokeh.models import Span, Label
 from bokeh.embed import components
+from bokeh.plotting import figure, output_file, save
+from bokeh.layouts import gridplot
+from bokeh.models import ColumnDataSource, Range1d, Span, Label
+from bokeh.models.tools import HoverTool
+from bs4 import BeautifulSoup
+from datetime import datetime
+from sqlalchemy.sql.expression import and_
 
 # jwql imports
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils import monitor_utils
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
+from jwql.utils import monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
 
 
@@ -96,7 +97,7 @@ class MSATA():
 
         # dictionary to define required keywords to extract MSATA data and where it lives
         self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
-                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
+                               'DATE-BEG': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter', 'type': str},
                                'DETECTOR': {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
@@ -154,8 +155,6 @@ class MSATA():
                     msata = True
                     break
             if not msata:
-                # print('\n WARNING! This file is not MSATA: ', fits_file)
-                # print('  Skiping msata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
             try:
@@ -279,19 +278,21 @@ class MSATA():
             self.source.data["number_status"] = number_status
             self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
-        plot = figure(title="MSATA Status [Succes=1, In_Progress=0.5, Fail=0]", x_axis_label='Time',
+        plot = figure(title="MSATA Status [Success=1, In Progress=0.5, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='number_status', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.3)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
-                          ('Subarray', '@subarray')]
+                          ('Subarray', '@subarray'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -326,7 +327,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -334,7 +336,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -362,7 +365,8 @@ class MSATA():
         hflabel = Label(x=time_arr[-1], y=-1 * v2halffacet[0], y_units='data', text='-V2 half-facet value')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -370,7 +374,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -398,7 +403,8 @@ class MSATA():
         hflabel = Label(x=time_arr[-1], y=-1 * v3halffacet[0], y_units='data', text='-V3 half-facet value')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -406,7 +412,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -433,7 +440,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -443,7 +451,8 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V2 sigma', '@lsv2sigma'),
                           ('LS V3 offset', '@lsv3offset'),
-                          ('LS V3 sigma', '@lsv3sigma')]
+                          ('LS V3 sigma', '@lsv3sigma'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -492,7 +501,8 @@ class MSATA():
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -502,7 +512,8 @@ class MSATA():
                           ('LS V2 offset', '@lsv2offset'),
                           ('LS V3 offset', '@lsv3offset'),
                           ('V2 half-facet', '@v2halffacet'),
-                          ('V3 half-facet', '@v3halffacet')]
+                          ('V3 half-facet', '@v3halffacet'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -526,14 +537,16 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
                           ('Subarray', '@subarray'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V2 sigma', '@lsv2sigma')]
+                          ('LS V2 sigma', '@lsv2sigma'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -557,7 +570,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -565,7 +579,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V3 offset', '@lsv3offset'),
-                          ('LS V3 sigma', '@lsv3sigma')]
+                          ('LS V3 sigma', '@lsv3sigma'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -595,7 +610,8 @@ class MSATA():
         plot.add_layout(arlabel)
         plot.renderers.extend([hline, arlinepos, arlineneg])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -603,7 +619,8 @@ class MSATA():
                           ('Subarray', '@subarray'),
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -627,7 +644,8 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -636,7 +654,8 @@ class MSATA():
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS slew mag offset', '@lsoffsetmag'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -682,7 +701,8 @@ class MSATA():
                       color='black', size=7, fill_alpha=0.3)
         plot.y_range = Range1d(0.0, 40.0)
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@visit_id'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@visit_id'),
                           ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
@@ -692,7 +712,8 @@ class MSATA():
                           ('LS roll offset', '@lsrolloffset'),
                           ('LS slew mag offset', '@lsoffsetmag'),
                           ('LS V2 offset', '@lsv2offset'),
-                          ('LS V3 offset', '@lsv3offset')]
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -774,14 +795,16 @@ class MSATA():
         plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
-        hover.tooltips = [('Visit ID', '@vid'),
+        hover.tooltips = [('File name', '@filename'),
+                          ('Visit ID', '@vid'),
                           ('Detector', '@det'),
                           ('Star No.', '@star_no'),
                           ('LS Status', '@status'),
                           ('Date-Obs', '@dobs'),
                           ('Box peak', '@peaks'),
                           ('Measured V2', '@stars_v2'),
-                          ('Measured V3', '@stars_v3')]
+                          ('Measured V3', '@stars_v3'),
+                          ('--------', '----------------')]
 
         plot.add_tools(hover)
         return plot
@@ -988,6 +1011,8 @@ class MSATA():
         for list_element in file_info:
             if 'filename' in list_element:
                 files.append(list_element['filename'])
+            elif 'root_name' in list_element:
+                files.append(list_element['root_name'])
         return files
 
     def get_uncal_names(self, file_list):
@@ -1003,10 +1028,13 @@ class MSATA():
         """
         good_files = []
         for filename in file_list:
-            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
-            if '_uncal' not in filename:
+            if filename.endswith('.fits'):
+                # MAST names look like: jw01133003001_02101_00001_nrs2_cal.fits
                 suffix2replace = filename.split('_')[-1]
                 filename = filename.replace(suffix2replace, 'uncal.fits')
+            else:
+                # rootnames look like: jw01133003001_02101_00001_nrs2
+                filename += '_uncal.fits'
             if filename not in good_files:
                 good_files.append(filename)
         return good_files
@@ -1062,6 +1090,32 @@ class MSATA():
                 line = "{:<50} {:<50} {:<50}".format(suc, ta_inprogress[idx], ta_failure[idx])
                 txt.write(line + "\n")
 
+    def read_existing_html(self):
+        """
+        This function gets the data from the Bokeh html file created with
+        the NIRSpec TA monitor script.
+        """
+        self.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor')
+        ensure_dir_exists(self.output_dir)
+
+        self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
+        if not os.path.isfile(self.output_file_name):
+            return 'No MSATA data available', '', ''
+
+        # open the html file and get the contents
+        with open(self.output_file_name, "r") as html_file:
+            contents = html_file.read()
+
+        soup = BeautifulSoup(contents, 'html.parser').body
+
+        # find the script elements
+        script1 = str(soup.find('script', type='text/javascript'))
+        script2 = str(soup.find('script', type='application/json'))
+
+        # find the div element
+        div = str(soup.find('div', class_='bk-root'))
+        return div, script1, script2
+
     @log_fail
     @log_info
     def run(self):
@@ -1097,7 +1151,7 @@ class MSATA():
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
             # move this plot to a previous version
-            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
+            shutil.copyfile(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
         # fail save - start from the beginning if there is no html file
         else:
             self.query_start = self.query_very_beginning
@@ -1107,11 +1161,18 @@ class MSATA():
         self.query_end = Time.now().mjd
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
-        # Query MAST using the aperture and the time of the
+        # Query for data using the aperture and the time of the
         # most recent previous search as the starting time
-        new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
+
+        # via MAST:
+        # new_entries = monitor_utils.mast_query_ta(
+        #     self.instrument, self.aperture, self.query_start, self.query_end)
+
+        # via django model:
+        new_entries = monitor_utils.model_query_ta(
+            self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} MSATA files for {}, {}.'.format(msata_entries, self.instrument, self.aperture))
+        logging.info('\tQuery has returned {} MSATA files for {}, {}.'.format(msata_entries, self.instrument, self.aperture))
 
         # Filter new entries to only keep uncal files
         new_entries = self.pull_filenames(new_entries)
@@ -1122,6 +1183,10 @@ class MSATA():
         # Get full paths to the files
         new_filenames = []
         for filename_of_interest in new_entries:
+            if (self.prev_data is not None
+                    and filename_of_interest in self.prev_data['filename'].values):
+                logging.warning('\t\tFile {} already in previous data. Skipping.'.format(filename_of_interest))
+                continue
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
                 logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
@@ -1164,7 +1229,7 @@ class MSATA():
             logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
-            logging.info('\t{} MSATA status file was updated')
+            logging.info('\tMSATA status file was updated')
         else:
             logging.info('\tMSATA monitor skipped.')
 

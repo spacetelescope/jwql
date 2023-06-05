@@ -102,7 +102,7 @@ def define_testdata():
             bool_status.append(0)
             status_colors.append('red')
         # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-        t = datetime.fromisoformat(do_str)
+        t = datetime.fromisoformat(do_str).timestamp()
         time_arr.append(t)
     # add these to the bokeh data structure
     wata_dict['time_arr'] = time_arr
@@ -114,15 +114,25 @@ def define_testdata():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_mast_query_ta():
+def test_query_ta():
     """Test the ``query_mast`` function"""
 
     query_start = 59833.0
     query_end = 59844.6
 
+    # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
+    assert len(result) == 16
 
-    assert len(result) >= 16
+    # query local model
+    alternate = monitor_utils.model_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
+    assert len(alternate) == len(result)
+
+    # check that filenames match up - model returns rootfiles, mast returns filenames
+    result = sorted(result, key=lambda x: x['filename'])
+    alternate = sorted(alternate, key=lambda x: x['root_name'])
+    for i, rootfile in enumerate(alternate):
+        assert rootfile['root_name'] in result[i]['filename']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
