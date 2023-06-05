@@ -53,6 +53,7 @@ import socket
 
 from bokeh.layouts import layout
 from bokeh.embed import components
+from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from sqlalchemy import inspect
@@ -123,6 +124,9 @@ def jwql_query(request):
 
             parameters = QUERY_CONFIG_TEMPLATE.copy()
             parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
+            parameters[QUERY_CONFIG_KEYS.LOOK_STATUS] = form.cleaned_data['look_status']
+            parameters[QUERY_CONFIG_KEYS.CAT_TYPE] = form.cleaned_data['cat_type']
+            parameters[QUERY_CONFIG_KEYS.SORT_TYPE] = form.cleaned_data['sort_type']
             parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
             parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
             parameters[QUERY_CONFIG_KEYS.FILTERS] = all_filters
@@ -132,8 +136,6 @@ def jwql_query(request):
             parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
             parameters[QUERY_CONFIG_KEYS.SUBARRAYS] = all_subarrays
             parameters[QUERY_CONFIG_KEYS.PUPILS] = all_pupils
-            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MIN] = str(form.cleaned_data['exp_time_min'])
-            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MAX] = str(form.cleaned_data['exp_time_max'])
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
@@ -208,8 +210,12 @@ def save_page_navigation_data_ajax(request):
     if request.method == 'POST':
         navigate_dict = request.POST.get('navigate_dict')
         # Save session in form {rootname:expstart}
-        rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
+        rootname_expstarts = dict()
+        for item in navigate_dict.split(','):
+            rootname, expstart = item.split("=")
+            rootname_expstarts[rootname] = float(expstart)
         request.session['navigation_data'] = rootname_expstarts
+
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 

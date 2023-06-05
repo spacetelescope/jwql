@@ -320,6 +320,9 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
+# Possible values for look status filter
+LOOK_OPTIONS = ['New', 'Viewed']
+
 # Maximum number of records returned by MAST for a single query
 MAST_QUERY_LIMIT = 500000
 
@@ -418,6 +421,9 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
 
+# All possible proposal categories
+PROPOSAL_CATEGORIES = ['AR', 'CAL', 'COM', 'DD', 'ENG', 'GO', 'GTO', 'NASA', 'SURVEY']
+
 PUPILS_PER_INSTRUMENT = {'nircam': ['CLEAR', 'FLAT', 'F162M', 'F164N', 'GDHS0', 'GDHS60', 'MASKBAR', 'MASKIPR', 'MASKRND',
                                     'PINHOLES', 'WLM8', 'WLP8', 'F323N', 'F405N', 'F466N', 'F470N', 'GRISMC', 'GRISMR', 'GRISMV2', 'GRISMV3'],
                          'niriss': ['CLEARP', 'F090W', 'F115W', 'F140M', 'F150W', 'F158M', 'F200W', 'GR700XD', 'NRM'],
@@ -430,15 +436,16 @@ PUPILS_PER_INSTRUMENT = {'nircam': ['CLEAR', 'FLAT', 'F162M', 'F164N', 'GDHS0', 
 class QUERY_CONFIG_KEYS:
     ANOMALIES = "ANOMALIES"
     APERTURES = "APERTURES"
+    CAT_TYPE = "CAT_TYPE"
     DETECTORS = "DETECTORS"
-    EXP_TIME_MAX = "EXP_TIME_MAX"
-    EXP_TIME_MIN = "EXP_TIME_MIN"
     EXP_TYPES = "EXP_TYPES"
     FILTERS = "FILTERS"
     GRATINGS = "GRATINGS"
+    LOOK_STATUS = "LOOK_STATUS"
     INSTRUMENTS = "INSTRUMENTS"
     PUPILS = "PUPILS"
     READ_PATTS = "READ_PATTS"
+    SORT_TYPE = "SORT_TYPE"
     SUBARRAYS = "SUBARRAYS"
     THUMBNAILS = "THUMBNAILS"
 
@@ -448,8 +455,6 @@ QUERY_CONFIG_TEMPLATE = {
     QUERY_CONFIG_KEYS.ANOMALIES: {},
     QUERY_CONFIG_KEYS.APERTURES: {},
     QUERY_CONFIG_KEYS.DETECTORS: {},
-    QUERY_CONFIG_KEYS.EXP_TIME_MAX: ['999999999999999'],
-    QUERY_CONFIG_KEYS.EXP_TIME_MIN: ['0'],
     QUERY_CONFIG_KEYS.EXP_TYPES: {},
     QUERY_CONFIG_KEYS.FILTERS: {},
     QUERY_CONFIG_KEYS.GRATINGS: {},
@@ -495,6 +500,9 @@ REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'exp_type',
                                          'detector', 'subarray', 'viewed'],
                               'nirspec': ['exp_type', 'filter', 'grating',
                                           'read_patt_num', 'viewed']}
+
+# Possible values for sort order
+SORT_OPTIONS = ['Ascending', 'Descending', 'Recent', 'Oldest']
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 

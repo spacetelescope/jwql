@@ -1507,6 +1507,17 @@ def get_rootnames_from_query(parameters):
         inst = inst.lower()
         current_ins_rootfileinfos = RootFileInfo.objects.filter(instrument=JWST_INSTRUMENT_NAMES_MIXEDCASE[inst])
 
+        # General fields
+        sort_type = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+        look_status = parameters[QUERY_CONFIG_KEYS.LOOK_STATUS]
+        if len(look_status) == 1:
+            viewed = (look_status[0] == 'VIEWED')
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(viewed=viewed)
+        cat_type = parameters[QUERY_CONFIG_KEYS.CAT_TYPE]
+        if len(cat_type) > 0:
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(obsnum__proposal__category__in=cat_type)
+
+        # Instrument fields
         inst_anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES][inst]
         inst_aperture = parameters[QUERY_CONFIG_KEYS.APERTURES][inst]
         inst_detector = parameters[QUERY_CONFIG_KEYS.DETECTORS][inst]
@@ -1535,25 +1546,36 @@ def get_rootnames_from_query(parameters):
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(subarray__in=inst_subarray)
 
         # TODO - This uncommented CODE is what we will use while DJANGO is still using the SQLITE3 DB.
-        #             ONCE DB IS MIGRATED TO POSTGRES WE CAN REPLACE THIS CODE WITH THE UNTESTED CODE COMMENTED OUT BELOW
+        #        ONCE DB IS MIGRATED TO POSTGRES WE CAN REPLACE THIS CODE WITH THE UNTESTED CODE COMMENTED OUT BELOW
         #      >>>  START CODE PRE DB MIGRATION HERE  <<<
         if (inst_anomalies != []):
             # If the rootfile info has any of the marked anomalies we want it
             # Make union of marked anomalies from our current query set, then save intersection.
-            anomaly_rootnames = []
-
+            anomaly_filters = None
             for anomaly in inst_anomalies:
                 anomaly_filter = "anomalies__" + str(anomaly).lower()
-                this_anomaly_rootnames = [name[0] for name in current_ins_rootfileinfos.filter(**{anomaly_filter: True}).values_list("root_name")]
-                anomaly_rootnames.extend(this_anomaly_rootnames)
+                this_anomaly_rootnames = current_ins_rootfileinfos.filter(**{anomaly_filter: True})
+                if anomaly_filters is None:
+                    anomaly_filters = this_anomaly_rootnames
+                else:
+                    anomaly_filters |= this_anomaly_rootnames
+            current_ins_rootfileinfos = anomaly_filters
+        #      >>>  END CODE PRE DB MIGRATION HERE  <<<
 
-            filtered_rootnames.extend(anomaly_rootnames)
-        else:
-            rootnames = [name[0] for name in current_ins_rootfileinfos.values_list("root_name")]
-            filtered_rootnames.extend(rootnames)
+        # sort as desired
+        if sort_type == 'DESCENDING':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
+        elif sort_type == 'ASCENDING':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('root_name')
+        elif sort_type == 'RECENT':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-expstart', 'root_name')
+        elif sort_type == 'OLDEST':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('expstart', 'root_name')
+
+        rootnames = [name[0] for name in current_ins_rootfileinfos.values_list("root_name")]
+        filtered_rootnames.extend(rootnames)
 
     return list(set(filtered_rootnames))
-    #      >>>  END CODE PRE DB MIGRATION HERE  <<<
 
     # TODO - BELOW IS THE OUTLINE OF CODE WE WANT TO USE, HOWEVER THIS CAN'T BE IMPLEMENTED WITH DJANGO RUNNING SQLITE
     #             ONCE WE MIGRATE TO POSTGRES WE CAN IMPLEMENT THE BELOW FUNCTIONALITY WHICH SHOULD MAKE THIS CODE MOVE A LITTLE FASTER
