@@ -1229,16 +1229,16 @@ function update_obs_options(data, inst, prop, observation) {
  * @param {Object} data - The data returned by the query_submit AJAX method
  */
 function update_pagination(data) {
-    var content = '<span class="step-links">'
+    var content = '<span class="step-links mx-2">'
     if ('previous_page' in data) {
-        content += '<a href="?page=1">&laquo; first</a> ' +
-            '<a href="?page=' + data.previous_page + '">previous</a>';
+        content += '<a class="mx-2" href="?page=1">&laquo; first</a> ' +
+            '<a class="mx-2" href="?page=' + data.previous_page + '">previous</a>';
     }
-    content += '<span class="current">Page ' + data.current_page + ' of ' + data.total_pages + '</span>'
+    content += '<span class="current mx-2">Page ' + data.current_page + ' of ' + data.total_pages + '</span>'
 
     if ('next_page' in data) {
-        content += '<a href="?page=' + data.next_page + '">next</a> ' +
-            '<a href="?page=' + data.total_pages + '">last &raquo;</a>';
+        content += '<a class="mx-2" href="?page=' + data.next_page + '">next</a> ' +
+            '<a class="mx-2" href="?page=' + data.total_pages + '">last &raquo;</a>';
     }
     content += '</span>';
     $("#pagination")[0].innerHTML = content;
