@@ -1495,8 +1495,8 @@ def get_rootnames_from_query(parameters):
 
     Returns
     -------
-    filtered_rootnames : query_set
-        A query_set of all rootfileinfos filtered from the given parameters
+    filtered_rootnames : list
+        A list of all root filenames filtered from the given parameters
     """
     # TODO - This code setup is temporary until the merge to Postgres is complete.
     # selected_rootfileinfos = RootFileInfo.objects.none()
@@ -1572,10 +1572,10 @@ def get_rootnames_from_query(parameters):
         else:
             current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
 
-        rootnames = [name[0] for name in current_ins_rootfileinfos.values_list("root_name")]
+        rootnames = [name[0] for name in current_ins_rootfileinfos.values_list('root_name')]
         filtered_rootnames.extend(rootnames)
 
-    return list(set(filtered_rootnames))
+    return filtered_rootnames
 
     # TODO - BELOW IS THE OUTLINE OF CODE WE WANT TO USE, HOWEVER THIS CAN'T BE IMPLEMENTED WITH DJANGO RUNNING SQLITE
     #             ONCE WE MIGRATE TO POSTGRES WE CAN IMPLEMENT THE BELOW FUNCTIONALITY WHICH SHOULD MAKE THIS CODE MOVE A LITTLE FASTER

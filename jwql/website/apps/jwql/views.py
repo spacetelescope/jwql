@@ -94,6 +94,7 @@ def jwql_query(request):
     """The anomaly query form page"""
 
     form = JwqlQueryForm(request.POST or None)
+    form.fields['sort_type'].initial = request.session.get('image_sort', 'Recent')
 
     if request.method == 'POST':
         if form.is_valid():
@@ -399,7 +400,7 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     save_page_navigation_data(request, data)
@@ -443,7 +444,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
@@ -497,12 +498,13 @@ def archive_thumbnails_query_ajax(request):
     data['total_pages'] = paginator.num_pages
     data['total_files'] = paginator.count
 
+    request.session['image_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
-    """Generate the dashbaord page
+    """Generate the dashboard page
 
     Parameters
     ----------
@@ -847,7 +849,7 @@ def query_submit(request):
     """
 
     template = 'query_submit.html'
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
     page_number = request.GET.get("page", 1)
     context = {'inst': '',
@@ -1225,7 +1227,7 @@ def view_exposure(request, inst, group_root):
 
     # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     if sort_type in ['Descending']:
         matching_rootfiles = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
@@ -1323,7 +1325,7 @@ def view_image(request, inst, file_root):
     # sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in
     # jwql.js->sort_by_thumbnails
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     if sort_type in ['Descending']:
         file_root_list = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:

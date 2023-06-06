@@ -1449,10 +1449,9 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
 /**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
- * @param {String} sort - Sort method string saved in session data image_sort
  * @param {Int} page - Page number to load
  */
-function update_thumbnails_query_page(base_url, sort, group, page) {
+function update_thumbnails_query_page(base_url, page) {
     $.ajax({
         url: base_url + '/ajax/query_submit/?page=' + page,
         success: function(data){
@@ -1462,12 +1461,12 @@ function update_thumbnails_query_page(base_url, sort, group, page) {
             update_thumbnail_array(data);
             update_filter_options(data, base_url, 'thumbnail');
             update_group_options(data, base_url);
-            update_sort_options(data, base_url);
+            update_sort_options(data.thumbnail_sort, base_url);
             update_pagination(data);
 
             // Do initial sort and group to match sort button display
-            group_by_thumbnails(group, base_url);
-            sort_by_thumbnails(sort, base_url);
+            group_by_thumbnails(data.thumbnail_group, base_url);
+            sort_by_thumbnails(data.thumbnail_sort, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
