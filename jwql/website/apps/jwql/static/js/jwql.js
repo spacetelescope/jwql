@@ -1244,7 +1244,7 @@ function update_pagination(data) {
     $("#pagination")[0].innerHTML = content;
 
     // Add the total file count to the img_show_count banner
-    $("#query_total")[0].innerHTML = '<p>Query returned ' + data.total_files + ' files total.</p>';
+    $("#query_total")[0].innerHTML = '<p>Query returned ' + data.total_files + ' activities total.</p>';
 }
 
 /**

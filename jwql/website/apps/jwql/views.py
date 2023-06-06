@@ -479,7 +479,8 @@ def archive_thumbnails_query_ajax(request):
     parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
     filtered_rootnames = get_rootnames_from_query(parameters)
 
-    paginator = Paginator(filtered_rootnames, 500)
+    paginator = Paginator(filtered_rootnames,
+                          parameters[QUERY_CONFIG_KEYS.NUM_PER_PAGE])
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 

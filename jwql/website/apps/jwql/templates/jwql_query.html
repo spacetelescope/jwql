@@ -61,10 +61,9 @@
 
     <main role="main" class="container">
         <h1>Dynamic Query Form</h1>
-        <p> Use this form to query the archive for any instrument or combination of instruments.
-            Enter the instruments for which you would like to view the archive and other constraints.
+        <p> Use this form to query the archive for data from any instrument or combination of instruments.</p>
+        <p> Select at least one instrument, then any other constraints desired.
             Feel free to leave fields blank if you do not want to further constrain the database search.
-            Note, however, that it may increase the run time if you search a wider array of images.
         </p>
     </main>
 
@@ -110,6 +109,16 @@
                             <span class="help-block">Sort Type</span>
                             <div class="form-control" id='sort_type'>
                                 {% for option in form.sort_type %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="help-block">Results Per Page</span>
+                            <div class="form-control" id='num_per_page'>
+                                {% for option in form.num_per_page %}
                                 <div class='radio'>
                                     {{ option }}
                                 </div>

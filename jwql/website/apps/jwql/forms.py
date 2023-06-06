@@ -154,6 +154,12 @@ class JwqlQueryForm(BaseForm):
         choices=sort_choices, initial=sort_choices[2],
         widget=forms.RadioSelect)
 
+    num_choices = [(50, 50), (100, 100), (200, 200), (500, 500)]
+    num_per_page = forms.ChoiceField(
+        required=True,
+        choices=num_choices, initial=num_choices[1],
+        widget=forms.RadioSelect)
+
     # instrument specific parameters
     miri_aper = forms.MultipleChoiceField(required=False, choices=params['miri']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_aper = forms.MultipleChoiceField(required=False, choices=params['nirspec']['aperture_list'], widget=forms.CheckboxSelectMultiple)
