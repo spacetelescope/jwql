@@ -1468,7 +1468,7 @@ function update_thumbnails_query_page(base_url, page) {
             update_thumbnail_array(data);
             update_filter_options(data, base_url, 'thumbnail');
             update_group_options(data, base_url);
-            update_sort_options(data.thumbnail_sort, base_url);
+            update_sort_options(data, base_url);
             update_pagination(data);
 
             // Do initial sort and group to match sort button display
