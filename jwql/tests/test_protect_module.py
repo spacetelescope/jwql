@@ -97,7 +97,7 @@ def test_lock_module_handles_stale_lock_files(module_lock, do_not_email):
        delete it, and continue to run successfully """
     # create locked file with not running PID in advance of calling protected code
     with open(module_lock, "w") as lock_file:
-        lock_file.write(f"{_PID_LOCKFILE_KEY}12345\n")
+        lock_file.write(f"{_PID_LOCKFILE_KEY}-9999\n")
     file_created = protected_code_verify_file_exists_true(module_lock)
     file_exists = os.path.exists(module_lock)
     # Assert that lock file was created in wrapper, and removed upon exit
