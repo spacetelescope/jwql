@@ -1244,7 +1244,14 @@ function update_pagination(data) {
     $("#pagination")[0].innerHTML = content;
 
     // Add the total file count to the img_show_count banner
-    $("#query_total")[0].innerHTML = '<p>Query returned ' + data.total_files + ' activities total.</p>';
+    var query_summary = '<p><br>Query returned ' + data.total_files + ' activities total with parameters:</p><ul>';
+    for (var i = 0; i < Object.keys(data.query_config).length; i++) {
+        var param = Object.keys(data.query_config)[i];
+        query_summary += '<li>' + param.toUpperCase() + '=' +
+            data.query_config[param].toString().toUpperCase() + '</li>';
+    }
+    query_summary += '</p>';
+    $("#query_summary")[0].innerHTML = query_summary;
 }
 
 /**
@@ -1256,7 +1263,7 @@ function update_show_count(count, type) {
     var content = 'Showing <a id="img_shown">' + count + '</a> / <a id="img_total">' + count + '</a> <a id="img_type">' + type + '</a>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
-    content += '<span id="query_total"></span>';
+    content += '<span id="query_summary"></span>';
     $("#img_show_count")[0].innerHTML = content;
 }
 

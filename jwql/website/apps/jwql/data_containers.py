@@ -1513,9 +1513,9 @@ def get_rootnames_from_query(parameters):
         if len(look_status) == 1:
             viewed = (look_status[0] == 'VIEWED')
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(viewed=viewed)
-        cat_type = parameters[QUERY_CONFIG_KEYS.CAT_TYPE]
-        if len(cat_type) > 0:
-            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(obsnum__proposal__category__in=cat_type)
+        proposal_category = parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY]
+        if len(proposal_category) > 0:
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(obsnum__proposal__category__in=proposal_category)
 
         # Instrument fields
         inst_anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES][inst]

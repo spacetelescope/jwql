@@ -126,7 +126,7 @@ def jwql_query(request):
             parameters = QUERY_CONFIG_TEMPLATE.copy()
             parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
             parameters[QUERY_CONFIG_KEYS.LOOK_STATUS] = form.cleaned_data['look_status']
-            parameters[QUERY_CONFIG_KEYS.CAT_TYPE] = form.cleaned_data['cat_type']
+            parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
             parameters[QUERY_CONFIG_KEYS.SORT_TYPE] = form.cleaned_data['sort_type']
             parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
             parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
@@ -488,6 +488,16 @@ def archive_thumbnails_query_ajax(request):
     data = thumbnails_query_ajax(page_obj.object_list)
     data['thumbnail_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
+
+    # add top level parameters for summarizing
+    summary_keys = [QUERY_CONFIG_KEYS.INSTRUMENTS,
+                    QUERY_CONFIG_KEYS.SORT_TYPE, QUERY_CONFIG_KEYS.LOOK_STATUS,
+                    QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY]
+    data['query_config'] = {}
+    for key in summary_keys:
+        value = parameters[key]
+        if value:
+            data['query_config'][key] = value
 
     # pass pagination info
     if page_obj.has_previous():
