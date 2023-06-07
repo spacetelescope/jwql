@@ -23,7 +23,9 @@ from astropy.io import fits
 from astropy.visualization import ZScaleInterval
 import numpy as np
 from bokeh.embed import components
-from bokeh.models import BasicTicker, ColorBar, HoverTool, LinearColorMapper, LogColorMapper, LogTicker
+from bokeh.models import (
+    BasicTicker, BoxZoomTool, ColorBar, HoverTool, LinearColorMapper, LogColorMapper,
+    LogTicker, WheelZoomTool)
 from bokeh.plotting import figure, output_file, show, save
 
 from jwst.datamodels import dqflags
@@ -80,9 +82,9 @@ class InteractivePreviewImg():
         self.save_html = save_html
 
         # Allow sending in of None without overriding defaults
-        if(group is None):
+        if group is None:
             group = -1
-        if(integ is None):
+        if integ is None:
             integ = 0
 
         # Determine the min and max values to use for the display
@@ -107,13 +109,13 @@ class InteractivePreviewImg():
         """Method to create the figure
         """
         limits = self.get_scale()
-        if limits[0] <= 0:
-            limits = (1e-4, limits[1])
         if self.low_lim is not None:
             limits = (self.low_lim, limits[1])
         if self.high_lim is not None:
             limits = (limits[0], self.high_lim)
         if self.scaling == 'log':
+            if limits[0] <= 0:
+                limits = (1e-4, limits[1])
             color_mapper = LogColorMapper(
                 palette="Viridis256", low=limits[0], high=limits[1])
             ticker = LogTicker()
@@ -128,13 +130,41 @@ class InteractivePreviewImg():
         if not self.show and self.save_html is not None:
             output_file(filename=self.save_html,
                         title=os.path.basename(self.filename))
-        fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save')
+
+        # fix figure aspect from data aspect
+        if xd > yd:
+            plot_width = 800
+            plot_height = int(plot_width * yd / xd)
+            if plot_height < 400:
+                plot_height = 400
+        else:
+            plot_height = 800
+            plot_width = int(plot_height * xd / yd)
+            if plot_width < 400:
+                plot_width = 400
+
+        fig = figure(tools='pan,reset,save', match_aspect=True,
+                     plot_width=plot_width, plot_height=plot_height)
+        fig.add_tools(BoxZoomTool(match_aspect=True))
+        fig.add_tools(WheelZoomTool(zoom_on_axis=False))
+
         img = fig.image(source=info, image='image',
                         level="image", color_mapper=color_mapper)
-        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=12, ticker=ticker, title=self.signal_units, bar_line_color='black',
+        color_bar = ColorBar(color_mapper=color_mapper, label_standoff=12, ticker=ticker,
+                             title=self.signal_units, bar_line_color='black',
                              minor_tick_line_color='black', major_tick_line_color='black')
         fig.add_layout(color_bar, 'below')
+
         fig.x_range.range_padding = fig.y_range.range_padding = 0
+        if xd >= yd:
+            fig.x_range.start = 0
+            fig.x_range.end = xd
+            fig.x_range.bounds = (0, xd)
+        if yd >= xd:
+            fig.y_range.start = 0
+            fig.y_range.end = yd
+            fig.y_range.bounds = (0, yd)
+
         if 'DQ' not in self.extname:
             hover_tool = HoverTool(tooltips=[("(x,y)", "($x{0.2f}, $y{0.2f})"),
                                              ('Value', '@image{0.4f}')

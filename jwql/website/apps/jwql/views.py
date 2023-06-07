@@ -892,7 +892,7 @@ def view_header(request, inst, filename, filetype):
 
 
 def explore_image(request, inst, file_root, filetype):
-    """Generate the header view page
+    """Generate the explore image page.
 
     Parameters
     ----------
@@ -958,7 +958,7 @@ def explore_image(request, inst, file_root, filetype):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
+def explore_image_ajax(request, inst, file_root, filetype, scaling="lin", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
