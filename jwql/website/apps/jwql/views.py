@@ -490,13 +490,15 @@ def archive_thumbnails_query_ajax(request):
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     # add top level parameters for summarizing
-    summary_keys = [QUERY_CONFIG_KEYS.INSTRUMENTS,
-                    QUERY_CONFIG_KEYS.SORT_TYPE, QUERY_CONFIG_KEYS.LOOK_STATUS,
-                    QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY]
     data['query_config'] = {}
-    for key in summary_keys:
+    for key in parameters:
         value = parameters[key]
-        if value:
+        if isinstance(value, dict):
+            for subkey in value:
+                subvalue = value[subkey]
+                if subvalue:
+                    data['query_config'][f'{key}_{subkey}'] = subvalue
+        elif value:
             data['query_config'][key] = value
 
     # pass pagination info

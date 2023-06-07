@@ -433,41 +433,42 @@ PUPILS_PER_INSTRUMENT = {'nircam': ['CLEAR', 'FLAT', 'F162M', 'F164N', 'GDHS0', 
 
 
 # Keep keys defined via class as they are used many places with potential mispellings
+# Keys are in sort order from general to instrument specific, then alphabetical
+# within instrument specific fields.
 class QUERY_CONFIG_KEYS:
+    INSTRUMENTS = "INSTRUMENTS"
+    PROPOSAL_CATEGORY = "PROPOSAL_CATEGORY"
+    LOOK_STATUS = "LOOK_STATUS"
+    NUM_PER_PAGE = "NUM_PER_PAGE"
+    SORT_TYPE = "SORT_TYPE"
     ANOMALIES = "ANOMALIES"
     APERTURES = "APERTURES"
-    PROPOSAL_CATEGORY = "PROPOSAL_CATEGORY"
     DETECTORS = "DETECTORS"
     EXP_TYPES = "EXP_TYPES"
     FILTERS = "FILTERS"
     GRATINGS = "GRATINGS"
-    LOOK_STATUS = "LOOK_STATUS"
-    INSTRUMENTS = "INSTRUMENTS"
-    NUM_PER_PAGE = "NUM_PER_PAGE"
     PUPILS = "PUPILS"
     READ_PATTS = "READ_PATTS"
-    SORT_TYPE = "SORT_TYPE"
     SUBARRAYS = "SUBARRAYS"
-    THUMBNAILS = "THUMBNAILS"
 
 
 # Template for parameters to be stored in "query_config" session for query_page
 QUERY_CONFIG_TEMPLATE = {
+    QUERY_CONFIG_KEYS.INSTRUMENTS: [],
+    QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY: [],
+    QUERY_CONFIG_KEYS.LOOK_STATUS: [],
+    QUERY_CONFIG_KEYS.NUM_PER_PAGE: 100,
+    QUERY_CONFIG_KEYS.SORT_TYPE: 'Recent',
     QUERY_CONFIG_KEYS.ANOMALIES: {},
     QUERY_CONFIG_KEYS.APERTURES: {},
-    QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY: [],
     QUERY_CONFIG_KEYS.DETECTORS: {},
     QUERY_CONFIG_KEYS.EXP_TYPES: {},
     QUERY_CONFIG_KEYS.FILTERS: {},
     QUERY_CONFIG_KEYS.GRATINGS: {},
-    QUERY_CONFIG_KEYS.INSTRUMENTS: [],
-    QUERY_CONFIG_KEYS.NUM_PER_PAGE: 100,
     QUERY_CONFIG_KEYS.PUPILS: {},
     QUERY_CONFIG_KEYS.READ_PATTS: {},
-    QUERY_CONFIG_KEYS.SORT_TYPE: 'Recent',
-    QUERY_CONFIG_KEYS.SUBARRAYS: {},
-    QUERY_CONFIG_KEYS.THUMBNAILS: []
-    }
+    QUERY_CONFIG_KEYS.SUBARRAYS: {}
+}
 
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
