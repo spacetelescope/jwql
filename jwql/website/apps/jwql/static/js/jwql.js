@@ -1075,9 +1075,6 @@ function update_wata_page(base_url) {
         var calc_difference = document.getElementById("calcDifference").checked;
 
         // Get the arguments to update
-        var scaling = get_radio_button_value("scaling");
-        var low_lim = get_number_or_none("low_lim");
-        var high_lim = get_number_or_none("high_lim");
         var ext_name = get_radio_button_value("extension");
         var int1_nr = get_number_or_none("integration1");
         var grp1_nr = get_number_or_none("group1");
@@ -1090,7 +1087,7 @@ function update_wata_page(base_url) {
             int2_nr="None";
             grp2_nr="None";
         }
-        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
+        optional_params = optional_params + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
     }
 
     $.ajax({

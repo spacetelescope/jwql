@@ -23,24 +23,31 @@
     width: 100%;
     margin: auto;
   }
-  
+
+  /* Make sure bokeh widgets match default theme */
+  .bk-root, .bk-btn {
+      font-family: 'Overpass', sans-serif !important;
+      font-size: 1rem !important;
+      flex-grow: 0 !important;
+  }
+
   /*Make normal buttons and highlighted outline buttons orange*/
   .btn-primary, .btn-primary.disabled, .btn-outline-primary:hover,
-  .btn-outline-primary.active {
+  .btn-outline-primary.active, .bk-btn-primary {
       background-color: #c85108 !important;
       border-color: #c85108 !important;
       color: white !important;
-      border-radius: 0px;
+      border-radius: 0px !important;
       text-decoration: none;
   }
   
   /*Make outline buttons and highlighted normal buttons white*/
   .btn-primary:hover, .btn-primary.active, .btn-outline-primary,
-  .show > .btn-primary.dropdown-toggle {
+  .show > .btn-primary.dropdown-toggle, .bk-btn-primary:hover {
       background-color: white !important;
       border-color: #c85108 !important ;
       color: #c85108 !important;
-      border-radius: 0px;
+      border-radius: 0px !important;
       text-decoration: none;
   }
   
@@ -544,7 +551,7 @@
   }
 
    /*Format thumbnail groups when active*/
-   .thumbnail-group {
+  .thumbnail-group {
       display: inline;
       font-size: 0.75rem;
   }
