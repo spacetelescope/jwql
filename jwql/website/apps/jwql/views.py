@@ -53,6 +53,7 @@ import socket
 
 from bokeh.layouts import layout
 from bokeh.embed import components
+from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from sqlalchemy import inspect
@@ -93,6 +94,7 @@ def jwql_query(request):
     """The anomaly query form page"""
 
     form = JwqlQueryForm(request.POST or None)
+    form.fields['sort_type'].initial = request.session.get('image_sort', 'Recent')
 
     if request.method == 'POST':
         if form.is_valid():
@@ -123,6 +125,9 @@ def jwql_query(request):
 
             parameters = QUERY_CONFIG_TEMPLATE.copy()
             parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
+            parameters[QUERY_CONFIG_KEYS.LOOK_STATUS] = form.cleaned_data['look_status']
+            parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
+            parameters[QUERY_CONFIG_KEYS.SORT_TYPE] = form.cleaned_data['sort_type']
             parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
             parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
             parameters[QUERY_CONFIG_KEYS.FILTERS] = all_filters
@@ -132,8 +137,6 @@ def jwql_query(request):
             parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
             parameters[QUERY_CONFIG_KEYS.SUBARRAYS] = all_subarrays
             parameters[QUERY_CONFIG_KEYS.PUPILS] = all_pupils
-            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MIN] = str(form.cleaned_data['exp_time_min'])
-            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MAX] = str(form.cleaned_data['exp_time_max'])
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
@@ -208,8 +211,12 @@ def save_page_navigation_data_ajax(request):
     if request.method == 'POST':
         navigate_dict = request.POST.get('navigate_dict')
         # Save session in form {rootname:expstart}
-        rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
+        rootname_expstarts = dict()
+        for item in navigate_dict.split(','):
+            rootname, expstart = item.split("=")
+            rootname_expstarts[rootname] = float(expstart)
         request.session['navigation_data'] = rootname_expstarts
+
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -393,7 +400,7 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     save_page_navigation_data(request, data)
@@ -437,7 +444,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
@@ -472,16 +479,44 @@ def archive_thumbnails_query_ajax(request):
 
     parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
     filtered_rootnames = get_rootnames_from_query(parameters)
-    data = thumbnails_query_ajax(filtered_rootnames)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+
+    paginator = Paginator(filtered_rootnames,
+                          parameters[QUERY_CONFIG_KEYS.NUM_PER_PAGE])
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    data = thumbnails_query_ajax(page_obj.object_list)
+    data['thumbnail_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
+    # add top level parameters for summarizing
+    data['query_config'] = {}
+    for key in parameters:
+        value = parameters[key]
+        if isinstance(value, dict):
+            for subkey in value:
+                subvalue = value[subkey]
+                if subvalue:
+                    data['query_config'][f'{key}_{subkey}'] = subvalue
+        elif value:
+            data['query_config'][key] = value
+
+    # pass pagination info
+    if page_obj.has_previous():
+        data['previous_page'] = page_obj.previous_page_number()
+    data['current_page'] = page_obj.number
+    if page_obj.has_next():
+        data['next_page'] = page_obj.next_page_number()
+    data['total_pages'] = paginator.num_pages
+    data['total_files'] = paginator.count
+
+    request.session['image_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
-    """Generate the dashbaord page
+    """Generate the dashboard page
 
     Parameters
     ----------
@@ -826,13 +861,14 @@ def query_submit(request):
     """
 
     template = 'query_submit.html'
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
+    page_number = request.GET.get("page", 1)
     context = {'inst': '',
                'base_url': get_base_url(),
                'sort': sort_type,
-               'group': group_type
-               }
+               'group': group_type,
+               'page': page_number}
 
     return render(request, template, context)
 
@@ -1203,7 +1239,7 @@ def view_exposure(request, inst, group_root):
 
     # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     if sort_type in ['Descending']:
         matching_rootfiles = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
@@ -1301,7 +1337,7 @@ def view_image(request, inst, file_root):
     # sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in
     # jwql.js->sort_by_thumbnails
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     if sort_type in ['Descending']:
         file_root_list = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
