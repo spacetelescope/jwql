@@ -53,8 +53,10 @@
         </div>
 
         <!-- Display the data -->
-        <div id='thumbnail-array'></div>
-        <script>update_thumbnails_query_page('{{base_url}}', '{{ sort }}', '{{ group }}');</script>
+        <div id="pagination" class="pagination"></div>
+        <hr>
+        <div id="thumbnail-array"></div>
+        <script>update_thumbnails_query_page('{{base_url}}', '{{ page }}');</script>
         <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
         <hr>

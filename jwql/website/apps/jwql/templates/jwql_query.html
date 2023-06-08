@@ -6,7 +6,7 @@
     <style type="text/css">
         div#instrument_form_group { margin-right: 80px;
                                     margin-left: 80px; }
-        span#helpBlock.help-block {font-size: LARGER;}
+        span.help-block {font-size: LARGER;}
     </style>
 
     <title>Dynamic Query Form - JWQL</title>
@@ -61,10 +61,9 @@
 
     <main role="main" class="container">
         <h1>Dynamic Query Form</h1>
-        <p> Use this form to query the archive for any instrument or combination of instruments.
-            Enter the instruments for which you would like to view the archive and other constraints.
+        <p> Use this form to query the archive for data from any instrument or combination of instruments.</p>
+        <p> Select at least one instrument, then any other constraints desired.
             Feel free to leave fields blank if you do not want to further constrain the database search.
-            Note, however, that it may increase the run time if you search a wider array of images.
         </p>
     </main>
 
@@ -75,21 +74,63 @@
                 <hr class="col-md-12">
                 <div class='instrument-form-group' id='instrument_form_group'>
                     <!-- Initial INSTRUMENT Checkbox -->
-                    <div class="col-md-2">
-                        <span id="helpBlock" class="help-block">Instruments</span>
-                        <div class="form-control" name='instrument' id='instrument'>
-                            {% for option in form.instrument %}
-                            <div class='radio'>
-                                {{ option }}
+                    <div style="display: flex" id="GENERAL">
+                        <div class="col-md-2">
+                            <span class="help-block">Instruments</span>
+                            <div class="form-control" id='instrument'>
+                                {% for option in form.instrument %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
+                        </div>
+                        <div class="col-md-2">
+                            <span class="help-block">Proposal Category</span>
+                            <div class="form-control" id='proposal_category'>
+                                {% for option in form.proposal_category %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="help-block">Look Status</span>
+                            <div class="form-control" id='look_status'>
+                                {% for option in form.look_status %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="help-block">Sort Type</span>
+                            <div class="form-control" id='sort_type'>
+                                {% for option in form.sort_type %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="help-block">Results Per Page</span>
+                            <div class="form-control" id='num_per_page'>
+                                {% for option in form.num_per_page %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
 
                     <!-- FGS Fields -->
                     <div style="display: flex" id="FGS">
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Anomalies</span>
+                            <span class="help-block">FGS Anomalies</span>
                             <div class="form-control" id='fgs_anomalies'>
                                 {% for field in form.fgs_anomalies %}
                                 <div class="row-sm-10">
@@ -101,7 +142,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Apertures</span>
+                            <span class="help-block">FGS Apertures</span>
                             <div class="form-control" id='fgs_aper'>
                                 {% for field in form.fgs_aper %}
                                 <div class="row-sm-10">
@@ -113,7 +154,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Detectors</span>
+                            <span class="help-block">FGS Detectors</span>
                             <div class="form-control" id='fgs_detector'>
                                 {% for field in form.fgs_detector %}
                                 <div class="row-sm-10">
@@ -125,7 +166,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Exposure Types</span>
+                            <span class="help-block">FGS Exposure Types</span>
                             <div class="form-control" id='fgs_exptype'>
                                 {% for field in form.fgs_exptype %}
                                 <div class="row-sm-10">
@@ -137,7 +178,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">FGS Read Patterns</span>
+                            <span class="help-block">FGS Read Patterns</span>
                             <div class="form-control" id='fgs_readpatt'>
                                 {% for field in form.fgs_readpatt %}
                                 <div class="row-sm-10">
@@ -152,7 +193,7 @@
                     <!-- MIRI Fields -->
                     <div style="display: flex" id="MIRI">
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Anomalies</span>
+                            <span class="help-block">MIRI Anomalies</span>
                             <div class="form-control" id='miri_anomalies'>
                                 {% for field in form.miri_anomalies %}
                                 <div class="row-sm-10">
@@ -164,7 +205,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Detectors</span>
+                            <span class="help-block">MIRI Detectors</span>
                             <div class="form-control" id='miri_detector'>
                                 {% for field in form.miri_detector %}
                                 <div class="row-2">
@@ -176,7 +217,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Exposure Types</span>
+                            <span class="help-block">MIRI Exposure Types</span>
                             <div class="form-control" id='miri_exptype'>
                                 {% for field in form.miri_exptype %}
                                 <div class="row-2">
@@ -188,7 +229,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Filters</span>
+                            <span class="help-block">MIRI Filters</span>
                             <div class="form-control" id='miri_filt'>
                                 {% for field in form.miri_filt %}
                                 <div class="row-2">
@@ -200,7 +241,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Read Patterns</span>
+                            <span class="help-block">MIRI Read Patterns</span>
                             <div class="form-control" id='miri_readpatt'>
                                 {% for field in form.miri_readpatt %}
                                 <div class="row-2">
@@ -212,7 +253,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">MIRI Subarrays</span>
+                            <span class="help-block">MIRI Subarrays</span>
                             <div class="form-control" id='miri_subarray'>
                                 {% for field in form.miri_subarray %}
                                 <div class="row-2">
@@ -226,7 +267,7 @@
                     <!-- NIRCAM Fields -->
                     <div style="display: flex" id="NIRCAM">
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Anomalies</span>
+                            <span class="help-block">NIRCam Anomalies</span>
                             <div class="form-control" id='nircam_anomalies'>
                                 {% for field in form.nircam_anomalies %}
                                 <div class="row-sm-10">
@@ -238,7 +279,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Detectors</span>
+                            <span class="help-block">NIRCam Detectors</span>
                             <div class="form-control" id='nircam_detector'>
                                 {% for field in form.nircam_detector %}
                                 <div class="row-4">
@@ -250,7 +291,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Exposure Types</span>
+                            <span class="help-block">NIRCam Exposure Types</span>
                             <div class="form-control" id='nircam_exptype'>
                                 {% for field in form.nircam_exptype %}
                                 <div class="row-4">
@@ -262,7 +303,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Filters</span>
+                            <span class="help-block">NIRCam Filters</span>
                             <div class="form-control" id='nircam_filt'>
                                 {% for field in form.nircam_filt %}
                                 <div class="row-sm-10">
@@ -274,7 +315,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Pupils</span>
+                            <span class="help-block">NIRCam Pupils</span>
                             <div class="form-control" id='nircam_pupil'>
                                 {% for field in form.nircam_pupil %}
                                 <div class="row-4">
@@ -286,7 +327,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Read Patterns</span>
+                            <span class="help-block">NIRCam Read Patterns</span>
                             <div class="form-control" id='nircam_readpatt'>
                                 {% for field in form.nircam_readpatt %}
                                 <div class="row-4">
@@ -298,7 +339,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRCam Subarrays</span>
+                            <span class="help-block">NIRCam Subarrays</span>
                             <div class="form-control" id='nircam_subarray'>
                                 {% for field in form.nircam_subarray %}
                                 <div class="row-4">
@@ -313,7 +354,7 @@
                     <!-- NIRISS Fields -->
                     <div style="display: flex" id="NIRISS">
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Anomalies</span>
+                            <span class="help-block">NIRISS Anomalies</span>
                             <div class="form-control" id='niriss_anomalies'>
                                 {% for field in form.niriss_anomalies %}
                                 <div class="row-sm-10">
@@ -325,7 +366,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Detectors</span>
+                            <span class="help-block">NIRISS Detectors</span>
                             <div class="form-control" id='niriss_detector'>
                                 {% for field in form.niriss_detector %}
                                 <div class="row-sm-10">
@@ -337,7 +378,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Exposure Types</span>
+                            <span class="help-block">NIRISS Exposure Types</span>
                             <div class="form-control" id='niriss_exptype'>
                                 {% for field in form.niriss_exptype %}
                                 <div class="row-sm-10">
@@ -349,7 +390,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Filters</span>
+                            <span class="help-block">NIRISS Filters</span>
                             <div class="form-control" id='niriss_filt'>
                                 {% for field in form.niriss_filt %}
                                 <div class="row-sm-10">
@@ -361,7 +402,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Pupils</span>
+                            <span class="help-block">NIRISS Pupils</span>
                             <div class="form-control" id='niriss_pupil'>
                                 {% for field in form.niriss_pupil %}
                                 <div class="row-sm-10">
@@ -373,7 +414,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Read Patterns</span>
+                            <span class="help-block">NIRISS Read Patterns</span>
                             <div class="form-control" id='niriss_readpatt'>
                                 {% for field in form.niriss_readpatt %}
                                 <div class="row-sm-10">
@@ -385,7 +426,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRISS Subarrays</span>
+                            <span class="help-block">NIRISS Subarrays</span>
                             <div class="form-control" id='niriss_subarray'>
                                 {% for field in form.niriss_subarray %}
                                 <div class="row-sm-10">
@@ -400,7 +441,7 @@
                     <!-- NIRSPEC Fields -->
                     <div style="display: flex" id="NIRSPEC">
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Anomalies</span>
+                            <span class="help-block">NIRSpec Anomalies</span>
                             <div class="form-control" id='nirspec_anomalies'>
                                 {% for field in form.nirspec_anomalies %}
                                 <div class="row-sm-10">
@@ -412,7 +453,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Apertures</span>
+                            <span class="help-block">NIRSpec Apertures</span>
                             <div class="form-control" id='nirspec_aper'>
                                 {% for field in form.nirspec_aper %}
                                 <div class="row-sm-10">
@@ -424,7 +465,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Detectors</span>
+                            <span class="help-block">NIRSpec Detectors</span>
                             <div class="form-control" id='nirspec_detector'>
                                 {% for field in form.nirspec_detector %}
                                 <div class="row-sm-10">
@@ -436,7 +477,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Exposure Types</span>
+                            <span class="help-block">NIRSpec Exposure Types</span>
                             <div class="form-control" id='nirspec_exptype'>
                                 {% for field in form.nirspec_exptype %}
                                 <div class="row-sm-10">
@@ -448,7 +489,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Filters</span>
+                            <span class="help-block">NIRSpec Filters</span>
                             <div class="form-control" id='nirspec_filt'>
                                 {% for field in form.nirspec_filt %}
                                 <div class="row-sm-10">
@@ -460,7 +501,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Gratings</span>
+                            <span class="help-block">NIRSpec Gratings</span>
                             <div class="form-control" id='nirspec_grating'>
                                 {% for field in form.nirspec_grating %}
                                 <div class="row-sm-10">
@@ -472,7 +513,7 @@
                         </section>
 
                         <section class="col-md">
-                            <span id="helpBlock" class="help-block">NIRSpec Read Patterns</span>
+                            <span class="help-block">NIRSpec Read Patterns</span>
                             <div class="form-control" id='nirspec_readpatt'>
                                 {% for field in form.nirspec_readpatt %}
                                 <div class="row-sm-10">
