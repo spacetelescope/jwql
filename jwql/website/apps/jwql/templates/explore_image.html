@@ -44,7 +44,13 @@
 
                 <!-- Allow the user to change the settings in the image to explore -->
                 <h4>Data Settings</h4>
-                <div class="mt-4">
+                <div class="col">
+                    <div class="row">
+                        <input class="mr-2" type="checkbox" id="show_line_plots">
+                        <label class="form-check-label" for="show_line_plots">Show column/row plots</label>
+                    </div>
+
+                    <div class="row">
                     Extension:&nbsp;&nbsp;
                     {% for extension in extensions %}
                         {% if extension == 'SCI' %}
@@ -53,6 +59,8 @@
                             <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
                         {% endif %}
                     {% endfor %}
+                    </div>
+
                     <div class="row">
                         <div class="explorer_options" id="integrationInput1">
                             <input type="number" id="integration1" min="0" size="3" step="1">
@@ -83,8 +91,11 @@
                 </p>
             </div>
 
-            <!-- Display the anomaly form -->
-            <div class="col-xl-3 text-left">
+
+        </div>
+
+        <!-- Display the anomaly form -->
+        <div class="col-xl-3 text-left">
                 <!--Load the file search form from the view-->
                 <div class="anomaly_form">
                     <h5>Submit Anomaly</h5>
@@ -115,8 +126,6 @@
                     </form>
                 </div>
             </div>
-            <!-- Display the anomaly form above -->
-        </div>
 
     </main>
     <script>explore_image_update_enable_options('{{ extension_ints }}', '{{ extension_groups }}');</script>

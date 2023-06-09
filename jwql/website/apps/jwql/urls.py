@@ -96,7 +96,7 @@ urlpatterns = [
     re_path('ajax/query_submit/', views.archive_thumbnails_query_ajax, name='archive_thumb_query_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
-    re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/ext_(?P<ext_name>.+)/int1_(?P<int1_nr>.+)/grp1_(?P<grp1_nr>.+)/int2_(?P<int2_nr>.+)/grp2_(?P<grp2_nr>.+)/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/plot_(?P<line_plots>(true|false))/ext_(?P<ext_name>.+)/int1_(?P<int1_nr>.+)/grp1_(?P<grp1_nr>.+)/int2_(?P<int2_nr>.+)/grp2_(?P<grp2_nr>.+)/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
     re_path(r'^ajax/viewed/(?P<file_root>.+)/$', views.toggle_viewed_ajax, name='toggle_viewed_ajax'),
     re_path(r'^ajax/viewed_group/(?P<group_root>.+)/(?P<status>(viewed|new|Viewed|New))/$',

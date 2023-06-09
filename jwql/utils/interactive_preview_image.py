@@ -16,6 +16,7 @@
         Required Arguments:
         ''filename'' - Name of a fits file containing a JWST observation
     """
+import datetime
 from copy import deepcopy
 import os
 
@@ -23,12 +24,13 @@ from astropy.io import fits
 from astropy.visualization import ZScaleInterval, MinMaxInterval, PercentileInterval
 import numpy as np
 from bokeh.embed import components
-from bokeh.layouts import layout
+from bokeh.layouts import gridplot, layout
 from bokeh.models import (
-    BasicTicker, BoxZoomTool, Button, ColorBar, CustomJS, Div, HoverTool,
-    LinearColorMapper, LogColorMapper, LogTicker, RadioGroup, Row, Select, Spacer,
-    Spinner, WheelZoomTool)
+    BasicTicker, BoxZoomTool, Button, ColorBar, ColumnDataSource,
+    CustomJS, CustomJSTransform, DataRange1d, Div, HoverTool, LinearColorMapper, LogColorMapper,
+    LogTicker, RadioGroup, Range1d, Row, Select, Spacer, Spinner, WheelZoomTool)
 from bokeh.plotting import figure, output_file, show, save
+from bokeh.transform import transform
 
 from jwst.datamodels import dqflags
 
@@ -37,8 +39,8 @@ class InteractivePreviewImg:
     """Class to create the interactive Bokeh figure.
     """
 
-    def __init__(self, filename, low_lim=None, high_lim=None, scaling='log', contrast=None, extname='SCI',
-                 group=None, integ=None, mask=None, save_html=None, show=False):
+    def __init__(self, filename, low_lim=None, high_lim=None, scaling='lin', contrast=None, extname='SCI',
+                 group=None, integ=None, mask=None, line_plots=False, save_html=None, show=False):
         """Populate attributes, read in data, and create the Bokeh figure
         Parameters
         ----------
@@ -68,6 +70,9 @@ class InteractivePreviewImg:
         mask : numpy.ndarray
             Mask to use in order to avoid some pixels when auto-scaling. Pixels with a value other than 0 will
             be ignored when auto-scaling.
+        line_plots : bool
+            If set, column and row plots are added to the layout, to be updated on click in the main figure.
+            These take some time to create, so are off by default.
         save_html : str
             Name of html file to save the figure to. If None, the components are returned instead.
         show : bool
@@ -80,6 +85,7 @@ class InteractivePreviewImg:
         self.contrast = contrast
         self.extname = extname.upper()
         self.mask = mask
+        self.show_line_plots = line_plots
         self.show = show
         self.save_html = save_html
 
@@ -105,6 +111,8 @@ class InteractivePreviewImg:
         self.get_data()
         if 'DQ' in self.extname:
             self.get_bits()
+            # col/row plots not available for dq values
+            self.show_line_plots = False
         self.script, self.div = self.create_bokeh_image()
 
     def create_bokeh_image(self):
@@ -140,16 +148,17 @@ class InteractivePreviewImg:
         # fix figure aspect from data aspect
         # bokeh throws errors if plot is too small, so make sure
         # the smaller dimension has reasonable size
+        max_dim, min_dim = 700, 300
         if xd > yd:
-            plot_width = 800
+            plot_width = max_dim
             plot_height = int(plot_width * yd / xd)
-            if plot_height < 400:
-                plot_height = 400
+            if plot_height < min_dim:
+                plot_height = min_dim
         else:
-            plot_height = 800
+            plot_height = max_dim
             plot_width = int(plot_height * xd / yd)
-            if plot_width < 400:
-                plot_width = 400
+            if plot_width < min_dim:
+                plot_width = min_dim
 
         fig = figure(tools='pan,reset,save', match_aspect=True,
                      plot_width=plot_width, plot_height=plot_height)
@@ -169,7 +178,10 @@ class InteractivePreviewImg:
                                  title=self.signal_units, bar_line_color='black',
                                  minor_tick_line_color='black', major_tick_line_color='black',
                                  visible=visible)
-            fig.add_layout(color_bar, 'below')
+            if self.show_line_plots:
+                fig.add_layout(color_bar, 'above')
+            else:
+                fig.add_layout(color_bar, 'below')
             images.append(img)
             color_bars.append(color_bar)
 
@@ -196,11 +208,19 @@ class InteractivePreviewImg:
         fig.title.text = self.title
         fig.xaxis.axis_label = 'Pixel'
         fig.yaxis.axis_label = 'Pixel'
-        fig.tools.append(hover_tool)
+        fig.add_tools(hover_tool)
 
         # add interactive widgets
         widgets = self.add_interactive_controls(images, color_bars)
-        box_layout = layout(children=[fig, *widgets])
+        if self.show_line_plots:
+            # add row and column plots
+            col_plot, row_plot = self.line_plots(fig)
+            grid = gridplot([fig, col_plot, row_plot],
+                            ncols=2, merge_tools=False)
+        else:
+            grid = fig
+
+        box_layout = layout(children=[grid, *widgets])
 
         # Show figure on screen if requested
         if self.show:
@@ -209,6 +229,98 @@ class InteractivePreviewImg:
             save(box_layout)
         else:
             return components(box_layout)
+
+    def line_plots(self, main_figure):
+        new_plots = []
+        new_lines = []
+        ny, nx = self.data.shape
+        col_idx, row_idx = np.indices((ny, nx))
+
+        for direction in ['y', 'x']:
+            if direction == 'y':
+                # column plots
+                fig = figure(plot_width=200, plot_height=main_figure.height,
+                             tools='xwheel_zoom, xpan, reset',
+                             y_axis_location='right')
+
+                fig.x_range = DataRange1d(only_visible=True)
+                fig.y_range = Range1d()
+                match_range = fig.y_range
+                main_range = main_figure.y_range
+
+                x_plot = 'data'
+                y_plot = 'index'
+                n_plot = nx
+                data_source = {'data': self.data, 'index': col_idx}
+                source = ColumnDataSource(data_source)
+            else:
+                # row plots
+                fig = figure(plot_height=200, plot_width=main_figure.width,
+                             tools='ywheel_zoom, ypan, reset')
+
+                fig.y_range = DataRange1d(only_visible=True)
+                fig.x_range = Range1d()
+                match_range = fig.x_range
+                main_range = main_figure.x_range
+
+                x_plot = 'index'
+                y_plot = 'data'
+                n_plot = ny
+                # indexing is off by 1 for row plots for some reason
+                data_source = {'data': self.data.T, 'index': row_idx.T + 1}
+                source = ColumnDataSource(data_source)
+
+            # match one of the axes to the main figure
+            if main_range.start is not None:
+                match_range.start = main_range.start
+            if main_range.end is not None:
+                match_range.end = main_range.end
+            main_range.js_link('start', match_range, 'start')
+            main_range.js_link('start', match_range, 'reset_start')
+            main_range.js_link('end', match_range, 'end')
+            main_range.js_link('end', match_range, 'reset_end')
+
+            lines = []
+            initial_visible = n_plot // 2
+            for i in range(n_plot):
+                idx_transform = CustomJSTransform(
+                    args={'idx': i},
+                    v_func="""
+                        const x_val = new Float64Array(xs.length);
+                        for (let i = 0; i < xs.length; i++) {
+                            x_val[i] = xs[i][idx];
+                        }
+                        return x_val;
+                    """)
+                line = fig.step(x=transform(x_plot, idx_transform),
+                                y=transform(y_plot, idx_transform),
+                                mode='before', source=source,
+                                visible=(i == initial_visible))
+                lines.append(line)
+            new_lines.append(lines)
+            new_plots.append(fig)
+
+        update_plot = CustomJS(args={'lines': new_lines}, code="""
+            var x = Math.floor(cb_obj.x);
+            var y = Math.floor(cb_obj.y);
+            for (let i=0; i < lines[0].length; i++) {
+                if (i == x) {
+                    lines[0][i].visible = true;
+                } else {
+                    lines[0][i].visible = false;
+                }
+            }
+            for (let j=0; j < lines[1].length; j++) {
+                if (j == y) {
+                    lines[1][j].visible = true;
+                } else {
+                    lines[1][j].visible = false;
+                }
+            }
+        """)
+        main_figure.js_on_event('tap', update_plot)
+
+        return new_plots
 
     def add_interactive_controls(self, images, color_bars):
         """

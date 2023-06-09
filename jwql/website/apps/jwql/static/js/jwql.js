@@ -423,7 +423,7 @@ function get_radio_button_value(element_name) {
 }
 
 /**
- * get_scaling_value
+ * Get value from a numerical text field
  * @param {String} element_id - The element id
  * @returns value - value of element id or "None" if empty or not a number
 */
@@ -1058,7 +1058,7 @@ function update_wata_page(base_url) {
 /**
  * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
- * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} file_root - The rootname of the file corresponding to the instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
  * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
@@ -1073,6 +1073,7 @@ function update_wata_page(base_url) {
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
         var calc_difference = document.getElementById("calcDifference").checked;
+        var show_line_plots = document.getElementById("show_line_plots").checked;
 
         // Get the arguments to update
         var ext_name = get_radio_button_value("extension");
@@ -1087,7 +1088,7 @@ function update_wata_page(base_url) {
             int2_nr="None";
             grp2_nr="None";
         }
-        optional_params = optional_params + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
+        optional_params = optional_params + "/plot_" + show_line_plots + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
     }
 
     $.ajax({
