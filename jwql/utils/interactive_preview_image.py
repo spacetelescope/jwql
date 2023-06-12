@@ -148,7 +148,7 @@ class InteractivePreviewImg:
         # fix figure aspect from data aspect
         # bokeh throws errors if plot is too small, so make sure
         # the smaller dimension has reasonable size
-        max_dim, min_dim = 700, 300
+        max_dim, min_dim = 700, 400
         if xd > yd:
             plot_width = max_dim
             plot_height = int(plot_width * yd / xd)
@@ -231,6 +231,19 @@ class InteractivePreviewImg:
             return components(box_layout)
 
     def line_plots(self, main_figure):
+        """
+        Pre-compute column and row plots for each pixel.
+
+        Parameters
+        ----------
+        main_figure : figure
+            Main figure containing image.
+
+        Returns
+        -------
+        list of figure
+            New figures to add to the page layout.
+        """
         new_plots = []
         new_lines = []
         ny, nx = self.data.shape
@@ -242,11 +255,14 @@ class InteractivePreviewImg:
                 fig = figure(plot_width=200, plot_height=main_figure.height,
                              tools='xwheel_zoom, xpan, reset',
                              y_axis_location='right')
-
                 fig.x_range = DataRange1d(only_visible=True)
                 fig.y_range = Range1d()
                 match_range = fig.y_range
                 main_range = main_figure.y_range
+
+                fig.xaxis.axis_label = self.signal_units
+                fig.yaxis.axis_label = 'Row pixel (y)'
+                fig.xaxis.major_label_orientation = np.radians(-45)
 
                 x_plot = 'data'
                 y_plot = 'index'
@@ -262,6 +278,9 @@ class InteractivePreviewImg:
                 fig.x_range = Range1d()
                 match_range = fig.x_range
                 main_range = main_figure.x_range
+
+                fig.xaxis.axis_label = 'Column pixel (x)'
+                fig.yaxis.axis_label = self.signal_units
 
                 x_plot = 'index'
                 y_plot = 'data'
