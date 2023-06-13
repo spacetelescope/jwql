@@ -16,13 +16,13 @@
         Required Arguments:
         ''filename'' - Name of a fits file containing a JWST observation
     """
-import datetime
 from copy import deepcopy
 import os
 
+import numpy as np
 from astropy.io import fits
 from astropy.visualization import ZScaleInterval, MinMaxInterval, PercentileInterval
-import numpy as np
+from astropy.wcs import WCS
 from bokeh.embed import components
 from bokeh.layouts import gridplot, layout
 from bokeh.models import (
@@ -32,7 +32,6 @@ from bokeh.models import (
     Select, Spacer, Spinner, WheelZoomTool)
 from bokeh.plotting import figure, output_file, show, save
 from bokeh.transform import transform
-
 from jwst.datamodels import dqflags
 
 
@@ -109,6 +108,10 @@ class InteractivePreviewImg:
                 raise ValueError(
                     'integ must be an integer or 2-element list')
         self.integ = integ
+
+        self.data = None
+        self.signal_units = None
+        self.wcs_coord = None
         self.get_data()
         if 'DQ' in self.extname:
             self.get_bits()
@@ -139,9 +142,14 @@ class InteractivePreviewImg:
         active = int(self.scaling == 'log')
 
         yd, xd = self.data.shape
-        info = ColumnDataSource(dict(image=[self.data], x=[0], y=[0], dw=[xd], dh=[yd]))
+        info = dict(image=[self.data], x=[0], y=[0], dw=[xd], dh=[yd])
         if 'DQ' in self.extname:
             info["dq"] = [self.bit_list]
+        if self.wcs_coord is not None and len(self.wcs_coord) == 2:
+            info["ra"] = [self.wcs_coord[0]]
+            info["dec"] = [self.wcs_coord[1]]
+        source = ColumnDataSource(info)
+
         if not self.show and self.save_html is not None:
             output_file(filename=self.save_html,
                         title=os.path.basename(self.filename))
@@ -173,7 +181,7 @@ class InteractivePreviewImg:
         for i, config in enumerate(scales):
             color_mapper, ticker = config
             visible = (i == active)
-            img = fig.image(source=info, image='image',
+            img = fig.image(source=source, image='image',
                             level="image", color_mapper=color_mapper, visible=visible)
             color_bar = ColorBar(color_mapper=color_mapper, label_standoff=12, ticker=ticker,
                                  title=self.signal_units, bar_line_color='black',
@@ -197,7 +205,7 @@ class InteractivePreviewImg:
             fig.y_range.end = yd
             fig.y_range.bounds = (0, yd)
 
-        hover_div, hover_tool = self.add_hover_tool(info, images)
+        hover_div, hover_tool = self.add_hover_tool(source, images)
 
         self.create_figure_title()
         fig.title.text = self.title
@@ -343,13 +351,13 @@ class InteractivePreviewImg:
 
         return new_plots
 
-    def add_hover_tool(self, info, images):
+    def add_hover_tool(self, source, images):
         """
         Make a hover tool with a div to display text.
 
         Parameters
         ----------
-        info : bokeh.models.ColumnDataSource
+        source : bokeh.models.ColumnDataSource
             Data source for the figure.
         images : list of bokeh.models.GlyphRenderer
             Images to use as renderers for the hover tool.
@@ -360,23 +368,35 @@ class InteractivePreviewImg:
             Div element that will contain text from hover tool.
         hover_tool : bokeh.models.
         """
-        hover_div = Div(height=200, width=200)
-        hover_callback = CustomJS(args={'s': info, 'd': hover_div}, code="""
+        hover_div = Div(height=300, width=300)
+        hover_callback = CustomJS(args={'s': source, 'd': hover_div, 'u': self.signal_units}, code="""
             const idx = cb_data.index.image_indices;
             if (idx.length > 0) { 
                 var x = idx[0].dim1;
                 var y = idx[0].dim2;
-                var val = s.data['image'][0][y][x];
-                val = val.toPrecision(5);
+                var flat = idx[0].flat_index;
+                var val = s.data['image'][0][y][x].toPrecision(5);
                 d.text = "<div style='margin:20px'><h5>Pixel Value</h5>" + 
                          "<div style='display:table; border-spacing: 2px'>" + 
                          "<div style='display:table-row'>" + 
                          "<div style='display:table-cell; text-align:right'>(x, y) =</div>" +
                          "<div style='display:table-cell'>(" + x + ", " + y + ")</div>" +
-                         "</div>" +
-                         "<div style='display:table-row'>" + 
-                         "<div style='display:table-cell; text-align:right'>Value =</div>" +
-                         "<div style='display:table-cell'>" + val + "</div></div></div></div>";
+                         "</div>"
+                if ('ra' in s.data && 'dec' in s.data) {
+                    var ra = s.data['ra'][0][flat].toPrecision(8);
+                    var dec = s.data['dec'][0][flat].toPrecision(8);
+                    d.text += "<div style='display:table-row'>" + 
+                              "<div style='display:table-cell; text-align:right'>RA (deg) =</div>" +
+                              "<div style='display:table-cell'>" + ra + "</div>" +
+                              "</div>" +
+                              "<div style='display:table-row'>" + 
+                              "<div style='display:table-cell; text-align:right'>Dec (deg)=</div>" +
+                              "<div style='display:table-cell'>" + dec + "</div>" +
+                              "</div>"
+                }
+                d.text += "<div style='display:table-row'>" + 
+                          "<div style='display:table-cell; text-align:right'>Value (" + u + ") =</div>" +
+                          "<div style='display:table-cell'>" + val + "</div></div></div></div>";
             } else {
                 d.text = "";
             }
@@ -547,6 +567,17 @@ class InteractivePreviewImg:
             self.signal_units = header['BUNIT']
         except KeyError:
             self.signal_units = ''
+
+        ny, nx = self.data.shape
+        col_idx, row_idx = np.indices((ny, nx))
+        try:
+            wcs = WCS(header)
+            if wcs.has_celestial:
+                self.wcs_coord = wcs.pixel_to_world_values(col_idx, row_idx)
+            else:
+                self.wcs_coord = None
+        except (ValueError, TypeError):
+            self.wcs_coord = None
 
     def get_scale(self):
         """Calculate the limits for the display, following the ZScale function
