@@ -27,8 +27,9 @@ from bokeh.embed import components
 from bokeh.layouts import gridplot, layout
 from bokeh.models import (
     BasicTicker, BoxZoomTool, Button, ColorBar, ColumnDataSource,
-    CustomJS, CustomJSTransform, DataRange1d, Div, HoverTool, LinearColorMapper, LogColorMapper,
-    LogTicker, RadioGroup, Range1d, Row, Select, Spacer, Spinner, WheelZoomTool)
+    CustomJS, CustomJSTransform, DataRange1d, Div, HoverTool,
+    LinearColorMapper, LogColorMapper, LogTicker, RadioGroup, Range1d, Row,
+    Select, Spacer, Spinner, WheelZoomTool)
 from bokeh.plotting import figure, output_file, show, save
 from bokeh.transform import transform
 
@@ -138,7 +139,7 @@ class InteractivePreviewImg:
         active = int(self.scaling == 'log')
 
         yd, xd = self.data.shape
-        info = dict(image=[self.data], x=[0], y=[0], dw=[xd], dh=[yd])
+        info = ColumnDataSource(dict(image=[self.data], x=[0], y=[0], dw=[xd], dh=[yd]))
         if 'DQ' in self.extname:
             info["dq"] = [self.bit_list]
         if not self.show and self.save_html is not None:
@@ -196,14 +197,8 @@ class InteractivePreviewImg:
             fig.y_range.end = yd
             fig.y_range.bounds = (0, yd)
 
-        if 'DQ' not in self.extname:
-            hover_tool = HoverTool(tooltips=[("(x,y)", "($x{0.2f}, $y{0.2f})"),
-                                             ('Value', '@image{0.4f}')
-                                             ], mode='mouse', renderers=images)
-        else:
-            hover_tool = HoverTool(tooltips=[("(x,y)", "($x{0.2f}, $y{0.2f})"),
-                                             ('Value', '@dq')
-                                             ], mode='mouse', renderers=images)
+        hover_div, hover_tool = self.add_hover_tool(info, images)
+
         self.create_figure_title()
         fig.title.text = self.title
         fig.xaxis.axis_label = 'Pixel'
@@ -215,10 +210,10 @@ class InteractivePreviewImg:
         if self.show_line_plots:
             # add row and column plots
             col_plot, row_plot = self.line_plots(fig)
-            grid = gridplot([fig, col_plot, row_plot],
+            grid = gridplot([fig, col_plot, row_plot, hover_div],
                             ncols=2, merge_tools=False)
         else:
-            grid = fig
+            grid = gridplot([fig, hover_div], ncols=2, merge_tools=False)
 
         box_layout = layout(children=[grid, *widgets])
 
@@ -249,12 +244,12 @@ class InteractivePreviewImg:
         ny, nx = self.data.shape
         col_idx, row_idx = np.indices((ny, nx))
 
-        for direction in ['y', 'x']:
-            if direction == 'y':
+        for index_direction in ['x', 'y']:
+            if index_direction == 'x':
                 # column plots
                 fig = figure(plot_width=200, plot_height=main_figure.height,
                              tools='xwheel_zoom, xpan, reset',
-                             y_axis_location='right')
+                             y_axis_location='right', margin=(0, 0, 0, 30))
                 fig.x_range = DataRange1d(only_visible=True)
                 fig.y_range = Range1d()
                 match_range = fig.y_range
@@ -314,32 +309,85 @@ class InteractivePreviewImg:
                 line = fig.step(x=transform(x_plot, idx_transform),
                                 y=transform(y_plot, idx_transform),
                                 mode='before', source=source,
-                                visible=(i == initial_visible))
+                                visible=(i == initial_visible),
+                                name=f'Data at {index_direction}={i}')
                 lines.append(line)
+            fig.title = lines[initial_visible].name
             new_lines.append(lines)
             new_plots.append(fig)
 
-        update_plot = CustomJS(args={'lines': new_lines}, code="""
-            var x = Math.floor(cb_obj.x);
-            var y = Math.floor(cb_obj.y);
-            for (let i=0; i < lines[0].length; i++) {
-                if (i == x) {
-                    lines[0][i].visible = true;
-                } else {
-                    lines[0][i].visible = false;
+        update_plot = CustomJS(
+            args={'lines': new_lines, 'figures': new_plots},
+            code="""
+                var x = Math.floor(cb_obj.x);
+                var y = Math.floor(cb_obj.y);
+                figures[0].title.text = "";
+                for (let i=0; i < lines[0].length; i++) {
+                    if (i == x) {
+                        lines[0][i].visible = true;
+                        figures[0].title.text = lines[0][i].name;
+                    } else {
+                        lines[0][i].visible = false;
+                    }
                 }
-            }
-            for (let j=0; j < lines[1].length; j++) {
-                if (j == y) {
-                    lines[1][j].visible = true;
-                } else {
-                    lines[1][j].visible = false;
-                }
-            }
-        """)
+                figures[1].title.text = "";
+                for (let j=0; j < lines[1].length; j++) {
+                    if (j == y) {
+                        lines[1][j].visible = true;
+                        figures[1].title.text = lines[1][j].name;
+                    } else {
+                        lines[1][j].visible = false;
+                    }
+                }""")
         main_figure.js_on_event('tap', update_plot)
 
         return new_plots
+
+    def add_hover_tool(self, info, images):
+        """
+        Make a hover tool with a div to display text.
+
+        Parameters
+        ----------
+        info : bokeh.models.ColumnDataSource
+            Data source for the figure.
+        images : list of bokeh.models.GlyphRenderer
+            Images to use as renderers for the hover tool.
+
+        Returns
+        -------
+        hover_div : bokeh.models.Div
+            Div element that will contain text from hover tool.
+        hover_tool : bokeh.models.
+        """
+        hover_div = Div(height=200, width=200)
+        hover_callback = CustomJS(args={'s': info, 'd': hover_div}, code="""
+            const idx = cb_data.index.image_indices;
+            if (idx.length > 0) { 
+                var x = idx[0].dim1;
+                var y = idx[0].dim2;
+                var val = s.data['image'][0][y][x];
+                val = val.toPrecision(5);
+                d.text = "<div style='margin:20px'><h5>Pixel Value</h5>" + 
+                         "<div style='display:table; border-spacing: 2px'>" + 
+                         "<div style='display:table-row'>" + 
+                         "<div style='display:table-cell; text-align:right'>(x, y) =</div>" +
+                         "<div style='display:table-cell'>(" + x + ", " + y + ")</div>" +
+                         "</div>" +
+                         "<div style='display:table-row'>" + 
+                         "<div style='display:table-cell; text-align:right'>Value =</div>" +
+                         "<div style='display:table-cell'>" + val + "</div></div></div></div>";
+            } else {
+                d.text = "";
+            }
+        """)
+        if 'DQ' not in self.extname:
+            hover_tool = HoverTool(tooltips=None, mode='mouse', renderers=images,
+                                   callback=hover_callback)
+        else:
+            hover_tool = HoverTool(tooltips=None, mode='mouse', renderers=images,
+                                   callback=hover_callback)
+        return hover_div, hover_tool
 
     def add_interactive_controls(self, images, color_bars):
         """
