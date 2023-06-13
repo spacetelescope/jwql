@@ -27,11 +27,9 @@ from bokeh.embed import components
 from bokeh.layouts import gridplot, layout
 from bokeh.models import (
     BasicTicker, BoxZoomTool, Button, ColorBar, ColumnDataSource,
-    CustomJS, CustomJSTransform, DataRange1d, Div, HoverTool,
-    LinearColorMapper, LogColorMapper, LogTicker, RadioGroup, Range1d, Row,
-    Select, Spacer, Spinner, WheelZoomTool)
+    CustomJS, Div, HoverTool, LinearColorMapper, LogColorMapper, LogTicker,
+    RadioGroup, Range1d, Row, Select, Spacer, Spinner, WheelZoomTool)
 from bokeh.plotting import figure, output_file, show, save
-from bokeh.transform import transform
 from jwst.datamodels import dqflags
 
 
@@ -249,48 +247,59 @@ class InteractivePreviewImg:
         """
         new_plots = []
         new_lines = []
+        match_ranges = []
+        value_ranges = []
+
         ny, nx = self.data.shape
         col_idx, row_idx = np.indices((ny, nx))
-
-        for index_direction in ['x', 'y']:
+        directions = ['x', 'y']
+        for index_direction in directions:
             if index_direction == 'x':
                 # column plots
-                fig = figure(plot_width=200, plot_height=main_figure.height,
-                             tools='xwheel_zoom, xpan, reset',
+                fig = figure(plot_width=200, plot_height=main_figure.height, tools='',
                              y_axis_location='right', margin=(0, 0, 0, 30))
-                fig.x_range = DataRange1d(only_visible=True)
+                fig.toolbar.logo = None
+
+                fig.x_range = Range1d()
                 fig.y_range = Range1d()
                 match_range = fig.y_range
                 main_range = main_figure.y_range
+                value_range = fig.x_range
 
                 fig.xaxis.axis_label = self.signal_units
                 fig.yaxis.axis_label = 'Row pixel (y)'
                 fig.xaxis.major_label_orientation = np.radians(-45)
 
-                x_plot = 'data'
-                y_plot = 'index'
                 n_plot = nx
-                data_source = {'data': self.data, 'index': col_idx}
-                source = ColumnDataSource(data_source)
+                initial_visible = n_plot // 2
+
+                x = self.data.T
+                y = col_idx.T
+                min_val = np.nanmin(x[initial_visible])
+                max_val = np.nanmax(x[initial_visible])
+
             else:
                 # row plots
-                fig = figure(plot_height=200, plot_width=main_figure.width,
-                             tools='ywheel_zoom, ypan, reset')
+                fig = figure(plot_height=200, plot_width=main_figure.width, tools='')
+                fig.toolbar.logo = None
 
-                fig.y_range = DataRange1d(only_visible=True)
+                fig.y_range = Range1d()
                 fig.x_range = Range1d()
                 match_range = fig.x_range
                 main_range = main_figure.x_range
+                value_range = fig.y_range
 
                 fig.xaxis.axis_label = 'Column pixel (x)'
                 fig.yaxis.axis_label = self.signal_units
 
-                x_plot = 'index'
-                y_plot = 'data'
-                n_plot = ny
                 # indexing is off by 1 for row plots for some reason
-                data_source = {'data': self.data.T, 'index': row_idx.T + 1}
-                source = ColumnDataSource(data_source)
+                n_plot = ny
+                initial_visible = n_plot // 2
+
+                x = row_idx + 1
+                y = self.data
+                min_val = np.nanmin(y[initial_visible])
+                max_val = np.nanmax(y[initial_visible])
 
             # match one of the axes to the main figure
             if main_range.start is not None:
@@ -302,28 +311,29 @@ class InteractivePreviewImg:
             main_range.js_link('end', match_range, 'end')
             main_range.js_link('end', match_range, 'reset_end')
 
+            # initialize the other to the data
+            pad = 0.1 * (max_val - min_val)
+            value_range.start = min_val - pad
+            value_range.end = max_val + pad
+
+            # plot a step line for each column and plot
+            # all but one are hidden to start
             lines = []
-            initial_visible = n_plot // 2
             for i in range(n_plot):
-                idx_transform = CustomJSTransform(
-                    args={'idx': i},
-                    v_func="""
-                        const x_val = new Float64Array(xs.length);
-                        for (let i = 0; i < xs.length; i++) {
-                            x_val[i] = xs[i][idx];
-                        }
-                        return x_val;
-                    """)
-                line = fig.step(x=transform(x_plot, idx_transform),
-                                y=transform(y_plot, idx_transform),
-                                mode='before', source=source,
+                line = fig.step(x=x[i], y=y[i],
+                                mode='before',
                                 visible=(i == initial_visible),
                                 name=f'Data at {index_direction}={i}')
                 lines.append(line)
             fig.title = lines[initial_visible].name
+
             new_lines.append(lines)
             new_plots.append(fig)
+            match_ranges.append(match_range)
+            value_ranges.append(value_range)
 
+        # watch for tap on plot - makes a new line visible,
+        # matching the selected point
         update_plot = CustomJS(
             args={'lines': new_lines, 'figures': new_plots},
             code="""
@@ -348,6 +358,48 @@ class InteractivePreviewImg:
                     }
                 }""")
         main_figure.js_on_event('tap', update_plot)
+
+        # watch for changes to matched axis to reset data range on value axis
+        for i in range(len(directions)):
+            limit_reset = CustomJS(
+                args={'line': new_lines[i],
+                      'direction': directions[i],
+                      'value_range': value_ranges[i],
+                      'match_range': match_ranges[i]},
+                code="""
+                    var min_val = Infinity;
+                    var max_val = -Infinity;
+                    for (let i=0; i < line.length; i++) {
+                        if (line[i].visible == true) {
+                            var data, idx;
+                            if (direction == 'x') {
+                                data = line[i].data_source.data['x'];
+                                idx = line[i].data_source.data['y'];
+                            } else {
+                                data = line[i].data_source.data['y'];
+                                idx = line[i].data_source.data['x'];
+                            }
+                            for (let j=0; j < data.length; j++) {
+                                if (idx[j] >= match_range.start 
+                                        && idx[j] <= match_range.end) {
+                                    min_val = Math.min(data[j], min_val);
+                                    max_val = Math.max(data[j], max_val);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (min_val < Infinity && min_val != max_val) {
+                        var pad = 0.1 * (max_val - min_val);
+                        value_range.start = min_val - pad;
+                        value_range.end = max_val + pad;
+                    }
+                    """)
+            match_ranges[i].js_on_change('start', limit_reset)
+            match_ranges[i].js_on_change('end', limit_reset)
+
+            # also reset the limits when the plot is tapped for a new column/row
+            main_figure.js_on_event('tap', limit_reset)
 
         return new_plots
 
@@ -375,7 +427,12 @@ class InteractivePreviewImg:
                 var x = idx[0].dim1;
                 var y = idx[0].dim2;
                 var flat = idx[0].flat_index;
-                var val = s.data['image'][0][y][x].toPrecision(5);
+                var val = s.data['image'][0][y][x];
+                if (!Number.isFinite(val)) {
+                    val = 'NaN';
+                } else {
+                    val = val.toPrecision(5);
+                }
                 d.text = "<div style='margin:20px'><h5>Pixel Value</h5>" + 
                          "<div style='display:table; border-spacing: 2px'>" + 
                          "<div style='display:table-row'>" + 
