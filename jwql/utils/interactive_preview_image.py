@@ -367,6 +367,13 @@ class InteractivePreviewImg:
                       'value_range': value_ranges[i],
                       'match_range': match_ranges[i]},
                 code="""
+                    var timeout;
+                    if (direction == 'x') {
+                        timeout = window._autoscale_timeout_x;
+                    } else {
+                        timeout = window._autoscale_timeout_y;
+                    }
+                    clearTimeout(timeout);
                     var min_val = Infinity;
                     var max_val = -Infinity;
                     for (let i=0; i < line.length; i++) {
@@ -382,17 +389,28 @@ class InteractivePreviewImg:
                             for (let j=0; j < data.length; j++) {
                                 if (idx[j] >= match_range.start 
                                         && idx[j] <= match_range.end) {
-                                    min_val = Math.min(data[j], min_val);
-                                    max_val = Math.max(data[j], max_val);
+                                    if (Number.isFinite(data[j])) {
+                                        min_val = Math.min(data[j], min_val);
+                                        max_val = Math.max(data[j], max_val);
+                                    }
                                 }
                             }
                             break;
                         }
                     }
-                    if (min_val < Infinity && min_val != max_val) {
+                    if (Number.isFinite(min_val) && Number.isFinite(max_val) && min_val != max_val) {
                         var pad = 0.1 * (max_val - min_val);
-                        value_range.start = min_val - pad;
-                        value_range.end = max_val + pad;
+                        if (direction == 'x') {
+                            window._autoscale_timeout_x = setTimeout(function() {
+                                value_range.start = min_val - pad;
+                                value_range.end = max_val + pad;
+                            });
+                        } else {
+                            window._autoscale_timeout_y = setTimeout(function() {
+                                value_range.start = min_val - pad;
+                                value_range.end = max_val + pad;
+                            });
+                        }
                     }
                     """)
             match_ranges[i].js_on_change('start', limit_reset)
