@@ -12,9 +12,10 @@
     	<!-- Show fits file name -->
         <h2>Explore Mode </h2>
     	<h3>{{ file_root }}_{{ filetype }}.fits</h3>
-    	<p>
+        <p>
             <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
             <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb_per_obs', args=[inst, file_root[2:7], file_root[7:10]]) }}> View Proposal</a>
+            <a class="btn btn-primary my-2 mx-2" role="button" href="https://mast.stsci.edu/api/v0.1/Download/file?uri=mast%3AJWST%2Fproduct%2F{{ file_root }}_{{ filetype }}.fits">Download File</a>
 	    </p>
 
 
