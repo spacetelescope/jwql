@@ -125,6 +125,11 @@
     document.getElementById("visit_id").innerHTML = parsed_name.visit_id;
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
+    // Add a link to download the file from MAST
+     document.getElementById("fits_filename").setAttribute('href',
+         'https://mast.stsci.edu/api/v0.1/Download/file?uri=mast%3AJWST%2Fproduct%2F' +
+         fits_filename + '.fits');
+
     // Show the appropriate image
     var img = document.getElementById("image_viewer");
     var jpg_filepath = '/static/preview_images/' + parsed_name.program + '/' + file_root + '_' + type + '_integ0.jpg';
