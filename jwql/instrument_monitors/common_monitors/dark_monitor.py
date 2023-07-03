@@ -712,7 +712,7 @@ class Dark():
                 pipeline_files.append(filename)
 
         # Specify that we want to skip the dark current correction step
-        step_args = {'dark_current': {'skip: True'}}
+        step_args = {'dark_current': {'skip': True}}
 
         # Call the pipeline
         outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate", "rateints"], self.instrument, step_args=step_args)

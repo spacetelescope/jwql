@@ -239,7 +239,7 @@ def convert_step_args_to_string(args_dict):
     args_str : str
         String representation of ``args_dict``
     """
-    args_str='{'
+    args_str="'{"
 
     for i, step in enumerate(args_dict):
         args_str += f'"{step}":'
@@ -248,9 +248,10 @@ def convert_step_args_to_string(args_dict):
             args_str += f'"{param}":"{val}"'
             if j < len(args_dict[step])-1:
                 args_str += ', '
-        args_str += '}'
+        args_str += "}"
         if i < len(args_dict)-1:
             args_str += ','
+    args_str += "}'"
     return args_str
 
 
@@ -262,7 +263,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
     command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
     logging.info("Running {}".format(command))
     process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)
-    with process.stderr:
+    with process.stderr:<log_subprocess
         log_subprocess_output(process.stderr)
     result = process.wait()
     logging.info("Subprocess result was {}".format(result))

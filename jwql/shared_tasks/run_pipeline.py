@@ -334,6 +334,7 @@ if __name__ == '__main__':
     working_path = args.working_path
     pipe_type = args.pipe
     outputs = args.outputs
+    step_args = args.step_args
 
     status_file = os.path.join(working_path, short_name+"_status.txt")
     with open(status_file, 'w') as out_file:
@@ -344,6 +345,7 @@ if __name__ == '__main__':
         out_file.write("\tinstrument is {} ({})\n".format(instrument, type(instrument)))
         out_file.write("\tinput_file is {} ({})\n".format(input_file, type(input_file)))
         out_file.write("\tshort_name is {} ({})\n".format(short_name, type(short_name)))
+        out_file.write("\tstep_args is {} ({})\n".format(step_args, type(step_args)))
 
     if not os.path.isfile(args.input_file):
         raise FileNotFoundError("No input file {}".format(args.input_file))
