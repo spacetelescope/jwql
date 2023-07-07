@@ -454,7 +454,13 @@ class InteractivePreviewImg:
                     val = s.data['dq'][0][y][x].join(', ');
                     label = "Value";
                 } else {
-                    var val = s.data['image'][0][y][x];
+                    // get the data from the array of arrays
+                    val = s.data['image'][0][y][x];
+                    if (val === undefined) {
+                        // uncal images have to be addressed with the flat index
+                        val = s.data['image'][0][flat];
+                    }
+                    // report any non-number as NaN
                     if (!Number.isFinite(val)) {
                         val = 'NaN';
                     } else {
