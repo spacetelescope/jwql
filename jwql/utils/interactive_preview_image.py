@@ -451,7 +451,10 @@ class InteractivePreviewImg:
                 var val;
                 var label;
                 if (dq === true) {
-                    val = s.data['dq'][0][y][x].join(', ');
+                    val = s.data['dq'][0][y][x];
+                    if (Array.isArray(val)) {
+                        val = val.join(', ');
+                    }
                     label = "Value";
                 } else {
                     // get the data from the array of arrays
