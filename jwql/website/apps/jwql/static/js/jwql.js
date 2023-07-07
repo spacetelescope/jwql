@@ -1109,6 +1109,13 @@ function update_wata_page(base_url) {
             */
             $('#explore_image').html(content);
 
+            // Add a help message for plots
+            if (show_line_plots === true) {
+                $('#help').html('<span class="help-tip mx-1">i</span>Click on the image to update the column/row plots.');
+            } else {
+                $('#help').html('');
+            }
+
             // Replace loading screen
             document.getElementById("loading").style.display = "none";
             document.getElementById("explore_image").style.display = "inline-block";
