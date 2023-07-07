@@ -439,17 +439,28 @@ class InteractivePreviewImg:
         hover_tool : bokeh.models.
         """
         hover_div = Div(height=300, width=300)
-        hover_callback = CustomJS(args={'s': source, 'd': hover_div, 'u': self.signal_units}, code="""
+
+        is_dq = ('DQ' in self.extname)
+        hover_callback = CustomJS(args={'s': source, 'd': hover_div,
+                                        'u': self.signal_units, 'dq': is_dq}, code="""
             const idx = cb_data.index.image_indices;
             if (idx.length > 0) { 
                 var x = idx[0].dim1;
                 var y = idx[0].dim2;
                 var flat = idx[0].flat_index;
-                var val = s.data['image'][0][y][x];
-                if (!Number.isFinite(val)) {
-                    val = 'NaN';
+                var val;
+                var label;
+                if (dq === true) {
+                    val = s.data['dq'][0][y][x].join(', ');
+                    label = "Value";
                 } else {
-                    val = val.toPrecision(5);
+                    var val = s.data['image'][0][y][x];
+                    if (!Number.isFinite(val)) {
+                        val = 'NaN';
+                    } else {
+                        val = val.toPrecision(5);
+                    }
+                    label = "Value (" + u + ")";
                 }
                 d.text = "<div style='margin:20px'><h5>Pixel Value</h5>" + 
                          "<div style='display:table; border-spacing: 2px'>" + 
@@ -461,7 +472,7 @@ class InteractivePreviewImg:
                     var ra = s.data['ra'][0][flat].toPrecision(8);
                     var dec = s.data['dec'][0][flat].toPrecision(8);
                     d.text += "<div style='display:table-row'>" + 
-                              "<div style='display:table-cell; text-align:right'>RA (deg) =</div>" +
+                              "<div style='display:table-cell; text-align:right'>RA (deg)=</div>" +
                               "<div style='display:table-cell'>" + ra + "</div>" +
                               "</div>" +
                               "<div style='display:table-row'>" + 
@@ -470,18 +481,15 @@ class InteractivePreviewImg:
                               "</div>"
                 }
                 d.text += "<div style='display:table-row'>" + 
-                          "<div style='display:table-cell; text-align:right'>Value (" + u + ") =</div>" +
+                          "<div style='display:table-cell; text-align:right'>" + label + "=</div>" +
                           "<div style='display:table-cell'>" + val + "</div></div></div></div>";
             } else {
                 d.text = "";
             }
         """)
-        if 'DQ' not in self.extname:
-            hover_tool = HoverTool(tooltips=None, mode='mouse', renderers=images,
-                                   callback=hover_callback)
-        else:
-            hover_tool = HoverTool(tooltips=None, mode='mouse', renderers=images,
-                                   callback=hover_callback)
+        hover_tool = HoverTool(tooltips=None, mode='mouse', renderers=images,
+                               callback=hover_callback)
+
         return hover_div, hover_tool
 
     def add_interactive_controls(self, images, color_bars):
