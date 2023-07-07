@@ -1009,7 +1009,7 @@ def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', l
     filetype : str
         Type of file (e.g. ``uncal``)
     line_plots : str
-        Scaling to implement in interactive preview image ("log" or "lin")
+        If 'true', column and row plots will be computed and shown with the image.
     low_lim : str
         Signal value to use as the lower limit of the displayed image. If "None", it will be calculated using the ZScale function
     high_lim : str
