@@ -428,7 +428,7 @@ function get_radio_button_value(element_name) {
 }
 
 /**
- * get_scaling_value
+ * Get value from a numerical text field
  * @param {String} element_id - The element id
  * @returns value - value of element id or "None" if empty or not a number
 */
@@ -1063,7 +1063,7 @@ function update_wata_page(base_url) {
 /**
  * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
- * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} file_root - The rootname of the file corresponding to the instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
  * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
@@ -1078,11 +1078,9 @@ function update_wata_page(base_url) {
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
         var calc_difference = document.getElementById("calcDifference").checked;
+        var show_line_plots = document.getElementById("show_line_plots").checked;
 
         // Get the arguments to update
-        var scaling = get_radio_button_value("scaling");
-        var low_lim = get_number_or_none("low_lim");
-        var high_lim = get_number_or_none("high_lim");
         var ext_name = get_radio_button_value("extension");
         var int1_nr = get_number_or_none("integration1");
         var grp1_nr = get_number_or_none("group1");
@@ -1095,7 +1093,7 @@ function update_wata_page(base_url) {
             int2_nr="None";
             grp2_nr="None";
         }
-        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
+        optional_params = optional_params + "/plot_" + show_line_plots + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
     }
 
     $.ajax({
@@ -1110,6 +1108,13 @@ function update_wata_page(base_url) {
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
             */
             $('#explore_image').html(content);
+
+            // Add a help message for plots
+            if (show_line_plots === true) {
+                $('#help').html('<span class="help-tip mx-1">i</span>Click on the image to update the column/row plots.');
+            } else {
+                $('#help').html('');
+            }
 
             // Replace loading screen
             document.getElementById("loading").style.display = "none";

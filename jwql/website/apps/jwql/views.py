@@ -928,7 +928,7 @@ def view_header(request, inst, filename, filetype):
 
 
 def explore_image(request, inst, file_root, filetype):
-    """Generate the header view page
+    """Generate the explore image page.
 
     Parameters
     ----------
@@ -994,7 +994,7 @@ def explore_image(request, inst, file_root, filetype):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
+def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -1008,8 +1008,8 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         FITS file_root of selected image in filesystem
     filetype : str
         Type of file (e.g. ``uncal``)
-    scaling : str
-        Scaling to implement in interactive preview image ("log" or "lin")
+    line_plots : str
+        If 'true', column and row plots will be computed and shown with the image.
     low_lim : str
         Signal value to use as the lower limit of the displayed image. If "None", it will be calculated using the ZScale function
     high_lim : str
@@ -1067,7 +1067,14 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         else:
             integ = int(int1_nr)
 
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name, group, integ)
+    if str(line_plots).strip().lower() == 'true':
+        line_plots = True
+    else:
+        line_plots = False
+
+    int_preview_image = InteractivePreviewImg(
+        full_fits_file, low_lim=low_lim, high_lim=high_lim, extname=ext_name,
+        group=group, integ=integ, line_plots=line_plots)
 
     context = {'inst': "inst",
                'script': int_preview_image.script,
