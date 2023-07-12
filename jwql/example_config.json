@@ -11,12 +11,12 @@
         "port" : ""
     },
     "django_database" : {
-        "engine" : "",
-        "name" : "",
-        "user" : "",
-        "password" : "",
-        "host" : "",
-        "port" : ""
+        "ENGINE" : "",
+        "NAME" : "",
+        "USER" : "",
+        "PASSWORD" : "",
+        "HOST" : "",
+        "PORT" : ""
     },
     "jwql_dir" : "",
     "jwql_version": "",
