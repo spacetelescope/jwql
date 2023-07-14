@@ -24,6 +24,7 @@ import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import session
+from jwql.database.database_interface import FGSReadnoiseStats, MIRIReadnoiseStats, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -69,7 +70,8 @@ class ReadnoiseMonitor(BokehTemplate):
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
         try:
-            pass
+            self._instrument
+            self._aperture
         except AttributeError:
             self._instrument = 'NIRCam'
             self._aperture = ''

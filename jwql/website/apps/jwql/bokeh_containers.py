@@ -212,25 +212,6 @@ def dark_monitor_tabs(instrument):
     return div, script
 
 
-def edb_monitor_tabs(instrument):
-    """Creates the various tabs of the dark monitor results page.
-
-    Parameters
-    ----------
-    instrument : str
-        The JWST instrument of interest (e.g. ``nircam``).
-
-    Returns
-    -------
-    div : str
-        The HTML div to render dark monitor plots
-    script : str
-        The JS script to render dark monitor plots
-    """
-    file_list[instrument]
-    print('read in html files')
-
-
 def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limits=None,
                            red_limits=None, save=True):
     """Create a value versus time plot of a single telemetry mnemonic. Optionally

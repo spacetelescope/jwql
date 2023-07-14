@@ -226,7 +226,6 @@ class DarkImagePlot():
 
                 # Display the 32-bit RGBA image
                 ydim, xdim = view.shape
-                max(xdim, ydim)
                 self.plot = figure(x_range=(0, xdim), y_range=(0, ydim), tools='pan,box_zoom,reset,wheel_zoom,save')
                 self.plot.image_rgba(image=[view], x=0, y=0, dw=xdim, dh=ydim)
                 self.plot.xaxis.visible = False
@@ -445,9 +444,6 @@ class DarkMonitorPlots():
         # particular full frame entry, then produce an empty plot, in order to
         # keep the plot layout consistent
         self.ensure_all_full_frame_apertures()
-
-        # List of full frame aperture names
-        FULL_FRAME_APERTURES[instrument.upper()]
 
         for aperture in self.available_apertures:
             self.aperture = aperture
