@@ -1248,9 +1248,9 @@ def get_instrument_proposals(instrument):
         List of proposals for the given instrument
     """
     tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select distinct proposal_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}%'")
+    tap_results = tap_service.search(f"select distinct prpID from CaomObservation where collection='JWST' and maxLevel>0 and insName like '{instrument.lower()}%'")
     prop_table = tap_results.to_table()
-    proposals = prop_table['proposal_id'].data
+    proposals = prop_table['prpID'].data
     inst_proposals = sorted(proposals.compressed(), reverse=True)
     return inst_proposals
 
