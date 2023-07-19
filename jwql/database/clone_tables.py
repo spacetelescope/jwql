@@ -62,7 +62,7 @@ if __name__ == '__main__':
     tab_help = "Individual tables to clone (comma-separated list)"
     action_help = "Action to take (read or write)"
     parser = argparse.ArgumentParser(description='Reset JWQL database tables')
-    parser.add_argument('action', metavar='ACTION', type=str, help=pipe_help)
+    parser.add_argument('action', metavar='ACTION', type=str, help=action_help)
     parser.add_argument('-i', '--instrument', metavar='INSTRUMENT', type=str,
                         help=ins_help, default=None, dest='instrument')
     parser.add_argument('-m', '--monitor', metavar='MONITOR', type=str,
