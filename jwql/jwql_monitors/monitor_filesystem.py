@@ -80,7 +80,6 @@ def files_per_filter():
       use that particular filter.
     """
     # Generate a list of filter/pupil pairs, to use as keys
-    from astropy.table import unique, vstack
     n_files = {}
     for instrument in JWST_INSTRUMENT_NAMES:
         n_files[instrument] = {}
