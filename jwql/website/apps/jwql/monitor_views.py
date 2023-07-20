@@ -270,15 +270,13 @@ def msata_monitoring_ajax(request):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # run the monitor
-    module = 'msata_monitor'
-    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+    # retrieve existing monitor html content
     monitor = msata_monitor.MSATA()
-    monitor.run()
-    monitor_utils.update_monitor_table(module, start_time, log_file)
+    div, script1, script2 = monitor.read_existing_html()
 
-    context = {'script': monitor.script,
-               'div': monitor.div}
+    context = {'script1': script1,
+               'script2': script2,
+               'div': div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -321,14 +319,12 @@ def wata_monitoring_ajax(request):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # run the monitor
-    module = 'wata_monitor'
-    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+    # retrieve existing monitor html content
     monitor = wata_monitor.WATA()
-    monitor.run()
-    monitor_utils.update_monitor_table(module, start_time, log_file)
+    div, script1, script2 = monitor.read_existing_html()
 
-    context = {'script': monitor.script,
-               'div': monitor.div}
+    context = {'script1': script1,
+               'script2': script2,
+               'div': div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})

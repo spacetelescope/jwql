@@ -26,12 +26,6 @@ data_containers.py
     :members:
     :undoc-members:
 
-db.py
------
-.. automodule:: jwql.website.apps.jwql.db
-    :members:
-    :undoc-members:
-
 forms.py
 --------
 .. automodule:: jwql.website.apps.jwql.forms

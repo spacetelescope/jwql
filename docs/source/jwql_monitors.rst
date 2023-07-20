@@ -25,9 +25,3 @@ monitor_filesystem.py
 .. automodule:: jwql.jwql_monitors.monitor_filesystem
     :members:
     :undoc-members:
-
-monitor_mast.py
----------------
-.. automodule:: jwql.jwql_monitors.monitor_mast
-    :members:
-    :undoc-members:

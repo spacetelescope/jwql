@@ -93,7 +93,7 @@ def define_testdata():
                     'sam_y': [-999.0],
                 }
     # create the additional arrays
-    bool_status, time_arr, status_colors = [], [], []
+    bool_status, status_colors = [], []
     for tas, do_str in zip(wata_dict['ta_status'], wata_dict['date_obs']):
         if 'unsuccessful' not in tas.lower():
             bool_status.append(1)
@@ -101,28 +101,39 @@ def define_testdata():
         else:
             bool_status.append(0)
             status_colors.append('red')
-        # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-        t = datetime.fromisoformat(do_str)
-        time_arr.append(t)
+
     # add these to the bokeh data structure
-    wata_dict['time_arr'] = time_arr
     wata_dict['ta_status_bool'] = bool_status
     wata_dict['status_colors'] = status_colors
-    # crate the dataframe
+
+    # create the dataframe
     wata_data = pd.DataFrame(wata_dict)
     return wata_data
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_mast_query_ta():
+def test_query_ta():
     """Test the ``query_mast`` function"""
 
     query_start = 59833.0
     query_end = 59844.6
 
+    # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
 
-    assert len(result) >= 16
+    # eliminate duplicates (sometimes rate files are returned with cal files)
+    result = [r for r in result if r['productLevel'] == '2b']
+    assert len(result) == 16
+
+    # query local model
+    alternate = monitor_utils.model_query_ta('nirspec', 'NRS_S1600A1_SLIT', query_start, query_end)
+    assert len(alternate) == len(result)
+
+    # check that filenames match up - model returns rootfiles, mast returns filenames
+    result = sorted(result, key=lambda x: x['filename'])
+    alternate = sorted(alternate, key=lambda x: x['root_name'])
+    for i, rootfile in enumerate(alternate):
+        assert rootfile['root_name'] in result[i]['filename']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -145,6 +156,8 @@ def test_plt_status():
     ta = WATA()
     wata_data = define_testdata()
     ta.source = ColumnDataSource(data=wata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_status()
 
     assert bokeh_plot_type == type(result)
@@ -157,6 +170,8 @@ def test_plt_residual_offsets():
     ta = WATA()
     wata_data = define_testdata()
     ta.source = ColumnDataSource(data=wata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_residual_offsets()
 
     assert bokeh_plot_type == type(result)
@@ -169,6 +184,8 @@ def test_plt_v2offset_time():
     ta = WATA()
     wata_data = define_testdata()
     ta.source = ColumnDataSource(data=wata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_v2offset_time()
 
     assert bokeh_plot_type == type(result)
@@ -181,6 +198,8 @@ def test_plt_v3offset_time():
     ta = WATA()
     wata_data = define_testdata()
     ta.source = ColumnDataSource(data=wata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_v3offset_time()
 
     assert bokeh_plot_type == type(result)
@@ -193,6 +212,9 @@ def test_plt_mag_time():
     ta = WATA()
     wata_data = define_testdata()
     ta.source = ColumnDataSource(data=wata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
+
     # create the arrays per filter and readout pattern
     nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
     nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
@@ -257,13 +279,16 @@ def test_plt_mag_time():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_unsucessful_ta():
-    """Test the ``get_unsucessful_ta`` function"""
+def test_get_unsuccessful_ta():
+    """Test the ``get_unsuccessful_ta`` function"""
 
     ta = WATA()
     wata_data = define_testdata()
     ta.source = ColumnDataSource(data=wata_data)
-    list_failed, list_else = ta.get_unsucessful_ta('ta_status_bool')
+    ta.add_time_column()
+    ta.setup_date_range()
+
+    list_failed, list_else = ta.get_unsuccessful_ta('ta_status_bool')
 
     assert list_else[0] == ta.source.data['ta_status_bool'][0]
     assert np.isnan(list_failed[0])
