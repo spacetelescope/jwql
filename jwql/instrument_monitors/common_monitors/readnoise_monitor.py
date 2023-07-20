@@ -43,10 +43,11 @@ from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import crds
 import matplotlib
-import matplotlib.pyplot as plt  # noqa: E348
-import numpy as np  # noqa: E348
-from pysiaf import Siaf  # noqa: E348
-from sqlalchemy.sql.expression import and_  # noqa: E348
+matplotlib.use('Agg') # ruff: noqa
+import matplotlib.pyplot as plt  # ruff: noqa
+import numpy as np  # ruff: noqa
+from pysiaf import Siaf  # ruff: noqa
+from sqlalchemy.sql.expression import and_  # ruff: noqa
 
 from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats  # ruff: noqa
 from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats  # ruff: noqa

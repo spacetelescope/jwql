@@ -29,6 +29,11 @@ import numpy as np
 from sqlalchemy import func
 
 from jwql.database.database_interface import get_unique_values_per_column, session
+from jwql.database.database_interface import NIRCamDarkPixelStats, NIRCamDarkDarkCurrent # ruff: noqa
+from jwql.database.database_interface import NIRISSDarkPixelStats, NIRISSDarkDarkCurrent # ruff: noqa
+from jwql.database.database_interface import MIRIDarkPixelStats, MIRIDarkDarkCurrent # ruff: noqa
+from jwql.database.database_interface import NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent # ruff: noqa
+from jwql.database.database_interface import FGSDarkPixelStats, FGSDarkDarkCurrent # ruff: noqa
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, read_png

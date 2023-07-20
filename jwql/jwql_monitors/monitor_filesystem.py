@@ -86,13 +86,12 @@ def files_per_filter():
         n_files[instrument] = {}
         for fname in FILTERS_PER_INSTRUMENT[instrument]:  # note that this does not include pupil wheel-based filters
             obs = Observations.query_criteria(filters=fname, instrument_name=JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument])
-            batch_size = 5
-            batches = [obs[i:i+batch_size] for i in range(0, len(obs), batch_size)]
+            # batch_size = 5
+            # batches = [obs[i:i+batch_size] for i in range(0, len(obs), batch_size)]
 
-            obs_table = [Observations.get_product_list(batch) for batch in batches]
-            products = unique(vstack(obs_table), keys='productFilename')
-            Observations.filter_products(products, productType=["SCIENCE"], productSubGroupDescription=['UNCAL'], extension="fits")
-
+            # obs_table = [Observations.get_product_list(batch) for batch in batches]
+            # products = unique(vstack(obs_table), keys='productFilename')
+            # filtered_products = Observations.filter_products(products, productType=["SCIENCE"], productSubGroupDescription=['UNCAL'], extension="fits")
             n_files[instrument][fname] = obs
     return n_files
 

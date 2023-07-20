@@ -623,7 +623,6 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
         ext_or_exts = [ext_or_exts]
     file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
     output_file_or_files = [os.path.join(dest_dir, x) for x in file_or_files]
-    [os.path.join(receive_path, x) for x in file_or_files]
     logging.info("\t\tCopying {} to {}".format(file_or_files, dest_dir))
     copy_files([os.path.join(receive_path, x) for x in file_or_files], dest_dir)
     logging.info("\t\tClearing Transfer Files")

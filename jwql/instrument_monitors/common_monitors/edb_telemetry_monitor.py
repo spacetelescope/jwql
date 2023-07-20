@@ -384,7 +384,13 @@ from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
 from jwql.database import database_interface
-from jwql.database.database_interface import session, engine
+
+from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
+    NIRCamEDBTimeIntervalStats, NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
+    NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats, MIRIEDBBlockStats, \
+    MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats, \
+    FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats, NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
+    NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session, engine # ruff: noqa
 from jwql.edb import engineering_database as ed
 from jwql.edb.engineering_database import add_limit_boxes
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition

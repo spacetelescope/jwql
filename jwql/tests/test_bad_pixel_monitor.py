@@ -24,6 +24,11 @@ import pytest
 
 from jwst.datamodels import dqflags
 from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats # ruff: noqa
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats # ruff: noqa
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats # ruff: noqa
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats # ruff: noqa
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats # ruff: noqa
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats # ruff: noqa
 from jwql.database.database_interface import session
 from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 from jwql.tests.resources import has_test_db

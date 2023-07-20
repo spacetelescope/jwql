@@ -29,7 +29,12 @@ import numpy as np
 from sqlalchemy import and_, func
 
 from jwql.database.database_interface import get_unique_values_per_column, session
-from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats # ruff: noqa
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats # ruff: noqa
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats # ruff: noqa
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats # ruff: noqa
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats # ruff: noqa
+from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
 from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, read_png
@@ -312,7 +317,6 @@ class BadPixelData():
         times = []
         for i, row in enumerate(all_entries_by_type):
             if i == 0:
-                row[0]
                 detector = row[1]
             num_pix.append(row[2])
             times.append(row[3])

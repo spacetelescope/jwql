@@ -87,7 +87,6 @@ def test_mast_query_darks():
     start_date = Time("2016-01-01T00:00:00").mjd
     end_date = Time("2018-01-01T00:00:00").mjd
     query = mast_query_darks(instrument, aperture, readpatt, start_date, end_date)
-    [entry['apername'] for entry in query]
     filenames = [entry['filename'] for entry in query]
 
     truth_filenames = ['jw82600013001_02103_00003_nrca1_dark.fits',

@@ -627,7 +627,6 @@ class ZerothGroupImage():
 
                 # Display the 32-bit RGBA image
                 ydim, xdim = image.shape
-                max(xdim, ydim)
                 self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
                                      tools='pan,box_zoom,reset,wheel_zoom,save')
                 self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)

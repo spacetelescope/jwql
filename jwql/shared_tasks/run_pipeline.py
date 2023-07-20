@@ -102,7 +102,6 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
     run the ``ramp_fit`` step and save the resulting slope file as well.
     """
     input_file_basename = os.path.basename(input_file)
-    os.path.dirname(input_file)
     status_file_name = short_name + "_status.txt"
     status_file = os.path.join(work_directory, status_file_name)
     uncal_file = os.path.join(work_directory, input_file_basename)
