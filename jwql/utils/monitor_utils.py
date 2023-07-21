@@ -23,7 +23,7 @@ from django import setup
 
 
 from jwql.database.database_interface import Monitor, engine
-from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
+from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES_ABBREVIATIONS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
 from jwql.utils import mast_utils
 from jwql.utils.utils import filename_parser
@@ -222,7 +222,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
     return query_results
 
 
-def model_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
+def model_query_ta(instrument, aperture, start_date, end_date, readpatt=None, return_model_instances=False):
     """Use local Django model to search for TA data.
 
     Parameters
@@ -238,20 +238,75 @@ def model_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
     readpatt : str
         Readout pattern to search for (e.g. ``RAPID``). If None,
         readout pattern will not be added to the query parameters.
+    return_model_instances : bool
+        If False, <QuerySet>.values() is returned, which is a QuerySet of dictionaries.
+        If True, the QuerySet will contain model instances, rather than dictionaries. This
+        is helpful if you need to examine obsnum values later.
 
     Returns
     -------
     query_results : list
         List of dictionaries containing the query results
     """
-    if aperture == 'NRS_S1600A1_SLIT':
-        exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
-    else:
-        exp_types = ['NRS_TACQ', 'NRS_MSATA']
+    if instrument.lower() == 'nirspec':
+        if aperture == 'NRS_S1600A1_SLIT':
+            exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
+        else:
+            exp_types = ['NRS_TACQ', 'NRS_MSATA']
+    elif instrument.lower() in ['nircam', 'niriss', 'miri']:
+        abbrev = JWST_INSTRUMENT_NAMES_ABBREVIATIONS[instrument]
+        exp_types = [f'{abbrev}_TACQ', f'{abbrev}_TACONFIRM']
 
     filter_kwargs = {
         'instrument__iexact': instrument,
-        'aperture__iexact': aperture,
+        'exp_type__in': exp_types,
+        'expstart__gte': start_date,
+        'expstart__lte': end_date
+    }
+
+    if aperture:
+        filter_kwargs['aperture__iexact'] = aperture
+
+    if readpatt is not None:
+        filter_kwargs['readpatt'] = readpatt
+
+    # get file info by instrument from local model
+    root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
+
+    if not return_model_instances:
+        return root_file_info.values()
+    else:
+        return root_file_info
+
+
+def model_query_taconfirm(instrument, start_date, end_date, readpatt=None):
+    """Use local Django model to search for TA data.
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name (e.g. ``nirspec``)
+    start_date : float
+        Starting date for the search in MJD
+    end_date : float
+        Ending date for the search in MJD
+    readpatt : str
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+    if instrument.lower() in ['nircam', 'niriss', 'miri']:
+        abbrev = JWST_INSTRUMENT_NAMES_ABBREVIATIONS[instrument]
+        exp_types = [f'{abbrev}_TACONFIRM']
+    else:
+        raise NotImplementedError('TACONFIRM query only configured for nircam, niriss, and miri')
+
+    filter_kwargs = {
+        'instrument__iexact': instrument,
         'exp_type__in': exp_types,
         'expstart__gte': start_date,
         'expstart__lte': end_date
