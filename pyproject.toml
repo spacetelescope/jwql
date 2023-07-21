@@ -21,6 +21,7 @@ dependencies = [
   "crds",
   "cryptography",
   "django",
+  "django-dbbackup",
   "inflection",
   "jinja2",
   "jsonschema",
@@ -46,7 +47,7 @@ test = [
   "pytest",
   "pytest-cov",
   "pytest-mock",
-]  
+]
 docs = [
   "sphinx",
   "sphinx_rtd_theme",
