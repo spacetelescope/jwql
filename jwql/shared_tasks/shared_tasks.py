@@ -364,6 +364,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
             cores = "half"
             status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
                                     input_file, short_name, result_file, cores, step_args)
+
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
                 managed = True
@@ -378,6 +379,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                     cores = "none"
                     status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
                                             input_file, short_name, result_file, cores, step_args)
+
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                         managed = True
@@ -588,7 +590,7 @@ def prep_file(input_file, in_ext):
         logging.critical(msg.format(short_name))
         raise ValueError("Redis lock for {} is in an unknown state".format(short_name))
     logging.info("\t\tAcquired Lock.")
-    logging.info("\t\tCopying {} to {}".format(input_file, send_path))
+    logging.info("\t\tCopying {} to {}".format(uncal_file, send_path))
     copy_files([uncal_file], send_path)
     return short_name, cal_lock, os.path.join(send_path, uncal_name)
 

@@ -10,6 +10,14 @@
         "host" : "",
         "port" : ""
     },
+    "django_database" : {
+        "ENGINE" : "",
+        "NAME" : "",
+        "USER" : "",
+        "PASSWORD" : "",
+        "HOST" : "",
+        "PORT" : ""
+    },
     "jwql_dir" : "",
     "jwql_version": "",
     "server_type": "",

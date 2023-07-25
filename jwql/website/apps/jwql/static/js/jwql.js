@@ -125,6 +125,11 @@
     document.getElementById("visit_id").innerHTML = parsed_name.visit_id;
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
+    // Add a link to download the file from MAST
+     document.getElementById("fits_filename").setAttribute('href',
+         'https://mast.stsci.edu/api/v0.1/Download/file?uri=mast%3AJWST%2Fproduct%2F' +
+         fits_filename + '.fits');
+
     // Show the appropriate image
     var img = document.getElementById("image_viewer");
     var jpg_filepath = '/static/preview_images/' + parsed_name.program + '/' + file_root + '_' + type + '_integ0.jpg';
@@ -423,7 +428,7 @@ function get_radio_button_value(element_name) {
 }
 
 /**
- * get_scaling_value
+ * Get value from a numerical text field
  * @param {String} element_id - The element id
  * @returns value - value of element id or "None" if empty or not a number
 */
@@ -1001,7 +1006,8 @@ function update_msata_page(base_url) {
 
             // Build div content
             var content = data["div"];
-            content += data["script"];
+            content += data["script1"];
+            content += data["script2"];
 
             /* Add the content to the div
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
@@ -1033,7 +1039,8 @@ function update_wata_page(base_url) {
 
             // Build div content
             var content = data["div"];
-            content += data["script"];
+            content += data["script1"];
+            content += data["script2"];
 
             /* Add the content to the div
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
@@ -1056,7 +1063,7 @@ function update_wata_page(base_url) {
 /**
  * Updates various components on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
- * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} file_root - The rootname of the file corresponding to the instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
  * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
@@ -1071,11 +1078,9 @@ function update_wata_page(base_url) {
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
         var calc_difference = document.getElementById("calcDifference").checked;
+        var show_line_plots = document.getElementById("show_line_plots").checked;
 
         // Get the arguments to update
-        var scaling = get_radio_button_value("scaling");
-        var low_lim = get_number_or_none("low_lim");
-        var high_lim = get_number_or_none("high_lim");
         var ext_name = get_radio_button_value("extension");
         var int1_nr = get_number_or_none("integration1");
         var grp1_nr = get_number_or_none("group1");
@@ -1088,7 +1093,7 @@ function update_wata_page(base_url) {
             int2_nr="None";
             grp2_nr="None";
         }
-        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
+        optional_params = optional_params + "/plot_" + show_line_plots + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
     }
 
     $.ajax({
@@ -1103,6 +1108,13 @@ function update_wata_page(base_url) {
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
             */
             $('#explore_image').html(content);
+
+            // Add a help message for plots
+            if (show_line_plots === true) {
+                $('#help').html('<span class="help-tip mx-1">i</span>Click on the image to update the column/row plots.');
+            } else {
+                $('#help').html('');
+            }
 
             // Replace loading screen
             document.getElementById("loading").style.display = "none";
@@ -1223,6 +1235,36 @@ function update_obs_options(data, inst, prop, observation) {
 }
 
 /**
+ * Update the pagination div with navigation links
+ * @param {Object} data - The data returned by the query_submit AJAX method
+ */
+function update_pagination(data) {
+    var content = '<span class="step-links mx-2">'
+    if ('previous_page' in data) {
+        content += '<a class="mx-2" href="?page=1">&laquo; first</a> ' +
+            '<a class="mx-2" href="?page=' + data.previous_page + '">previous</a>';
+    }
+    content += '<span class="current mx-2">Page ' + data.current_page + ' of ' + data.total_pages + '</span>'
+
+    if ('next_page' in data) {
+        content += '<a class="mx-2" href="?page=' + data.next_page + '">next</a> ' +
+            '<a class="mx-2" href="?page=' + data.total_pages + '">last &raquo;</a>';
+    }
+    content += '</span>';
+    $("#pagination")[0].innerHTML = content;
+
+    // Add the total file count to the img_show_count banner
+    var query_summary = '<p><br>Query returned ' + data.total_files + ' activities total with parameters:</p><ul>';
+    for (var i = 0; i < Object.keys(data.query_config).length; i++) {
+        var param = Object.keys(data.query_config)[i];
+        query_summary += '<li>' + param.toUpperCase() + '=' +
+            data.query_config[param].toString().toUpperCase() + '</li>';
+    }
+    query_summary += '</p>';
+    $("#query_summary")[0].innerHTML = query_summary;
+}
+
+/**
  * Updates the img_show_count component
  * @param {Integer} count - The count to display
  * @param {String} type - The type of the count (e.g. "activities")
@@ -1231,6 +1273,7 @@ function update_show_count(count, type) {
     var content = 'Showing <a id="img_shown">' + count + '</a> / <a id="img_total">' + count + '</a> <a id="img_type">' + type + '</a>';
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
+    content += '<span id="query_summary"></span>';
     $("#img_show_count")[0].innerHTML = content;
 }
 
@@ -1423,11 +1466,11 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, bas
 /**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
- * @param {String} sort - Sort method string saved in session data image_sort
+ * @param {Int} page - Page number to load
  */
-function update_thumbnails_query_page(base_url, sort, group) {
+function update_thumbnails_query_page(base_url, page) {
     $.ajax({
-        url: base_url + '/ajax/query_submit/',
+        url: base_url + '/ajax/query_submit/?page=' + page,
         success: function(data){
             // Perform various updates to divs
             var num_thumbnails = Object.keys(data.file_data).length;
@@ -1436,10 +1479,11 @@ function update_thumbnails_query_page(base_url, sort, group) {
             update_filter_options(data, base_url, 'thumbnail');
             update_group_options(data, base_url);
             update_sort_options(data, base_url);
+            update_pagination(data);
 
             // Do initial sort and group to match sort button display
-            group_by_thumbnails(group, base_url);
-            sort_by_thumbnails(sort, base_url);
+            group_by_thumbnails(data.thumbnail_group, base_url);
+            sort_by_thumbnails(data.thumbnail_sort, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
