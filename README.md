@@ -154,10 +154,11 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Mees Fix (Technical Lead, INS) [@mfixstsci](https://github.com/mfixstsci)
 - Misty Cracraft (INS) [@cracraft](https://github.com/cracraft)
 - Mike Engesser (INS) [@mengesser](https://github.com/mengesser)
-- Shannon Osborne (INS) [@shanosborne](https://github.com/shanosborne)
 - Maria Pena-Guerrero [@penaguerrero](https://github.com/penaguerrero)
 - Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
 - Brian York (INS) [@york-stsci](https://github.com/york-stsci)
+- Bradley Sappington (INS) [@bradleysappington](https://github.com/bradleysappington)
+- Melanie Clarke (INS) [@melanieclarke](https://github.com/melanieclarke)
 
 ## Past Development Team Members
 - Matthew Bourque (INS) [@bourque](https://github.com/bourque)
@@ -168,7 +169,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
 - Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
-
+- Shannon Osborne (INS) [@shanosborne](https://github.com/shanosborne)
 
 ## Acknowledgments:
 - Faith Abney (DMD)
