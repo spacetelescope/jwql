@@ -746,7 +746,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
         uncal_name = os.path.basename(uncal_file)
         result = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
         logging.info("\t\tStarting with ID {}".format(result.id))
-        #processed_path = result.get()
+        processed_path = result.get()
         logging.info("\t\tPipeline Complete")
         output = retrieve_files(short_name, ext_or_exts, retrieve_dir)
     except Exception as e:
@@ -838,7 +838,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
         for short_name in results:
             try:
                 logging.info("\tWaiting for {} ({})".format(short_name, results[short_name].id))
-                #processed_path = results[short_name].get()
+                processed_path = results[short_name].get()
                 logging.info("\t{} retrieved".format(short_name))
                 outputs[input_file_paths[short_name]] = retrieve_files(short_name, ext_or_exts, output_dirs[short_name])
                 logging.info("\tFiles copied for {}".format(short_name))
