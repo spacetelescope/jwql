@@ -263,7 +263,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
     command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
     logging.info("Running {}".format(command))
     process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)
-    with process.stderr:<log_subprocess
+    with process.stderr:
         log_subprocess_output(process.stderr)
     result = process.wait()
     logging.info("Subprocess result was {}".format(result))
