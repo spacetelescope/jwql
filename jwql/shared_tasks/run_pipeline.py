@@ -50,6 +50,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         status_f.write("\t input_file_basename is {} ({})\n".format(input_file_basename, type(input_file_basename)))
         status_f.write("\t start_dir is {} ({})\n".format(start_dir, type(start_dir)))
         status_f.write("\t uncal_file is {} ({})\n".format(uncal_file, type(uncal_file)))
+        status_f.write(f"\t outputs is {outputs}\n")
 
     try:
         copy_files([input_file], work_directory)
@@ -133,8 +134,12 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
                             pass
                         model[0].save(output_file)
                         if 'rateints' in outputs:
-                            model[1].save(output_file.replace('rate', 'rateints'))
-
+                            outbase = os.path.basename(output_file)
+                            outbase = outbase.replace('rate', 'rateints')
+                            output_file = os.path.join(work_directory, outbase)
+                            model[1].save(output_file)
+                            with open(status_file, 'a+') as status_f:
+                                status_f.write(f"Saved rateints model to {output_file}\n")
                     done = True
                     for output in outputs:
                         output_name = "{}_{}.fits".format(short_name, output)
