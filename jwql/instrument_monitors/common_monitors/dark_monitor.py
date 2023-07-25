@@ -715,7 +715,7 @@ class Dark():
         step_args = {'dark_current': {'skip': True}}
 
         # Call the pipeline
-        outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate", "rateints"], self.instrument, step_args=step_args)
+        outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate"], self.instrument, step_args=step_args)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
             if processed_file not in slope_files and os.path.isfile(processed_file):
