@@ -75,6 +75,7 @@ from collections import OrderedDict
 from copy import deepcopy
 import gc
 from glob import glob
+import json
 import logging
 from logging import FileHandler, StreamHandler
 import os
@@ -224,40 +225,9 @@ def collect_after_task(**kwargs):
     gc.collect()
 
 
-def convert_step_args_to_string(args_dict):
-    """Convert the nested dictionary containing pipeline step parameter keyword/value pairs
-    to a string so that it can be passed via command line
-
-    Parameters
-    ----------
-    args_dict : dict
-        Nested dictionary. Top level keys are pipeline step names. Values are dictionaries containing
-        keyword value pairs for that step.
-
-    Returns
-    -------
-    args_str : str
-        String representation of ``args_dict``
-    """
-    args_str="'{"
-
-    for i, step in enumerate(args_dict):
-        args_str += f'"{step}":'
-        args_str += '{'
-        for j, (param, val) in enumerate(args_dict[step].items()):
-            args_str += f'"{param}":"{val}"'
-            if j < len(args_dict[step])-1:
-                args_str += ', '
-        args_str += "}"
-        if i < len(args_dict)-1:
-            args_str += ','
-    args_str += "}'"
-    return args_str
-
-
 def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores, step_args):
     # Convert step_args dictionary to a string so that it can be passed via command line
-    step_args_str = convert_step_args_to_string(step_args)
+    step_args_str = json.loads(step_args)
 
     command = "{} {} {} '{}' {} {} {} {} --step_args {}"
     command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
@@ -557,7 +527,7 @@ def prep_file(input_file, in_ext):
     short_name : str
         The exposure ID with the calibration tag and the fits extension chopped off.
 
-    uncal_file : str
+    input_name : str
         The raw file to be calibrated
     """
     config = get_config()
@@ -569,16 +539,8 @@ def prep_file(input_file, in_ext):
     input_path, input_name = os.path.split(input_file)
     logging.info("\tPath is {}, file is {}".format(input_path, input_name))
 
-    if "uncal" not in in_ext and "dark" not in in_ext:
-        logging.info("\tSwitching from {} to uncal".format(in_ext))
-        uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
-        uncal_file = filesystem_path(uncal_name, check_existence=True)
-    else:
-        uncal_file = input_file
-        uncal_name = input_name
-
-    if not os.path.isfile(uncal_file):
-        raise FileNotFoundError("Input File {} does not exist.".format(uncal_file))
+    if not os.path.isfile(input_file):
+        raise FileNotFoundError("Input File {} does not exist.".format(input_file))
 
     output_file_or_files = []
     short_name = input_name.replace("_" + in_ext, "").replace(".fits", "")
@@ -590,9 +552,9 @@ def prep_file(input_file, in_ext):
         logging.critical(msg.format(short_name))
         raise ValueError("Redis lock for {} is in an unknown state".format(short_name))
     logging.info("\t\tAcquired Lock.")
-    logging.info("\t\tCopying {} to {}".format(uncal_file, send_path))
-    copy_files([uncal_file], send_path)
-    return short_name, cal_lock, os.path.join(send_path, uncal_name)
+    logging.info("\t\tCopying {} to {}".format(input_file, send_path))
+    copy_files([input_file], send_path)
+    return short_name, cal_lock, os.path.join(send_path, input_name)
 
 
 def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False, step_args={}):
