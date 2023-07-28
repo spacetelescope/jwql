@@ -87,7 +87,6 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         # Set any steps the user specifically asks to skip
         for step, step_dict in step_args.items():
             if 'skip' in step_dict:
-                print(f'SKIP the {step}!!')
                 if step_dict['skip']:
                     steps[step] = False
 

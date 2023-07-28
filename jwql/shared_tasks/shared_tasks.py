@@ -224,10 +224,41 @@ def after_setup_celery_logger(logger, **kwargs):
 def collect_after_task(**kwargs):
     gc.collect()
 
+def convert_step_args_to_string(args_dict):
+    """Convert the nested dictionary containing pipeline step parameter keyword/value pairs
+    to a string so that it can be passed via command line
+
+    Parameters
+    ----------
+    args_dict : dict
+        Nested dictionary. Top level keys are pipeline step names. Values are dictionaries containing
+        keyword value pairs for that step.
+
+    Returns
+    -------
+    args_str : str
+        String representation of ``args_dict``
+    """
+    args_str="'{"
+
+    for i, step in enumerate(args_dict):
+        args_str += f'"{step}":'
+        args_str += '{'
+        for j, (param, val) in enumerate(args_dict[step].items()):
+            args_str += f'"{param}":"{val}"'
+            if j < len(args_dict[step])-1:
+                args_str += ', '
+        args_str += "}"
+        if i < len(args_dict)-1:
+            args_str += ','
+    args_str += "}'"
+    return args_str
+
 
 def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores, step_args):
-    # Convert step_args dictionary to a string so that it can be passed via command line
-    step_args_str = json.loads(step_args)
+    # Convert step_args dictionary to a string so that it can be passed via command line.
+    # For some reason, json.dumps() doesn't seem to work correctly, so we use a custom function.
+    step_args_str = convert_step_args_to_string(step_args)
 
     command = "{} {} {} '{}' {} {} {} {} --step_args {}"
     command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
