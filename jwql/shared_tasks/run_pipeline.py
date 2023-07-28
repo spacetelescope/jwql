@@ -212,6 +212,9 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         if instrument == 'nircam':
             params['refpix'] = dict(odd_even_rows=False)
 
+        # Default CR rejection threshold is too low
+        params['jump']['rejection_threshold'] = 15
+
         # Set up to save jump step output
         params['jump']['save_results'] = True
         params['jump']['output_dir'] = work_directory
