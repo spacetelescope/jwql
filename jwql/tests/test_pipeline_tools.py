@@ -107,9 +107,10 @@ def test_get_pipeline_steps():
 
     # MIRI
     miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
-    miri_steps = ['dq_init', 'saturation', 'firstframe', 'lastframe',
-                  'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate']
-    not_required = ['group_scale', 'ipc', 'superbias', 'persistence']
+    miri_steps = ['group_scale', 'dq_init', 'saturation', 'firstframe', 'lastframe',
+                  'reset', 'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate',
+                  'gain_scale']
+    not_required = ['ipc', 'superbias', 'persistence']
     miri_dict = OrderedDict({})
     for step in miri_steps:
         miri_dict[step] = True
