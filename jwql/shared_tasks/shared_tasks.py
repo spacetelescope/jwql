@@ -459,7 +459,8 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         logging.error("File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
 
-    short_name = input_file_name[0: input_file_name.rfind('_')]
+    parts = input_file_name.split('_')
+    short_name = f'{parts[0]}_{parts[1]}_{parts[2]}_{parts[3]}'
     ensure_dir_exists(cal_dir)
     output_dir = os.path.join(config["transfer_dir"], "outgoing")
 
