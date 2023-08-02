@@ -382,31 +382,36 @@ class HistogramPlot():
         """
         x_label = 'Signal (DN)'
         y_label = '# Pixels'
-        if len(self.data['counts'].iloc[0]) > 0:
+        # Be sure data is not empty
+        if len(data) > 0:
+            # Be sure the array of histogram information is not empty
+            if len(self.data['counts'].iloc[0]) > 0:
 
-            # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
-            bin_centers = np.array(self.data['bin_centers'][0])
-            half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
-            half_widths = np.insert(half_widths, 0, half_widths[0])
-            self.data['bin_left'] = [bin_centers - half_widths]
-            self.data['bin_right'] = [bin_centers + half_widths]
+                # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
+                bin_centers = np.array(self.data['bin_centers'][0])
+                half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
+                half_widths = np.insert(half_widths, 0, half_widths[0])
+                self.data['bin_left'] = [bin_centers - half_widths]
+                self.data['bin_right'] = [bin_centers + half_widths]
 
-            datestr = self.data['expstart_str'].iloc[0]
-            self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
-                               background_fill_color="#fafafa")
+                datestr = self.data['expstart_str'].iloc[0]
+                self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
+                                   background_fill_color="#fafafa")
 
-            # Keep only the columns where the data are a list
-            series = self.data.iloc[0]
-            series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
-            source = ColumnDataSource(dict(series))
-            self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
-                           fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
+                # Keep only the columns where the data are a list
+                series = self.data.iloc[0]
+                series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
+                source = ColumnDataSource(dict(series))
+                self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
+                               fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
-            hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
-            self.plot.tools.append(hover_tool)
-            self.plot.xaxis.axis_label = x_label
-            self.plot.yaxis.axis_label = y_label
+                hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
+                self.plot.tools.append(hover_tool)
+                self.plot.xaxis.axis_label = x_label
+                self.plot.yaxis.axis_label = y_label
 
+            else:
+                self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
         else:
             self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
 
