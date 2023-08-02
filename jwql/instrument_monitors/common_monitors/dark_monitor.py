@@ -649,22 +649,13 @@ class Dark():
             values = []
 
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
-                                                       pixels_y=coords[1],
-                                                       values=values
+                                                       pixels_y=coords[1]
                                                       )
                                              )
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
-
-        # Create hover tools for the bad pixel types
-        #hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
-        #                                            ('value:', f'@values'),
-        #                                            ],
-        #                                    renderers=[badpixplots[pix_type]])
-        # Add tool to plot
-        #self.plot.tools.append(hover_tools[pix_type])
 
         # Add to the legend
         if  numpix > 0:
@@ -814,7 +805,7 @@ class Dark():
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-            logging.info("Creating Mean Slope Image {}".format(slope_image))
+            logging.info("Creating Mean Slope Image")
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
                                           noisyxy=new_noisy_pixels, baseline_file=baseline_file)
