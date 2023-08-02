@@ -383,7 +383,7 @@ class HistogramPlot():
         x_label = 'Signal (DN)'
         y_label = '# Pixels'
         # Be sure data is not empty
-        if len(data) > 0:
+        if len(self.data) > 0:
             # Be sure the array of histogram information is not empty
             if len(self.data['counts'].iloc[0]) > 0:
 
