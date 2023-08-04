@@ -1022,6 +1022,19 @@ class Dark():
                             # Copy files from filesystem
                             dark_files, not_copied = copy_files(new_filenames, self.data_dir)
 
+                            # Check that there were no problems with the file copying. If any of the copied
+                            # files have different sizes between the MAST filesystem and the JWQL filesystem,
+                            # then throw them out.
+                            for dark_file in dark_files:
+                                copied_size = os.stat(dark_file).st_size
+                                orig_size = os.stat(filesystem_path(os.path.basename(dark_file))).st_size
+                                if orig_size != copied_size:
+                                    logging.info(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem.")
+                                    logging.info(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                    not_copied.append(dark_file)
+                                    dark_files.remove(dark_file)
+                                    os.remove(dark_file)
+
                             logging.info('\tNew_filenames: {}'.format(new_filenames))
                             logging.info('\tData dir: {}'.format(self.data_dir))
                             logging.info('\tCopied to working dir: {}'.format(dark_files))
