@@ -432,7 +432,13 @@ class Bias():
             # Add this new entry to the bias database table
             with engine.begin() as connection:
                 connection.execute(self.stats_table.__table__.insert(), bias_db_entry)
-            logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
+
+            # Don't print long arrays of numbers to the log file
+            log_dict = {}
+            for key in bias_db_entry:
+                if key not in ['collapsed_rows', 'collapsed_columns', 'counts', 'bin_centers']:
+                    log_dict[key] = bias_db_entry[key]
+            logging.info('\tNew entry added to bias database table: {}'.format(log_dict))
 
             # Remove the raw and calibrated files to save memory space
             os.remove(filename)
