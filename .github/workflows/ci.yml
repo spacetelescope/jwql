@@ -11,6 +11,39 @@ defaults:
     shell: bash -l {0}
 
 jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Develop Branch
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: '0'
+        ref: ${{ github.event.pull_request.base.ref }}
+    - name: Find Python files
+      run: |
+        # Find .py files and store the count in a variable
+        PY_FILE_COUNT=$(git diff origin/$GITHUB_REF_NAME --name-only -- '*.py' | wc -l)
+
+        # Output the count for debugging purposes
+        echo "Found $PY_FILE_COUNT .py files"
+        
+        # Set an environment variable to be used in the next step
+        echo "PY_FILE_COUNT=$PY_FILE_COUNT" >> $GITHUB_ENV
+    - name: Run Ruff Check
+      run: |
+        # Get the value of PY_FILE_COUNT environment variable
+        COUNT=$PY_FILE_COUNT
+        
+        # Check if the count is zero
+        if [ "$COUNT" -eq 0 ]; then
+          echo "No .py files found, no ruff linting required"
+        else
+          echo "Found $COUNT .py files, workflow will continue as usual."
+          pip install ruff
+          ruff check $(git diff origin/$GITHUB_REF_NAME --name-only -- '*.py') --ignore "E501","F401","E402"
+        fi
+
   check:
     runs-on: ubuntu-latest
     steps:
@@ -29,11 +62,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.9, "3.10"]
+        python-version: ["3.9", "3.10"]
 
     steps:
-      - uses: actions/checkout@v3
-
       - uses: mamba-org/provision-with-micromamba@v15
         with:
           environment-file: ./environment_python_${{ matrix.python-version }}.yml
@@ -43,7 +74,7 @@ jobs:
       - run: pip install -e .[test]
 
       - run: conda env export
-      
+
       - uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
