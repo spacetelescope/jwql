@@ -64,7 +64,6 @@ from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (compari
 from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E348 (comparison to true)
 
-print('test test')
 
 class Readnoise():
     """Class for executing the readnoise monitor.

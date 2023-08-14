@@ -15,7 +15,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Develop Branch
+    - name: Checkout Target Branch
       uses: actions/checkout@v2
       with:
         fetch-depth: '0'
