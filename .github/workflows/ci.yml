@@ -41,7 +41,7 @@ jobs:
         else
           echo "Found $COUNT .py files, workflow will continue as usual."
           pip install ruff
-          ruff check $(git diff origin/$GITHUB_REF_NAME --name-only -- '*.py') --ignore "E501","F401","E402"
+          ruff check $(git diff origin/$GITHUB_REF_NAME --name-only -- '*.py')
         fi
 
   check:
