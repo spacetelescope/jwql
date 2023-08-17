@@ -27,7 +27,7 @@ jobs:
 
         # Output the count for debugging purposes
         echo "Found $PY_FILE_COUNT .py files"
-        echo ${{ github.event.pull_request.base.ref }}
+        echo $GITHUB_ENV
         # Set an environment variable to be used in the next step
         echo "PY_FILE_COUNT=$PY_FILE_COUNT" >> $GITHUB_ENV
     - name: Run Ruff Check
