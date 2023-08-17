@@ -15,7 +15,7 @@
 # To remove the environment entirely, run the following command:
 # $ conda env remove -n jwql-3.9
 
-name: jwql-3.9-deptest
+name: jwql-3.9
 
 channels:
   - conda-forge
