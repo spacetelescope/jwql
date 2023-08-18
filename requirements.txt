@@ -12,11 +12,11 @@ jinja2==3.1.2
 jsonschema==4.19.0
 jwst==1.11.4
 matplotlib==3.7.2
-nodejs==18.16.0
+nodejs==20.5.1
 numpy==1.25.2
 numpydoc==1.5.0
 pandas==2.0.3
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.7
 pysiaf==0.20.0
 pysqlite3==0.5.1
 pytest==7.4.0
@@ -25,7 +25,7 @@ pytest-mock==3.11.1
 pyvo==1.4.2
 pyyaml==6.0
 redis==5.0.0
-ruff==0.0.284
+ruff==0.0.285
 scipy==1.9.3
 selenium==4.11.2
 setuptools==68.0.0
