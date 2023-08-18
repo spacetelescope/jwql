@@ -1498,8 +1498,7 @@ def get_rootnames_from_query(parameters):
     filtered_rootnames : list
         A list of all root filenames filtered from the given parameters
     """
-    # TODO - This code setup is temporary until the merge to Postgres is complete.
-    # selected_rootfileinfos = RootFileInfo.objects.none()
+
     filtered_rootnames = []
     # Each Query Selection is Instrument specific
     for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
@@ -1544,23 +1543,13 @@ def get_rootnames_from_query(parameters):
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(read_patt__in=inst_read_patt)
         if (inst_subarray != []):
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(subarray__in=inst_subarray)
-
-        # TODO - This uncommented CODE is what we will use while DJANGO is still using the SQLITE3 DB.
-        #        ONCE DB IS MIGRATED TO POSTGRES WE CAN REPLACE THIS CODE WITH THE UNTESTED CODE COMMENTED OUT BELOW
-        #      >>>  START CODE PRE DB MIGRATION HERE  <<<
         if (inst_anomalies != []):
-            # If the rootfile info has any of the marked anomalies we want it
-            # Make union of marked anomalies from our current query set, then save intersection.
-            anomaly_filters = None
+            anomaly_rootfileinfos = RootFileInfo.objects.none()
             for anomaly in inst_anomalies:
+                # If the rootfile info has any of the marked anomalies we want it
                 anomaly_filter = "anomalies__" + str(anomaly).lower()
-                this_anomaly_rootnames = current_ins_rootfileinfos.filter(**{anomaly_filter: True})
-                if anomaly_filters is None:
-                    anomaly_filters = this_anomaly_rootnames
-                else:
-                    anomaly_filters |= this_anomaly_rootnames
-            current_ins_rootfileinfos = anomaly_filters
-        #      >>>  END CODE PRE DB MIGRATION HERE  <<<
+                anomaly_rootfileinfos = anomaly_rootfileinfos.union(current_ins_rootfileinfos.filter(**{anomaly_filter: True}))
+            current_ins_rootfileinfos = current_ins_rootfileinfos.intersection(anomaly_rootfileinfos)
 
         # sort as desired
         if sort_type.upper() == 'ASCENDING':
@@ -1576,27 +1565,6 @@ def get_rootnames_from_query(parameters):
         filtered_rootnames.extend(rootnames)
 
     return filtered_rootnames
-
-    # TODO - BELOW IS THE OUTLINE OF CODE WE WANT TO USE, HOWEVER THIS CAN'T BE IMPLEMENTED WITH DJANGO RUNNING SQLITE
-    #             ONCE WE MIGRATE TO POSTGRES WE CAN IMPLEMENT THE BELOW FUNCTIONALITY WHICH SHOULD MAKE THIS CODE MOVE A LITTLE FASTER
-    #             NOTE: THIS CODE OUTLINE IS UNTESTED and is only a rough outline!
-    #      >>>  START CODE AFTER DB MIGRATION HERE  <<<
-    #     if (inst_anomalies != []):
-    #         # If the rootfile info has any of the marked anomalies we want it
-    #         # Make union of marked anomalies from our current query set, then save intersection.
-    #         anomaly_rootfileinfos = RootFileInfo.objects.none()
-
-    #         for anomaly in inst_anomalies:
-    #             anomaly_filter = "anomalies__" + str(anomaly).lower()
-    #             anomaly_rootfileinfos.union(current_ins_rootfileinfos.filter(**{anomaly_filter: True}))
-
-    #         current_ins_rootfileinfos = current_ins_rootfileinfos.intersection(anomaly_rootfileinfos)
-
-    #     # Add this instrument's query set to our return queryset
-    #     selected_rootfileinfos = selected_rootfileinfos.union(current_ins_rootfileinfos)
-
-    # return selected_rootfileinfos  # OR RETURN LIST OF ROOTNAMES
-    #      >>>  END CODE AFTER DB MIGRATION HERE  <<<
 
 
 def get_thumbnails_by_instrument(inst):
