@@ -34,7 +34,6 @@ from collections import defaultdict
 import datetime
 from glob import glob
 import logging
-import numpy as np
 import os
 import re
 import shutil
@@ -315,7 +314,7 @@ class CosmicRay:
                 data = hdu[1].data
                 dq = hdu[3].data
         except (IndexError, FileNotFoundError):
-            logging.warning(f'Could not open jump file: {jump_file} Skipping')
+            logging.warning(f'Could not open jump file: {jump_filename} Skipping')
             head = data = dq = None
 
         return head, data, dq
@@ -369,7 +368,7 @@ class CosmicRay:
         try:
             data = fits.getdata(rate_filename)
         except FileNotFoundError:
-            logging.warning(f'Could not open rate file: {rate_file} Skipping')
+            logging.warning(f'Could not open rate file: {rate_filename} Skipping')
             data = None
 
         return data

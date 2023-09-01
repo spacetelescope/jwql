@@ -17,13 +17,12 @@ Use
 
         pytest -s test_edb.py
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 from astropy.table import Table
 from astropy.time import Time
 import astropy.units as u
-from datetime import datetime, timedelta
 import numpy as np
 import pytest
 

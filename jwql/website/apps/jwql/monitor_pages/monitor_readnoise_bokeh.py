@@ -70,8 +70,8 @@ class ReadnoiseMonitor(BokehTemplate):
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
         try:
-            dummy_instrument = self._instrument
-            dummy_aperture = self._aperture
+            dummy_instrument = self._instrument # noqa: F841 (Necessary for bokeh plots to work)
+            dummy_aperture = self._aperture # noqa: F841 (Necessary for bokeh plots to work)
         except AttributeError:
             self._instrument = 'NIRCam'
             self._aperture = ''

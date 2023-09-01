@@ -320,14 +320,12 @@ class BadPixelData():
         times = []
         for i, row in enumerate(all_entries_by_type):
             if i == 0:
-                badtype = row[0]
                 detector = row[1]
             num_pix.append(row[2])
             times.append(row[3])
 
         # If there was no data in the database, create an empty entry
         if len(num_pix) == 0:
-            badtype = badpix_type
             detector = self.detector
             num_pix = [0]
             times = [datetime.datetime.today()]
@@ -558,7 +556,6 @@ class NewBadPixPlot():
         if len(self.coords[0]) < 50:
             radius = 1.0
         pink = '#EC04FF'
-        green = '#07FF1F'
         badpixplots = self.plot.circle(x='pixels_x', y='pixels_y', source=source, fill_color=pink, line_color=pink,
                                        fill_alpha=1.0, line_alpha=1.0, radius=radius)
 

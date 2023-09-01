@@ -24,14 +24,16 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
+from bokeh.models import DatetimeTickFormatter, BoxAnnotation
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure, output_file
 import numpy as np
 import pysiaf
 
+from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor import red_limits, yellow_limits
 from jwql.website.apps.jwql import monitor_pages
 from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
-from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
+from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -210,25 +212,6 @@ def dark_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
-
-
-def edb_monitor_tabs(instrument):
-    """Creates the various tabs of the dark monitor results page.
-
-    Parameters
-    ----------
-    instrument : str
-        The JWST instrument of interest (e.g. ``nircam``).
-
-    Returns
-    -------
-    div : str
-        The HTML div to render dark monitor plots
-    script : str
-        The JS script to render dark monitor plots
-    """
-    html_file_list = file_list[instrument]
-    print('read in html files')
 
 
 def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limits=None,

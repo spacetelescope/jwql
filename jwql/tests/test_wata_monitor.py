@@ -219,7 +219,7 @@ def test_plt_mag_time():
     nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
     nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
     filter_used, readout = ta.source.data['tafilter'], ta.source.data['readout']
-    max_val_box, time_arr = ta.source.data['max_val_box'], ta.source.data['time_arr']
+    max_val_box, _ = ta.source.data['max_val_box'], ta.source.data['time_arr']
     for i, val in enumerate(max_val_box):
         if '140' in filter_used[i]:
             if readout[i].lower() == 'nrsrapid':

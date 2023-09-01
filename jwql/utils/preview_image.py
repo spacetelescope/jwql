@@ -524,7 +524,7 @@ class PreviewImage():
             plt.gca().invert_yaxis()
 
             if not thumbnail:
-                cbar = fig.colorbar(cax)
+                cbar = self.fig.colorbar(cax)
                 ax.set_xlabel('Pixels')
                 ax.set_ylabel('Pixels')
 

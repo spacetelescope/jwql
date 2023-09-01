@@ -286,8 +286,8 @@ class Dark():
             mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
             # Plot image and add color bar
-            imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
-                                      color_mapper=mapper, level="image")
+            self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                            color_mapper=mapper, level="image")
 
             color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
             self.plot.add_layout(color_bar, 'right')
@@ -553,7 +553,7 @@ class Dark():
         """
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
                                                        self.query_table.readpattern == self.readpatt). \
-                filter(self.query_table.run_monitor == True)  # noqa: E348 (comparison to true)
+                filter(self.query_table.run_monitor == True)  # noqa: E712 (comparison to true)
 
         dates = np.zeros(0)
         for instance in query:
@@ -634,7 +634,6 @@ class Dark():
         adjective = {"hot": "hotter", "dead": "lower", "noisy": "noisier"}
         sources = {}
         badpixplots = {}
-        hover_tools = {}
 
         # Need to make sources a dict because we can't use the same variable name
         # for multiple ColumnDataSources
@@ -655,7 +654,7 @@ class Dark():
                                              )
 
         # Overplot the bad pixel locations
-        badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
+        badpixplots[pix_type] = self.plot.circle(x='pixels_x', y='pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
 
         # Create hover tools for the bad pixel types
@@ -715,7 +714,7 @@ class Dark():
         step_args = {'dark_current': {'skip': True}}
 
         # Call the pipeline
-        outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate"], self.instrument, step_args=step_args)
+        _ = run_parallel_pipeline(pipeline_files, "dark", ["rate"], self.instrument, step_args=step_args)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
             if processed_file not in slope_files and os.path.isfile(processed_file):

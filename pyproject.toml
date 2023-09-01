@@ -73,3 +73,9 @@ junit_family = "xunit2"
 
 [tool.pytest.ini_options]
 norecursedirs = ["jwql/website/apps/jwql/static"]
+
+[tool.ruff]
+ignore = ["E501","F401","E402"]
+line-length = 165
+exclude = ["./style_guide/typing_demo/*",
+           "./jwql/utils/monitor_template.py"]

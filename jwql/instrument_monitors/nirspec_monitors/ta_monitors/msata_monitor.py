@@ -1000,7 +1000,7 @@ class MSATA():
             where the msata monitor was run.
         """
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                                                            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+                                                            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all() # noqa: E712
 
         dates = np.zeros(0)
         for instance in query:

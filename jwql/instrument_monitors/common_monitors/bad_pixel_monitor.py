@@ -1059,9 +1059,9 @@ class BadPixels():
         if 'NOT FOUND' in baseline_file:
             logging.warning(('\tNo baseline bad pixel file for {} {}. Any bad '
                              'pixels found as part of this search will be considered new'.format(self.instrument, self.aperture)))
-            baseline_file = new_badpix_file
-            yd, xd = badpix_mask.shape
-            baseline_badpix_mask = np.zeros((yd, xd), type=np.int)
+            baseline_file = 'None'
+            yd, xd = badpix_map.shape
+            baseline_badpix_mask = np.zeros((yd, xd), dtype=np.int)
         else:
             logging.info('\tBaseline bad pixel file is {}'.format(baseline_file))
             baseline_badpix_mask = fits.getdata(baseline_file)
@@ -1080,11 +1080,9 @@ class BadPixels():
             if bad_type in FLATS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
-                flat_png = create_png_from_fits(illuminated_slope_files[0], self.output_dir)
             elif bad_type in DARKS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
-                dark_png = create_png_from_fits(dark_slope_files[0], self.output_dir)
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 

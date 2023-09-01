@@ -395,6 +395,7 @@ from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
 from jwql.shared_tasks.shared_tasks import only_one
+from jwql.website.apps.jwql.bokeh_containers import add_limit_boxes
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MIRI_POS_RATIO_VALUES
@@ -721,7 +722,7 @@ class EdbMnemonicMonitor():
                 self.run(instrument_name, mnem_dict, plot_start=plot_start, plot_end=plot_end)
                 logging.info(f'Monitor complete for {instrument_name}')
 
-        logging.info(f'EDB Telemetry Monitor completed successfully.')
+        logging.info('EDB Telemetry Monitor completed successfully.')
 
     def filter_telemetry(self, mnem, data, dep_list):
         """
@@ -853,7 +854,7 @@ class EdbMnemonicMonitor():
         # *should* never end up in here, as missing dependency data should zero out the main
         # mnemonic in there.
         if len(dependency) == 0:
-            mnem_data.blocks = [0, len(mnem)]
+            mnem_data.blocks = [0, len(mnem_data)]
             mnem_data.every_change_values = [np.nan]
 
         # Make sure the data values for the dependency are strings.
@@ -925,7 +926,7 @@ class EdbMnemonicMonitor():
         if starting_time is None:
             query_starting_times = None
             query_ending_times = None
-            logging.info(f'Query start times: None')
+            logging.info('Query start times: None')
         else:
             query_starting_times = []
             query_ending_times = []
@@ -1227,7 +1228,7 @@ class EdbMnemonicMonitor():
             logging.info(f'get_mnemonic_info returning data of length {len(good_mnemonic_data)}')
             return good_mnemonic_data
         else:
-            logging.info(f'get_mnemonic_info returning data with zero length')
+            logging.info('get_mnemonic_info returning data with zero length')
             return None
 
     def identify_tables(self, inst, tel_type):
@@ -1366,7 +1367,7 @@ class EdbMnemonicMonitor():
                         if product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
                             # If both mnemonics are change-only, then we need to translate them both
                             # to all-points.
-                            delta_t = timedelta(seconds=1.)
+                            delta_t = datetime.timedelta(seconds=1.)
                             mnem_numpts = (mnemonic_info.data["dates"][-1] - mnemonic_info.data["dates"][0]) / delta_t + 1
                             mnem_new_dates = [mnemonic_info.data["dates"][0] + i * delta_t for i in range(len(mnem_numpts))]
 
@@ -1566,7 +1567,7 @@ class EdbMnemonicMonitor():
                     else:
                         # Here the entire plot range is before the most recent search,
                         # so all we need to do is query the JWQL database for the data.
-                        logging.info(f"Plot time span contained entirely in JWQLDB. No need to query EDB.")
+                        logging.info("Plot time span contained entirely in JWQLDB. No need to query EDB.")
                         create_new_history_entry = False
                         starttime = None
 
@@ -1594,7 +1595,7 @@ class EdbMnemonicMonitor():
                         info = ed.get_mnemonic_info(mnemonic["name"])
                         new_data = empty_edb_instance(mnemonic[self._usename], plot_start, plot_end, info=info)
                         new_data.mnemonic_identifier = product_identifier
-                        logging.info(f'All data needed are already in JWQLDB.')
+                        logging.info('All data needed are already in JWQLDB.')
                         create_new_history_entry = False
                 else:
                     # For data where no averaging is done, all data must be retrieved from EDB. They are not
@@ -1638,7 +1639,7 @@ class EdbMnemonicMonitor():
                         # Retrieve the historical data from the database, so that we can add the new data
                         # to it
                         historical_data = self.get_history_every_change(new_data.mnemonic_identifier, plot_start, plot_end)
-                        logging.info(f'Retrieved data from JWQLDB. Number of data points per key:')
+                        logging.info('Retrieved data from JWQLDB. Number of data points per key:')
                         for key in historical_data:
                             logging.info(f'Key: {key}, Num of Points: {len(historical_data[key][0])}')
                         if historical_data == {}:
@@ -1664,7 +1665,7 @@ class EdbMnemonicMonitor():
                         # Note that the line below will change mnemonic_info into a dictionary
                         mnemonic_info = add_every_change_history(historical_data, every_change_data)
 
-                        logging.info(f'Combined new data plus historical data. Number of data points per key:')
+                        logging.info('Combined new data plus historical data. Number of data points per key:')
                         for key in mnemonic_info:
                             logging.info(f'Key: {key}, Num of Points: {len(mnemonic_info[key][0])}')
 

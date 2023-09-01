@@ -58,7 +58,7 @@ from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.constants import FILESYSTEM_MONITOR_SUBDIRS, FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
@@ -93,13 +93,6 @@ def files_per_filter():
         n_files[instrument] = {}
         for fname in FILTERS_PER_INSTRUMENT[instrument]:  # note that this does not include pupil wheel-based filters
             obs = Observations.query_criteria(filters=fname, instrument_name=JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument])
-            batch_size = 5
-            batches = [obs[i:i+batch_size] for i in range(0, len(obs), batch_size)]
-
-            obs_table = [Observations.get_product_list(batch) for batch in batches]
-            products = unique(vstack(obs_table), keys='productFilename')
-            filtered_products = Observations.filter_products(products, productType=["SCIENCE"], productSubGroupDescription=['UNCAL'], extension="fits")
-
             n_files[instrument][fname] = obs
     return n_files
 

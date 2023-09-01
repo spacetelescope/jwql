@@ -161,8 +161,8 @@ def create_png_from_fits(filename, outdir):
         mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
         # Plot image
-        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
-                             color_mapper=mapper, level="image")
+        plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                   color_mapper=mapper, level="image")
 
         # Turn off the axes, in order to make embedding in another figure easier
         plot.xaxis.visible = False

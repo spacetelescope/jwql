@@ -119,7 +119,6 @@ class DarkHistPlot():
                 # correctly. The data are identical for the full aperture and all amps. So
                 # for the moment, show only the full aperture data (by setting per_amp=False).
                 per_amp = False
-                main_label = 'Full Aperture'
 
                 # Colors to use for the amp-dpendent plots
                 colors = ['red', 'orange', 'green', 'gray']
@@ -234,7 +233,6 @@ class DarkImagePlot():
 
                 # Display the 32-bit RGBA image
                 ydim, xdim = view.shape
-                dim = max(xdim, ydim)
                 self.plot = figure(x_range=(0, xdim), y_range=(0, ydim), tools='pan,box_zoom,reset,wheel_zoom,save')
                 self.plot.image_rgba(image=[view], x=0, y=0, dw=xdim, dh=ydim)
                 self.plot.xaxis.visible = False
@@ -454,9 +452,6 @@ class DarkMonitorPlots():
         # keep the plot layout consistent
         self.ensure_all_full_frame_apertures()
 
-        # List of full frame aperture names
-        full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
-
         for aperture in self.available_apertures:
             self.aperture = aperture
 
@@ -662,7 +657,6 @@ class DarkTrendPlot():
                 # correctly. The data are identical for the full aperture and all amps. So
                 # for the moment, show only the full aperture data (by setting per_amp=False).
                 per_amp = False
-                main_label = 'Full Aperture'
 
                 # Colors to use for the amp-dpendent plots
                 colors = ['red', 'orange', 'green', 'grey']

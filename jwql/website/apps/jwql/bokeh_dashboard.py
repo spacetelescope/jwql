@@ -94,8 +94,8 @@ def build_table_latest_entry(tablename):
 
     # Build list of column data based on column name.
     data = []
-    for column in column_names:
-        column_data = list(map(itemgetter(column), result_dict))
+    for col in column_names:
+        column_data = list(map(itemgetter(col), result_dict))
         data.append(column_data)
 
     data = dict(zip(column_names, data))
@@ -291,7 +291,7 @@ class GeneralDashboard:
                 plot.line(x='date', y='used', source=source, line_color=color, line_dash='dashed', legend_label=area, line_width=3)
                 plot.circle(x='date', y='used', source=source, color=color, size=10)
 
-                hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
+                hover_tool = HoverTool(tooltips=[('Used:', '@used TB'),
                                                  ('Date:', '@date{%d %b %Y}')
                                                  ])
                 hover_tool.formatters = {'@date': 'datetime'}
@@ -340,7 +340,7 @@ class GeneralDashboard:
             cen_store_plot.xaxis.major_label_orientation = pi / 4
             cen_store_plot.legend.location = 'top_left'
 
-            hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
+            hover_tool = HoverTool(tooltips=[('Used:', '@used TB'),
                                              ('Date:', '@date{%d %b %Y}')
                                              ])
             hover_tool.formatters = {'@date': 'datetime'}

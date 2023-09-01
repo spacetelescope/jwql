@@ -20,7 +20,6 @@ Use
         monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL')
 """
 
-from datetime import datetime, timedelta
 import os
 
 from astropy.stats import sigma_clip
@@ -405,7 +404,7 @@ class HistogramPlot():
                 self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
                                fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
-                hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
+                hover_tool = HoverTool(tooltips='@bin_centers DN: @counts')
                 self.plot.tools.append(hover_tool)
                 self.plot.xaxis.axis_label = x_label
                 self.plot.yaxis.axis_label = y_label
@@ -644,7 +643,6 @@ class ZerothGroupImage():
 
                 # Display the 32-bit RGBA image
                 ydim, xdim = image.shape
-                dim = max(xdim, ydim)
                 self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
                                      tools='pan,box_zoom,reset,wheel_zoom,save')
                 self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)

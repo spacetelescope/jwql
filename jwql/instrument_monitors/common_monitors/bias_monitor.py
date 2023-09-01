@@ -347,7 +347,7 @@ class Bias():
         """
 
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E348 (comparison to true)
+                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E712
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
