@@ -61,7 +61,7 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         # If the input file is a file other than uncal.fits, then we may only need to run a
         # subset of steps. Check the completed steps in the input file. Find the latest step
         # that has been completed, and skip that plus all prior steps
-        if 'uncal.fits' not in input_file:
+        if 'uncal' not in input_file:
             completed_steps = completed_pipeline_steps(input_file)
 
             # Reverse the boolean value, so that now steps answers the question: "Do we need
@@ -73,7 +73,11 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         # run, and only run subsequent steps. This protects against cases where some early
         # step was not run. In that case, we don't want to go back and run it because running
         # pipeline steps out of order doesn't work.
-        last_run = 'group_scale'  # initialize to the first step
+        if instrument in ['miri', 'nirspec']:
+            last_run = 'group_scale'  # initialize to the first step
+        else:
+            last_run = 'dq_init'
+
         for step in steps:
             if not steps[step]:
                 last_run = deepcopy(step)
