@@ -35,11 +35,16 @@ from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorP
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
-REPO_DIR = os.path.split(PACKAGE_DIR)[0]
-TEMPLATE_DIR = os.path.join(PACKAGE_DIR, 'website/apps/jwql/templates')
+
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+if not ON_GITHUB_ACTIONS:
+    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+    PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
+    REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+    TEMPLATE_DIR = os.path.join(PACKAGE_DIR, 'website/apps/jwql/templates')
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
