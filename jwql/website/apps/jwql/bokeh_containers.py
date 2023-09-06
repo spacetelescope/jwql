@@ -30,7 +30,6 @@ from bokeh.plotting import figure, output_file
 import numpy as np
 import pysiaf
 
-from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor import red_limits, yellow_limits
 from jwql.website.apps.jwql import monitor_pages
 from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -64,29 +63,29 @@ def add_limit_boxes(fig, yellow=None, red=None):
         greater than the high value of yellow.
     """
     if yellow is not None:
-        green = BoxAnnotation(bottom=yellow_limits[0], top=yellow_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+        green = BoxAnnotation(bottom=yellow[0], top=yellow[1], fill_color='chartreuse', fill_alpha=0.2)
         fig.add_layout(green)
         if red is not None:
-            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=red_limits[1], fill_color='gold', fill_alpha=0.2)
+            yellow_high = BoxAnnotation(bottom=yellow[1], top=red[1], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
-            yellow_low = BoxAnnotation(bottom=red_limits[0], top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            yellow_low = BoxAnnotation(bottom=red[0], top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
-            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1] + 100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red[1], top=red[1] + 100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red[0] - 100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
         else:
-            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=yellow_limits[1] + 100, fill_color='gold', fill_alpha=0.2)
+            yellow_high = BoxAnnotation(bottom=yellow[1], top=yellow[1] + 100, fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
-            yellow_low = BoxAnnotation(bottom=yellow_limits[0] - 100, top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            yellow_low = BoxAnnotation(bottom=yellow[0] - 100, top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
     else:
         if red is not None:
-            green = BoxAnnotation(bottom=red_limits[0], top=red_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+            green = BoxAnnotation(bottom=red[0], top=red[1], fill_color='chartreuse', fill_alpha=0.2)
             fig.add_layout(green)
-            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1] + 100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red[1], top=red[1] + 100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red[0] - 100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
     return fig
 
