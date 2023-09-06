@@ -31,7 +31,6 @@ import numpy as np
 import pysiaf
 
 from jwql.website.apps.jwql import monitor_pages
-from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
@@ -40,6 +39,8 @@ from jwql.utils.utils import get_config
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 if not ON_GITHUB_ACTIONS:
+    from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
+
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
     FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
     PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
