@@ -19,14 +19,15 @@ Use
 
 from collections import OrderedDict
 import os
+
+from astropy.io import fits
+import numpy as np
 import pytest
 
-import numpy as np
-
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, session
 from jwql.instrument_monitors.common_monitors import readnoise_monitor
+from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
-
 
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
@@ -133,3 +134,63 @@ def test_make_histogram():
 
     assert counts == counts_truth
     assert bin_centers == bin_centers_truth
+
+
+@pytest.mark.skipif(not has_test_db(), reason='Modifies test database.')
+def test_process(mocker, tmp_path):
+    hdul = fits.HDUList([
+        fits.PrimaryHDU(header=fits.Header({
+            'DATE-OBS': 'test',
+            'TIME-OBS': 'test', 'INSTRUME': 'NIRCam',
+            'DETECTOR': 'nrcalong', 'READPATT': 'test',
+            'SUBARRAY': 'test'})),
+        fits.ImageHDU(np.zeros((10, 10, 10, 10)), name='SCI')])
+    filename = str(tmp_path / 'test_uncal_file.fits')
+    processed_file = str(tmp_path / 'test_refpix_file.fits')
+    hdul.writeto(filename, overwrite=True)
+    hdul.writeto(processed_file, overwrite=True)
+
+    monitor = readnoise_monitor.Readnoise()
+    monitor.instrument = 'nircam'
+    monitor.detector = 'nrcalong'
+    monitor.aperture = 'test'
+    monitor.read_pattern = 'test'
+    monitor.subarray = 'test'
+    monitor.nints = 1
+    monitor.ngroups = 1
+    monitor.expstart = 9999.0
+    monitor.data_dir = str(tmp_path)
+    monitor.identify_tables()
+
+    assert not monitor.file_exists_in_database(filename)
+
+    # mock the pipeline run
+    mocker.patch.object(readnoise_monitor, 'run_parallel_pipeline',
+                        return_value={filename: processed_file})
+    # mock amplifier info
+    mocker.patch.object(readnoise_monitor.instrument_properties, 'amplifier_info',
+                        return_value=('test', 'test'))
+    mocker.patch.object(monitor, 'get_amp_stats',
+                        return_value={'test': 0})
+    # mock image creation
+    mocker.patch.object(monitor, 'make_readnoise_image',
+                        return_value=np.zeros(10))
+    mocker.patch.object(monitor, 'make_histogram',
+                        return_value=(np.zeros(10), np.zeros(10)))
+    mocker.patch.object(monitor, 'image_to_png',
+                        return_value=str(tmp_path / 'output.png'))
+    # mock crds
+    mocker.patch.object(readnoise_monitor.crds, 'getreferences',
+                        side_effect=ValueError('no reffile'))
+
+    try:
+        monitor.process([filename])
+        assert monitor.file_exists_in_database(filename)
+    finally:
+        # clean up
+        query = session.query(monitor.stats_table).filter(
+            monitor.stats_table.uncal_filename == filename)
+        query.delete()
+        session.commit()
+
+        assert not monitor.file_exists_in_database(filename)

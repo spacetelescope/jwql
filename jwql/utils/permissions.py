@@ -240,7 +240,7 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODES, group=DEF
             os.chmod(pathname, mode_to_use)
             # change group but not owner
             os.chown(pathname, -1, grp.getgrnam(group).gr_gid)
-        except PermissionError:
+        except (PermissionError, KeyError):
             pass
 
     if verbose:

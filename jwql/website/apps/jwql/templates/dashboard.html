@@ -13,7 +13,7 @@
         <hr>
 
         <p>
-            The JWQL dashboard provides users with a "high level" status of our systems and tools. Here we provide some analytics and 
+            The JWQL dashboard provides users with a "high level" status of our systems and tools. Here we provide some analytics and
             statistics for the JWQL filesystem as well as the status of the instrument monitors. The figures below are interactive and some provide
             more detailed information if you hover over them and will take you to other landing pages within the application if clicked.
         </p>
@@ -25,7 +25,7 @@
                 {% for dt in time_deltas %}
                     <option value='{{ dt }}'>{{ dt }}</option>
                 {% endfor %}
-            </select> 
+            </select>
 
             <button name=time_delta_value class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
 
@@ -34,7 +34,7 @@
             <body>
                 {{ div | safe }}
                 {{ script | safe }}
-                
+
                 <br>
                 <h3>JWQL Monitor Status</h3>
                 <hr>
@@ -87,7 +87,7 @@
                 <script>
                     $(document).ready( function () {
                         var table = $('#jwqltable').DataTable({
-                            "order": [[ 2, "desc" ]],
+                            "order": [],
                             "createdRow": function( row, data, dataIndex ) {
                             if ( data[4] == "FAILURE" ) {
                                 $(row).addClass('red');

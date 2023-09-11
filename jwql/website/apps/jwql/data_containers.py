@@ -447,7 +447,7 @@ def get_current_flagged_anomalies(rootfileinfo_set):
     Parameters
     ----------
     rootfileinfo_set : RootFileInfo Queryset
-        A query set of 1 or more RootFileInfos of interest 
+        A query set of 1 or more RootFileInfos of interest
         Must be iterable, even if only one RootFileInfo.
 
     Returns
@@ -886,7 +886,7 @@ def mast_query_by_rootname(instrument, rootname):
         result = response[0].json()
     except Exception as e:
         logging.error("Mast.service_request_async- {} - {}".format(file_set_name, e))
-        result['data'] = []
+        result = {'data': []}
 
     retval = {}
     if result['data'] == []:
@@ -1248,9 +1248,9 @@ def get_instrument_proposals(instrument):
         List of proposals for the given instrument
     """
     tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select distinct proposal_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}%'")
+    tap_results = tap_service.search(f"select distinct prpID from CaomObservation where collection='JWST' and maxLevel>0 and insName like '{instrument.lower()}%'")
     prop_table = tap_results.to_table()
-    proposals = prop_table['proposal_id'].data
+    proposals = prop_table['prpID'].data
     inst_proposals = sorted(proposals.compressed(), reverse=True)
     return inst_proposals
 
@@ -1484,9 +1484,8 @@ def get_rootnames_for_proposal(proposal):
     return rootnames.compressed()
 
 
-def get_thumbnails_all_instruments(parameters):
-    """Return a list of thumbnails available in the filesystem for all
-    instruments given requested MAST parameters and queried anomalies.
+def get_rootnames_from_query(parameters):
+    """Return a query_set of RootFileInfo given requested filter parameters.
 
     Parameters
     ----------
@@ -1496,87 +1495,76 @@ def get_thumbnails_all_instruments(parameters):
 
     Returns
     -------
-    thumbnails : list
-        A list of thumbnails available in the filesystem for the
-        given instrument.
+    filtered_rootnames : list
+        A list of all root filenames filtered from the given parameters
     """
 
-    anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES]
-
-    thumbnails_subset = []
-
+    filtered_rootnames = []
+    # Each Query Selection is Instrument specific
     for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
-        # Make sure instruments are of the proper format (e.g. "Nircam")
-        instrument = inst[0].upper() + inst[1:].lower()
+        # Make sure instruments are of the proper format for the archive query
+        inst = inst.lower()
+        current_ins_rootfileinfos = RootFileInfo.objects.filter(instrument=JWST_INSTRUMENT_NAMES_MIXEDCASE[inst])
 
-        # Query MAST for all rootnames for the instrument
-        service = "Mast.Jwst.Filtered.{}".format(instrument)
+        # General fields
+        sort_type = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+        look_status = parameters[QUERY_CONFIG_KEYS.LOOK_STATUS]
+        if len(look_status) == 1:
+            viewed = (look_status[0] == 'VIEWED')
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(viewed=viewed)
+        proposal_category = parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY]
+        if len(proposal_category) > 0:
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(obsnum__proposal__category__in=proposal_category)
 
-        if ((parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()] == [])
-                and (parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()] == [])
-                and (parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()] == [])
-                and (parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()] == [])
-                and (parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()] == [])):  # noqa: W503
-            params = {"columns": "*", "filters": []}
+        # Instrument fields
+        inst_anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES][inst]
+        inst_aperture = parameters[QUERY_CONFIG_KEYS.APERTURES][inst]
+        inst_detector = parameters[QUERY_CONFIG_KEYS.DETECTORS][inst]
+        inst_exp_type = parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst]
+        inst_filter = parameters[QUERY_CONFIG_KEYS.FILTERS][inst]
+        inst_grating = parameters[QUERY_CONFIG_KEYS.GRATINGS][inst]
+        inst_pupil = parameters[QUERY_CONFIG_KEYS.PUPILS][inst]
+        inst_read_patt = parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst]
+        inst_subarray = parameters[QUERY_CONFIG_KEYS.SUBARRAYS][inst]
+
+        if (inst_aperture != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(aperture__in=inst_aperture)
+        if (inst_detector != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(detector__in=inst_detector)
+        if (inst_exp_type != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(exp_type__in=inst_exp_type)
+        if (inst_filter != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(filter__in=inst_filter)
+        if (inst_grating != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(grating__in=inst_grating)
+        if (inst_pupil != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(pupil__in=inst_pupil)
+        if (inst_read_patt != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(read_patt__in=inst_read_patt)
+        if (inst_subarray != []):
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(subarray__in=inst_subarray)
+        if (inst_anomalies != []):
+            anomaly_rootfileinfos = RootFileInfo.objects.none()
+            for anomaly in inst_anomalies:
+                # If the rootfile info has any of the marked anomalies we want it
+                anomaly_filter = "anomalies__" + str(anomaly).lower()
+                anomaly_rootfileinfos = anomaly_rootfileinfos.union(current_ins_rootfileinfos.filter(**{anomaly_filter: True}))
+            current_ins_rootfileinfos = current_ins_rootfileinfos.intersection(anomaly_rootfileinfos)
+
+        # sort as desired
+        if sort_type.upper() == 'ASCENDING':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('root_name')
+        elif sort_type.upper() == 'RECENT':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-expstart', 'root_name')
+        elif sort_type.upper() == 'OLDEST':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('expstart', 'root_name')
         else:
-            query_filters = []
-            if (parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()] != []):
-                if instrument != "Nircam":
-                    query_filters.append({"paramName": "pps_aper", "values": parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()]})
-                if instrument == "Nircam":
-                    query_filters.append({"paramName": "apername", "values": parameters[QUERY_CONFIG_KEYS.APERTURES][inst.lower()]})
-            if (parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()] != []):
-                query_filters.append({"paramName": "detector", "values": parameters[QUERY_CONFIG_KEYS.DETECTORS][inst.lower()]})
-            if (parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()] != []):
-                query_filters.append({"paramName": "filter", "values": parameters[QUERY_CONFIG_KEYS.FILTERS][inst.lower()]})
-            if (parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()] != []):
-                query_filters.append({"paramName": "exp_type", "values": parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst.lower()]})
-            if (parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()] != []):
-                query_filters.append({"paramName": "readpatt", "values": parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst.lower()]})
-            params = {"columns": "*",
-                      "filters": query_filters}
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
 
-        response = Mast.service_request_async(service, params)
-        results = response[0].json()['data']
+        rootnames = [name[0] for name in current_ins_rootfileinfos.values_list('root_name')]
+        filtered_rootnames.extend(rootnames)
 
-        inst_filenames = [result['filename'].split('.')[0] for result in results]
-        inst_filenames = [filename for filename in inst_filenames if filename.split('_')[-1] not in IGNORED_SUFFIXES]
-
-        # Get list of all thumbnails
-        thumb_inventory = os.path.join(f"{THUMBNAIL_FILESYSTEM}", f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt")
-        thumbnail_inst_list = retrieve_filelist(thumb_inventory)
-
-        # Get subset of thumbnail images that match the filenames
-        thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
-                                  os.path.basename(item).split('_integ')[0] in inst_filenames]
-
-        # Eliminate any duplicates
-        thumbnails_inst_subset = list(set(thumbnails_inst_subset))
-        thumbnails_subset.extend(thumbnails_inst_subset)
-
-    # Determine whether or not queried anomalies are flagged
-    final_subset = []
-
-    if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
-        for thumbnail in thumbnails_subset:
-            components = thumbnail.split('_')
-            file_root = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
-            filerootinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
-            try:
-                instrument = filename_parser(thumbnail)['instrument']
-                thumbnail_anomalies = get_current_flagged_anomalies(filerootinfo_set)
-                if thumbnail_anomalies:
-                    for anomaly in anomalies[instrument.lower()]:
-                        if anomaly.lower() in thumbnail_anomalies:
-                            # thumbnail contains an anomaly selected in the query
-                            final_subset.append(thumbnail)
-            except KeyError:
-                print("Error with thumbnail: ", thumbnail)
-    else:
-        # if no anomalies are flagged, return all thumbnails from query
-        final_subset = thumbnails_subset
-
-    return list(set(final_subset))
+    return filtered_rootnames
 
 
 def get_thumbnails_by_instrument(inst):
@@ -2117,16 +2105,13 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
     return data_dict
 
 
-def thumbnails_query_ajax(rootnames, expstarts=None):
+def thumbnails_query_ajax(rootnames):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
     Parameters
     ----------
     rootnames : list of strings
-        Rootname of APT proposal to filter
-    expstarts : list
-        Exposure start times from MAST (mjd)
 
     Returns
     -------
@@ -2161,14 +2146,13 @@ def thumbnails_query_ajax(rootnames, expstarts=None):
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
-        try:
-            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
-        except KeyError:
-            data_dict['file_data'][rootname]['inst'] = "MIRI"
-            print("Warning: assuming instrument is MIRI")
+        data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
+        root_file_info = RootFileInfo.objects.get(root_name=rootname)
+        exp_start = root_file_info.expstart
+        data_dict['file_data'][rootname]['expstart'] = exp_start
+        data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         data_dict['file_data'][rootname]['suffixes'] = []
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
         for filename in available_files:

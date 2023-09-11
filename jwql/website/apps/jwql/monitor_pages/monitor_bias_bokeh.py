@@ -101,7 +101,8 @@ class BiasMonitorData():
                                           self.stats_table.amp3_odd_med,
                                           self.stats_table.amp4_even_med,
                                           self.stats_table.amp4_odd_med,
-                                          self.stats_table.expstart) \
+                                          self.stats_table.expstart,
+                                          self.stats_table.uncal_filename) \
             .filter(self.stats_table.aperture == aperture) \
             .order_by(self.stats_table.expstart) \
             .all()
@@ -113,7 +114,10 @@ class BiasMonitorData():
                                                                       'amp2_even_med', 'amp2_odd_med',
                                                                       'amp3_even_med', 'amp3_odd_med',
                                                                       'amp4_even_med', 'amp4_odd_med',
-                                                                      'expstart_str'])
+                                                                      'expstart_str', 'uncal_filename'])
+        uncal_basename = [os.path.basename(e) for e in self.trending_data['uncal_filename']]
+        self.trending_data['uncal_filename'] = uncal_basename
+
         # Add a column of expstart values that are datetime objects
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
         datetimes = [datetime.strptime(entry, format_data) for entry in self.trending_data['expstart_str']]
@@ -128,12 +132,13 @@ class BiasMonitorData():
         aperture : str
             Aperture name (e.g. NRCA1_FULL)
         """
-        subq = (session.query(func.max(self.stats_table.expstart).label("max_created")) \
-        .filter(self.stats_table.aperture == aperture) \
+        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created")) \
+        .group_by(self.stats_table.aperture)
         .subquery()
         )
 
-        query = (session.query(self.stats_table.uncal_filename,
+        query = (session.query(self.stats_table.aperture,
+                               self.stats_table.uncal_filename,
                                self.stats_table.cal_filename,
                                self.stats_table.cal_image,
                                self.stats_table.expstart,
@@ -142,6 +147,7 @@ class BiasMonitorData():
                                self.stats_table.counts,
                                self.stats_table.bin_centers,
                                self.stats_table.entry_date)
+                     .filter(self.stats_table.aperture == aperture)
                      .order_by(self.stats_table.entry_date) \
                      .join(subq, self.stats_table.expstart == subq.c.max_created)
                      )
@@ -152,10 +158,10 @@ class BiasMonitorData():
         # Put the returned data in a dataframe. Include only the most recent entry.
         # The query has already filtered to include only entries using the latest
         # expstart value.
-        self.latest_data = pd.DataFrame(latest_data[-1:], columns=['uncal_filename', 'cal_filename',
-                                                                  'cal_image', 'expstart_str', 'collapsed_rows',
-                                                                  'collapsed_columns', 'counts', 'bin_centers',
-                                                                  'entry_date'])
+        self.latest_data = pd.DataFrame(latest_data[-1:], columns=['aperture', 'uncal_filename', 'cal_filename',
+                                                                   'cal_image', 'expstart_str', 'collapsed_rows',
+                                                                   'collapsed_columns', 'counts', 'bin_centers',
+                                                                   'entry_date'])
         # Add a column of expstart values that are datetime objects
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
         datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart_str']]
@@ -376,31 +382,36 @@ class HistogramPlot():
         """
         x_label = 'Signal (DN)'
         y_label = '# Pixels'
-        if len(self.data['counts'].iloc[0]) > 0:
+        # Be sure data is not empty
+        if len(self.data) > 0:
+            # Be sure the array of histogram information is not empty
+            if len(self.data['counts'].iloc[0]) > 0:
 
-            # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
-            bin_centers = np.array(self.data['bin_centers'][0])
-            half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
-            half_widths = np.insert(half_widths, 0, half_widths[0])
-            self.data['bin_left'] = [bin_centers - half_widths]
-            self.data['bin_right'] = [bin_centers + half_widths]
+                # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
+                bin_centers = np.array(self.data['bin_centers'][0])
+                half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
+                half_widths = np.insert(half_widths, 0, half_widths[0])
+                self.data['bin_left'] = [bin_centers - half_widths]
+                self.data['bin_right'] = [bin_centers + half_widths]
 
-            datestr = self.data['expstart_str'].iloc[0]
-            self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
-                               background_fill_color="#fafafa")
+                datestr = self.data['expstart_str'].iloc[0]
+                self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
+                                   background_fill_color="#fafafa")
 
-            # Keep only the columns where the data are a list
-            series = self.data.iloc[0]
-            series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
-            source = ColumnDataSource(dict(series))
-            self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
-                           fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
+                # Keep only the columns where the data are a list
+                series = self.data.iloc[0]
+                series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
+                source = ColumnDataSource(dict(series))
+                self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
+                               fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
-            hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
-            self.plot.tools.append(hover_tool)
-            self.plot.xaxis.axis_label = x_label
-            self.plot.yaxis.axis_label = y_label
+                hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
+                self.plot.tools.append(hover_tool)
+                self.plot.xaxis.axis_label = x_label
+                self.plot.yaxis.axis_label = y_label
 
+            else:
+                self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
         else:
             self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
 
@@ -460,31 +471,39 @@ class MedianRowColPlot():
             title_text = 'Column'
             axis_text = 'Row Number'
 
-        #datestr = self.data['expstart'][0].strftime("%m/%d/%Y")
-        datestr = self.data['expstart_str'].iloc[0]
-        title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
+        # Make sure there is data present
+        if len(self.data) > 0:
+            # Make sure that the colname column is not empty
+            if len(self.data[colname].iloc[0]) > 0:
+                datestr = self.data['expstart_str'].iloc[0]
+                title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
 
-        if len(self.data[colname].iloc[0]) > 0:
-            plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
-                          background_fill_color="#fafafa")
+                plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
+                              background_fill_color="#fafafa")
 
-            # Add a column containing pixel numbers to plot against
-            pix_num = np.arange(len(self.data[colname].iloc[0]))
-            self.data['pixel'] = [pix_num]
+                # Add a column containing pixel numbers to plot against
+                pix_num = np.arange(len(self.data[colname].iloc[0]))
+                self.data['pixel'] = [pix_num]
 
-            series = self.data.iloc[0]
-            series = series[['pixel', colname]]
-            source = ColumnDataSource(dict(series))
-            plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
-                         alpha=0.75, source=source)
+                series = self.data.iloc[0]
+                series = series[['pixel', colname]]
+                source = ColumnDataSource(dict(series))
+                plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
+                             alpha=0.75, source=source)
 
-            hover_text = axis_text.split(' ')[0]
-            hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
-            plot.tools.append(hover_tool)
-            plot.xaxis.axis_label = axis_text
-            plot.yaxis.axis_label = 'Median Signal (DN)'
+                hover_text = axis_text.split(' ')[0]
+                hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
+                plot.tools.append(hover_tool)
+                plot.xaxis.axis_label = axis_text
+                plot.yaxis.axis_label = 'Median Signal (DN)'
+            else:
+                # If there is a latest_data entry, but the collapsed_row or collapsed_col
+                # columns are empty, then make a placeholder plot.
+                title_str = f'Calibrated data: Collapsed {title_text}'
+                plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
         else:
             # If there are no data, then create an empty placeholder plot
+            title_str = f'Calibrated data: Collapsed {title_text}'
             plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
 
         return plot
@@ -535,7 +554,7 @@ class TrendingPlot():
 
         if len(amp_data["expstart"]) > 0:
             plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
-                      background_fill_color="#fafafa")
+                          background_fill_color="#fafafa")
             source = ColumnDataSource(amp_data)
             even_col = f'amp{amp_num}_even_med'
             odd_col = f'amp{amp_num}_odd_med'
@@ -561,12 +580,13 @@ class TrendingPlot():
             # interpret the format codes as html tags and crash with errors such as:
             # "Encountered unknown tag 'd'. Jinja was looking for the following tags: 'endblock'.
             # The innermost block that needs to be closed is 'block'"
-            hover_tool = HoverTool(tooltips=[('Even col bias:', f'@{even_col}'),
+            hover_tool = HoverTool(tooltips=[('File:', '@uncal_filename'),
+                                             ('Even col bias:', f'@{even_col}'),
                                              ('Odd col bias:', f'@{odd_col}'),
                                              ('Date:', '@expstart_str')
                                              ]
                                    )
-            hover_tool.formatters = {'@expstart': 'datetime'}
+            #hover_tool.formatters = {'@expstart': 'datetime'}
             plot.tools.append(hover_tool)
             plot.xaxis.axis_label = x_label
             plot.yaxis.axis_label = y_label
@@ -585,7 +605,7 @@ class TrendingPlot():
         # Create one plot per amplifier
         for amp_num in range(1, 5):
             cols_to_use = [col for col in self.data.columns if str(amp_num) in col]
-            cols_to_use.append('expstart')
+            cols_to_use.extend(['expstart', 'expstart_str', 'uncal_filename'])
             subframe = self.data[cols_to_use]
             self.plots[amp_num] = self.create_amp_plot(amp_num, subframe)
 
@@ -616,22 +636,28 @@ class ZerothGroupImage():
     def create_figure(self):
         """Create the Bokeh figure
         """
-        if os.path.isfile(self.data['cal_image'].iloc[0]):
-            image = read_png(self.data['cal_image'].iloc[0])
+        if len(self.data['cal_image']) > 0:
+            if os.path.isfile(self.data['cal_image'].iloc[0]):
+                image = read_png(self.data['cal_image'].iloc[0])
 
-            datestr = self.data['expstart_str'].iloc[0]
+                datestr = self.data['expstart_str'].iloc[0]
 
-            # Display the 32-bit RGBA image
-            ydim, xdim = image.shape
-            dim = max(xdim, ydim)
-            self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
-                                 tools='pan,box_zoom,reset,wheel_zoom,save')
-            self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)
-            self.figure.xaxis.visible = False
-            self.figure.yaxis.visible = False
+                # Display the 32-bit RGBA image
+                ydim, xdim = image.shape
+                dim = max(xdim, ydim)
+                self.figure = figure(title=f'Calibrated Zeroth Group of Most Recent Dark: {datestr}', x_range=(0, xdim), y_range=(0, ydim),
+                                     tools='pan,box_zoom,reset,wheel_zoom,save')
+                self.figure.image_rgba(image=[image], x=0, y=0, dw=xdim, dh=ydim)
+                self.figure.xaxis.visible = False
+                self.figure.yaxis.visible = False
+            else:
+                # If the listed file is missing, create an empty plot
+                self.figure = PlaceholderPlot('Calibrated Zeroth Group of Most Recent Dark', '', '').plot
+                self.figure.xaxis.visible = False
+                self.figure.yaxis.visible = False
 
         else:
-            # If the given file is missing, create an empty plot
+            # If no file is given, create an empty plot
             self.figure = PlaceholderPlot('Calibrated Zeroth Group of Most Recent Dark', '', '').plot
             self.figure.xaxis.visible = False
             self.figure.yaxis.visible = False

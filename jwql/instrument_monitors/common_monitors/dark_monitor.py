@@ -93,16 +93,15 @@ from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
-from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
-from jwql.utils import calculations, instrument_properties, monitor_utils
+from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
@@ -232,7 +231,8 @@ class Dark():
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
-        self.pixel_table.__table__.insert().execute(entry)
+        with engine.begin() as connection:
+            connection.execute(self.pixel_table.__table__.insert(), entry)
 
     def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None):
         """Create and save a png containing the mean dark slope image,
@@ -401,11 +401,11 @@ class Dark():
         new_pixels_y : list
             List of y coordinates of new bad pixels
         """
-        
+
         if len(badpix[0]) == 0:
             logging.warning("\tNo new {} pixels to check.".format(pixel_type))
             return ([], [])
-        
+
         logging.info("\tChecking {} potential new {} pixels".format(len(badpix[0]), pixel_type))
 
         if pixel_type not in ['hot', 'dead', 'noisy']:
@@ -439,7 +439,7 @@ class Dark():
             if len(np.intersect1d(ind_x[0], ind_y[0])) == 0:
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
-        
+
         logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
 #             pixel = (x, y)
 #             if pixel not in already_found:
@@ -649,22 +649,13 @@ class Dark():
             values = []
 
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
-                                                       pixels_y=coords[1],
-                                                       values=values
+                                                       pixels_y=coords[1]
                                                       )
                                              )
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
-
-        # Create hover tools for the bad pixel types
-        #hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
-        #                                            ('value:', f'@values'),
-        #                                            ],
-        #                                    renderers=[badpixplots[pix_type]])
-        # Add tool to plot
-        #self.plot.tools.append(hover_tools[pix_type])
 
         # Add to the legend
         if  numpix > 0:
@@ -711,7 +702,11 @@ class Dark():
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
 
-        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        # Specify that we want to skip the dark current correction step
+        step_args = {'dark_current': {'skip': True}}
+
+        # Call the pipeline
+        outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate"], self.instrument, step_args=step_args)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
             if processed_file not in slope_files and os.path.isfile(processed_file):
@@ -809,8 +804,8 @@ class Dark():
                 # Add new noisy pixels to the database
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-            
-            logging.info("Creating Mean Slope Image {}".format(slope_image))
+
+            logging.info("Creating Mean Slope Image")
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
                                           noisyxy=new_noisy_pixels, baseline_file=baseline_file)
@@ -861,7 +856,8 @@ class Dark():
                              'hist_amplitudes': histogram[key],
                              'entry_date': datetime.datetime.now()
                              }
-            self.stats_table.__table__.insert().execute(dark_db_entry)
+            with engine.begin() as connection:
+                connection.execute(self.stats_table.__table__.insert(), dark_db_entry)
 
     def read_baseline_slope_image(self, filename):
         """Read in a baseline mean slope image and associated standard
@@ -1026,6 +1022,19 @@ class Dark():
                             # Copy files from filesystem
                             dark_files, not_copied = copy_files(new_filenames, self.data_dir)
 
+                            # Check that there were no problems with the file copying. If any of the copied
+                            # files have different sizes between the MAST filesystem and the JWQL filesystem,
+                            # then throw them out.
+                            for dark_file in dark_files:
+                                copied_size = os.stat(dark_file).st_size
+                                orig_size = os.stat(filesystem_path(os.path.basename(dark_file))).st_size
+                                if orig_size != copied_size:
+                                    logging.info(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem.")
+                                    logging.info(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                    not_copied.append(dark_file)
+                                    dark_files.remove(dark_file)
+                                    os.remove(dark_file)
+
                             logging.info('\tNew_filenames: {}'.format(new_filenames))
                             logging.info('\tData dir: {}'.format(self.data_dir))
                             logging.info('\tCopied to working dir: {}'.format(dark_files))
@@ -1049,7 +1058,9 @@ class Dark():
                                  'files_found': len(new_entries),
                                  'run_monitor': monitor_run,
                                  'entry_date': datetime.datetime.now()}
-                    self.query_table.__table__.insert().execute(new_entry)
+                    with engine.begin() as connection:
+                        connection.execute(
+                            self.query_table.__table__.insert(), new_entry)
                     logging.info('\tUpdated the query history table')
 
         logging.info('Dark Monitor completed successfully.')
