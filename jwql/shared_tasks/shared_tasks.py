@@ -408,7 +408,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
-def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True):
+def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True, step_args={}):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -429,6 +429,13 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     save_fitopt : bool
         If ``True``, the file of optional outputs from the ramp fitting
         step of the pipeline is saved.
+
+    step_args : dict
+        A dictionary containing custom arguments to supply to individual pipeline steps.
+        When a step is run, the dictionary will be checked for a key matching the step
+        name (as defined in jwql.utils.utils.get_pipeline_steps() for the provided
+        instrument). The value matching the step key should, itself, be a dictionary that
+        can be spliced in to step.call() via dereferencing (**dict)
 
     Returns
     -------
@@ -469,7 +476,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
 
     cores = 'all'
     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file,
-                            short_name, result_file, cores)
+                            short_name, result_file, cores, step_args)
 
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
@@ -484,7 +491,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         if core_fail:
             cores = "half"
             status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
-                                    input_file, short_name, result_file, cores)
+                                    input_file, short_name, result_file, cores, step_args)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
                 managed = True
@@ -498,7 +505,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                 if core_fail:
                     cores = "none"
                     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
-                                            input_file, short_name, result_file, cores)
+                                            input_file, short_name, result_file, cores, step_args)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                         managed = True
