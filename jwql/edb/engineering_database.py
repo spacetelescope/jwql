@@ -674,6 +674,7 @@ class EdbMnemonic:
 
         if plot_data:
             data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
+            fig.line(x='x', y='y', line_width=1, line_color='blue', source=source)
             hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                              ('Date', '@x{%d %b %Y %H:%M:%S}')
                                              ], mode='mouse', renderers=[data])
@@ -1136,6 +1137,8 @@ class EdbMnemonic:
                     meanvals = self.median
                 else:
                     meanvals = self.mean
+
+                fig.line(self.median_times, meanvals, line_width=1, line_color='orange', alpha=0.75)
 
                 # If the max and min arrays are to be plotted, create columndata sources for them as well
                 if plot_max:

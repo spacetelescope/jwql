@@ -739,6 +739,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
         uncal_name = os.path.basename(uncal_file)
         result = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
         logging.info("\t\tStarting with ID {}".format(result.id))
+        result.get()
         logging.info("\t\tPipeline Complete")
         output = retrieve_files(short_name, ext_or_exts, retrieve_dir)
     except Exception as e:

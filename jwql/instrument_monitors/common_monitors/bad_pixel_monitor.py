@@ -1080,6 +1080,7 @@ class BadPixels():
             if bad_type in FLATS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
+                create_png_from_fits(illuminated_slope_files[0], self.output_dir)
             elif bad_type in DARKS_BAD_PIXEL_TYPES:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
