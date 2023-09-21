@@ -267,6 +267,7 @@ class TargetInfo():
     self.attitude = define_attitude(self.V2_ref, self.V3_ref, self.RA_ref, self.DEC_ref, self.roll_ref)
     self.v2_targ, self.v3_targ = rotations.getv2v3(self.attitude, self.RA_targ, self.DEC_targ)
     self.x_targ, self.y_targ = self.ap_siaf.tel_to_sci(self.v2_targ, self.v3_targ)
+    self.idl_x_targ, self.idl_y_targ = self.ap.tel_to_idl(self.v2_targ, self.v3_targ)
 
     def manual_centroid(self, use_ref_loc=True, use_targ_loc=False, half_width=None):
         """Calculate the centroid of the source in the data. This will be compared to the
@@ -800,10 +801,12 @@ Out[56]: (17.64133000000004, 40.69263000000001)
 
         if self.instrument == 'nircam':
             self.dms_aperture_centroid = self.ap_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
+            self.dms_aperture_centroid_v2v3 = self.ap_siaf.det_to_tel(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
             self.full_siaf = self.inst_siaf[f'{self.aperture.split("_")[0]}_FULL'] #-- but what about coronagraphic ta?
             self.dms_det_centroid = self.full_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
         elif self.instrument == 'niriss':
             self.dms_aperture_centroid = self.ap_siaf.det_to_sci(self.event.ta_info['detector_centroid'][1], self.event.ta_info['detector_centroid'][0])
+            self.dms_aperture_centroid_v2v3 = self.ap_siaf.det_to_tel(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
             self.full_siaf = self.inst_siaf['NIS_CEN']
             self.dms_det_centroid = self.full_siaf.raw_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
         elif self.instrument == 'miri':
@@ -811,9 +814,11 @@ Out[56]: (17.64133000000004, 40.69263000000001)
             if self.subarray != 'FULL':
                 sub_siaf = self.inst_siaf['MIRIM_' + self.subarray]
                 self.dms_aperture_centroid = sub_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
+                self.dms_aperture_centroid_v2v3 = sub_siaf.det_to_tel(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
                 self.dms_det_centroid = self.full_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
             else:
                 self.dms_aperture_centroid = self.event.ta_info['aperture_centroid']
+                self.dms_aperture_centroid_v2v3 = ???
                 self.dms_det_centroid = self.event.ta_info['detector_centroid']
 
 
@@ -1187,12 +1192,10 @@ niriss soss and ami use TA observations. both use 64x64 subarray
 
 
         # Calculate offset of target from ref point, in arcseconds
+        # This is the offset between the refernnce location and the CALCULATED RA, Dec of the target.
+        # Keep in mind that this will be wrong if the calcuated RA, Dec is wrong.
         offset_RA = (self.ta_data.RA_ref - self.ta_data.RA_targ) * 3600
         offset_DEC = (self.ta_data.DEC_ref - self.ta_data.DEC_targ) * 3600
-
-        # Maybe better here: look at offset between target x,y (from gentalocate) and ref pos x,y
-
-
         self.offset = np.sqrt(offset_RA**2 + offset_DEC**2)
 
         logging.info('Target RA: {}, Target DEC: {}'.format(self.ta_data.RA_targ, self.ta_data.DEC_targ))
@@ -1278,8 +1281,12 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         delta_xy_targ_ref = np.sqrt(delta_x_targ_ref**2 + delta_y_targ_ref**2)
         delta_arcsec_targ_ref = np.sqrt((delta_x_targ_ref * self.pixel_scale_x)**2 + (delta_y_targ_ref * self.pixel_scale_y)**2)
 
-        request to have this delta in ideal pixels and V2,V3
+        delta_v2_targ_ref = self.ta_data.V2_ref - self.dms_aperture_centroid_v2v3[0]
+        delta_v3_targ_ref = self.ta_data.V3_ref - self.dms_aperture_centroid_v2v3[1]
+        #delta_idlx_targ_ref = self.ta_data.idl_x_targ -
+        #delta_idly_targ_ref = self.ta_data.idl_y_targ -
 
+        request to have the delta above in ideal pixels and V2,V3
 
         # Now we need an independenly measured centroid value to compare to. e.g. photutils
         # For now let's use a simple call to photutils' centroid_com(). Note that we are supplying
@@ -1289,6 +1296,8 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         # 1st quantity to track in requirements page
         # x, y offsets between the source and the reference location of the aperture (blind pointing accuracy)
         # but this case uses the independently-measured location of the source. Do we really want this?
+        # This is a repeat of delta_x_targ_ref above, but using the manually calculated centroid rather than the
+        # GENTALOCATE results
         print('Do we really want this?')
         ref_dx = x_photutil_centroid - self.x_ref
         ref_dy = y_photutil_centroid - self.y_ref
@@ -1547,7 +1556,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
 
         # Loop through TA apertures and process new data
         #for exp_type in exp_type_list:
-        for instrument in ['nircam', 'niriss', 'miri']:
+        for instrument in ['nircam']:  #['nircam', 'niriss', 'miri']:
             logging.info(f'Working on {instrument}')
 
             self.instrument = instrument
@@ -1559,12 +1568,53 @@ niriss soss and ami use TA observations. both use 64x64 subarray
             self.identify_tables()
 
             # We start by querying for new data
-            self.query_start = self.most_recent_search()
-            self.query_end = Time.now().mjd
+            #Skip during development at the moment
+            #self.query_start = self.most_recent_search()
+            #self.query_end = Time.now().mjd
 
             # Query via django model rather than mast. Leave the aperture value as an empty
             # string so that the query will look for all apertures. This will query for TACQ
             # and TACONFIRM data
+
+            ######!!!!!FOR DEVELOPMENT ######
+            # NIRCam
+            # 59714 - will get the TA image for NIRCam PID 1068 obs 7 - 2022-05-15 16:23:43
+            # jw01068007001_02102_00001-seg001_nrcalong_rate.fits
+            # 59714.5 - 59714.8
+            #
+            # NIRISS
+            # AMI
+            # JW01093002001_02101_00001_NIS_rate.fits
+            # 59722.33 - 59722.375
+            # 2022-05-23 08:24
+            #
+            # SOSS
+            # JW01541001001_02101_00001-SEG001_NIS_RATE.fits
+            # 2022-06-08T06:16:09.084
+            # 59738.25 - 59738.3
+            #
+            # MIRI
+            # LRS - fixed slit
+            # JW01033001001_02101_00001_MIRIMAGE_RATE.fits
+            # 2022-05-26T10:27:51.288
+            # 59725.4 - 59725.5
+            #
+            # LRS slitless
+            # JW01353005001_02101_00001-SEG001_MIRIMAGE_RATE.fits
+            # 2023-03-12T23:25:06.923
+            # 60015.95 - 60016.
+            if instrument == 'nircam':
+                self.query_start = 59714.5
+                self.query_end = 59714.8
+            elif instrument == 'niriss':
+                self.query_start = 59722.33
+                self.query_end = 59722.375
+            elif instrument == 'miri':
+                self.query_start = 60015.95
+                self.query_end = 60016.0
+            ######!!!!!FOR DEVELOPMENT ######
+
+
             self.ta_entries = monitor_utils.model_query_ta(self.instrument, '', self.query_start, self.query_end)
 
             # Organize the query results. Remove entries for coron observations and TACQ files we
@@ -1636,6 +1686,9 @@ Out[22]:
             else:
                 monitor_run = False
 
+
+
+
             new_entry = {'instrument': self.instrument,
                          'exp_type': self.exp_type[0],
                          'start_time_mjd': self.query_start,
@@ -1644,10 +1697,11 @@ Out[22]:
                          'files_run': len(ta_files_processed)
                          'run_monitor': monitor_run,
                          'entry_date': datetime.datetime.now()}
-            self.query_table.__table__.insert().execute(new_entry)
+            # Skip making a database entry for the moment
+            #self.query_table.__table__.insert().execute(new_entry)
 
-            logging.info(f'\tUpdated the query history table with {sef.instrument} results.')
-            logging.info(f'\t{new_entry}')
+            #logging.info(f'\tUpdated the query history table with {sef.instrument} results.')
+            #logging.info(f'\t{new_entry}')
 
 
 
