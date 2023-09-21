@@ -8,6 +8,7 @@ jwst==1.11.4
 pygments==2.16.1
 pytest==7.4.0
 redis==5.0.0
+selenium==4.11.3
 sphinx==6.2.1
 sphinx_rtd_theme==1.2.2
 stsci_rtd_theme==1.0.0
