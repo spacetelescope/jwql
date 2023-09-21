@@ -22,7 +22,7 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.embed import components, file_html
-from bokeh.io import export_png, show
+from bokeh.io import show
 from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
 from bokeh.plotting import figure
@@ -40,7 +40,7 @@ from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixe
 from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
 from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import filesystem_path, get_config, read_png
+from jwql.utils.utils import filesystem_path, get_config, read_png, save_png
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = get_config()['outputs']
@@ -593,7 +593,7 @@ class NewBadPixPlot():
             Title to add to the Figure
         """
         # Save the figure as a png
-        export_png(self.plot, filename=filename)
+        save_png(self.plot, filename=filename)
         set_permissions(filename)
 
         # Read in the png and insert into a replacement figure

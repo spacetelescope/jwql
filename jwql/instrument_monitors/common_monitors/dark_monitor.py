@@ -84,7 +84,6 @@ from astropy.io import ascii, fits
 from astropy.modeling import models
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
-from bokeh.io import export_png
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
 from bokeh.models import LinearColorMapper
 from bokeh.plotting import figure
@@ -106,7 +105,7 @@ from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_P
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, save_png
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -350,7 +349,7 @@ class Dark():
                 self.plot.add_layout(legend, 'below')
 
             # Save the plot in a png
-            export_png(self.plot, filename=output_filename)
+            save_png(self.plot, filename=output_filename)
             set_permissions(output_filename)
 
 

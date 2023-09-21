@@ -45,6 +45,7 @@ from bokeh.models import LinearColorMapper, LogColorMapper
 from bokeh.plotting import figure
 import numpy as np
 from PIL import Image
+from selenium import webdriver
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
@@ -170,7 +171,7 @@ def create_png_from_fits(filename, outdir):
 
         # Save the plot in a png
         output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
-        export_png(plot, filename=output_filename)
+        save_png(plot, filename=output_filename)
         permissions.set_permissions(output_filename)
         return output_filename
     else:
@@ -754,6 +755,26 @@ def read_png(filename):
         view = None
     # Return the 2D version
     return img
+
+
+def save_png(fig, filename=''):
+    """Starting with selenium version 4.10.0, our testing has shown that on the JWQL
+    servers, we need to specify an instance of a web driver when exporting a Bokeh
+    figure as a png. This is a wrapper function that creates the web driver instance
+    and calls Bokeh's export_png function.
+
+    Parameters
+    ----------
+    fig : bokeh.plotting.figure
+        Bokeh figure to be saved as a png
+
+    filename : str
+        Filename to use for the png file
+    """
+    options = webdriver.FirefoxOptions()
+    options.add_argument('-headless')
+    driver = webdriver.Firefox(options=options)
+    export_png(fig, filename=filename, webdriver=driver)
 
 
 def grouper(iterable, chunksize):
