@@ -775,6 +775,7 @@ def save_png(fig, filename=''):
     options.add_argument('-headless')
     driver = webdriver.Firefox(options=options)
     export_png(fig, filename=filename, webdriver=driver)
+    driver.quit()
 
 
 def grouper(iterable, chunksize):
