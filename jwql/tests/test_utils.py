@@ -491,9 +491,7 @@ def test_save_png():
     ny, nx = image.shape
     mapper = LinearColorMapper(palette='Viridis256', low=0 ,high=1.1)
     imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
-    #save_png(plot, filename='test.png')
-    from bokeh.io import export_png
-    export_png(plot, filename='test.png')
+    save_png(plot, filename='test.png')
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
