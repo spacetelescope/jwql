@@ -348,7 +348,7 @@ if __name__ == '__main__':
     outputs = args.outputs
     step_args = args.step_args
 
-    status_file = os.path.join(working_path, short_name+"_status.txt")
+    status_file = os.path.join(working_path, short_name + "_status.txt")
     with open(status_file, 'w') as out_file:
         out_file.write("Starting Process\n")
         out_file.write("\tpipeline is {} ({})\n".format(pipe_type, type(pipe_type)))
