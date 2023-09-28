@@ -158,8 +158,7 @@ def create_png_from_fits(filename, outdir):
         plot.ygrid.visible = False
 
         # Create the color mapper that will be used to scale the image
-        #mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
-        mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Greys256', low=(img_med - (5 * img_dev)),high=(img_med + (5 * img_dev)))
 
         # Plot image
         imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
@@ -170,8 +169,13 @@ def create_png_from_fits(filename, outdir):
         plot.yaxis.visible = False
 
         # Save the plot in a png
+<<<<<<< Updated upstream
         output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
         save_png(plot, filename=output_filename)
+=======
+        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits', 'png'))
+        export_png(plot, filename=output_filename)
+>>>>>>> Stashed changes
         permissions.set_permissions(output_filename)
         return output_filename
     else:
@@ -750,7 +754,7 @@ def read_png(filename):
 
         # Copy the RGBA image into view, flipping it so it comes right-side up
         # with a lower-left origin
-        view[:,:,:] = np.flipud(np.asarray(rgba_img))
+        view[:, :, :] = np.flipud(np.asarray(rgba_img))
     else:
         view = None
     # Return the 2D version

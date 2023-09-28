@@ -275,14 +275,14 @@ class Dark():
 
             # Create figure
             start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
-            end_time  = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            end_time = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
 
             self.plot = figure(title=f'{self.aperture}: {num_files} files. {start_time} to {end_time}', tools='')
             #                   tools='pan,box_zoom,reset,wheel_zoom,save')
             self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
             # Create the color mapper that will be used to scale the image
-            mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+            mapper = LinearColorMapper(palette='Viridis256', low=(img_med - (5 * img_dev)), high=(img_med + (5 * img_dev)))
 
             # Plot image and add color bar
             imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
@@ -290,13 +290,6 @@ class Dark():
 
             color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
             self.plot.add_layout(color_bar, 'right')
-
-            # Add hover tool for all pixel values
-            #hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
-            #                                 ('value:', '@image')
-            #                                 ],
-            #                       renderers=[imgplot])
-            #self.plot.tools.append(hover_tool)
 
             if (('FULL' in self.aperture) or ('_CEN' in self.aperture)):
 
@@ -337,21 +330,20 @@ class Dark():
                     base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
                     base_end = Time(float(base_parts[5]), format='mjd').tt.datetime
                     base_start_time = base_start.strftime("%m/%d/%Y")
-                    base_end_time  = base_end.strftime("%m/%d/%Y")
+                    base_end_time = base_end.strftime("%m/%d/%Y")
                     legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
                 else:
                     legend_title = 'Compared to previous mean dark'
                 legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
                                 location="center",
                                 orientation='vertical',
-                                title = legend_title)
+                                title=legend_title)
 
                 self.plot.add_layout(legend, 'below')
 
             # Save the plot in a png
             save_png(self.plot, filename=output_filename)
             set_permissions(output_filename)
-
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file
@@ -650,14 +642,14 @@ class Dark():
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
                                                        pixels_y=coords[1]
                                                       )
-                                             )
+                                            )
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
 
         # Add to the legend
-        if  numpix > 0:
+        if numpix > 0:
             if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
                 text = f"{numpix} pix {adjective[pix_type]} than baseline"
             else:
