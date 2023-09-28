@@ -308,8 +308,8 @@ class BadPixelData():
         # Query database for all data in the table with a matching detector and bad pixel type
         all_entries_by_type = session.query(self.pixel_table.type, self.pixel_table.detector, func.array_length(self.pixel_table.x_coord, 1),
                                             self.pixel_table.obs_mid_time) \
-                              .filter(and_(self.pixel_table.detector == self.detector, self.pixel_table.type == badpix_type)) \
-                              .all()
+            .filter(and_(self.pixel_table.detector == self.detector, self.pixel_table.type == badpix_type)) \
+            .all()
 
         # Organize the results
         num_pix = []
@@ -654,7 +654,7 @@ class BadPixTrendPlot():
                                             string_time=string_times,
                                             value=[self.badpix_type] * len(self.num_pix)
                                             )
-                                 )
+                                  )
 
         self.plot = figure(title=f'{self.detector}: New {self.badpix_type} Pixels', tools='pan,box_zoom,reset,wheel_zoom,save',
                            background_fill_color="#fafafa")

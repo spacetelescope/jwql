@@ -485,11 +485,11 @@ def test_filesystem_path():
 
 def test_save_png():
     """Test that we can create a png file"""
-    plot = figure(title='test',tools='')
-    image = np.zeros((200,200))
+    plot = figure(title='test', tools='')
+    image = np.zeros((200, 200))
     image[100:105, 100:105] = 1
     ny, nx = image.shape
-    mapper = LinearColorMapper(palette='Viridis256', low=0 ,high=1.1)
+    mapper = LinearColorMapper(palette='Viridis256', low=0, high=1.1)
     imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
     save_png(plot, filename='test.png')
 

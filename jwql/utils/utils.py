@@ -169,13 +169,8 @@ def create_png_from_fits(filename, outdir):
         plot.yaxis.visible = False
 
         # Save the plot in a png
-<<<<<<< Updated upstream
-        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
-        save_png(plot, filename=output_filename)
-=======
         output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits', 'png'))
-        export_png(plot, filename=output_filename)
->>>>>>> Stashed changes
+        save_png(plot, filename=output_filename)
         permissions.set_permissions(output_filename)
         return output_filename
     else:

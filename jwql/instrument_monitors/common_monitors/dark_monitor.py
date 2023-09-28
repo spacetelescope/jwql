@@ -641,8 +641,8 @@ class Dark():
 
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
                                                        pixels_y=coords[1]
-                                                      )
-                                            )
+                                                       )
+                                             )
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
