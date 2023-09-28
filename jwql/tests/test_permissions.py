@@ -51,7 +51,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
 
     yield test_dir
     if os.path.isdir(test_dir):
-        os.remove(test_dir)
+        os.rmdir(test_dir)
 
 
 def test_directory_permissions(test_directory):

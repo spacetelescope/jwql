@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Monitor Log Viewer - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Explore JWQL monitoring logs through the web browser.</h2><hr>
+
+        <p align="justify">
+            This page allows users to load monitoring logs into the web browsers. This feature
+            obtains logs from all JWQL servers (ops, dev, and test). 
+
+            <br><br>
+        </p>
+
+        <hr>
+        <form action="" method="post" id="logForm">
+            {{ csrf_input }}
+            
+            <!--LOG SELECT DROPDOWN-->
+            <h4>Select JWQL Monitoring Log</h4>
+                <div class="col-6 mx-auto text-left mt-5">
+                    <input id="log_select" type="text" list="logs" placeholder="Log Name" class="form-control">
+                    <datalist id="logs">
+                        {% for log_name in all_logs %}
+                            <option id="{{ log_name }}" value="{{ log_name }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+            <br>
+
+            <button id="log_submit" name="log_submit" class="btn btn-primary" onclick="GetSelectedTextValue()" type="submit" style="float: left;" disabled>Submit</button>
+            <br><br><br>
+
+            <!-- If log is passed, render log. -->
+            <!-- Log is not rendered when coming from home/monitor views -->
+            {% if log_text %}
+                <h4> {{ log_name|safe }} </h4><hr>
+                <!-- Show Logs here -->
+                <pre>
+                    {{ log_text }}
+                </pre>
+            {% endif %}
+
+            <script type="text/javascript">
+                function GetSelectedTextValue() {
+                    var log_value = document.getElementById("log_select").value;
+                    document.getElementById("log_submit").value = log_value;
+                }
+            </script>
+
+            <script type="text/javascript">
+                const idInputField = document.getElementById('log_select');
+                var logsList = document.getElementById("logs");
+                idInputField.addEventListener('input', function () {
+                    if (logsList.options.namedItem(this.value) != null) {
+                        document.getElementById("log_submit").disabled = false;
+                    } else {
+                        document.getElementById("log_submit").disabled = true;
+                    }
+                });
+            </script>
+
+        </form>
+    </main>
+
+{% endblock %}

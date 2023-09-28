@@ -27,6 +27,7 @@ Authors
 
     - Matthew Bourque
     - Teagan King
+    - Melanie Clarke
 
 Use
 ---
@@ -50,12 +51,11 @@ from .data_containers import get_all_proposals
 from .data_containers import get_filenames_by_proposal
 from .data_containers import get_filenames_by_rootname
 from .data_containers import get_instrument_proposals
-from .data_containers import get_preview_images_by_instrument
+from .data_containers import get_instrument_looks
 from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_preview_images_by_rootname
-from .data_containers import get_thumbnails_by_instrument
 from .data_containers import get_thumbnails_by_proposal
-from .data_containers import get_thumbnails_by_rootname
+from .data_containers import get_thumbnail_by_rootname
 
 
 def all_proposals(request):
@@ -139,28 +139,44 @@ def instrument_proposals(request, inst):
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
-def preview_images_by_instrument(request, inst):
-    """Return a list of available preview images in the filesystem for
-    the given instrument.
+def instrument_looks(request, inst, status=None):
+    """Return a table of looks information for the given instrument.
+
+    'Viewed' indicates whether an observation is new or has been reviewed
+    for QA.  In addition to 'filename', and 'viewed', observation
+    descriptors from the Django models may be added to the table. Keys
+    are specified by instrument in the REPORT_KEYS_PER_INSTRUMENT constant.
 
     Parameters
     ----------
     request : HttpRequest object
-        Incoming request from the webpage
+        Incoming request from the webpage.
     inst : str
-        The instrument of interest.  The name of the instrument must
-        mach one of the following: (``nircam``, ``NIRCam``, ``niriss``,
-        ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
-        ``fgs``, ``FGS``).
+        The JWST instrument of interest.
+    status : str, optional
+        If set to None, all viewed values are returned. If set to
+        'viewed', only viewed data is returned. If set to 'new', only
+        new data is returned.
 
     Returns
     -------
-    JsonResponse object
-        Outgoing response sent to the webpage
+    JsonResponse
+        Outgoing response sent to the webpage, depending on return_type.
     """
+    # get all observation looks from file info model
+    # and join with observation descriptors
+    keys, looks = get_instrument_looks(inst, look=status)
 
-    preview_images = get_preview_images_by_instrument(inst)
-    return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
+    # return results by api key
+    if status is None:
+        status = 'looks'
+
+    response = JsonResponse({'instrument': inst,
+                             'keys': keys,
+                             'type': status,
+                             status: looks},
+                            json_dumps_params={'indent': 2})
+    return response
 
 
 def preview_images_by_proposal(request, proposal):
@@ -205,30 +221,6 @@ def preview_images_by_rootname(request, rootname):
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_by_instrument(request, inst):
-    """Return a list of available thumbnails in the filesystem for the
-    given instrument.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        The instrument of interest.  The name of the instrument must
-        match one of the following: (``nircam``, ``NIRCam``, ``niriss``,
-        ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
-        ``fgs``, ``FGS``).
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-
-    thumbnails = get_thumbnails_by_instrument(inst)
-    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
-
-
 def thumbnails_by_proposal(request, proposal):
     """Return a list of available thumbnails in the filesystem for the
     given ``proposal``.
@@ -250,8 +242,8 @@ def thumbnails_by_proposal(request, proposal):
     return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_by_rootname(request, rootname):
-    """Return a list of available thumbnails in the filesystem for the
+def thumbnail_by_rootname(request, rootname):
+    """Return the best available thumbnail in the filesystem for the
     given ``rootname``.
 
     Parameters
@@ -267,5 +259,5 @@ def thumbnails_by_rootname(request, rootname):
         Outgoing response sent to the webpage
     """
 
-    thumbnails = get_thumbnails_by_rootname(rootname)
-    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
+    thumbnail = get_thumbnail_by_rootname(rootname)
+    return JsonResponse({'thumbnails': thumbnail}, json_dumps_params={'indent': 2})

@@ -268,9 +268,9 @@ class PreviewImage():
                 if ext in extnames:
                     dimensions = len(hdulist[ext].data.shape)
                     if dimensions == 4:
-                        data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
+                        data = hdulist[ext].data[:, [0, -1], :, :].astype(float)
                     else:
-                        data = hdulist[ext].data.astype(np.float)
+                        data = hdulist[ext].data.astype(float)
                     yd, xd = data.shape[-2:]
                     try:
                         self.units = f"{hdulist[ext].header['BUNIT']}  "
@@ -531,7 +531,7 @@ class PreviewImage():
         # If preview image, set a title
         if not thumbnail:
             filename = os.path.split(self.file)[-1]
-            ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
+            ax.set_title(filename + ' Int: {}'.format(int(integration_number)))
 
     def make_image(self, max_img_size=8.0, create_thumbnail=False):
         """The main function of the ``PreviewImage`` class.
@@ -575,6 +575,11 @@ class PreviewImage():
 
             # Find signal limits for the display
             minval, maxval = self.find_limits(frame)
+
+            # Set NaN values to zero, so that those pixels
+            # do not appear as big white splotches in the jpgs
+            # after matplotlib downsamples/averages
+            frame = nan_to_zero(frame)
 
             # Create preview image matplotlib object
             indir, infile = os.path.split(self.file)
@@ -757,3 +762,20 @@ def expand_for_i2d(array, xdim, ydim):
         return new_array_x
     else:
         return array
+
+def nan_to_zero(image):
+    """Set any pixels with a value of NaN to zero
+
+    Parameters
+    ----------
+    image : numpy.ndarray
+        Array from which NaNs will be removed
+
+    Returns
+    -------
+    image : numpy.ndarray
+        Input array with NaNs changed to zero
+    """
+    nan = np.isnan(image)
+    image[nan] = 0
+    return image

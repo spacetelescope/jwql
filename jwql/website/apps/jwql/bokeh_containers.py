@@ -27,8 +27,10 @@ from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 from bokeh.plotting import figure, output_file
 import numpy as np
+import pysiaf
 
-from . import monitor_pages
+from jwql.website.apps.jwql import monitor_pages
+from jwql.website.apps.jwql.monitor_pages.monitor_dark_bokeh import DarkMonitorPlots
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
@@ -36,6 +38,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+TEMPLATE_DIR = os.path.join(PACKAGE_DIR, 'website/apps/jwql/templates')
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
@@ -84,153 +87,6 @@ def add_limit_boxes(fig, yellow=None, red=None):
             red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
     return fig
-
-
-def bad_pixel_monitor_tabs(instrument):
-    """Creates the various tabs of the bad pixel monitor results page.
-
-    Parameters
-    ----------
-    instrument : str
-        The JWST instrument of interest (e.g. ``nircam``).
-
-    Returns
-    -------
-    div : str
-        The HTML div to render bad pixel monitor plots
-    script : str
-        The JS script to render bad pixel monitor plots
-    """
-    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
-
-    templates_all_apertures = {}
-    for aperture in full_apertures:
-
-        # Start with default values for instrument and aperture because
-        # BokehTemplate's __init__ method does not allow input arguments
-        monitor_template = monitor_pages.BadPixelMonitor()
-
-        # Set instrument and monitor using DarkMonitor's setters
-        monitor_template.aperture_info = (instrument, aperture)
-        templates_all_apertures[aperture] = monitor_template
-
-    # for reference - here are the bad pixel types
-    # badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
-    # badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
-
-    # We loop over detectors here, and create one tab per detector, rather
-    # than one tab for each plot type, as is done with the dark monitor
-    all_tabs = []
-    for aperture_name, template in templates_all_apertures.items():
-
-        tab_plots = []
-        # Add the image of bad pixels found in darks
-        dark_image = template.refs["dark_position_figure"]
-        dark_image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        tab_plots.append(dark_image)
-
-        # Add the image of bad pixels found in flats
-        flat_image = template.refs["flat_position_figure"]
-        flat_image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        tab_plots.append(flat_image)
-
-        # Add history plots
-        for badpix_type in BAD_PIXEL_TYPES:
-            history = template.refs["{}_history_figure".format(badpix_type.lower())]
-            history.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-            tab_plots.append(history)
-
-        # Let's put two plots per line
-        badpix_layout = layout(
-            tab_plots[0:2],
-            tab_plots[2:4],
-            tab_plots[4:6],
-            tab_plots[6:8],
-            tab_plots[8:10]
-        )
-
-        badpix_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        badpix_tab = Panel(child=badpix_layout, title=aperture_name)
-        all_tabs.append(badpix_tab)
-
-    # Build tabs
-    tabs = Tabs(tabs=all_tabs)
-
-    # Return tab HTML and JavaScript to web app
-    script, div = components(tabs)
-
-    return div, script
-
-
-def bias_monitor_tabs(instrument):
-    """Creates the various tabs of the bias monitor results page.
-
-    Parameters
-    ----------
-    instrument : str
-        The JWST instrument of interest (e.g. ``nircam``).
-
-    Returns
-    -------
-    div : str
-        The HTML div to render bias monitor plots
-    script : str
-        The JS script to render bias monitor plots
-    """
-
-    # Make a separate tab for each aperture
-    tabs = []
-    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
-        monitor_template = monitor_pages.BiasMonitor()
-        monitor_template.input_parameters = (instrument, aperture)
-
-        # Add the mean bias vs time plots for each amp and odd/even columns
-        plots = []
-        for amp in ['1', '2', '3', '4']:
-            for kind in ['even', 'odd']:
-                bias_plot = monitor_template.refs['mean_bias_figure_amp{}_{}'.format(amp, kind)]
-                bias_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
-                plots.append(bias_plot)
-
-        # Add the calibrated 0th group image
-        calibrated_image = monitor_template.refs['cal_image']
-        calibrated_image.sizing_mode = 'scale_width'
-        calibrated_image.margin = (0, 100, 0, 100)  # Add space around sides of figure
-        plots.append(calibrated_image)
-
-        # Add the calibrated 0th group histogram
-        if instrument == 'NIRISS':
-            calibrated_hist = monitor_template.refs['cal_hist']
-            calibrated_hist.sizing_mode = 'scale_width'
-            calibrated_hist.margin = (0, 190, 0, 190)
-            plots.append(calibrated_hist)
-
-        # Add the collapsed row/column plots
-        if instrument != 'NIRISS':
-            for direction in ['rows', 'columns']:
-                collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
-                collapsed_plot.sizing_mode = 'scale_width'
-                plots.append(collapsed_plot)
-
-        # Put the mean bias plots on the top 2 rows, the calibrated image on the
-        # third row, and the remaining plots on the bottom row.
-        bias_layout = layout(
-            plots[0:8][::2],
-            plots[0:8][1::2],
-            plots[8:9],
-            plots[9:]
-        )
-        bias_layout.sizing_mode = 'scale_width'
-        bias_tab = Panel(child=bias_layout, title=aperture)
-        tabs.append(bias_tab)
-
-    # Build tabs
-    tabs = Tabs(tabs=tabs)
-
-    # Return tab HTML and JavaScript to web app
-    script, div = components(tabs)
-
-    return div, script
 
 
 def cosmic_ray_monitor_tabs(instrument):
@@ -334,90 +190,17 @@ def dark_monitor_tabs(instrument):
     script : str
         The JS script to render dark monitor plots
     """
+    # This will query for the data and produce the plots
+    plots = DarkMonitorPlots(instrument)
 
-    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+    # Define the layout for each plot type
+    histogram_layout = standard_monitor_plot_layout(instrument, plots.hist_plots)
+    trending_layout = standard_monitor_plot_layout(instrument, plots.trending_plots)
+    image_layout = standard_monitor_plot_layout(instrument, plots.dark_image_data)
 
-    templates_all_apertures = {}
-    for aperture in full_apertures:
-
-        # Start with default values for instrument and aperture because
-        # BokehTemplate's __init__ method does not allow input arguments
-        monitor_template = monitor_pages.DarkMonitor()
-
-        # Set instrument and monitor using DarkMonitor's setters
-        monitor_template.aperture_info = (instrument, aperture)
-        templates_all_apertures[aperture] = monitor_template
-
-    # Histogram tab
-    histograms_all_apertures = []
-    for aperture_name, template in templates_all_apertures.items():
-        histogram = template.refs["dark_full_histogram_figure"]
-        histogram.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        histograms_all_apertures.append(histogram)
-
-    if instrument == 'NIRCam':
-        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = histograms_all_apertures
-        histogram_layout = layout(
-            [a2, a4, b3, b1],
-            [a1, a3, b4, b2],
-            [a5, b5]
-        )
-
-    elif instrument in ['NIRISS', 'MIRI']:
-        single_aperture = histograms_all_apertures[0]
-        histogram_layout = layout(
-            [single_aperture]
-        )
-
-    elif instrument in ['NIRSpec', 'FGS']:
-        d1, d2 = histograms_all_apertures
-        histogram_layout = layout(
-            [d1, d2]
-        )
-
-    histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-    histogram_tab = Panel(child=histogram_layout, title="Histogram")
-
-    # Current v. time tab
-    lines_all_apertures = []
-    for aperture_name, template in templates_all_apertures.items():
-        line = template.refs["dark_current_time_figure"]
-        line.title.align = "center"
-        line.title.text_font_size = "20px"
-        line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        lines_all_apertures.append(line)
-
-    if instrument == 'NIRCam':
-        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = lines_all_apertures
-        line_layout = layout(
-            [a2, a4, b3, b1],
-            [a1, a3, b4, b2],
-            [a5, b5]
-        )
-
-    elif instrument in ['NIRISS', 'MIRI']:
-        single_aperture = lines_all_apertures[0]
-        line_layout = layout(
-            [single_aperture]
-        )
-
-    elif instrument in ['NIRSpec', 'FGS']:
-        d1, d2 = lines_all_apertures
-        line_layout = layout(
-            [d1, d2]
-        )
-
-    line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-    line_tab = Panel(child=line_layout, title="Trending")
-
-    # Mean dark image tab
-
-    # The three lines below work for displaying a single image
-    image = templates_all_apertures[full_apertures[0]].refs["mean_dark_image_figure"]
-    image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-    image_layout = layout(image)
-    image.height = 250  # Not working
-    image_layout.sizing_mode = "scale_width"
+    # Create a tab for each type of plot
+    histogram_tab = Panel(child=histogram_layout, title="Dark Rate Histogram")
+    line_tab = Panel(child=trending_layout, title="Trending")
     image_tab = Panel(child=image_layout, title="Mean Dark Image")
 
     # Build tabs
@@ -511,6 +294,17 @@ def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limit
     return fig
 
 
+def identify_dark_monitor_tables(instrument):
+    """Determine which dark current database tables as associated with
+    a given instrument"""
+
+    mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+    query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
+    pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
+    stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
+    return query_table, pixel_table, stats_table
+
+
 def readnoise_monitor_tabs(instrument):
     """Creates the various tabs of the readnoise monitor results page.
 
@@ -570,3 +364,88 @@ def readnoise_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
+
+
+def standard_monitor_plot_layout(instrument, plots):
+    """Arrange a set of plots into a bokeh layout. The layout will
+    show the plots for full frame apertures in an orientation that
+    matches the relative detector locations within the instrument.
+    Any subarray aperture plots will be arranged below the full frame
+    plots, with 4 plots to a row, in an order matching that in pysiaf's
+    aperture list. This function assumes that there are plots for all full
+    frame apertures present.
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the instrument that the plots are for
+
+    plots : dict
+        Dictionary containing a set of plots for an instrument.
+        Keys are aperture names (e.g. NRCA1_FULL) and values are the
+        plots (bokeh figures)
+
+    Returns
+    -------
+    plot_layout : bokeh.layouts.layout
+    """
+    # Generate nested lists of the full frame apertures, which will be shown at the top
+    # of the tab. Note that order below is intentional. It mimics the detectors' locations
+    # relative to one another in the focal plane.
+    if instrument.lower() == 'nircam':
+        full_frame_lists = [
+            [plots['NRCA2_FULL'], plots['NRCA4_FULL'], plots['NRCB3_FULL'], plots['NRCB1_FULL']],
+            [plots['NRCA1_FULL'], plots['NRCA3_FULL'], plots['NRCB4_FULL'], plots['NRCB2_FULL']],
+            [plots['NRCA5_FULL'], plots['NRCB5_FULL']]
+        ]
+    elif instrument.lower() == 'niriss':
+        full_frame_lists = [
+            [plots['NIS_CEN']]
+            ]
+    elif instrument.lower() == 'miri':
+        full_frame_lists = [
+            [plots['MIRIM_FULL']]
+        ]
+    elif instrument.lower() == 'nirspec':
+        full_frame_lists = [
+            [plots['NRS1_FULL'], plots['NRS2_FULL']]
+        ]
+    elif instrument.lower() == 'fgs':
+        full_frame_lists = [
+            [plots['FGS1_FULL'], plots['FGS2_FULL']]
+        ]
+
+    # Next create lists of subarrays. Keep the subarrays in the order in which
+    # they exist in pyiaf, in order to make the page a little more readable.
+    # The dark monitor also populates aperture names using pysiaf.
+    subarrs = [p for p in plots.keys() if p not in FULL_FRAME_APERTURES[instrument.upper()]]
+    siaf = pysiaf.Siaf(instrument.lower())
+    all_apertures = np.array(list(siaf.apernames))
+
+    indexes = []
+    for key in subarrs:
+        subarr_plot_idx = np.where(all_apertures == key)[0]
+        if len(subarr_plot_idx) > 0:
+            indexes.append(subarr_plot_idx[0])
+    to_sort = np.argsort(indexes)
+    sorted_keys = np.array(subarrs)[to_sort]
+
+    # Place 4 subarray plots in each row. Generate a nested
+    # list where each sublist contains the plots to place in
+    # a given row
+    subarr_plots_per_row = 4
+    first_col = np.arange(0, len(sorted_keys), 4)
+
+    subarr_lists = []
+    for idx in first_col:
+        row_keys = sorted_keys[idx: idx + subarr_plots_per_row]
+        row_list = [plots[key] for key in row_keys]
+        subarr_lists.append(row_list)
+
+    # Combine full frame and subarray aperture lists
+    full_list = full_frame_lists + subarr_lists
+
+    # Now create a layout that holds the lists
+    plot_layout = layout(full_list)
+
+    return plot_layout

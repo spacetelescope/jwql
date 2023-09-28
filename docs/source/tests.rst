@@ -74,9 +74,9 @@ test_logging_functions.py
     :members:
     :undoc-members:
 
-test_monitor_mast.py
+test_mast_utils.py
 --------------------
-.. automodule:: jwql.tests.test_monitor_mast
+.. automodule:: jwql.tests.test_mast_utils
     :members:
     :undoc-members:
 

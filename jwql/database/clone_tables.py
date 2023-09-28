@@ -46,15 +46,13 @@ Dependencies
 """
 
 import argparse
-import pandas
-from psycopg2.errors import UndefinedTable
-from sqlalchemy.exc import ProgrammingError
+import os
 import sys
 
+import pandas
+
 from jwql.database import database_interface
-from jwql.database.database_interface import base, set_read_permissions
 from jwql.database.database_interface import INSTRUMENT_TABLES, MONITOR_TABLES
-from jwql.utils.utils import get_config
 
 
 if __name__ == '__main__':
@@ -78,7 +76,7 @@ if __name__ == '__main__':
         active_tables = INSTRUMENT_TABLES[instrument]
     elif args.monitor is not None:
         monitor = args.monitor.lower()
-        active tables = MONITOR_TABLES[monitor]
+        active_tables = MONITOR_TABLES[monitor]
     elif args.table is not None:
         table_list = args.table.split(",")
         active_tables = []

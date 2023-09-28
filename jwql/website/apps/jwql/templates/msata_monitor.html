@@ -13,23 +13,24 @@
 		<h1>{{ inst }} MSATA Monitor</h1>
         <!--Horizontal line-->
         <hr>
-        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
-        <div style="text-align: center">
-          <img src={{ static('img/jwql_logo_full_transparent.png') }}
-               width=20%
-               alt="JWQL Logo"
-               title="JWQL Logo">
+        <div id= "description">
+            <p>This monitor uses all MSATA data available.
+            The plots are updated regularly from new data in MAST.</p>
+
+            <h2>Instructions</h2>
+            <p>For general MSATA monitoring, you only need to look at the first two plots
+            below: 1. MSATA Status and 2. MSATA Least Squares Residual V2-V3 Offsets.</p>
+            <p>Plot 1 shows the successful Visit IDs (blue points, which always correspond
+            to the second position - 1/2 shutter moved from the first), the unsuccessful
+            ones (red points), and the in-progress images (gray points, which always
+            correspond to the first position of the TA). MSATA can do up-to two tries,
+            so you may see 4 entries for the same program ID in the gray points.</p>
+            <p>Plot 2 shows the V2-V3 least square residual offsets: the closer to the
+            purple cross (the half facet coordinates) the better. The default limits of
+            the plot are the acceptable values. If you see any point at the edges or
+            outside the limits of (-0.5, 0.5) for both axis, please let any of the
+            NIRSpec TA experts know: Tracy Beck, Charles Proffit, and/or Tony Keyes.</p>
         </div>
-
-        <p id= "description">
-          <h2>Updates to this monitor only occur with new data</h2>
-          This monitor uses all MSATA data available and the plots include all data.
-          The plots will only be updated if new MSATA data is in MAST, otherwise, the
-          monitor will show all data previously obtained.
-          <br>
-          <br>
-
-        </p>
 
         <!-- Loading animation -->
         <div id="loading">
@@ -44,7 +45,7 @@
                         </div>
                     </div>
                 </div>
-                Searching MAST ...
+                Loading ...
             </div>
         </div>
 

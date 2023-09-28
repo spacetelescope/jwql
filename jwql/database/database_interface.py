@@ -75,11 +75,10 @@ from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
+from sqlalchemy import text
 from sqlalchemy import UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import text
 from sqlalchemy.types import ARRAY
 
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -94,7 +93,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 @property
 def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
-
+    # NOTE: this requires pandas>=2 if sqlalchemy>=2
     return pd.read_sql(self.statement, self.session.bind)
 
 
@@ -135,11 +134,11 @@ def load_connection(connection_string):
     ``ascql``:
         https://github.com/spacetelescope/acsql/blob/master/acsql/database/database_interface.py
     """
-    engine = create_engine(connection_string, echo=False, client_encoding='utf8', encoding='utf8')
-    base = declarative_base(engine)
+    engine = create_engine(connection_string, echo=False)
+    base = declarative_base()
     Session = sessionmaker(bind=engine)
     session = Session()
-    meta = MetaData(engine)
+    meta = MetaData()
 
     return session, base, engine, meta
 
@@ -152,6 +151,23 @@ if 'build' and 'project' in socket.gethostname() or ON_GITHUB_ACTIONS:
 else:
     SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
+
+
+class FilesystemCharacteristics(base):
+    """ORM for table containing instrument-specific lists of the number of
+    obervations corresponding to various instrument characteristics (e.g.
+    filters)
+    """
+
+    # Name the table
+    __tablename__ = 'filesystem_characteristics'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_name_enum'), nullable=False)
+    filter_pupil = Column(ARRAY(String, dimensions=1))
+    obs_per_filter_pupil = Column(ARRAY(Integer, dimensions=1))
 
 
 class FilesystemGeneral(base):
@@ -357,6 +373,28 @@ def get_monitor_table_constraints(data_dict, table_name):
     return data_dict
 
 
+def get_unique_values_per_column(table, column_name):
+    """Return a list of the unique values from a particular column in the
+    given table.
+
+    Parameters
+    ----------
+    table : sqlalchemy.orm.decl_api.DeclarativeMeta
+        SQL table to be searched. (e.g. table = eval('NIRCamDarkPixelStats'))
+
+    column_name : str
+        Column name within the table to query
+
+    Returns
+    -------
+    distinct_colvals : list
+        List of unique values in the given column
+    """
+    colvals = session.query(eval(f'table.{column_name}')).distinct()
+    distinct_colvals = [eval(f'x.{column_name}') for x in colvals]
+    return sorted(distinct_colvals)
+
+
 def monitor_orm_factory(class_name):
     """Create a ``SQLAlchemy`` ORM Class for a ``jwql`` instrument
     monitor.
@@ -390,16 +428,6 @@ def monitor_orm_factory(class_name):
     data_dict = get_monitor_table_constraints(data_dict, data_dict['__tablename__'])
 
     return type(class_name, (base,), data_dict)
-
-
-def set_read_permissions():
-    """Set read permissions for db tables"""
-
-    db_username = SETTINGS['database']['user']
-    db_username = '_'.join(db_username.split('_')[:-1])
-    db_account = '{}_read'.format(db_username)
-    command = 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};'.format(db_account)
-    engine.execute(command)
 
 
 # Create tables from ORM factory

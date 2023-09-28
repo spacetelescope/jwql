@@ -1,0 +1,73 @@
+# This file describes a conda environment that can be to install jwql
+#
+# Run the following command to set up this environment:
+# $ conda env create -f environment_python_3.10.yml
+#
+# The environment name can be overridden with the following command:
+# $ conda env create -n <custom name> -f environment_python_3.10.yml
+#
+# Run the following command to activate the environment:
+# $ source activate jwql-3.10
+#
+# To deactivate the environment run the following command:
+# $ source deactivate
+#
+# To remove the environment entirely, run the following command:
+# $ conda env remove -n jwql-3.10
+
+name: jwql-3.10
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - astropy=5.3.2
+  - beautifulsoup4=4.12.2
+  - bokeh=2.4.3
+  - celery=5.3.1
+  - cryptography=41.0.3
+  - django=4.2.3
+  - inflection=0.5.1
+  - ipython=8.14.0
+  - jinja2=3.1.2
+  - jsonschema=4.19.0
+  - matplotlib=3.7.2
+  - nodejs=20.5.1
+  - numpy=1.25.2
+  - numpydoc=1.5.0
+  - pandas=2.0.3
+  - pip=23.2.1
+  - postgresql=15.4
+  - psycopg2=2.9.6
+  - pytest=7.4.0
+  - pytest-cov=4.1.0
+  - pytest-mock=3.11.1
+  - python=3.10.12
+  - pyyaml=6.0
+  - redis
+  - ruff=0.0.285
+  - scipy=1.9.3
+  - setuptools=68.0.0
+  - sphinx=6.2.1
+  - sphinx_rtd_theme=1.2.2
+  - sqlalchemy=2.0.20
+  - twine=4.0.2
+  - wtforms=3.0.1
+
+  - pip:
+    - astroquery==0.4.6
+    - bandit==1.7.5
+    - jwst==1.11.4
+    - pysiaf==0.20.0
+    - pysqlite3==0.5.1
+    - pyvo==1.4.2
+    - redis==5.0.0
+    - selenium==4.11.2
+    - stdatamodels==1.7.2
+    - stsci_rtd_theme==1.0.0
+    - vine==5.0.0
+    - git+https://github.com/spacetelescope/jwst_reffiles
+
+    # Current package
+    - -e .

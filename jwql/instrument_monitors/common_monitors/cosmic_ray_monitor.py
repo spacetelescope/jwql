@@ -60,9 +60,9 @@ from jwql.database.database_interface import NIRSpecCosmicRayQueryHistory
 from jwql.database.database_interface import NIRSpecCosmicRayStats
 from jwql.database.database_interface import FGSCosmicRayQueryHistory
 from jwql.database.database_interface import FGSCosmicRayStats
-from jwql.database.database_interface import session
-from jwql.jwql_monitors import monitor_mast
+from jwql.database.database_interface import session, engine
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
+from jwql.utils import mast_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.logging_functions import log_info
@@ -557,7 +557,7 @@ class CosmicRay:
             files
         """
         for file_chunk in grouper(file_list, 100):
-        
+
             input_files = []
             in_ext = "uncal"
             out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
@@ -622,7 +622,7 @@ class CosmicRay:
 
                 dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
-                
+
                 if file_name not in output_files:
                     skip = False
                     head = fits.getheader(file_name)
@@ -702,7 +702,8 @@ class CosmicRay:
                                            'magnitude': cosmic_ray_mags,
                                            'outliers': outlier_mags
                                            }
-                    self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
+                    with engine.begin() as connection:
+                        connection.execute(self.stats_table.__table__.insert(), cosmic_ray_db_entry)
 
                     logging.info("Successfully inserted into database. \n")
 
@@ -820,7 +821,8 @@ class CosmicRay:
                              'files_found': len(new_entries),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
+                with engine.begin() as connection:
+                    connection.execute(self.query_table.__table__.insert(), new_entry)
                 logging.info('\tUpdated the query history table')
 
     def query_mast(self):
@@ -842,9 +844,9 @@ class CosmicRay:
         data_product = JWST_DATAPRODUCTS
         parameters = {"date_obs_mjd": {"min": self.query_start, "max": self.query_end}, "apername": self.aperture}
 
-        result = monitor_mast.instrument_inventory(self.instrument, data_product,
-                                                   add_filters=parameters,
-                                                   return_data=True)
+        result = mast_utils.instrument_inventory(self.instrument, data_product,
+                                                 add_filters=parameters,
+                                                 return_data=True)
 
         return result
 
