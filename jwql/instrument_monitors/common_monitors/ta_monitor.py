@@ -243,31 +243,33 @@ class TargetInfo():
         self.inst_siaf = Siaf(self.instrument)
 
         # Get RA/DEC of ref point
-        self.RA_ref = hdu_header['RA_REF']
-        self.DEC_ref = hdu_header['DEC_REF']
-        self.V2_ref = hdu_header['V2_REF']
-        self.V3_ref = hdu_header['V3_REF']
-        self.x_ref = hdu_header['CRPIX1']
-        self.y_ref = hdu_header['CRPIX2']
-        self.pa_v3 = hdu_header['PA_V3']
-        self.roll_ref = hdu_header['ROLL_REF']
-        self.pixel_scale_x = hdu_header['CDELT1'] * 3600.  # Convert to arcsec
-        self.pixel_scale_y = hdu_header['CDELT2'] * 3600.  # Convert to arcsec
+        self.RA_ref = head1['RA_REF']
+        self.DEC_ref = head1['DEC_REF']
+        self.V2_ref = head1['V2_REF']
+        self.V3_ref = head1['V3_REF']
+        self.x_ref = head1['CRPIX1']
+        self.y_ref = head1['CRPIX2']
+        self.pa_v3 = head1['PA_V3']
+        self.roll_ref = head1['ROLL_REF']
+        self.pixel_scale_x = head1['CDELT1'] * 3600.  # Convert to arcsec
+        self.pixel_scale_y = head1['CDELT2'] * 3600.  # Convert to arcsec
+
+        # Create a Siaf instance for the aperture
+        self.ap_siaf = pysiaf.Siaf(self.instrument)[self.apeture]
 
         # Calculate the target's x, y location based on the target's CALCULATED RA, Dec, the
         # ref location's RA, Dec, V2, V3 and using an attitude matrix
-        self.calc_target_xy(self.V2_ref, self.V3_ref, self.RA_ref, self.DEC_ref,
-                           self.roll_ref, self.RA_targ, self.DEC_targ)
+        self.calc_target_xy()
 
     def calc_target_xy(self):
-    """Calculate the target's x, y location on the detector. Do this using the reference
-    location's RA, Dec, V2, V3, creating an attitude matrix, calculating the target's
-    V2, V3, and then converting to x, y
-    """
-    self.attitude = define_attitude(self.V2_ref, self.V3_ref, self.RA_ref, self.DEC_ref, self.roll_ref)
-    self.v2_targ, self.v3_targ = rotations.getv2v3(self.attitude, self.RA_targ, self.DEC_targ)
-    self.x_targ, self.y_targ = self.ap_siaf.tel_to_sci(self.v2_targ, self.v3_targ)
-    self.idl_x_targ, self.idl_y_targ = self.ap.tel_to_idl(self.v2_targ, self.v3_targ)
+        """Calculate the target's x, y location on the detector. Do this using the reference
+        location's RA, Dec, V2, V3, creating an attitude matrix, calculating the target's
+        V2, V3, and then converting to x, y
+        """
+        self.attitude = define_attitude(self.V2_ref, self.V3_ref, self.RA_ref, self.DEC_ref, self.roll_ref)
+        self.v2_targ, self.v3_targ = rotations.getv2v3(self.attitude, self.RA_targ, self.DEC_targ)
+        self.x_targ, self.y_targ = self.ap_siaf.tel_to_sci(self.v2_targ, self.v3_targ)
+        self.idl_x_targ, self.idl_y_targ = self.ap_siaf.tel_to_idl(self.v2_targ, self.v3_targ)
 
     def manual_centroid(self, use_ref_loc=True, use_targ_loc=False, half_width=None):
         """Calculate the centroid of the source in the data. This will be compared to the
@@ -963,7 +965,7 @@ used to looking at DMS-oriented frames.
             non_coron = [row for row in self.ta_entries if row.aperture not in MIRI_NON_CORON_TA_APERTURES]
 
         # Now check each unique program/obsnum for TACQ and TACONFIRM entries
-        exptypes = [row.exp_type for row in non_coron]
+        exptypes = np.array([row.exp_type for row in non_coron])
         program_obsnum = np.array([f'{row.proposal}{row.obsnum.obsnum}' for row in non_coron])
 
         unique_program_obsnums = set(program_obsnum)
@@ -971,7 +973,7 @@ used to looking at DMS-oriented frames.
             match = np.where(program_obsnum == probs)[0]
 
             tas = np.where(exptypes[match] == 'NRC_TACQ')[0]
-            taconfirms = np.where(expstarts[match] == 'NRC_TACONFIRM')[0]
+            taconfirms = np.where(exptypes[match] == 'NRC_TACONFIRM')[0]
 
             if len(tas) > 1:
                 raise ValueError(f"For {self.instrument} program {probs[0:-3]}, observation {probs[-3:]}, there appears to be > 1 TACQ file. Unexpected.")
@@ -1477,7 +1479,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
 
         # There should never be an exposure prior to the TA, so the earliest exptime from the non-TA
         # exposures should be the entry we want.
-        expstarts = np.array([e['expstart'] for e in non_ta_results])
+        expstarts = np.array([e.expstart for e in non_ta_results])
         min_loc = np.where(expstarts == np.min(expstarts))[0]
         sci_entry = non_ta_results[min_loc[0]]
 
@@ -1615,7 +1617,12 @@ niriss soss and ami use TA observations. both use 64x64 subarray
             ######!!!!!FOR DEVELOPMENT ######
 
 
-            self.ta_entries = monitor_utils.model_query_ta(self.instrument, '', self.query_start, self.query_end)
+            self.ta_entries = model_query_ta(self.instrument, '', self.query_start, self.query_end)
+
+
+            #For nircam: the results are:
+            #<QuerySet [<RootFileInfo: jw01068007001_02102_00001-seg001_nrcalong>, <RootFileInfo: jw01068006001_02102_00001-seg001_nrcblong>, <RootFileInfo: jw01068005001_02102_00001-seg001_nrcblong>]>
+
 
             # Organize the query results. Remove entries for coron observations and TACQ files we
             # don't care about.
@@ -1671,9 +1678,13 @@ Out[22]:
 
                 ta_files_processed = []
                 for ta, (ta_confirm, science) in self.ta_query_results.items():
-                    ta_fullpath = find_in_filesystem(f'{ta.root_name}_rate.fits')
-                    ta_confirm_fullpath = find_in_filesystem(f'{ta_confirm.root_name}_rate.fits')
-                    science_fullpath = find_in_filesystem(f'{science.root_name}_rate.fits')  # or should we grab cal?
+                    ta_fullpath, ta_confirm_fullpath, science_fullpath = None, None, None
+                    if ta is not None:
+                        ta_fullpath = find_in_filesystem(f'{ta.root_name}_rate.fits')
+                    if ta_confirm is not None:
+                        ta_confirm_fullpath = find_in_filesystem(f'{ta_confirm.root_name}_rate.fits')
+                    if science is not None:
+                        science_fullpath = find_in_filesystem(f'{science.root_name}_rate.fits')  # or should we grab cal?
 
                     if ta_fullpath is not None:
                         self.process(ta_fullpath, ta_confirm_fullpath, science_fullpath)
