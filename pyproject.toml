@@ -27,7 +27,6 @@ dependencies = [
   "jwst",
   "jwst_reffiles",
   "matplotlib",
-  "nodejs",
   "numpy",
   "numpydoc",
   "pandas",
@@ -46,7 +45,7 @@ test = [
   "pytest",
   "pytest-cov",
   "pytest-mock",
-]  
+]
 docs = [
   "sphinx",
   "sphinx_rtd_theme",
@@ -71,4 +70,6 @@ namespaces = false
 
 [tool.pytest]
 junit_family = "xunit2"
-addopts = "--ignore=jwql/website/apps/jwql/static"
+
+[tool.pytest.ini_options]
+norecursedirs = ["jwql/website/apps/jwql/static"]

@@ -1248,9 +1248,9 @@ def get_instrument_proposals(instrument):
         List of proposals for the given instrument
     """
     tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select distinct proposal_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}%'")
+    tap_results = tap_service.search(f"select distinct prpID from CaomObservation where collection='JWST' and maxLevel>0 and insName like '{instrument.lower()}%'")
     prop_table = tap_results.to_table()
-    proposals = prop_table['proposal_id'].data
+    proposals = prop_table['prpID'].data
     inst_proposals = sorted(proposals.compressed(), reverse=True)
     return inst_proposals
 
@@ -1495,11 +1495,10 @@ def get_rootnames_from_query(parameters):
 
     Returns
     -------
-    filtered_rootnames : query_set
-        A query_set of all rootfileinfos filtered from the given parameters
+    filtered_rootnames : list
+        A list of all root filenames filtered from the given parameters
     """
-    # TODO - This code setup is temporary until the merge to Postgres is complete.
-    # selected_rootfileinfos = RootFileInfo.objects.none()
+
     filtered_rootnames = []
     # Each Query Selection is Instrument specific
     for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
@@ -1507,6 +1506,17 @@ def get_rootnames_from_query(parameters):
         inst = inst.lower()
         current_ins_rootfileinfos = RootFileInfo.objects.filter(instrument=JWST_INSTRUMENT_NAMES_MIXEDCASE[inst])
 
+        # General fields
+        sort_type = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+        look_status = parameters[QUERY_CONFIG_KEYS.LOOK_STATUS]
+        if len(look_status) == 1:
+            viewed = (look_status[0] == 'VIEWED')
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(viewed=viewed)
+        proposal_category = parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY]
+        if len(proposal_category) > 0:
+            current_ins_rootfileinfos = current_ins_rootfileinfos.filter(obsnum__proposal__category__in=proposal_category)
+
+        # Instrument fields
         inst_anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES][inst]
         inst_aperture = parameters[QUERY_CONFIG_KEYS.APERTURES][inst]
         inst_detector = parameters[QUERY_CONFIG_KEYS.DETECTORS][inst]
@@ -1533,48 +1543,28 @@ def get_rootnames_from_query(parameters):
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(read_patt__in=inst_read_patt)
         if (inst_subarray != []):
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(subarray__in=inst_subarray)
-
-        # TODO - This uncommented CODE is what we will use while DJANGO is still using the SQLITE3 DB.
-        #             ONCE DB IS MIGRATED TO POSTGRES WE CAN REPLACE THIS CODE WITH THE UNTESTED CODE COMMENTED OUT BELOW
-        #      >>>  START CODE PRE DB MIGRATION HERE  <<<
         if (inst_anomalies != []):
-            # If the rootfile info has any of the marked anomalies we want it
-            # Make union of marked anomalies from our current query set, then save intersection.
-            anomaly_rootnames = []
-
+            anomaly_rootfileinfos = RootFileInfo.objects.none()
             for anomaly in inst_anomalies:
+                # If the rootfile info has any of the marked anomalies we want it
                 anomaly_filter = "anomalies__" + str(anomaly).lower()
-                this_anomaly_rootnames = [name[0] for name in current_ins_rootfileinfos.filter(**{anomaly_filter: True}).values_list("root_name")]
-                anomaly_rootnames.extend(this_anomaly_rootnames)
+                anomaly_rootfileinfos = anomaly_rootfileinfos.union(current_ins_rootfileinfos.filter(**{anomaly_filter: True}))
+            current_ins_rootfileinfos = current_ins_rootfileinfos.intersection(anomaly_rootfileinfos)
 
-            filtered_rootnames.extend(anomaly_rootnames)
+        # sort as desired
+        if sort_type.upper() == 'ASCENDING':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('root_name')
+        elif sort_type.upper() == 'RECENT':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-expstart', 'root_name')
+        elif sort_type.upper() == 'OLDEST':
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('expstart', 'root_name')
         else:
-            rootnames = [name[0] for name in current_ins_rootfileinfos.values_list("root_name")]
-            filtered_rootnames.extend(rootnames)
+            current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
 
-    return list(set(filtered_rootnames))
-    #      >>>  END CODE PRE DB MIGRATION HERE  <<<
+        rootnames = [name[0] for name in current_ins_rootfileinfos.values_list('root_name')]
+        filtered_rootnames.extend(rootnames)
 
-    # TODO - BELOW IS THE OUTLINE OF CODE WE WANT TO USE, HOWEVER THIS CAN'T BE IMPLEMENTED WITH DJANGO RUNNING SQLITE
-    #             ONCE WE MIGRATE TO POSTGRES WE CAN IMPLEMENT THE BELOW FUNCTIONALITY WHICH SHOULD MAKE THIS CODE MOVE A LITTLE FASTER
-    #             NOTE: THIS CODE OUTLINE IS UNTESTED and is only a rough outline!
-    #      >>>  START CODE AFTER DB MIGRATION HERE  <<<
-    #     if (inst_anomalies != []):
-    #         # If the rootfile info has any of the marked anomalies we want it
-    #         # Make union of marked anomalies from our current query set, then save intersection.
-    #         anomaly_rootfileinfos = RootFileInfo.objects.none()
-
-    #         for anomaly in inst_anomalies:
-    #             anomaly_filter = "anomalies__" + str(anomaly).lower()
-    #             anomaly_rootfileinfos.union(current_ins_rootfileinfos.filter(**{anomaly_filter: True}))
-
-    #         current_ins_rootfileinfos = current_ins_rootfileinfos.intersection(anomaly_rootfileinfos)
-
-    #     # Add this instrument's query set to our return queryset
-    #     selected_rootfileinfos = selected_rootfileinfos.union(current_ins_rootfileinfos)
-
-    # return selected_rootfileinfos  # OR RETURN LIST OF ROOTNAMES
-    #      >>>  END CODE AFTER DB MIGRATION HERE  <<<
+    return filtered_rootnames
 
 
 def get_thumbnails_by_instrument(inst):

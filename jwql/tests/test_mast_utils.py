@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Tests for the ``monitor_mast`` module.
+"""Tests for the ``mast_utils`` module.
 
 Authors
 -------
@@ -14,15 +14,15 @@ Use
     suppress verbose output to stdout):
     ::
 
-        pytest -s test_monitor_mast.py
+        pytest -s test_mast_utils.py
 """
 
 import os
 
 from astroquery.mast import Mast
 
-from jwql.jwql_monitors import monitor_mast as mm
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+from jwql.utils import mast_utils as mu
 from jwql.utils.utils import get_config
 
 # Temporary until JWST operations: switch to test string for MAST request URL
@@ -47,7 +47,7 @@ def test_caom_instrument_keywords():
     instruments"""
     kw = []
     for ins in JWST_INSTRUMENT_NAMES:
-        kw.append(mm.instrument_keywords(ins, caom=True)['keyword'].tolist())
+        kw.append(mu.instrument_keywords(ins, caom=True)['keyword'].tolist())
 
     assert kw[0] == kw[1] == kw[2] == kw[3] == kw[4]
 
@@ -57,7 +57,7 @@ def test_filtered_instrument_keywords():
     different for all instruments"""
     kw = []
     for ins in JWST_INSTRUMENT_NAMES:
-        kw.append(mm.instrument_keywords(ins, caom=False)['keyword'].tolist())
+        kw.append(mu.instrument_keywords(ins, caom=False)['keyword'].tolist())
 
     assert kw[0] != kw[1] != kw[2] != kw[3] != kw[4]
 
@@ -65,7 +65,7 @@ def test_filtered_instrument_keywords():
 def test_instrument_inventory_filtering():
     """Test to see that the instrument inventory can be filtered"""
     filt = 'GR150R'
-    data = mm.instrument_inventory('niriss',
+    data = mu.instrument_inventory('niriss',
                                    add_filters={'filter': filt},
                                    return_data=True)
 
@@ -78,7 +78,7 @@ def test_instrument_dataproduct_filtering():
     """Test to see that the instrument inventory can be filtered
     by data product"""
     dp = 'spectrum'
-    data = mm.instrument_inventory('nirspec', dataproduct=dp, caom=True,
+    data = mu.instrument_inventory('nirspec', dataproduct=dp, caom=True,
                                    return_data=True)
 
     dps = [row['dataproduct_type'] for row in data['data']]
