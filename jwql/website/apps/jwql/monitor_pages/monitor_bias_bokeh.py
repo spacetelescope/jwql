@@ -382,31 +382,36 @@ class HistogramPlot():
         """
         x_label = 'Signal (DN)'
         y_label = '# Pixels'
-        if len(self.data['counts'].iloc[0]) > 0:
+        # Be sure data is not empty
+        if len(self.data) > 0:
+            # Be sure the array of histogram information is not empty
+            if len(self.data['counts'].iloc[0]) > 0:
 
-            # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
-            bin_centers = np.array(self.data['bin_centers'][0])
-            half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
-            half_widths = np.insert(half_widths, 0, half_widths[0])
-            self.data['bin_left'] = [bin_centers - half_widths]
-            self.data['bin_right'] = [bin_centers + half_widths]
+                # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
+                bin_centers = np.array(self.data['bin_centers'][0])
+                half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
+                half_widths = np.insert(half_widths, 0, half_widths[0])
+                self.data['bin_left'] = [bin_centers - half_widths]
+                self.data['bin_right'] = [bin_centers + half_widths]
 
-            datestr = self.data['expstart_str'].iloc[0]
-            self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
-                               background_fill_color="#fafafa")
+                datestr = self.data['expstart_str'].iloc[0]
+                self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
+                                   background_fill_color="#fafafa")
 
-            # Keep only the columns where the data are a list
-            series = self.data.iloc[0]
-            series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
-            source = ColumnDataSource(dict(series))
-            self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
-                           fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
+                # Keep only the columns where the data are a list
+                series = self.data.iloc[0]
+                series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
+                source = ColumnDataSource(dict(series))
+                self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
+                               fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
-            hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
-            self.plot.tools.append(hover_tool)
-            self.plot.xaxis.axis_label = x_label
-            self.plot.yaxis.axis_label = y_label
+                hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
+                self.plot.tools.append(hover_tool)
+                self.plot.xaxis.axis_label = x_label
+                self.plot.yaxis.axis_label = y_label
 
+            else:
+                self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
         else:
             self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
 
@@ -466,31 +471,39 @@ class MedianRowColPlot():
             title_text = 'Column'
             axis_text = 'Row Number'
 
-        #datestr = self.data['expstart'][0].strftime("%m/%d/%Y")
-        datestr = self.data['expstart_str'].iloc[0]
-        title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
+        # Make sure there is data present
+        if len(self.data) > 0:
+            # Make sure that the colname column is not empty
+            if len(self.data[colname].iloc[0]) > 0:
+                datestr = self.data['expstart_str'].iloc[0]
+                title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
 
-        if len(self.data[colname].iloc[0]) > 0:
-            plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
-                          background_fill_color="#fafafa")
+                plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
+                              background_fill_color="#fafafa")
 
-            # Add a column containing pixel numbers to plot against
-            pix_num = np.arange(len(self.data[colname].iloc[0]))
-            self.data['pixel'] = [pix_num]
+                # Add a column containing pixel numbers to plot against
+                pix_num = np.arange(len(self.data[colname].iloc[0]))
+                self.data['pixel'] = [pix_num]
 
-            series = self.data.iloc[0]
-            series = series[['pixel', colname]]
-            source = ColumnDataSource(dict(series))
-            plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
-                         alpha=0.75, source=source)
+                series = self.data.iloc[0]
+                series = series[['pixel', colname]]
+                source = ColumnDataSource(dict(series))
+                plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
+                             alpha=0.75, source=source)
 
-            hover_text = axis_text.split(' ')[0]
-            hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
-            plot.tools.append(hover_tool)
-            plot.xaxis.axis_label = axis_text
-            plot.yaxis.axis_label = 'Median Signal (DN)'
+                hover_text = axis_text.split(' ')[0]
+                hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
+                plot.tools.append(hover_tool)
+                plot.xaxis.axis_label = axis_text
+                plot.yaxis.axis_label = 'Median Signal (DN)'
+            else:
+                # If there is a latest_data entry, but the collapsed_row or collapsed_col
+                # columns are empty, then make a placeholder plot.
+                title_str = f'Calibrated data: Collapsed {title_text}'
+                plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
         else:
             # If there are no data, then create an empty placeholder plot
+            title_str = f'Calibrated data: Collapsed {title_text}'
             plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
 
         return plot
