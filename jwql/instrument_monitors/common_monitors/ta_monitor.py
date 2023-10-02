@@ -46,12 +46,13 @@ from sqlalchemy.sql.expression import and_
 #from jwql.database.database_interface import NIRCamTAStats, NIRISSTAStats, MIRITAStats
 from jwql.database.database_interface import session
 from jwql.edb.engdb_oss_msgs import EventLog
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_DATAPRODUCTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_ABBREVIATIONS, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.logging_functions import log_info
 from jwql.utils.logging_functions import log_fail
 from jwql.utils.monitor_utils import model_query_ta
 from jwql.utils.utils import ensure_dir_exists, get_config, filesystem_path
+from jwql.website.apps.jwql.models import RootFileInfo
 
 
 """For trending plots, model them on the code used for MSATA and WATA montiors, which have a slider to control date range, etc.
@@ -247,15 +248,17 @@ class TargetInfo():
         self.DEC_ref = head1['DEC_REF']
         self.V2_ref = head1['V2_REF']
         self.V3_ref = head1['V3_REF']
-        self.x_ref = head1['CRPIX1']
-        self.y_ref = head1['CRPIX2']
+
+        # Coordinates from the header are 1-indexed. Subtract 1 to make 0-indexed
+        self.x_ref = head1['CRPIX1'] - 1
+        self.y_ref = head1['CRPIX2'] - 1
         self.pa_v3 = head1['PA_V3']
         self.roll_ref = head1['ROLL_REF']
         self.pixel_scale_x = head1['CDELT1'] * 3600.  # Convert to arcsec
         self.pixel_scale_y = head1['CDELT2'] * 3600.  # Convert to arcsec
 
         # Create a Siaf instance for the aperture
-        self.ap_siaf = pysiaf.Siaf(self.instrument)[self.apeture]
+        self.ap_siaf = Siaf(self.instrument)[self.aperture]
 
         # Calculate the target's x, y location based on the target's CALCULATED RA, Dec, the
         # ref location's RA, Dec, V2, V3 and using an attitude matrix
@@ -269,6 +272,11 @@ class TargetInfo():
         self.attitude = define_attitude(self.V2_ref, self.V3_ref, self.RA_ref, self.DEC_ref, self.roll_ref)
         self.v2_targ, self.v3_targ = rotations.getv2v3(self.attitude, self.RA_targ, self.DEC_targ)
         self.x_targ, self.y_targ = self.ap_siaf.tel_to_sci(self.v2_targ, self.v3_targ)
+
+        # Coordinates from pysiaf are 1-indexed. Subtract 1 to make 0-indexed
+        self.x_targ -= 1
+        self.y_targ -= 1
+
         self.idl_x_targ, self.idl_y_targ = self.ap_siaf.tel_to_idl(self.v2_targ, self.v3_targ)
 
     def manual_centroid(self, use_ref_loc=True, use_targ_loc=False, half_width=None):
@@ -301,15 +309,16 @@ class TargetInfo():
                 if use_targ_loc:
                     raise ValueError('Both use_ref_loc and use_targ_loc cannot both be True.')
                 else:
-                    xstart = self.x_ref - half_width
-                    xend = self.x_ref + half_width
-                    ystart = self.y_ref - half_width
-                    yend = self.y_ref + half_width
+                    xstart = int(self.x_ref) - half_width
+                    xend = int(self.x_ref) + half_width
+                    ystart = int(self.y_ref) - half_width
+                    yend = int(self.y_ref) + half_width
             elif use_targ_loc:
-                xstart = self.x_targ - half_width
-                xend = self.x_targ + half_width
-                ystart = self.y_targ - half_width
-                yend = self.y_targ + half_width
+                xstart = int(self.x_targ) - half_width
+                xend = int(self.x_targ) + half_width
+                ystart = int(self.y_targ) - half_width
+                yend = int(self.y_targ) + half_width
+
             array = self.data[ystart:yend, xstart:xend]
             dq_array = self.dq[ystart:yend, xstart:xend].astype('bool')
         else:
@@ -804,7 +813,7 @@ Out[56]: (17.64133000000004, 40.69263000000001)
         if self.instrument == 'nircam':
             self.dms_aperture_centroid = self.ap_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
             self.dms_aperture_centroid_v2v3 = self.ap_siaf.det_to_tel(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
-            self.full_siaf = self.inst_siaf[f'{self.aperture.split("_")[0]}_FULL'] #-- but what about coronagraphic ta?
+            self.full_siaf = self.inst_siaf[f'{self.ta_data.aperture.split("_")[0]}_FULL'] #-- but what about coronagraphic ta?
             self.dms_det_centroid = self.full_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
         elif self.instrument == 'niriss':
             self.dms_aperture_centroid = self.ap_siaf.det_to_sci(self.event.ta_info['detector_centroid'][1], self.event.ta_info['detector_centroid'][0])
@@ -820,7 +829,7 @@ Out[56]: (17.64133000000004, 40.69263000000001)
                 self.dms_det_centroid = self.full_siaf.det_to_sci(self.event.ta_info['detector_centroid'][0], self.event.ta_info['detector_centroid'][1])
             else:
                 self.dms_aperture_centroid = self.event.ta_info['aperture_centroid']
-                self.dms_aperture_centroid_v2v3 = ???
+                self.dms_aperture_centroid_v2v3 = something
                 self.dms_det_centroid = self.event.ta_info['detector_centroid']
 
 
@@ -868,9 +877,20 @@ Out[56]: (17.64133000000004, 40.69263000000001)
         taken after the TA. If the science data are dispersed, then we can't do any source
         position checks, so return None.
         """
-        for entry in self.ta_query_results:
-            taconf = self.ta_query_results[entry]
-            science_file = self.query_for_post_ta_data(entry)
+
+        print('CHECK ADDITION OF SCIENCE FILE: ')
+        print('BEFORE:')
+        for e in self.ta_query_results:
+            print(e)
+
+        tmp_list = []
+
+        for ta_rootfile, taconf_rootfile in self.ta_query_results:
+            #taconf = entry[1]
+            #taconf = self.ta_query_results[entry]
+            science_file = self.query_for_post_ta_data(ta_rootfile)
+
+            print(f'science file is: {science_file}')
 
             if self.instrument == 'miri':
                 # If the science file contains dispersed data, we don't want it
@@ -887,7 +907,21 @@ Out[56]: (17.64133000000004, 40.69263000000001)
 
             # Update the dictionary such that the value is now a tuple of the TACONFIRM
             # RootFileInfo, and the science file dictionary
-            self.ta_query_results[entry] = (taconf, science_file)
+            print('science_file type:', type(science_file))
+            print(science_file.root_name)
+            print('HELLOOO??')
+            entry = (ta_rootfile, taconf_rootfile, science_file.root_name)
+            tmp_list.append(entry)
+            print('updated entry:')
+            print(entry)
+
+        # Re-populate self.ta_query_results with the updated 3-tuples
+        self.ta_query_results = tmp_list
+
+        print('AFTER:')
+        for e in self.ta_query_results:
+            print(e)
+
 
 
     def get_refpoint_info(self, hdu_header):
@@ -898,8 +932,10 @@ Out[56]: (17.64133000000004, 40.69263000000001)
         self.DEC_ref = hdu_header['DEC_REF']
         self.V2_ref = hdu_header['V2_REF']
         self.V3_ref = hdu_header['V3_REF']
-        self.x_ref = hdu_header['CRPIX1']
-        self.y_ref = hdu_header['CRPIX2']
+
+        # Indexes from the header are 1-indexed. Subtract 1 to make them 0-indexed
+        self.x_ref = hdu_header['CRPIX1'] - 1
+        self.y_ref = hdu_header['CRPIX2'] - 1
         #self.pa_v3 = hdu_header['PA_V3']
         self.roll_ref = hdu_header['ROLL_REF']
         self.pixel_scale_x = hdu_header['CDELT1'] * 3600.  # Convert to arcsec
@@ -908,11 +944,11 @@ Out[56]: (17.64133000000004, 40.69263000000001)
     def get_roi_offset(self):
         """Calculate the offset of the ROI from the aperture
         """
-prob want to use the science frame for the full frame equivalent rather than then detector frame, right?
-for miri it doesn't matter, but for nircam and niriss the detector coords flip between the two, and people are more
-used to looking at DMS-oriented frames.
+        #prob want to use the science frame for the full frame equivalent rather than then detector frame, right?
+        #for miri it doesn't matter, but for nircam and niriss the detector coords flip between the two, and people are more
+        #used to looking at DMS-oriented frames.
 
-        self.ap_siaf = self.inst_siaf[self.aperture]
+        self.ap_siaf = self.inst_siaf[self.ta_data.aperture]
         self.x, self.y = self.ap_siaf.corners(to_frame='det')
         #self.x_ref, self.y_ref = self.ap_siaf.reference_point(to_frame='det') - done in get_refpoint_info()
 
@@ -952,21 +988,25 @@ used to looking at DMS-oriented frames.
         """Remove coronagraphic RootFileInfo entries from the results of nircam and miri
         model queries.
         """
-        self.ta_query_results = {}
+        self.ta_query_results = []
 
-        apertures = [row.aperture for row in self.ta_entries]
+        apertures = [row['aperture'] for row in self.ta_entries]
 
         if self.instrument == 'nircam':
 
             # First throw out all entries with MASK or WEDGE in the aperture name
-            non_coron = [row for row in self.ta_entries if 'MASK' not in row.aperture and 'WEDGE' not in row.aperture]
+            non_coron = [row for row in self.ta_entries if 'MASK' not in row['aperture'] and 'WEDGE' not in row['aperture']]
 
         elif self.instrument == 'miri':
-            non_coron = [row for row in self.ta_entries if row.aperture not in MIRI_NON_CORON_TA_APERTURES]
+            non_coron = [row for row in self.ta_entries if row['aperture'] not in MIRI_NON_CORON_TA_APERTURES]
 
         # Now check each unique program/obsnum for TACQ and TACONFIRM entries
-        exptypes = np.array([row.exp_type for row in non_coron])
-        program_obsnum = np.array([f'{row.proposal}{row.obsnum.obsnum}' for row in non_coron])
+        exptypes = np.array([row['exp_type'] for row in non_coron])
+
+        program_obsnum = np.array([f'{row["root_name"][7:10]}' for row in non_coron])
+
+        # Why is there no obsnum information in this query set? am I referencing it incorrectly?
+        #program_obsnum = np.array([f'{row["proposal"]}{row["obsnum"]["obsnum"]}' for row in non_coron])
 
         unique_program_obsnums = set(program_obsnum)
         for probs in unique_program_obsnums:
@@ -982,10 +1022,19 @@ used to looking at DMS-oriented frames.
 
             # Set up the results as a dictionary where the key is the TACQ RootFileInfo entry, and the value is
             # the TACONFIRM RootFileEntry (this is still ugly)
+
+            print('self.ta_query_results:')
+            print(self.ta_query_results)
+            print(self.ta_entries)
+            print(int(list(match)[tas[0]]))
+            print(type(self.ta_entries))
+            print(self.ta_entries[int(list(match)[tas[0]])])
+
+
             if len(taconfirms) == 1:
-                self.ta_query_results[self.ta_entries[int(list(match)[tas[0]])]] = self.ta_entries[int(list(match)[taconfirms[0]])]
+                self.ta_query_results.append((self.ta_entries[int(list(match)[tas[0]])], self.ta_entries[int(list(match)[taconfirms[0]])]))
             elif len(taconfirms) == 0:
-                self.ta_query_results[self.ta_entries[int(list(match)[tas[0]])]] = None
+                self.ta_query_results.append((self.ta_entries[int(list(match)[tas[0]])], None))
 
     #def manual_centroid(self):
     #    """Calculate the centroid of the source in the data. This will be compared to the
@@ -1077,12 +1126,12 @@ used to looking at DMS-oriented frames.
         are the RootFileInfo entries for associated TACONFIRM exposures. Note that not all TACQ exposures
         have an associated TACONFIRM exposure. In that case, the value will be blank.
         """
-        if instrument in ['nircam', 'miri']:
+        if self.instrument in ['nircam', 'miri']:
             self.keep_non_coron_ta()
-
-        if instrument == 'niriss':
+        elif self.instrument == 'niriss':
             self.remove_dithered_ta_files()
-
+        else:
+            raise ValueError(f'Unsupported instrument: {self.instrument}')
 
     def process(self, ta_file, taconfirm_file, science_file):
 
@@ -1162,7 +1211,8 @@ niriss soss and ami use TA observations. both use 64x64 subarray
 
 
         # Determine the offset between the region of interest and the aperture
-        #self.inst_siaf = Siaf(self.instrument)
+        self.inst_siaf = self.ta_data.inst_siaf
+        self.ap_siaf = self.ta_data.ap_siaf
         self.get_roi_offset()
 
         # Get RA/DEC of ref point
@@ -1264,8 +1314,8 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         # that the visit start is included in the log entries. If it is not, then
         # the code will not be able to extract the TA information, even if that is included in the
         # extracted log entries. Use the reported visit start and end times from the header
-        self.event = EventLog(startdate=self.visit_start_time, enddate=self.visit_end_time)
-        self.event.extract_oss_centroid(self.visit_id)
+        self.event = EventLog(startdate=self.ta_data.visit_start_time, enddate=self.ta_data.visit_end_time)
+        self.event.extract_oss_centroid(self.ta_data.visit_id)
         #detector_ta_centroid = self.event.ta_info["detector_centroid"]  # in raw detector coords? may need to flip
         #self.ta_model.raw_to_sci(xcoords, ycoords)  - I get a NotImplementedError when I try this with a TA aperture using pysiaf
 
@@ -1281,19 +1331,22 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         delta_x_targ_ref = self.ta_data.x_ref - self.dms_aperture_centroid[0]
         delta_y_targ_ref = self.ta_data.y_ref - self.dms_aperture_centroid[1]
         delta_xy_targ_ref = np.sqrt(delta_x_targ_ref**2 + delta_y_targ_ref**2)
-        delta_arcsec_targ_ref = np.sqrt((delta_x_targ_ref * self.pixel_scale_x)**2 + (delta_y_targ_ref * self.pixel_scale_y)**2)
+        delta_arcsec_targ_ref = np.sqrt((delta_x_targ_ref * self.ta_data.pixel_scale_x)**2
+                                         + (delta_y_targ_ref * self.ta_data.pixel_scale_y)**2)
 
         delta_v2_targ_ref = self.ta_data.V2_ref - self.dms_aperture_centroid_v2v3[0]
         delta_v3_targ_ref = self.ta_data.V3_ref - self.dms_aperture_centroid_v2v3[1]
         #delta_idlx_targ_ref = self.ta_data.idl_x_targ -
         #delta_idly_targ_ref = self.ta_data.idl_y_targ -
 
-        request to have the delta above in ideal pixels and V2,V3
+        #request to have the delta above in ideal pixels and V2,V3
 
         # Now we need an independenly measured centroid value to compare to. e.g. photutils
         # For now let's use a simple call to photutils' centroid_com(). Note that we are supplying
         # data in DMS aperture coords.
-        x_photutil_centroid, y_photutil_centroid = ta_data.manual_centroid(use_ref_loc=True, half_width=4)
+        self.ta_data.manual_centroid(use_ref_loc=True, half_width=4)
+        x_photutil_centroid = self.ta_data.manual_x_centroid
+        y_photutil_centroid = self.ta_data.manual_y_centroid
 
         # 1st quantity to track in requirements page
         # x, y offsets between the source and the reference location of the aperture (blind pointing accuracy)
@@ -1301,8 +1354,8 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         # This is a repeat of delta_x_targ_ref above, but using the manually calculated centroid rather than the
         # GENTALOCATE results
         print('Do we really want this?')
-        ref_dx = x_photutil_centroid - self.x_ref
-        ref_dy = y_photutil_centroid - self.y_ref
+        ref_dx = x_photutil_centroid - self.ta_data.x_ref
+        ref_dy = y_photutil_centroid - self.ta_data.y_ref
 
         #####################################################
         # 2. OSS Centroid accuracy3: x, y, offsets between the results of GENTALOCATE and the measured
@@ -1311,8 +1364,8 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         centroid_dy = y_photutil_centroid - self.dms_aperture_centroid[1]
 
         # Works! but for the nircam A3 example, the photutils centroid is pretty far off.
-        print(x_photutil_centroid, self.x_ref, ref_dx)
-        print(y_photutil_centroid, self.y_ref, ref_dy)
+        print(x_photutil_centroid, self.ta_data.x_ref, ref_dx)
+        print(y_photutil_centroid, self.ta_data.y_ref, ref_dy)
         print(x_photutil_centroid, self.dms_aperture_centroid[0], centroid_dx)
         print(y_photutil_centroid, self.dms_aperture_centroid[1], centroid_dy)
 
@@ -1332,7 +1385,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
             dx_taconf_centroid_refloc = x_taconf_photutil_centroid - taconfirm_data.x_ref
             dy_taconf_centroid_refloc = y_taconf_photutil_centroid - taconfirm_data.y_ref
 
-            also translate into ideal x,y and v2,v3
+            #also translate into ideal x,y and v2,v3
 
             totaldelta_taconf_centroid_refloc = np.sqrt(dx_taconf_centroid_refloc**2 + dy_taconf_centroid_refloc**2)
             if totaldelta_taconf_centroid_refloc <= TA_FAILURE_THRESHOLD:
@@ -1340,7 +1393,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
             else:
                 self.ta_status = 'FAILURE'
 
-            save self.ta_status, but also compare to self.event.ta_info["convergence"] (and self.event.ta_info["conv_thresh"])
+            #save self.ta_status, but also compare to self.event.ta_info["convergence"] (and self.event.ta_info["conv_thresh"])
 
         ########################################################
         # 4. Now we need to examine the SCIENCE image (rather than the TA image)
@@ -1349,6 +1402,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         # JWST point based on the information learned from the TA image.
         # Note that in some cases the science data may be GRISM data.
 
+        """
         How do we check this?
         MRS data - target is moved into the MRS aperture, which then leads to IFU data.
         NRC grism time series - LW is dispersed. SW typically uses WL, which will be hard to centroid (can we use a webbpsf psf to help a centroiding function?)
@@ -1358,6 +1412,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
            (for blind pointing info) and then the confirmation image, as well as the science image
         niriss soss - 3 TA images(dithered by integer pixels), then a ta confirm, and then science, which is dispersed.
             Look at 1st TA image and TA confirmation image
+        """
 
 
         if science_file is not None:
@@ -1383,13 +1438,13 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         # centroids from filtered data can be converted to position in the LRS data, to find
         # the position relative to the slit.
 
-        what are these well-known offsets?
+        #what are these well-known offsets?
 
 
 
 
 
-
+        """
         # Quantities to save to the database
         self.event.ta_info['convergence'] example value: 'SUCCESS'
         self.event.ta_info['peak_signal'] example value: 40598.464
@@ -1410,6 +1465,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         centroid_dy - y diff between manual centroid and GENTALOCATE (pix)
         aperture
         subarray
+        """
 
 
 
@@ -1464,10 +1520,10 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         """
         # Query for all entries for the proposal/obsnum of the TA file
         filter_kwargs = {
-            'instrument__iexact': rootfile.instrument,
-            'expstart__gte': rootfile.expstart,
-            'proposal__iexact': rootfile.proposal,
-            'obsnum__obsnum': rootfile.obsnum.obsnum
+            'instrument__iexact': rootfile['instrument'],
+            'expstart__gte': rootfile['expstart'],
+            'proposal__iexact': rootfile['proposal'],
+            'obsnum__obsnum': rootfile['root_name'][7:10] #rootfile.obsnum.obsnum
         }
         root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
 
@@ -1508,7 +1564,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         NIRISS NIS_TACQ 1092 001 NIS_SOSSTA F480M CLEARP
         NIRISS NIS_TACQ 1092 001 NIS_SOSSTA F480M CLEARP
         """
-        self.ta_query_results = {}
+        self.ta_query_results = []
 
         exptypes = [row.exp_type for row in self.ta_entries]
         expstarts = [row.expstart for row in self.ta_entries]
@@ -1539,7 +1595,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
 
             # Set up the results as a dictionary where the key is the TACQ RootFileInfo entry, and the value is
             # the TACONFIRM RootFileEntry (this is still ugly)
-            self.ta_query_results[self.ta_entries[int(list(match)[earliest[0]])]] = self.ta_entries[int(list(match)[latest[0]])]
+            self.ta_query_results.append((self.ta_entries[int(list(match)[earliest[0]])], self.ta_entries[int(list(match)[latest[0]])]))
 
     @log_fail
     @log_info
@@ -1567,7 +1623,8 @@ niriss soss and ami use TA observations. both use 64x64 subarray
                              ]
 
             # Identify which tables to use
-            self.identify_tables()
+            #####SKIP FOR NOW IN EARLY DEVELOPMENT. UNCOMMENT LATER
+            #self.identify_tables()
 
             # We start by querying for new data
             #Skip during development at the moment
@@ -1669,26 +1726,28 @@ Out[22]:
             self.get_post_ta_data()
 
 
-            # At this point, the entries in self.ta_query_results should be 2-tuples, with the RootFileInfo
-            # obj for the TACONFIRM file, and that for the following science file. If either of those files
-            # don't exist, then they will be set to None.
+            # At this point, the entries in self.ta_query_results should be 3-tuples, with the RootFileInfo
+            # obj for the TA file, TACONFIRM file, and that for the following science file. If either of the
+            # latter two don't exist, then they will be set to None.
 
             num_new_tas = len(self.ta_query_results)
             if num_new_tas > 0:
 
                 ta_files_processed = []
-                for ta, (ta_confirm, science) in self.ta_query_results.items():
+                for ta, ta_confirm, science in self.ta_query_results:
                     ta_fullpath, ta_confirm_fullpath, science_fullpath = None, None, None
                     if ta is not None:
-                        ta_fullpath = find_in_filesystem(f'{ta.root_name}_rate.fits')
+                        ta_fullpath = find_in_filesystem(f'{ta["root_name"]}_rate.fits')
                     if ta_confirm is not None:
-                        ta_confirm_fullpath = find_in_filesystem(f'{ta_confirm.root_name}_rate.fits')
+                        ta_confirm_fullpath = find_in_filesystem(f'{ta_confirm["root_name"]}_rate.fits')
                     if science is not None:
-                        science_fullpath = find_in_filesystem(f'{science.root_name}_rate.fits')  # or should we grab cal?
+                        science_fullpath = find_in_filesystem(f'{science}_rate.fits')  # or should we grab cal?
 
                     if ta_fullpath is not None:
                         self.process(ta_fullpath, ta_confirm_fullpath, science_fullpath)
                         ta_files_processed.append(f'{ta.root_name}_rate.fits')
+
+                stop
 
                 if len(ta_files_processed) > 0:
                     monitor_run = True
@@ -1705,7 +1764,7 @@ Out[22]:
                          'start_time_mjd': self.query_start,
                          'end_time_mjd': self.query_end,
                          'files_found': num_new_tas,
-                         'files_run': len(ta_files_processed)
+                         'files_run': len(ta_files_processed),
                          'run_monitor': monitor_run,
                          'entry_date': datetime.datetime.now()}
             # Skip making a database entry for the moment
@@ -1786,5 +1845,5 @@ if __name__ == "__main__":
     configure_logging(module)
 
     # Call the main function
-    monitor = MIRI_TA_Monitor()
+    monitor = TAMonitor()
     monitor.run()
