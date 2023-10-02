@@ -12,7 +12,7 @@ Use
 
     ::
 
-        from jwql.website.apps.jwql import monitor_pages
+        .
         monitor_template = monitor_pages.ReadnoiseMonitor()
         monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL')
 """
@@ -20,12 +20,17 @@ Use
 from datetime import datetime, timedelta
 import os
 
+from bokeh.embed import components
+from bokeh.layouts import column, row
+from bokeh.models import Panel, Tabs  # bokeh <= 3.0
+from bokeh.models import ColumnDataSource, HoverTool
+# from bokeh.models import TabPanel, Tabs  # bokeh >= 3.0
+from bokeh.plotting import figure
 import numpy as np
 
-from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import session
 from jwql.database.database_interface import FGSReadnoiseStats, MIRIReadnoiseStats, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 
 
 class ReadnoiseMonitorData():
@@ -74,8 +79,24 @@ class ReadnoiseMonitorData():
 
         session.close()
 
-class ReadNoisePlots():
-    """Class to make readnoise plots.
+
+class ReadNoiseFigure():
+    """Generate tabbed plot displayed in JWQL web application
+    """
+    def __init__(self, instrument):
+        instrument_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+
+        self.tabs = []
+        for aperture in instrument_apertures:
+            readnoise_tab = ReadNoisePlotTab(instrument, aperture)
+            self.tabs.append(readnoise_tab.tab)
+
+        self.plot = Tabs(tabs=self.tabs)
+        self.tab_components = components(self.plot)
+
+
+class ReadNoisePlotTab():
+    """Class to make instrument/aperture panels 
     """
     def __init__(self, instrument, aperture):
         self.instrument = instrument
@@ -83,16 +104,89 @@ class ReadNoisePlots():
 
         self.db = ReadnoiseMonitorData(self.instrument, self.aperture)
 
+        self.plot_readnoise_amplifers()
+        self.plot_readnoise_difference_image()
+        self.plot_readnoise_histogram()
 
-    def read_noise_amp_plots(self):
-        """Make read noise monitor trending plots per amplifier
-        """
-        print('make plot here')
-        # for amp in ['1', '2', '3', '4']:
-        #     expstarts_iso = np.array([result.expstart for result in self.db])
-        #     readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.query_results])
+        self.tab = Panel(child=column(row(*self.amp_plots), self.diff_image_plot, self.readnoise_histogram), title= self.aperture)
+
+    def plot_readnoise_amplifers(self):
+
+        self.amp_plots = []
+        for amp in ['1', '2', '3', '4']:
+
+            amp_plot = figure(width=350, height=350, x_axis_type='datetime')
+
+            readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.db.query_results])
             
+            filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.db.query_results]
+            expstarts_iso = np.array([result.expstart for result in self.db.query_results])
+            expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
+            nints = [result.nints for result in self.db.query_results]
+            ngroups = [result.ngroups for result in self.db.query_results]
+
+            source = ColumnDataSource(data=dict(
+                        file=filenames,
+                        expstarts=expstarts,
+                        nints=nints,
+                        ngroups=ngroups,
+                        readnoise=readnoise_vals,
+                        ))
+
+            amp_plot.add_tools(HoverTool(tooltips=[("file", "@filenames"),
+                                                    ("time", "@expstarts"),
+                                                    ("nints", "@nints"),
+                                                    ("ngroups", "@ngroups"),
+                                                    ("readnoise", "@readnoise")]))
+
+            amp_plot.circle(x='expstarts', y='readnoise', source=source)
+
+            amp_plot.xaxis.axis_label = 'Date'
+            amp_plot.yaxis.axis_label = 'Mean Readnoise [DN]'
+
+            self.amp_plots.append(amp_plot)
+
+    def plot_readnoise_difference_image(self):
+        """Updates the readnoise difference image"""
+
+        # Update the readnoise difference image and histogram, if data exists
+
+        self.diff_image_plot = figure(height=700, width=700)
+
+        if len(self.db.query_results) != 0:
+            diff_image_png = self.db.query_results[-1].readnoise_diff_image
+            self.diff_image_plot.image_url(url=[diff_image_png], x=1, y=1, w=2048, h=2048, anchor="bottom_left")
+            self.diff_image_plot.xaxis.visible = False
+            self.diff_image_plot.yaxis.visible = False
+            self.diff_image_plot.xgrid.grid_line_color = None
+            self.diff_image_plot.ygrid.grid_line_color = None
+            self.diff_image_plot.title.text_font_size = '22px'
+            self.diff_image_plot.title.align = 'center'
+
+    def plot_readnoise_histogram(self):
+        """Updates the readnoise histogram"""
+
+        diff_image_n = np.array(self.db.query_results[-1].diff_image_n)
+        diff_image_bin_centers = np.array(self.db.query_results[-1].diff_image_bin_centers)
+
+        hist_xr_start = diff_image_bin_centers.min()
+        hist_xr_end = diff_image_bin_centers.max()
+        hist_yr_start = diff_image_n.min()
+        hist_yr_end = diff_image_n.max() + diff_image_n.max() * 0.05
+
+        self.readnoise_histogram = figure(height=800, width=800,
+                                          x_range=(hist_xr_start, hist_xr_end),
+                                          y_range=(hist_yr_start, hist_yr_end))
 
 
+        source = ColumnDataSource(data=dict(
+                        x=diff_image_bin_centers,
+                        y=diff_image_n,
+                        ))
 
+        self.readnoise_histogram.add_tools(HoverTool(tooltips=[("Data (x, y)", "(@x, @y)"),]))
 
+        self.readnoise_histogram.circle(x='x', y='y', source=source)
+
+        self.readnoise_histogram.xaxis.axis_label = 'Readnoise Difference [DN]'
+        self.readnoise_histogram.yaxis.axis_label = 'Number of Pixels'
