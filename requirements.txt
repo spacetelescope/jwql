@@ -4,7 +4,7 @@ bandit==1.7.5
 beautifulsoup4==4.12.2
 bokeh==2.4.3
 celery==5.3.1
-cryptography==41.0.3
+cryptography==41.0.4
 django==4.2.3
 inflection==0.5.1
 ipython==8.14.0
@@ -26,7 +26,7 @@ pyvo==1.4.2
 pyyaml==6.0
 redis==5.0.0
 ruff==0.0.285
-scipy==1.9.3
+scipy==1.10.0
 selenium==4.11.2
 setuptools==68.0.0
 sphinx==6.2.1
