@@ -133,7 +133,7 @@ class ReadNoisePlotTab():
                         readnoise=readnoise_vals,
                         ))
 
-            amp_plot.add_tools(HoverTool(tooltips=[("file", "@filenames"),
+            amp_plot.add_tools(HoverTool(tooltips=[("file", "@file"),
                                                     ("time", "@expstarts"),
                                                     ("nints", "@nints"),
                                                     ("ngroups", "@ngroups"),
@@ -155,7 +155,7 @@ class ReadNoisePlotTab():
 
         if len(self.db.query_results) != 0:
             diff_image_png = self.db.query_results[-1].readnoise_diff_image
-            self.diff_image_plot.image_url(url=[diff_image_png], x=1, y=1, w=2048, h=2048, anchor="bottom_left")
+            self.diff_image_plot.image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
             self.diff_image_plot.xaxis.visible = False
             self.diff_image_plot.yaxis.visible = False
             self.diff_image_plot.xgrid.grid_line_color = None
