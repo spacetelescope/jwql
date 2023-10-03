@@ -106,7 +106,7 @@ def configure_logging(module):
     logging.basicConfig(filename=log_file,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S %p',
-                        level=logging.INFO)
+                        level=logging.DEBUG)
     print('Log file initialized to {}'.format(log_file))
     set_permissions(log_file)
 

@@ -45,7 +45,7 @@ dependencies:
   - pytest-mock=3.11.1
   - python=3.10.13
   - pyyaml=6.0.1
-  - redis=5.0.1
+  - redis=5.0.0
   - ruff=0.0.292
   - scipy=1.9.3
   - setuptools=68.2.2
