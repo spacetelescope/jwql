@@ -58,7 +58,7 @@ dependencies:
   - pip:
     - astroquery==0.4.6
     - bandit==1.7.5
-    - jwst==1.12.2
+    - jwst==1.12.3
     - pysiaf==0.20.0
     - pysqlite3==0.5.2
     - pyvo==1.4.2
