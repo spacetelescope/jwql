@@ -22,24 +22,24 @@ channels:
   - defaults
 
 dependencies:
-  - astropy=5.3.3
+  - astropy=5.3.4
   - beautifulsoup4=4.12.2
   - bokeh=2.4.3
   - celery=5.3.4
   - cryptography=41.0.4
-  - django=4.2.5
+  - django=4.2.6
   - inflection=0.5.1
   - ipython=8.16.1
   - jinja2=3.1.2
   - jsonschema=4.19.1
   - matplotlib=3.8.0
-  - nodejs>=18.15.0
+  - nodejs=20.8.0
   - numpy=1.25.2
   - numpydoc=1.5.0
   - pandas=2.1.1
   - pip=23.2.1
-  - postgresql>=15.2
-  - psycopg2>=2.9.3
+  - postgresql=15.4
+  - psycopg2=2.9.7
   - pytest=7.4.2
   - pytest-cov=4.1.0
   - pytest-mock=3.11.1
