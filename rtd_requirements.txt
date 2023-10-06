@@ -10,7 +10,6 @@ pytest==7.4.2
 redis==5.0.0
 selenium==4.13.0
 sphinx==7.2.6
-sphinx_rtd_theme==1.30
 stsci_rtd_theme==1.0.0
 tomli==2.0.1
 git+https://github.com/spacetelescope/jwst_reffiles
