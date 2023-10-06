@@ -62,7 +62,7 @@ dependencies:
     - pysiaf==0.20.0
     - pysqlite3==0.5.2
     - pyvo==1.4.2
-    - redis==5.0.1
+    - redis==5.0.0
     - selenium==4.13.0
     - stdatamodels==1.8.3
     - stsci_rtd_theme==1.0.0
