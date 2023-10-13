@@ -69,7 +69,7 @@ def bad_pixel_monitor(request, inst):
 
     context = {
         'inst': inst,
-        }
+    }
 
     return render(request, template, context)
 

@@ -35,28 +35,27 @@ from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIX
 
 class ReadnoiseMonitorData():
     """Class to hold bias data to be plotted
-    
+
     Parameters
     ----------
-    
+
     instrument : str
         Instrument name (e.g. nircam)
-    
+
     Attributes
     ----------
-    
+
     instrument : str
         Instrument name (e.g. nircam)
     aperture : str
         Aperture name (e.g. apername)
-    
+
     """
 
     def __init__(self, instrument, aperture):
         self.instrument = instrument
         self.aperture = aperture
         self.load_data()
-
 
     def identify_tables(self):
         """Determine which database tables to use for the given instrument"""
@@ -96,7 +95,7 @@ class ReadNoiseFigure():
 
 
 class ReadNoisePlotTab():
-    """Class to make instrument/aperture panels 
+    """Class to make instrument/aperture panels
     """
     def __init__(self, instrument, aperture):
         self.instrument = instrument
@@ -108,10 +107,10 @@ class ReadNoisePlotTab():
         self.plot_readnoise_difference_image()
         self.plot_readnoise_histogram()
 
-        self.tab = Panel(child=column(row(*self.amp_plots), 
-                                          self.diff_image_plot, 
-                                          self.readnoise_histogram), 
-                        title= self.aperture)
+        self.tab = Panel(child=column(row(*self.amp_plots),
+                                      self.diff_image_plot,
+                                      self.readnoise_histogram),
+                         title=self.aperture)
 
     def plot_readnoise_amplifers(self):
 
@@ -122,7 +121,7 @@ class ReadNoisePlotTab():
             amp_plot.xaxis[0].ticker.desired_num_ticks = 4
 
             readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.db.query_results])
-            
+
             filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.db.query_results]
             expstarts_iso = np.array([result.expstart for result in self.db.query_results])
             expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
@@ -138,10 +137,10 @@ class ReadNoisePlotTab():
                         ))
 
             amp_plot.add_tools(HoverTool(tooltips=[("file", "@file"),
-                                                    ("time", "@expstarts"),
-                                                    ("nints", "@nints"),
-                                                    ("ngroups", "@ngroups"),
-                                                    ("readnoise", "@readnoise")]))
+                                                   ("time", "@expstarts"),
+                                                   ("nints", "@nints"),
+                                                   ("ngroups", "@ngroups"),
+                                                   ("readnoise", "@readnoise")]))
 
             amp_plot.circle(x='expstarts', y='readnoise', source=source)
 
@@ -155,7 +154,7 @@ class ReadNoisePlotTab():
 
         # Update the readnoise difference image and histogram, if data exists
 
-        self.diff_image_plot = figure(title='Readnoise Difference (most recent dark - pipeline reffile)', 
+        self.diff_image_plot = figure(title='Readnoise Difference (most recent dark - pipeline reffile)',
                                       height=500, width=500, sizing_mode='scale_width')
 
         if len(self.db.query_results) != 0:
@@ -184,7 +183,6 @@ class ReadNoisePlotTab():
                                           x_range=(hist_xr_start, hist_xr_end),
                                           y_range=(hist_yr_start, hist_yr_end),
                                           sizing_mode='scale_width')
-
 
         source = ColumnDataSource(data=dict(
                         x=diff_image_bin_centers,
