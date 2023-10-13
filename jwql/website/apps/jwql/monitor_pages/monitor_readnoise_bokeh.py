@@ -108,14 +108,18 @@ class ReadNoisePlotTab():
         self.plot_readnoise_difference_image()
         self.plot_readnoise_histogram()
 
-        self.tab = Panel(child=column(row(*self.amp_plots), self.diff_image_plot, self.readnoise_histogram), title= self.aperture)
+        self.tab = Panel(child=column(row(*self.amp_plots), 
+                                          self.diff_image_plot, 
+                                          self.readnoise_histogram), 
+                        title= self.aperture)
 
     def plot_readnoise_amplifers(self):
 
         self.amp_plots = []
         for amp in ['1', '2', '3', '4']:
 
-            amp_plot = figure(width=350, height=350, x_axis_type='datetime')
+            amp_plot = figure(title='Amp {}'.format(amp), width=280, height=280, x_axis_type='datetime')
+            amp_plot.xaxis[0].ticker.desired_num_ticks = 4
 
             readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.db.query_results])
             
@@ -151,10 +155,12 @@ class ReadNoisePlotTab():
 
         # Update the readnoise difference image and histogram, if data exists
 
-        self.diff_image_plot = figure(height=700, width=700)
+        self.diff_image_plot = figure(title='Readnoise Difference (most recent dark - pipeline reffile)', 
+                                      height=500, width=500, sizing_mode='scale_width')
 
         if len(self.db.query_results) != 0:
             diff_image_png = self.db.query_results[-1].readnoise_diff_image
+            diff_image_png = os.path.join('/static', '/'.join(diff_image_png.split('/')[-6:]))
             self.diff_image_plot.image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
             self.diff_image_plot.xaxis.visible = False
             self.diff_image_plot.yaxis.visible = False
@@ -174,9 +180,10 @@ class ReadNoisePlotTab():
         hist_yr_start = diff_image_n.min()
         hist_yr_end = diff_image_n.max() + diff_image_n.max() * 0.05
 
-        self.readnoise_histogram = figure(height=800, width=800,
+        self.readnoise_histogram = figure(height=500, width=500,
                                           x_range=(hist_xr_start, hist_xr_end),
-                                          y_range=(hist_yr_start, hist_yr_end))
+                                          y_range=(hist_yr_start, hist_yr_end),
+                                          sizing_mode='scale_width')
 
 
         source = ColumnDataSource(data=dict(
@@ -190,3 +197,5 @@ class ReadNoisePlotTab():
 
         self.readnoise_histogram.xaxis.axis_label = 'Readnoise Difference [DN]'
         self.readnoise_histogram.yaxis.axis_label = 'Number of Pixels'
+        self.readnoise_histogram.xaxis.axis_label_text_font_size = "15pt"
+        self.readnoise_histogram.yaxis.axis_label_text_font_size = "15pt"
