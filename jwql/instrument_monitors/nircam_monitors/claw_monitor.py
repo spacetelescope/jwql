@@ -20,7 +20,7 @@ import os
 
 from astropy.convolution import Gaussian2DKernel, convolve
 from astropy.io import fits
-from astropy.stats import gaussian_fwhm_to_sigma
+from astropy.stats import gaussian_fwhm_to_sigma, sigma_clipped_stats
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 from astroquery.mast import Mast
@@ -28,10 +28,13 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from photutils import detect_sources, detect_threshold
+from photutils.segmentation import detect_sources, detect_threshold
 
-#from jwql.utils import monitor_utils  # todo uncomment
-#from jwql.utils.logging_functions import log_info, log_fail  # todo uncomment
+from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamClawQueryHistory, NIRCamClawStats
+from jwql.utils import monitor_utils  # todo uncomment
+from jwql.utils.logging_functions import log_info, log_fail  # todo uncomment
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class ClawMonitor():
@@ -63,17 +66,20 @@ class ClawMonitor():
             fs = 20
         
         # Make source-masked, median-stack of each detector's images
+        logging.info('Working on claw stack: {}'.format(self.outfile))
         print(self.outfile)
         print(self.proposal, self.obs, self.fltr, self.pupil, self.wv, detectors_to_run)
         found_scale = False
         for i,det in enumerate(detectors_to_run):
             files = self.files[self.detectors == det]
             # Remove missing files; to avoid memory/speed issues, only use the first 20 files, which should be plenty to see any claws todo change value?
-            files = [f for f in files if os.path.exists(f)][0:2]  # todo change index value?
+            files = [f for f in files if os.path.exists(f)][0:5]  # todo change index value?
             stack = np.ma.ones((len(files), 2048, 2048))
             print(det)
             print(files)
             print('------')
+            backgrounds = []
+            fraction_masked = []
             for n,f in enumerate(files):
                 # Get pointing and other info from first image
                 if n == 0:
@@ -81,18 +87,23 @@ class ClawMonitor():
                     obs_start = '{}T{}'.format(h[0].header['DATE-OBS'], h[0].header['TIME-OBS'])
                     obs_start_mjd = h[0].header['EXPSTART']
                     targname, ra_v1, dec_v1, pa_v3 = h[0].header['TARGPROP'], h[1].header['RA_V1'], h[1].header['DEC_V1'], h[1].header['PA_V3']
+                    print(obs_start, obs_start_mjd)
+                    print(targname, ra_v1, dec_v1, pa_v3)
                     h.close()
 
-                # Make source segmap, and add the masked data to the stack
+                # Make source segmap, add the masked data to the stack, and get background stats
                 data = fits.getdata(f, 'SCI')
-                threshold = detect_threshold(data, 1.25)
+                threshold = detect_threshold(data, 1.0)
                 sigma = 3.0 * gaussian_fwhm_to_sigma  # FWHM = 3.
                 kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
                 kernel.normalize()
                 data_conv = convolve(data, kernel)
-                segmap = detect_sources(data_conv, threshold, npixels=3)
+                segmap = detect_sources(data_conv, threshold, npixels=6)
                 segmap = segmap.data
                 stack[n] = np.ma.masked_array(data, mask=segmap!=0)
+                fraction_masked.append(len(segmap[segmap!=0]) / (segmap.shape[0]*segmap.shape[1]))
+                mean, med, stddev = sigma_clipped_stats(data[segmap!=0])
+                backgrounds.append(med)
 
             # Make the normalized skyflat for this detector
             skyflat = np.ma.median(stack, axis=0)
@@ -130,6 +141,7 @@ class ClawMonitor():
             fig.savefig(self.outfile, dpi=100, bbox_inches='tight')
         fig.clf()
         plt.close()
+        logging.info('Claw stack complete: {}'.format(self.outfile))
 
     def query_mast(self):
         """Query MAST for new nircam full-frame imaging data.
@@ -166,30 +178,38 @@ class ClawMonitor():
 
         return t
 
-    #@log_fail  # todo uncomment
-    #@log_info  # todo uncomment
+    @log_fail  # todo uncomment
+    @log_info  # todo uncomment
     def run(self):
         """The main method.  See module docstrings for further details."""
 
         logging.info('Begin logging for claw_monitor')
-        self.output_dir = '/Users/bsunnquist/Documents/nircam/claw_monitor_testing/'  # todo change this to os.path.join(get_config()['outputs'], 'claw_monitor')
+        self.output_dir = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
+        ensure_dir_exists(self.output_dir)
         self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files
+        self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  #todo remove
 
         # Query MAST for new imaging data from the last 3 days
         self.query_end_mjd = Time.now().mjd
         self.query_start_mjd = self.query_end_mjd - 3
-        self.query_end_mjd, self.query_start_mjd = 59878.986, 59878.934  # todo remove these test datess
+        #self.query_start_mjd, self.query_end_mjd = 59878.934, 59878.986  # todo remove these test datess test case
+        self.query_start_mjd, self.query_end_mjd = 60150, 60152  # todo remove
+        #self.query_start_mjd = 59985  # last run was may 25; todo remove
+
         print(self.query_start_mjd, self.query_end_mjd)
         t = self.query_mast()
-        print(t)
+        #print(t)
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
         combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in t])
+        n_combos = len(np.unique(combos))
+        print('unique combos:')
         print(np.unique(combos))
         t['combos'] = combos
-        for combo in np.unique(combos)[0:2]:  # todo take off 0:2
+        for nnn,combo in enumerate(np.unique(combos)[0:]):  # todo take off 0:2
+            print(combo, '{}/{}'.format(nnn,n_combos))
             tt = t[t['combos']==combo]
-            print(tt)
+            #print(tt)
             if 'long' in tt['filename'][0]:
                 self.wv = 'LW'
             else:
@@ -197,12 +217,12 @@ class ClawMonitor():
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
             self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5), self.obs, self.fltr, self.pupil).lower())
             self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)), 'obsnum{}'.format(self.obs), row['filename']) for row in tt])  # todo change to server filepath
-            print(self.files)
+            #print(self.files)
             self.detectors = np.array(tt['detector'])
             if not os.path.exists(self.outfile):
                 self.process()
             else:
-                print('{} already exists'.format(self.outfile))
+                logging.info('{} already exists'.format(self.outfile))
 
         logging.info('Claw Monitor completed successfully.')
 
@@ -210,9 +230,9 @@ class ClawMonitor():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    #start_time, log_file = monitor_utils.initialize_instrument_monitor(module)   # todo uncomment
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)   # todo uncomment
 
     monitor = ClawMonitor()
     monitor.run()
 
-    #monitor_utils.update_monitor_table(module, start_time, log_file)   # todo uncomment
+    monitor_utils.update_monitor_table(module, start_time, log_file)   # todo uncomment
