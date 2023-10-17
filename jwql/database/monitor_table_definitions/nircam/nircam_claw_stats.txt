@@ -15,3 +15,4 @@ MEDIAN, float
 STDDEV, float
 FRAC_MASKED, float
 SKYFLAT_FILENAME, string
+ENTRY_DATE, datetime

@@ -15,6 +15,7 @@ Use
         python claw_monitor.py
 """
 
+import datetime
 import logging
 import os
 
@@ -30,7 +31,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from photutils.segmentation import detect_sources, detect_threshold
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRCamClawQueryHistory, NIRCamClawStats
 from jwql.utils import monitor_utils  # todo uncomment
 from jwql.utils.logging_functions import log_info, log_fail  # todo uncomment
@@ -73,26 +74,22 @@ class ClawMonitor():
         for i,det in enumerate(detectors_to_run):
             files = self.files[self.detectors == det]
             # Remove missing files; to avoid memory/speed issues, only use the first 20 files, which should be plenty to see any claws todo change value?
-            files = [f for f in files if os.path.exists(f)][0:5]  # todo change index value?
+            files = [f for f in files if os.path.exists(f)][0:3]  # todo change index value?
             stack = np.ma.ones((len(files), 2048, 2048))
             print(det)
             print(files)
             print('------')
-            backgrounds = []
-            fraction_masked = []
             for n,f in enumerate(files):
-                # Get pointing and other info from first image
+                h = fits.open(f)
+                
+                # Get plot label info from first image
                 if n == 0:
-                    h = fits.open(f)
                     obs_start = '{}T{}'.format(h[0].header['DATE-OBS'], h[0].header['TIME-OBS'])
-                    obs_start_mjd = h[0].header['EXPSTART']
-                    targname, ra_v1, dec_v1, pa_v3 = h[0].header['TARGPROP'], h[1].header['RA_V1'], h[1].header['DEC_V1'], h[1].header['PA_V3']
-                    print(obs_start, obs_start_mjd)
-                    print(targname, ra_v1, dec_v1, pa_v3)
-                    h.close()
+                    pa_v3 = h[1].header['PA_V3']
 
                 # Make source segmap, add the masked data to the stack, and get background stats
-                data = fits.getdata(f, 'SCI')
+                data = h['SCI'].data
+                dq = h['DQ'].data
                 threshold = detect_threshold(data, 1.0)
                 sigma = 3.0 * gaussian_fwhm_to_sigma  # FWHM = 3.
                 kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
@@ -100,10 +97,35 @@ class ClawMonitor():
                 data_conv = convolve(data, kernel)
                 segmap = detect_sources(data_conv, threshold, npixels=6)
                 segmap = segmap.data
+                segmap[dq&1!=0] = 1  # flag DO_NOT_USE pixels
                 stack[n] = np.ma.masked_array(data, mask=segmap!=0)
-                fraction_masked.append(len(segmap[segmap!=0]) / (segmap.shape[0]*segmap.shape[1]))
                 mean, med, stddev = sigma_clipped_stats(data[segmap!=0])
-                backgrounds.append(med)
+                
+                # Add this file's stats to the claw database table.
+                # Can't insert values with numpy.float32 datatypes into database
+                # so need to change the datatypes of these values.
+                claw_db_entry = {'filename': os.path.basename(f),
+                                 'proposal': self.proposal,
+                                 'obs': self.obs,
+                                 'detector': det,
+                                 'filter': self.fltr,
+                                 'pupil': self.pupil,
+                                 'expstart': '{}T{}'.format(h[0].header['DATE-OBS'], h[0].header['TIME-OBS']),
+                                 'expstart_mjd': h[0].header['EXPSTART'],
+                                 'effexptm': h[0].header['EFFEXPTM'],
+                                 'ra': h[1].header['RA_V1'],
+                                 'dec': h[1].header['DEC_V1'],
+                                 'pa_v3': h[1].header['PA_V3'],
+                                 'mean': float(mean),
+                                 'median': float(med),
+                                 'stddev': float(stddev),
+                                 'frac_masked': len(segmap[segmap!=0]) / (segmap.shape[0]*segmap.shape[1]),
+                                 'skyflat_filename': os.path.basename(self.outfile),
+                                 'entry_date': datetime.datetime.now()
+                                }
+                with engine.begin() as connection:
+                    connection.execute(self.stats_table.__table__.insert(), claw_db_entry)
+                h.close()
 
             # Make the normalized skyflat for this detector
             skyflat = np.ma.median(stack, axis=0)
@@ -126,9 +148,11 @@ class ClawMonitor():
                 found_scale = True
                 ax.set_title(det, fontsize=fs)
                 im = ax.imshow(skyflat, cmap='coolwarm', vmin=vmin, vmax=vmax, origin='lower')
+                print(det, vmin, vmax)
             else:
                 ax.set_title(det, fontsize=fs)
                 im = ax.imshow(skyflat, cmap='coolwarm', vmin=vmin, vmax=vmax, origin='lower')
+                print(det, vmin, vmax)
             ax.axes.get_xaxis().set_ticks([])
             ax.axes.get_yaxis().set_ticks([])
         
@@ -189,6 +213,10 @@ class ClawMonitor():
         self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files
         self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  #todo remove
 
+        # Get the claw monitor database tables
+        self.query_table = eval('NIRCamClawQueryHistory')
+        self.stats_table = eval('NIRCamClawStats')
+
         # Query MAST for new imaging data from the last 3 days
         self.query_end_mjd = Time.now().mjd
         self.query_start_mjd = self.query_end_mjd - 3
@@ -206,6 +234,7 @@ class ClawMonitor():
         print('unique combos:')
         print(np.unique(combos))
         t['combos'] = combos
+        monitor_run = False
         for nnn,combo in enumerate(np.unique(combos)[0:]):  # todo take off 0:2
             print(combo, '{}/{}'.format(nnn,n_combos))
             tt = t[t['combos']==combo]
@@ -221,8 +250,18 @@ class ClawMonitor():
             self.detectors = np.array(tt['detector'])
             if not os.path.exists(self.outfile):
                 self.process()
+                monitor_run = True
             else:
                 logging.info('{} already exists'.format(self.outfile))
+
+        # Update the query history
+        new_entry = {'instrument': 'nircam',
+                     'start_time_mjd': self.query_start_mjd,
+                     'end_time_mjd': self.query_end_mjd,
+                     'run_monitor': monitor_run,
+                     'entry_date': datetime.datetime.now()}
+        with engine.begin() as connection:
+            connection.execute(self.query_table.__table__.insert(), new_entry)
 
         logging.info('Claw Monitor completed successfully.')
 
