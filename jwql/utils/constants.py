@@ -378,6 +378,7 @@ MONITORS = {
              ('Readnoise Monitor', '/miri/readnoise_monitor')],
     'nircam': [('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Bias Monitor', '/nircam/bias_monitor'),
+               ('Claw Monitor', '/nircam/claw_monitor'),
                ('Cosmic Ray Monitor', '#'),
                ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('EDB Telemetry Monitor', '/nircam/edb_monitor'),

@@ -67,11 +67,11 @@ class ClawMonitor():
             fs = 20
         
         # Make source-masked, median-stack of each detector's images
-        logging.info('Working on claw stack: {}'.format(self.outfile))
         print(self.outfile)
         print(self.proposal, self.obs, self.fltr, self.pupil, self.wv, detectors_to_run)
         found_scale = False
         for i,det in enumerate(detectors_to_run):
+            logging.info('Working on {}'.format(det))
             files = self.files[self.detectors == det]
             # Remove missing files; to avoid memory/speed issues, only use the first 20 files, which should be plenty to see any claws todo change value?
             files = [f for f in files if os.path.exists(f)][0:3]  # todo change index value?
@@ -80,6 +80,7 @@ class ClawMonitor():
             print(files)
             print('------')
             for n,f in enumerate(files):
+                logging.info('Working on: {}'.format(f))
                 h = fits.open(f)
                 
                 # Get plot label info from first image
@@ -99,7 +100,7 @@ class ClawMonitor():
                 segmap = segmap.data
                 segmap[dq&1!=0] = 1  # flag DO_NOT_USE pixels
                 stack[n] = np.ma.masked_array(data, mask=segmap!=0)
-                mean, med, stddev = sigma_clipped_stats(data[segmap!=0])
+                mean, med, stddev = sigma_clipped_stats(data[segmap==0])
                 
                 # Add this file's stats to the claw database table.
                 # Can't insert values with numpy.float32 datatypes into database
@@ -148,11 +149,9 @@ class ClawMonitor():
                 found_scale = True
                 ax.set_title(det, fontsize=fs)
                 im = ax.imshow(skyflat, cmap='coolwarm', vmin=vmin, vmax=vmax, origin='lower')
-                print(det, vmin, vmax)
             else:
                 ax.set_title(det, fontsize=fs)
                 im = ax.imshow(skyflat, cmap='coolwarm', vmin=vmin, vmax=vmax, origin='lower')
-                print(det, vmin, vmax)
             ax.axes.get_xaxis().set_ticks([])
             ax.axes.get_yaxis().set_ticks([])
         
@@ -165,7 +164,7 @@ class ClawMonitor():
             fig.savefig(self.outfile, dpi=100, bbox_inches='tight')
         fig.clf()
         plt.close()
-        logging.info('Claw stack complete: {}'.format(self.outfile))
+        logging.info('Claw stacks complete: {}'.format(self.outfile))
 
     def query_mast(self):
         """Query MAST for new nircam full-frame imaging data.
@@ -226,6 +225,7 @@ class ClawMonitor():
 
         print(self.query_start_mjd, self.query_end_mjd)
         t = self.query_mast()
+        logging.info('{} files found between {} and {}.'.format(len(t), self.query_start_mjd, self.query_end_mjd))
         #print(t)
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
@@ -249,6 +249,7 @@ class ClawMonitor():
             #print(self.files)
             self.detectors = np.array(tt['detector'])
             if not os.path.exists(self.outfile):
+                logging.info('Working on {}'.format(self.outfile))
                 self.process()
                 monitor_run = True
             else:

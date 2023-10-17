@@ -30,12 +30,16 @@ Dependencies
 
 import os
 
+from astropy.time import Time
 from bokeh.resources import CDN, INLINE
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 import json
+import pandas as pd
 
 from . import bokeh_containers
+from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamClawStats
 from jwql.website.apps.jwql import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, get_base_url
@@ -95,6 +99,37 @@ def bias_monitor(request, inst):
     context = {
         'inst': inst,
     }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+def claw_monitor(request):
+    """Generate the NIRCam claw monitor page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "claw_monitor.html"
+
+    # Get all recent claw stack images
+    query = session.query(NIRCamClawStats.expstart_mjd, NIRCamClawStats.skyflat_filename).order_by(NIRCamClawStats.expstart_mjd.desc()).all()
+    df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
+    recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd']>Time.now().mjd-100]))  # todo change 100 to 10 days back?
+    claw_stacks = ['/static/outputs/claw_monitor/claw_stacks/{}'.format(filename) for filename in recent_files]
+
+    context = {
+        'inst': 'NIRCam',
+        'claw_stacks': claw_stacks
+        }
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
