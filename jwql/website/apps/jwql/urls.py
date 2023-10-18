@@ -59,6 +59,7 @@ urlpatterns = [
     path('', views.home, name='home'),
 
     # NIRCam-specific views
+    path('nircam/background_monitor/', monitor_views.background_monitor, name='background_monitor'), 
     path('nircam/claw_monitor/', monitor_views.claw_monitor, name='claw_monitor'), 
 
     # NIRSpec-specific views

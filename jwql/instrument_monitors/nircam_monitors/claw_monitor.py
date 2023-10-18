@@ -29,6 +29,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from photutils.segmentation import detect_sources, detect_threshold
 
 from jwql.database.database_interface import session, engine
@@ -40,11 +41,117 @@ from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 class ClawMonitor():
     """Class for executing the claw monitor.
+
+    This class searches for all new NIRCam full-frame imaging data
+    and creates observation-level, source-masked, median stacks
+    for each filter/pupil combination. These stacks are then plotted
+    in on-sky orientation and the results are used to identify new
+    instances of claws - a scattered light effect seen in NIRCam
+    data. Background statistics are also stored for each individual
+    image, which are then plotted to track the NIRCam background
+    levels over time. Results are all saved to database tables.
+
+    Attributes
+    ----------
+    outfile : str
+        The name of the output plot for a given claw stack combination.
+
+    output_dir : str
+        Path into which claw stack plots will be placed.
+
+    output_dir_bkg : str
+        Path into which background trending plots will be placed.
+
+    query_start : float
+        MJD start date to use for querying MAST.
+
+    query_end : float
+        MJD end date to use for querying MAST.
+
+    wv : str
+        NIRCam channel for a given claw stack, either ``SW`` or ``LW``.
+
+    proposal : str
+        NIRCam proposal number for a given claw stack.
+
+    obs : str
+        NIRCam observation number for a given claw stack.
+
+    fltr : str
+        NIRCam filter used for a given claw stack.
+
+    pupil : str
+        NIRCam pupil used for a given claw stack.
+
+    detectors : str
+        The detectors used for a given claw stack combination.
+
+    files : numpy.ndarray
+        The names of the individual files belonging to a given claw stack combination.
     """
 
     def __init__(self):
         """Initialize an instance of the ``ClawMonitor`` class.
         """
+
+    def make_background_plots(self):
+        """Makes plots of the background levels over time in NIRCam data.
+        """
+
+        # Get all of the background data.
+        query = session.query(NIRCamClawStats.filename, NIRCamClawStats.filter, NIRCamClawStats.pupil, NIRCamClawStats.detector,
+                              NIRCamClawStats.effexptm, NIRCamClawStats.expstart_mjd, NIRCamClawStats.entry_date, NIRCamClawStats.mean, 
+                              NIRCamClawStats.median, NIRCamClawStats.frac_masked).all()
+        df_orig = pd.DataFrame(query, columns=['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 
+                                               'entry_date', 'mean', 'median', 'frac_masked'])
+        df_orig = df_orig.drop_duplicates(subset='filename', keep="last")  # remove any duplicate filename entries, keep the most recent
+
+        # Make backgroud trending plots for all SW wide filters
+        for fltr in ['F070W', 'F090W', 'F115W', 'F150W', 'F200W']:
+            logging.info('Working on background trending plots for {}'.format(fltr))
+            grid = plt.GridSpec(2, 4, hspace=.2, wspace=.2, width_ratios=[1,1,1,1])
+            fig = plt.figure(figsize=(40, 20))
+            fig.suptitle(fltr, fontsize=45)
+            for i,det in enumerate(['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']):  # in on-sky order, don't change order
+                logging.info('Working on {}'.format(det))
+                # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields, 
+                # extended objects, nebulas, short exposures.
+                df = df_orig[(df_orig['filter']==fltr) & (df_orig['pupil']=='CLEAR') & (df_orig['detector']==det) &
+                             (df_orig['effexptm']>300) & (df_orig['frac_masked']<0.075) & (abs(1-(df_orig['mean']/df_orig['median']))<0.05)]
+                
+                # Plot the background levels over time
+                ax = fig.add_subplot(grid[i])
+                ax.scatter(df['expstart_mjd'], df['median'])
+                ax.set_title(det, fontsize=30)
+                ax.set_ylabel('Background Level [MJy/sr]')
+                ax.set_xlabel('Date [MJD]')
+            fig.savefig(os.path.join(self.output_dir_bkg, '{}_backgrounds.png'.format(fltr)), dpi=180, bbox_inches='tight')
+            fig.clf()
+            plt.close()
+
+
+        # Make backgroud trending plots for all LW wide filters
+        for fltr in ['F277W', 'F356W', 'F444W']:
+            logging.info('Working on background trending plots for {}'.format(fltr))
+            grid = plt.GridSpec(1, 2, hspace=.2, wspace=.2, width_ratios=[1,1])
+            fig = plt.figure(figsize=(20, 10))
+            fig.suptitle(fltr, fontsize=30)
+            for i,det in enumerate(['NRCALONG', 'NRCBLONG']):
+                logging.info('Working on {}'.format(det))
+                # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields, 
+                # extended objects, nebulas, short exposures.
+                df = df_orig[(df_orig['filter']==fltr) & (df_orig['pupil']=='CLEAR') & (df_orig['detector']==det) &
+                             (df_orig['effexptm']>300) & (df_orig['frac_masked']<0.15) & (abs(1-(df_orig['mean']/df_orig['median']))<0.05)]
+                
+                # Plot the background levels over time
+                ax = fig.add_subplot(grid[i])
+                ax.scatter(df['expstart_mjd'], df['median'])
+                ax.set_title(det, fontsize=20)
+                ax.set_ylabel('Background Level [MJy/sr]')
+                ax.set_xlabel('Date [MJD]')
+            fig.savefig(os.path.join(self.output_dir_bkg, '{}_backgrounds.png'.format(fltr)), dpi=180, bbox_inches='tight')
+            fig.clf()
+            plt.close()
 
     def process(self):
         """The main method for processing.  See module docstrings for further details.
@@ -73,7 +180,8 @@ class ClawMonitor():
         for i,det in enumerate(detectors_to_run):
             logging.info('Working on {}'.format(det))
             files = self.files[self.detectors == det]
-            # Remove missing files; to avoid memory/speed issues, only use the first 20 files, which should be plenty to see any claws todo change value?
+            # Remove missing files; to avoid memory/speed issues, only use the first 20 files, 
+            # which should be plenty to see any claws todo change value?
             files = [f for f in files if os.path.exists(f)][0:3]  # todo change index value?
             stack = np.ma.ones((len(files), 2048, 2048))
             print(det)
@@ -102,15 +210,14 @@ class ClawMonitor():
                 stack[n] = np.ma.masked_array(data, mask=segmap!=0)
                 mean, med, stddev = sigma_clipped_stats(data[segmap==0])
                 
-                # Add this file's stats to the claw database table.
-                # Can't insert values with numpy.float32 datatypes into database
-                # so need to change the datatypes of these values.
+                # Add this file's stats to the claw database table. Can't insert values with numpy.float32
+                # datatypes into database so need to change the datatypes of these values.
                 claw_db_entry = {'filename': os.path.basename(f),
                                  'proposal': self.proposal,
                                  'obs': self.obs,
-                                 'detector': det,
-                                 'filter': self.fltr,
-                                 'pupil': self.pupil,
+                                 'detector': det.upper(),
+                                 'filter': self.fltr.upper(),
+                                 'pupil': self.pupil.upper(),
                                  'expstart': '{}T{}'.format(h[0].header['DATE-OBS'], h[0].header['TIME-OBS']),
                                  'expstart_mjd': h[0].header['EXPSTART'],
                                  'effexptm': h[0].header['EFFEXPTM'],
@@ -134,7 +241,7 @@ class ClawMonitor():
             skyflat = skyflat / np.nanmedian(skyflat)
             skyflat[~np.isfinite(skyflat)] = 1  # fill missing values
 
-            # Add the skyflat for this detector to the plot
+            # Add the skyflat for this detector to the claw stack plot
             if (self.wv=='SW') & (i>3):  # skip colobar axis
                 idx = i+1
             else:
@@ -155,7 +262,7 @@ class ClawMonitor():
             ax.axes.get_xaxis().set_ticks([])
             ax.axes.get_yaxis().set_ticks([])
         
-        # Add colobar, save figure if any detector stacks exist
+        # Add colobar, save figure if any claw stacks exist
         if found_scale:
             fig.suptitle('PID-{} OBS-{} {} {}\n{}  pa_v3={}\n'.format(self.proposal, self.obs, self.fltr.upper(), self.pupil.upper(), obs_start.split('.')[0], pa_v3), fontsize=fs*1.5)
             cax = fig.add_subplot(grid[0:rows, cols-1:cols])
@@ -167,7 +274,7 @@ class ClawMonitor():
         logging.info('Claw stacks complete: {}'.format(self.outfile))
 
     def query_mast(self):
-        """Query MAST for new nircam full-frame imaging data.
+        """Query MAST for new NIRCam full-frame imaging data.
 
         Returns
         -------
@@ -207,22 +314,25 @@ class ClawMonitor():
         """The main method.  See module docstrings for further details."""
 
         logging.info('Begin logging for claw_monitor')
+
+        # Define and setup the output directories for the claw and background plots.
         self.output_dir = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
         ensure_dir_exists(self.output_dir)
-        self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files
+        self.output_dir_bkg =  os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
+        ensure_dir_exists(self.output_dir_bkg)
+        self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files REMOVE
         self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  #todo remove
 
         # Get the claw monitor database tables
         self.query_table = eval('NIRCamClawQueryHistory')
         self.stats_table = eval('NIRCamClawStats')
 
-        # Query MAST for new imaging data from the last 3 days
+        # Query MAST for new NIRCam full-frame imaging data from the last 2 days
         self.query_end_mjd = Time.now().mjd
-        self.query_start_mjd = self.query_end_mjd - 3
+        self.query_start_mjd = self.query_end_mjd - 2
         #self.query_start_mjd, self.query_end_mjd = 59878.934, 59878.986  # todo remove these test datess test case
         self.query_start_mjd, self.query_end_mjd = 60150, 60152  # todo remove
         #self.query_start_mjd = 59985  # last run was may 25; todo remove
-
         print(self.query_start_mjd, self.query_end_mjd)
         t = self.query_mast()
         logging.info('{} files found between {} and {}.'.format(len(t), self.query_start_mjd, self.query_end_mjd))
@@ -246,6 +356,7 @@ class ClawMonitor():
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
             self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5), self.obs, self.fltr, self.pupil).lower())
             self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)), 'obsnum{}'.format(self.obs), row['filename']) for row in tt])  # todo change to server filepath
+            #self.files = np.array([filesystem_path(row['filename']) for row in tt])  # todo uncomment
             #print(self.files)
             self.detectors = np.array(tt['detector'])
             if not os.path.exists(self.outfile):
@@ -254,6 +365,11 @@ class ClawMonitor():
                 monitor_run = True
             else:
                 logging.info('{} already exists'.format(self.outfile))
+
+        # Update the background trending plots, if any new data exists
+        if len(t)>0:
+            logging.info('Making background trending plots.')
+            self.make_background_plots()
 
         # Update the query history
         new_entry = {'instrument': 'nircam',
@@ -270,9 +386,9 @@ class ClawMonitor():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)   # todo uncomment
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = ClawMonitor()
     monitor.run()
 
-    monitor_utils.update_monitor_table(module, start_time, log_file)   # todo uncomment
+    monitor_utils.update_monitor_table(module, start_time, log_file)

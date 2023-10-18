@@ -51,6 +51,34 @@ CONFIG = get_config()
 FILESYSTEM_DIR = os.path.join(CONFIG['jwql_dir'], 'filesystem')
 
 
+def background_monitor(request):
+    """Generate the NIRCam background monitor page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "background_monitor.html"
+
+    # Get the background trending filters to display
+    fltrs = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']
+    bkg_plots = ['/static/outputs/claw_monitor/backgrounds/{}_backgrounds.png'.format(fltr) for fltr in fltrs]
+
+    context = {
+        'inst': 'NIRCam',
+        'bkg_plots': bkg_plots
+        }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
 def bad_pixel_monitor(request, inst):
     """Generate the dark monitor page for a given instrument
 
