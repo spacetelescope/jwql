@@ -106,12 +106,18 @@ class ClawMonitor():
                                                'entry_date', 'mean', 'median', 'frac_masked'])
         df_orig = df_orig.drop_duplicates(subset='filename', keep="last")  # remove any duplicate filename entries, keep the most recent
 
+        # Use the same time xlimits/xticks for all plots
+        start_mjd = 59650  # March 2022, middle of commissioning
+        end_mjd = Time.now().mjd + 0.05*(Time.now().mjd - start_mjd)
+        time_tick_vals = np.linspace(start_mjd, end_mjd, 5)  # Make April 2022 the first tick
+        time_tick_labels = [Time(m, format='mjd').isot.split('T')[0] for m in time_tick_vals]
+
         # Make backgroud trending plots for all SW wide filters
         for fltr in ['F070W', 'F090W', 'F115W', 'F150W', 'F200W']:
             logging.info('Working on background trending plots for {}'.format(fltr))
-            grid = plt.GridSpec(2, 4, hspace=.2, wspace=.2, width_ratios=[1,1,1,1])
+            grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1,1,1,1])
             fig = plt.figure(figsize=(40, 20))
-            fig.suptitle(fltr, fontsize=45)
+            fig.suptitle(fltr, fontsize=70)
             for i,det in enumerate(['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']):  # in on-sky order, don't change order
                 logging.info('Working on {}'.format(det))
                 # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields, 
@@ -122,9 +128,25 @@ class ClawMonitor():
                 # Plot the background levels over time
                 ax = fig.add_subplot(grid[i])
                 ax.scatter(df['expstart_mjd'], df['median'])
-                ax.set_title(det, fontsize=30)
-                ax.set_ylabel('Background Level [MJy/sr]')
-                ax.set_xlabel('Date [MJD]')
+
+                # Match scaling in all plots to the first detector. Shade median+/-10% region.
+                if len(df)>0:
+                    if i==0:
+                        first_med = np.nanmedian(df['median'])
+                    ax.set_ylim(first_med-first_med*0.5, first_med+first_med*0.5)
+                    med = np.nanmedian(df['median'])
+                    ax.axhline(med, ls='-', color='black')
+                    ax.axhspan(med-med*0.1, med+med*0.1, color='gray', alpha=0.4, lw=0)
+
+                # Axis formatting
+                ax.set_title(det, fontsize=40)
+                ax.set_xlim(start_mjd, end_mjd)
+                ax.set_xticks(time_tick_vals)
+                ax.set_xticklabels(time_tick_labels, fontsize=20, rotation=45)
+                ax.yaxis.set_tick_params(labelsize=20)
+                ax.set_ylabel('Background [MJy/sr]', fontsize=30)
+                #ax.set_xlabel('Date [YYYY-MM-DD]')
+                ax.grid(ls='--', color='gray')
             fig.savefig(os.path.join(self.output_dir_bkg, '{}_backgrounds.png'.format(fltr)), dpi=180, bbox_inches='tight')
             fig.clf()
             plt.close()
@@ -133,9 +155,9 @@ class ClawMonitor():
         # Make backgroud trending plots for all LW wide filters
         for fltr in ['F277W', 'F356W', 'F444W']:
             logging.info('Working on background trending plots for {}'.format(fltr))
-            grid = plt.GridSpec(1, 2, hspace=.2, wspace=.2, width_ratios=[1,1])
+            grid = plt.GridSpec(1, 2, hspace=.2, wspace=.4, width_ratios=[1,1])
             fig = plt.figure(figsize=(20, 10))
-            fig.suptitle(fltr, fontsize=30)
+            fig.suptitle(fltr, fontsize=70, y=1.05)
             for i,det in enumerate(['NRCALONG', 'NRCBLONG']):
                 logging.info('Working on {}'.format(det))
                 # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields, 
@@ -146,9 +168,25 @@ class ClawMonitor():
                 # Plot the background levels over time
                 ax = fig.add_subplot(grid[i])
                 ax.scatter(df['expstart_mjd'], df['median'])
-                ax.set_title(det, fontsize=20)
-                ax.set_ylabel('Background Level [MJy/sr]')
-                ax.set_xlabel('Date [MJD]')
+
+                # Match y scaling in all plots to the first detector. Shade median+/-10% region.
+                if len(df)>0:
+                    if i==0:
+                        first_med = np.nanmedian(df['median'])
+                    ax.set_ylim(first_med-first_med*0.5, first_med+first_med*0.5)
+                    med = np.nanmedian(df['median'])
+                    ax.axhline(med, ls='-', color='black')
+                    ax.axhspan(med-med*0.1, med+med*0.1, color='gray', alpha=0.4, lw=0)
+
+                # Axis formatting
+                ax.set_title(det, fontsize=40)
+                ax.set_xlim(start_mjd, end_mjd)
+                ax.set_xticks(time_tick_vals)
+                ax.set_xticklabels(time_tick_labels, fontsize=20, rotation=45)
+                ax.yaxis.set_tick_params(labelsize=20)
+                ax.set_ylabel('Background [MJy/sr]', fontsize=30)
+                #ax.set_xlabel('Date [YYYY-MM-DD]')
+                ax.grid(ls='--', color='gray')
             fig.savefig(os.path.join(self.output_dir_bkg, '{}_backgrounds.png'.format(fltr)), dpi=180, bbox_inches='tight')
             fig.clf()
             plt.close()
