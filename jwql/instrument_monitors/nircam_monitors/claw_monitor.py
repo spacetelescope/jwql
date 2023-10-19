@@ -13,6 +13,13 @@ Use
     ::
 
         python claw_monitor.py
+
+    To only update the background trending plots:
+
+    ::
+
+        m = ClawMonitor()
+        m.make_background_plots()
 """
 
 import datetime
@@ -94,6 +101,18 @@ class ClawMonitor():
         """Initialize an instance of the ``ClawMonitor`` class.
         """
 
+        # Define and setup the output directories for the claw and background plots.
+        self.output_dir = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
+        ensure_dir_exists(self.output_dir)
+        self.output_dir_bkg =  os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
+        ensure_dir_exists(self.output_dir_bkg)
+        self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files REMOVE
+        self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  #todo remove
+
+        # Get the claw monitor database tables
+        self.query_table = eval('NIRCamClawQueryHistory')
+        self.stats_table = eval('NIRCamClawStats')
+
     def make_background_plots(self):
         """Makes plots of the background levels over time in NIRCam data.
         """
@@ -109,67 +128,38 @@ class ClawMonitor():
         # Use the same time xlimits/xticks for all plots
         start_mjd = 59650  # March 2022, middle of commissioning
         end_mjd = Time.now().mjd + 0.05*(Time.now().mjd - start_mjd)
-        time_tick_vals = np.linspace(start_mjd, end_mjd, 5)  # Make April 2022 the first tick
+        time_tick_vals = np.linspace(start_mjd, end_mjd, 5)
         time_tick_labels = [Time(m, format='mjd').isot.split('T')[0] for m in time_tick_vals]
 
-        # Make backgroud trending plots for all SW wide filters
-        for fltr in ['F070W', 'F090W', 'F115W', 'F150W', 'F200W']:
+        # Make backgroud trending plots for all wide filters
+        for fltr in ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']:
             logging.info('Working on background trending plots for {}'.format(fltr))
-            grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1,1,1,1])
-            fig = plt.figure(figsize=(40, 20))
-            fig.suptitle(fltr, fontsize=70)
-            for i,det in enumerate(['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']):  # in on-sky order, don't change order
+            if int(fltr[1:4])<250:  # i.e. SW
+                detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']   # in on-sky order, don't change order
+                grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1,1,1,1])
+                fig = plt.figure(figsize=(40, 20))
+                fig.suptitle(fltr, fontsize=70)
+                frack_masked_thresh = 0.075
+            else:  # i.e. LW
+                detectors_to_run = ['NRCALONG', 'NRCBLONG']
+                grid = plt.GridSpec(1, 2, hspace=.2, wspace=.4, width_ratios=[1,1])
+                fig = plt.figure(figsize=(20, 10))
+                fig.suptitle(fltr, fontsize=70, y=1.05)
+                frack_masked_thresh = 0.15
+            for i,det in enumerate(detectors_to_run):
                 logging.info('Working on {}'.format(det))
+
                 # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields, 
                 # extended objects, nebulas, short exposures.
                 df = df_orig[(df_orig['filter']==fltr) & (df_orig['pupil']=='CLEAR') & (df_orig['detector']==det) &
-                             (df_orig['effexptm']>300) & (df_orig['frac_masked']<0.075) & (abs(1-(df_orig['mean']/df_orig['median']))<0.05)]
+                             (df_orig['effexptm']>300) & (df_orig['frac_masked']<frack_masked_thresh) & 
+                             (abs(1-(df_orig['mean']/df_orig['median']))<0.05)]
                 
                 # Plot the background levels over time
                 ax = fig.add_subplot(grid[i])
                 ax.scatter(df['expstart_mjd'], df['median'])
 
                 # Match scaling in all plots to the first detector. Shade median+/-10% region.
-                if len(df)>0:
-                    if i==0:
-                        first_med = np.nanmedian(df['median'])
-                    ax.set_ylim(first_med-first_med*0.5, first_med+first_med*0.5)
-                    med = np.nanmedian(df['median'])
-                    ax.axhline(med, ls='-', color='black')
-                    ax.axhspan(med-med*0.1, med+med*0.1, color='gray', alpha=0.4, lw=0)
-
-                # Axis formatting
-                ax.set_title(det, fontsize=40)
-                ax.set_xlim(start_mjd, end_mjd)
-                ax.set_xticks(time_tick_vals)
-                ax.set_xticklabels(time_tick_labels, fontsize=20, rotation=45)
-                ax.yaxis.set_tick_params(labelsize=20)
-                ax.set_ylabel('Background [MJy/sr]', fontsize=30)
-                #ax.set_xlabel('Date [YYYY-MM-DD]')
-                ax.grid(ls='--', color='gray')
-            fig.savefig(os.path.join(self.output_dir_bkg, '{}_backgrounds.png'.format(fltr)), dpi=180, bbox_inches='tight')
-            fig.clf()
-            plt.close()
-
-
-        # Make backgroud trending plots for all LW wide filters
-        for fltr in ['F277W', 'F356W', 'F444W']:
-            logging.info('Working on background trending plots for {}'.format(fltr))
-            grid = plt.GridSpec(1, 2, hspace=.2, wspace=.4, width_ratios=[1,1])
-            fig = plt.figure(figsize=(20, 10))
-            fig.suptitle(fltr, fontsize=70, y=1.05)
-            for i,det in enumerate(['NRCALONG', 'NRCBLONG']):
-                logging.info('Working on {}'.format(det))
-                # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields, 
-                # extended objects, nebulas, short exposures.
-                df = df_orig[(df_orig['filter']==fltr) & (df_orig['pupil']=='CLEAR') & (df_orig['detector']==det) &
-                             (df_orig['effexptm']>300) & (df_orig['frac_masked']<0.15) & (abs(1-(df_orig['mean']/df_orig['median']))<0.05)]
-                
-                # Plot the background levels over time
-                ax = fig.add_subplot(grid[i])
-                ax.scatter(df['expstart_mjd'], df['median'])
-
-                # Match y scaling in all plots to the first detector. Shade median+/-10% region.
                 if len(df)>0:
                     if i==0:
                         first_med = np.nanmedian(df['median'])
@@ -302,7 +292,8 @@ class ClawMonitor():
         
         # Add colobar, save figure if any claw stacks exist
         if found_scale:
-            fig.suptitle('PID-{} OBS-{} {} {}\n{}  pa_v3={}\n'.format(self.proposal, self.obs, self.fltr.upper(), self.pupil.upper(), obs_start.split('.')[0], pa_v3), fontsize=fs*1.5)
+            fig.suptitle('PID-{} OBS-{} {} {}\n{}  pa_v3={}\n'.format(self.proposal, self.obs, self.fltr.upper(), 
+                         self.pupil.upper(), obs_start.split('.')[0], pa_v3), fontsize=fs*1.5)
             cax = fig.add_subplot(grid[0:rows, cols-1:cols])
             cbar = fig.colorbar(im, cax=cax, orientation='vertical')
             cbar.ax.tick_params(labelsize=cbar_fs)
@@ -353,18 +344,6 @@ class ClawMonitor():
 
         logging.info('Begin logging for claw_monitor')
 
-        # Define and setup the output directories for the claw and background plots.
-        self.output_dir = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
-        ensure_dir_exists(self.output_dir)
-        self.output_dir_bkg =  os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
-        ensure_dir_exists(self.output_dir_bkg)
-        self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files REMOVE
-        self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  #todo remove
-
-        # Get the claw monitor database tables
-        self.query_table = eval('NIRCamClawQueryHistory')
-        self.stats_table = eval('NIRCamClawStats')
-
         # Query MAST for new NIRCam full-frame imaging data from the last 2 days
         self.query_end_mjd = Time.now().mjd
         self.query_start_mjd = self.query_end_mjd - 2
@@ -392,8 +371,10 @@ class ClawMonitor():
             else:
                 self.wv = 'SW'
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
-            self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5), self.obs, self.fltr, self.pupil).lower())
-            self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)), 'obsnum{}'.format(self.obs), row['filename']) for row in tt])  # todo change to server filepath
+            self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
+                                        self.obs, self.fltr, self.pupil).lower())
+            self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)), 
+                            'obsnum{}'.format(self.obs), row['filename']) for row in tt])  # todo change to server filepath
             #self.files = np.array([filesystem_path(row['filename']) for row in tt])  # todo uncomment
             #print(self.files)
             self.detectors = np.array(tt['detector'])
