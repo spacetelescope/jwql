@@ -1,4 +1,4 @@
- #! /usr/bin/env python
+#! /usr/bin/env python
 
 """This module contains code for the celery application, which is used for any demanding
 work which should be restricted in terms of how many iterations are run simultaneously, or
@@ -204,7 +204,7 @@ def log_subprocess_output(pipe):
     If a subprocess STDOUT has been set to subprocess.PIPE, this function will log each
     line to the logging output.
     """
-    for line in iter(pipe.readline, b''): # b'\n'-separated lines
+    for line in iter(pipe.readline, b''):  # b'\n'-separated lines
         logging.info("\t{}".format(line.decode('UTF-8').strip()))
 
 
@@ -224,6 +224,7 @@ def after_setup_celery_logger(logger, **kwargs):
 def collect_after_task(**kwargs):
     gc.collect()
 
+
 def convert_step_args_to_string(args_dict):
     """Convert the nested dictionary containing pipeline step parameter keyword/value pairs
     to a string so that it can be passed via command line
@@ -239,17 +240,17 @@ def convert_step_args_to_string(args_dict):
     args_str : str
         String representation of ``args_dict``
     """
-    args_str="'{"
+    args_str = "'{"
 
     for i, step in enumerate(args_dict):
         args_str += f'"{step}":'
         args_str += '{'
         for j, (param, val) in enumerate(args_dict[step].items()):
             args_str += f'"{param}":"{val}"'
-            if j < len(args_dict[step])-1:
+            if j < len(args_dict[step]) - 1:
                 args_str += ', '
         args_str += "}"
-        if i < len(args_dict)-1:
+        if i < len(args_dict) - 1:
             args_str += ','
     args_str += "}'"
     return args_str
@@ -331,7 +332,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     current_dir = os.path.dirname(__file__)
     cmd_name = os.path.join(current_dir, "run_pipeline.py")
     outputs = ",".join(ext_or_exts)
-    result_file = os.path.join(cal_dir, short_name+"_status.txt")
+    result_file = os.path.join(cal_dir, short_name + "_status.txt")
     if "all" in ext_or_exts:
         logging.info("All outputs requested")
         if instrument.lower() != 'miri':
@@ -399,7 +400,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         set_permissions(os.path.join(output_dir, file))
 
     logging.info("Removing local files.")
-    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    files_to_remove = glob(os.path.join(cal_dir, short_name + "*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
@@ -408,7 +409,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
-def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True):
+def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True, step_args={}):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -429,6 +430,13 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     save_fitopt : bool
         If ``True``, the file of optional outputs from the ramp fitting
         step of the pipeline is saved.
+
+    step_args : dict
+        A dictionary containing custom arguments to supply to individual pipeline steps.
+        When a step is run, the dictionary will be checked for a key matching the step
+        name (as defined in jwql.utils.utils.get_pipeline_steps() for the provided
+        instrument). The value matching the step key should, itself, be a dictionary that
+        can be spliced in to step.call() via dereferencing (**dict)
 
     Returns
     -------
@@ -465,11 +473,11 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     output_dir = os.path.join(config["transfer_dir"], "outgoing")
 
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
-    result_file = os.path.join(cal_dir, short_name+"_status.txt")
+    result_file = os.path.join(cal_dir, short_name + "_status.txt")
 
     cores = 'all'
     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file,
-                            short_name, result_file, cores)
+                            short_name, result_file, cores, step_args)
 
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
@@ -484,7 +492,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         if core_fail:
             cores = "half"
             status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
-                                    input_file, short_name, result_file, cores)
+                                    input_file, short_name, result_file, cores, step_args)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
                 managed = True
@@ -498,7 +506,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                 if core_fail:
                     cores = "none"
                     status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
-                                            input_file, short_name, result_file, cores)
+                                            input_file, short_name, result_file, cores, step_args)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                         managed = True
@@ -524,7 +532,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                 files["fitopt_output"] = os.path.join(output_dir, file)
 
     logging.info("Removing local files.")
-    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    files_to_remove = glob(os.path.join(cal_dir, short_name + "*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
