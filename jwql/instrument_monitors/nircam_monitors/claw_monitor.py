@@ -107,7 +107,7 @@ class ClawMonitor():
         self.output_dir_bkg = os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
         ensure_dir_exists(self.output_dir_bkg)
         self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files REMOVE
-        self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  #todo remove
+        self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  # todo remove
 
         # Get the claw monitor database tables
         self.query_table = eval('NIRCamClawQueryHistory')
@@ -151,9 +151,9 @@ class ClawMonitor():
 
                 # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields,
                 # extended objects, nebulas, short exposures.
-                df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det) &
-                             (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh) &
-                             (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
+                df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det)
+                             & (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh)
+                             & (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
 
                 # Plot the background levels over time
                 ax = fig.add_subplot(grid[i])
@@ -320,13 +320,13 @@ class ClawMonitor():
         service = 'Mast.Jwst.Filtered.Nircam'
         FIELDS = ['filename', 'program', 'observtn', 'category', 'instrume', 'productLevel', 'filter',
                   'pupil', 'subarray', 'detector', 'datamodl', 'date_beg_mjd', 'effexptm']
-        params = {"columns" : ",".join(FIELDS),
-                "filters":[{"paramName" : "pupil","values" : ['CLEAR', 'F162M', 'F164N', 'F323N', 'F405N', 'F466N', 'F470N']},
-                           {"paramName" : "exp_type","values" : ['NRC_IMAGE']},
-                           {"paramName" : "datamodl", "values" : ['ImageModel']},  # exclude calints, which are cubemodel
-                           {"paramName" : "productLevel", "values" : ['2b']},  # i.e. cal.fits
-                           {"paramName" : "subarray", "values" : ['FULL']},]
-                 }
+        params = {"columns": ",".join(FIELDS),
+                  "filters":[{"paramName": "pupil", "values": ['CLEAR', 'F162M', 'F164N', 'F323N', 'F405N', 'F466N', 'F470N']},
+                             {"paramName": "exp_type", "values": ['NRC_IMAGE']},
+                             {"paramName": "datamodl", "values": ['ImageModel']},  # exclude calints, which are cubemodel
+                             {"paramName": "productLevel", "values": ['2b']},  # i.e. cal.fits
+                             {"paramName": "subarray", "values": ['FULL']}, ]
+                  }
         t = JwstObs.service_request(service, params)
         t = t[(t['date_beg_mjd'] > self.query_start_mjd) & (t['date_beg_mjd'] < self.query_end_mjd)]
         t.sort('date_beg_mjd')
@@ -371,7 +371,7 @@ class ClawMonitor():
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
             self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
                                         self.obs, self.fltr, self.pupil).lower())
-            self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)), 
+            self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)),
                                   'obsnum{}'.format(self.obs), row['filename']) for row in tt])  # todo change to server filepath
             # self.files = np.array([filesystem_path(row['filename']) for row in tt])  # todo uncomment
             # print(self.files)
