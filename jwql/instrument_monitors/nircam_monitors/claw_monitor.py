@@ -41,8 +41,8 @@ from photutils.segmentation import detect_sources, detect_threshold
 
 from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRCamClawQueryHistory, NIRCamClawStats
-from jwql.utils import monitor_utils  # todo uncomment
-from jwql.utils.logging_functions import log_info, log_fail  # todo uncomment
+from jwql.utils import monitor_utils
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
@@ -106,8 +106,6 @@ class ClawMonitor():
         ensure_dir_exists(self.output_dir)
         self.output_dir_bkg = os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
         ensure_dir_exists(self.output_dir_bkg)
-        self.data_dir = '/ifs/jwst/wit/nircam/commissioning/'  # todo change this to path of cal.fits files REMOVE
-        self.data_dir = '/ifs/jwst/wit/witserv/data7/nrc/bsunnquist/'  # todo remove
 
         # Get the claw monitor database tables
         self.query_table = eval('NIRCamClawQueryHistory')
@@ -202,19 +200,14 @@ class ClawMonitor():
             fs = 20
 
         # Make source-masked, median-stack of each detector's images
-        print(self.outfile)
-        print(self.proposal, self.obs, self.fltr, self.pupil, self.wv, detectors_to_run)
         found_scale = False
         for i, det in enumerate(detectors_to_run):
             logging.info('Working on {}'.format(det))
             files = self.files[self.detectors == det]
             # Remove missing files; to avoid memory/speed issues, only use the first 20 files,
-            # which should be plenty to see any claws todo change value?
-            files = [f for f in files if os.path.exists(f)][0:3]  # todo change index value?
+            # which should be plenty to see any claws.
+            files = [f for f in files if os.path.exists(f)][0:20]
             stack = np.ma.ones((len(files), 2048, 2048))
-            print(det)
-            print(files)
-            print('------')
             for n, f in enumerate(files):
                 logging.info('Working on: {}'.format(f))
                 h = fits.open(f)
@@ -335,8 +328,8 @@ class ClawMonitor():
 
         return t
 
-    @log_fail  # todo uncomment
-    @log_info  # todo uncomment
+    @log_fail
+    @log_info
     def run(self):
         """The main method.  See module docstrings for further details."""
 
@@ -345,25 +338,15 @@ class ClawMonitor():
         # Query MAST for new NIRCam full-frame imaging data from the last 2 days
         self.query_end_mjd = Time.now().mjd
         self.query_start_mjd = self.query_end_mjd - 2
-        # self.query_start_mjd, self.query_end_mjd = 59878.934, 59878.986  # todo remove these test datess test case
-        self.query_start_mjd, self.query_end_mjd = 60150, 60152  # todo remove
-        # self.query_start_mjd = 59985  # last run was may 25; todo remove
-        print(self.query_start_mjd, self.query_end_mjd)
         t = self.query_mast()
         logging.info('{} files found between {} and {}.'.format(len(t), self.query_start_mjd, self.query_end_mjd))
-        # print(t)
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
         combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in t])
-        n_combos = len(np.unique(combos))
-        print('unique combos:')
-        print(np.unique(combos))
         t['combos'] = combos
         monitor_run = False
-        for nnn, combo in enumerate(np.unique(combos)[0:]):  # todo take off 0:2
-            print(combo, '{}/{}'.format(nnn, n_combos))
+        for combo in np.unique(combos):
             tt = t[t['combos'] == combo]
-            # print(tt)
             if 'long' in tt['filename'][0]:
                 self.wv = 'LW'
             else:
@@ -371,10 +354,7 @@ class ClawMonitor():
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
             self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
                                         self.obs, self.fltr, self.pupil).lower())
-            self.files = np.array([os.path.join(self.data_dir, '{}'.format(str(self.proposal).zfill(5)),
-                                  'obsnum{}'.format(self.obs), row['filename']) for row in tt])  # todo change to server filepath
-            # self.files = np.array([filesystem_path(row['filename']) for row in tt])  # todo uncomment
-            # print(self.files)
+            self.files = np.array([filesystem_path(row['filename']) for row in tt])
             self.detectors = np.array(tt['detector'])
             if not os.path.exists(self.outfile):
                 logging.info('Working on {}'.format(self.outfile))
