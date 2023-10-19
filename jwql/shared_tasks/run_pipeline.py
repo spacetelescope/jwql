@@ -10,6 +10,7 @@ import os
 import shutil
 import sys
 import time
+import traceback
 
 from jwst import datamodels
 from jwst.dq_init import DQInitStep
@@ -173,7 +174,8 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         with open(status_file, "a+") as status_f:
             status_f.write("EXCEPTION\n")
             status_f.write("{}\n".format(e))
-            status_f.write("FAILED")
+            status_f.write("FAILED\n")
+            status_f.write(traceback.format_exc())
         sys.exit(1)
 
     with open(status_file, "a+") as status_f:
@@ -229,6 +231,7 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
             params['refpix'] = dict(odd_even_rows=False)
 
         # Default CR rejection threshold is too low
+        params['jump'] = {}
         params['jump']['rejection_threshold'] = 15
 
         # Set up to save jump step output
@@ -296,7 +299,8 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
         with open(status_file, "a+") as status_f:
             status_f.write("EXCEPTION\n")
             status_f.write("{}\n".format(e))
-            status_f.write("FAILED")
+            status_f.write("FAILED\n")
+            status_f.write(traceback.format_exc())
         sys.exit(1)
 
     with open(status_file, "a+") as status_f:
@@ -356,7 +360,7 @@ if __name__ == '__main__':
     outputs = args.outputs
     step_args = args.step_args
 
-    status_file = os.path.join(working_path, short_name+"_status.txt")
+    status_file = os.path.join(working_path, short_name + "_status.txt")
     with open(status_file, 'w') as out_file:
         out_file.write("Starting Process\n")
         out_file.write("\tpipeline is {} ({})\n".format(pipe_type, type(pipe_type)))

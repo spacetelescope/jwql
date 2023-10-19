@@ -45,14 +45,15 @@ from bokeh.models import LinearColorMapper, LogColorMapper
 from bokeh.plotting import figure
 import numpy as np
 from PIL import Image
+from selenium import webdriver
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
-                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
-                                 FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
-                                 FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
-                                 FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND
+    FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
+    FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
+    FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
+    FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
+    JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
@@ -157,8 +158,7 @@ def create_png_from_fits(filename, outdir):
         plot.ygrid.visible = False
 
         # Create the color mapper that will be used to scale the image
-        #mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
-        mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Greys256', low=(img_med - (5 * img_dev)), high=(img_med + (5 * img_dev)))
 
         # Plot image
         imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
@@ -169,8 +169,8 @@ def create_png_from_fits(filename, outdir):
         plot.yaxis.visible = False
 
         # Save the plot in a png
-        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
-        export_png(plot, filename=output_filename)
+        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits', 'png'))
+        save_png(plot, filename=output_filename)
         permissions.set_permissions(output_filename)
         return output_filename
     else:
@@ -749,11 +749,32 @@ def read_png(filename):
 
         # Copy the RGBA image into view, flipping it so it comes right-side up
         # with a lower-left origin
-        view[:,:,:] = np.flipud(np.asarray(rgba_img))
+        view[:, :, :] = np.flipud(np.asarray(rgba_img))
     else:
         view = None
     # Return the 2D version
     return img
+
+
+def save_png(fig, filename=''):
+    """Starting with selenium version 4.10.0, our testing has shown that on the JWQL
+    servers, we need to specify an instance of a web driver when exporting a Bokeh
+    figure as a png. This is a wrapper function that creates the web driver instance
+    and calls Bokeh's export_png function.
+
+    Parameters
+    ----------
+    fig : bokeh.plotting.figure
+        Bokeh figure to be saved as a png
+
+    filename : str
+        Filename to use for the png file
+    """
+    options = webdriver.FirefoxOptions()
+    options.add_argument('-headless')
+    driver = webdriver.Firefox(options=options)
+    export_png(fig, filename=filename, webdriver=driver)
+    driver.quit()
 
 
 def grouper(iterable, chunksize):
