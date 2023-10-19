@@ -52,18 +52,27 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
         status_f.write("\t start_dir is {} ({})\n".format(start_dir, type(start_dir)))
         status_f.write("\t uncal_file is {} ({})\n".format(uncal_file, type(uncal_file)))
         status_f.write(f"\t outputs is {outputs}\n")
+        sys.stderr.write("Running run_pipe\n")
+        sys.stderr.write("\t input_file_basename is {} ({})\n".format(input_file_basename, type(input_file_basename)))
+        sys.stderr.write("\t start_dir is {} ({})\n".format(start_dir, type(start_dir)))
+        sys.stderr.write("\t uncal_file is {} ({})\n".format(uncal_file, type(uncal_file)))
+        sys.stderr.write(f"\t outputs is {outputs}\n")
 
     try:
+        sys.stderr.write("Copying file {} to working directory.\n".format(input_file))
         copy_files([input_file], work_directory)
+        sys.stderr.write("Setting permissions on {}\n".format(uncal_file))
         set_permissions(uncal_file)
 
         steps = get_pipeline_steps(instrument)
+        sys.stderr.write("Pipeline steps initialized to {}\n".format(steps))
 
         # If the input file is a file other than uncal.fits, then we may only need to run a
         # subset of steps. Check the completed steps in the input file. Find the latest step
         # that has been completed, and skip that plus all prior steps
         if 'uncal' not in input_file:
             completed_steps = completed_pipeline_steps(input_file)
+            sys.stderr.write("Steps {} already completed.\n".format(completed_steps))
 
             # Reverse the boolean value, so that now steps answers the question: "Do we need
             # to run this step?""
@@ -81,18 +90,21 @@ def run_pipe(input_file, short_name, work_directory, instrument, outputs, max_co
 
         for step in steps:
             if not steps[step]:
+                sys.stderr.write("Setting last_run to {}.\n".format(step))
                 last_run = deepcopy(step)
 
         for step in steps:
             if step == last_run:
                 break
             if step != last_run:
+                sys.stderr.write("Setting {} to skip while looking for last_run.\n".format(step))
                 steps[step] = False
 
         # Set any steps the user specifically asks to skip
         for step, step_dict in step_args.items():
             if 'skip' in step_dict:
                 if step_dict['skip']:
+                    sys.stderr.write("Setting step {} to skip by user request.\n".format(step))
                     steps[step] = False
 
         # Run each specified step
