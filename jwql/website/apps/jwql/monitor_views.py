@@ -74,10 +74,11 @@ def background_monitor(request):
     context = {
         'inst': 'NIRCam',
         'bkg_plots': bkg_plots
-        }
+    }
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
 
 def bad_pixel_monitor(request, inst):
     """Generate the dark monitor page for a given instrument
@@ -151,13 +152,13 @@ def claw_monitor(request):
     # Get all recent claw stack images
     query = session.query(NIRCamClawStats.expstart_mjd, NIRCamClawStats.skyflat_filename).order_by(NIRCamClawStats.expstart_mjd.desc()).all()
     df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
-    recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd']>Time.now().mjd-100]))  # todo change 100 to 10 days back?
+    recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 100]))  # todo change 100 to 10 days back?
     claw_stacks = ['/static/outputs/claw_monitor/claw_stacks/{}'.format(filename) for filename in recent_files]
 
     context = {
         'inst': 'NIRCam',
         'claw_stacks': claw_stacks
-        }
+    }
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
