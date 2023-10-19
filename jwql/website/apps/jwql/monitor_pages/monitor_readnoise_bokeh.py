@@ -129,12 +129,11 @@ class ReadNoisePlotTab():
             ngroups = [result.ngroups for result in self.db.query_results]
 
             source = ColumnDataSource(data=dict(
-                        file=filenames,
-                        expstarts=expstarts,
-                        nints=nints,
-                        ngroups=ngroups,
-                        readnoise=readnoise_vals,
-                        ))
+                                      file=filenames,
+                                      expstarts=expstarts,
+                                      nints=nints,
+                                      ngroups=ngroups,
+                                      readnoise=readnoise_vals))
 
             amp_plot.add_tools(HoverTool(tooltips=[("file", "@file"),
                                                    ("time", "@expstarts"),
