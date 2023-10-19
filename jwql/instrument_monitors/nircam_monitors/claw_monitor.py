@@ -151,9 +151,9 @@ class ClawMonitor():
 
                 # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields,
                 # extended objects, nebulas, short exposures.
-                df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det)
-                             & (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh)
-                             & (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
+                df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det) &
+                             (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh) &
+                             (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
 
                 # Plot the background levels over time
                 ax = fig.add_subplot(grid[i])
@@ -321,11 +321,11 @@ class ClawMonitor():
         FIELDS = ['filename', 'program', 'observtn', 'category', 'instrume', 'productLevel', 'filter',
                   'pupil', 'subarray', 'detector', 'datamodl', 'date_beg_mjd', 'effexptm']
         params = {"columns": ",".join(FIELDS),
-                  "filters":[{"paramName": "pupil", "values": ['CLEAR', 'F162M', 'F164N', 'F323N', 'F405N', 'F466N', 'F470N']},
-                             {"paramName": "exp_type", "values": ['NRC_IMAGE']},
-                             {"paramName": "datamodl", "values": ['ImageModel']},  # exclude calints, which are cubemodel
-                             {"paramName": "productLevel", "values": ['2b']},  # i.e. cal.fits
-                             {"paramName": "subarray", "values": ['FULL']}, ]
+                  "filters": [{"paramName": "pupil", "values": ['CLEAR', 'F162M', 'F164N', 'F323N', 'F405N', 'F466N', 'F470N']},
+                              {"paramName": "exp_type", "values": ['NRC_IMAGE']},
+                              {"paramName": "datamodl", "values": ['ImageModel']},  # exclude calints, which are cubemodel
+                              {"paramName": "productLevel", "values": ['2b']},  # i.e. cal.fits
+                              {"paramName": "subarray", "values": ['FULL']}, ]
                   }
         t = JwstObs.service_request(service, params)
         t = t[(t['date_beg_mjd'] > self.query_start_mjd) & (t['date_beg_mjd'] < self.query_end_mjd)]
