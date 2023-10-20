@@ -30,7 +30,6 @@ from astropy.convolution import Gaussian2DKernel, convolve
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma, sigma_clipped_stats
 from astropy.time import Time
-from astropy.visualization import ZScaleInterval
 from astroquery.mast import Mast
 import matplotlib
 matplotlib.use('Agg')
@@ -132,6 +131,7 @@ class ClawMonitor():
         # Make backgroud trending plots for all wide filters
         for fltr in ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']:
             logging.info('Working on background trending plots for {}'.format(fltr))
+            found_limits = False
             if int(fltr[1:4]) < 250:  # i.e. SW
                 detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']   # in on-sky order, don't change order
                 grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1, 1, 1, 1])
@@ -157,10 +157,11 @@ class ClawMonitor():
                 ax = fig.add_subplot(grid[i])
                 ax.scatter(df['expstart_mjd'], df['median'])
 
-                # Match scaling in all plots to the first detector. Shade median+/-10% region.
+                # Match scaling in all plots to the first detector with data. Shade median+/-10% region.
                 if len(df) > 0:
-                    if i == 0:
+                    if found_limits is False:
                         first_med = np.nanmedian(df['median'])
+                        found_limits = True
                     ax.set_ylim(first_med - first_med * 0.5, first_med + first_med * 0.5)
                     med = np.nanmedian(df['median'])
                     ax.axhline(med, ls='-', color='black')
@@ -272,8 +273,8 @@ class ClawMonitor():
                 ax.set_title('N/A', fontsize=fs)
                 ax.imshow(skyflat, cmap='coolwarm', vmin=999, vmax=999, origin='lower')
             elif (len(skyflat[skyflat != 1]) > 0) & (found_scale is False):  # match scaling to first non-empty stack
-                z = ZScaleInterval()
-                vmin, vmax = z.get_limits(skyflat)
+                mean, med, stddev = sigma_clipped_stats(skyflat)
+                vmin, vmax =  med - 3 * stddev, med + 3 * stddev
                 found_scale = True
                 ax.set_title(det, fontsize=fs)
                 im = ax.imshow(skyflat, cmap='coolwarm', vmin=vmin, vmax=vmax, origin='lower')
@@ -356,7 +357,7 @@ class ClawMonitor():
             self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
                                         self.obs, self.fltr, self.pupil).lower())
             #self.files = np.array([filesystem_path(row['filename']) for row in tt])  # todo uncomment?
-            self.files = np.array([os.path.join(get_config()['filesystem'], 'public', filesystem_path(row['filename'])) for row in tt])
+            self.files = np.array([os.path.join(get_config()['filesystem'], 'public', filesystem_path(row['filename'])) for row in tt]) # todo remove
             self.detectors = np.array(tt['detector'])
             if not os.path.exists(self.outfile):
                 logging.info('Working on {}'.format(self.outfile))
