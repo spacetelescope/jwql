@@ -41,6 +41,8 @@ class ReadnoiseMonitorData():
 
     instrument : str
         Instrument name (e.g. nircam)
+    aperture : str
+        Aperture name (e.g. apername)
 
     Attributes
     ----------
@@ -49,7 +51,12 @@ class ReadnoiseMonitorData():
         Instrument name (e.g. nircam)
     aperture : str
         Aperture name (e.g. apername)
-
+    query_results : list
+        Results from read noise statistics table based on
+        instrument, aperture and exposure start time
+    stats_table : sqlalchemy.orm.decl_api.DeclarativeMeta
+        Statistics table object to query based on instrument
+        and aperture
     """
 
     def __init__(self, instrument, aperture):
@@ -113,14 +120,18 @@ class ReadNoisePlotTab():
                          title=self.aperture)
 
     def plot_readnoise_amplifers(self):
-
+        """Class to create readnoise scatter plots per amplifier.
+        """
         self.amp_plots = []
         for amp in ['1', '2', '3', '4']:
 
             amp_plot = figure(title='Amp {}'.format(amp), width=280, height=280, x_axis_type='datetime')
             amp_plot.xaxis[0].ticker.desired_num_ticks = 4
 
-            readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.db.query_results])
+            if self.db.query_results:
+                readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.db.query_results])
+            else:
+                readnoise_vals = np.array(list())
 
             filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.db.query_results]
             expstarts_iso = np.array([result.expstart for result in self.db.query_results])
@@ -160,18 +171,24 @@ class ReadNoisePlotTab():
             diff_image_png = self.db.query_results[-1].readnoise_diff_image
             diff_image_png = os.path.join('/static', '/'.join(diff_image_png.split('/')[-6:]))
             self.diff_image_plot.image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
-            self.diff_image_plot.xaxis.visible = False
-            self.diff_image_plot.yaxis.visible = False
-            self.diff_image_plot.xgrid.grid_line_color = None
-            self.diff_image_plot.ygrid.grid_line_color = None
-            self.diff_image_plot.title.text_font_size = '22px'
-            self.diff_image_plot.title.align = 'center'
+            
+        self.diff_image_plot.xaxis.visible = False
+        self.diff_image_plot.yaxis.visible = False
+        self.diff_image_plot.xgrid.grid_line_color = None
+        self.diff_image_plot.ygrid.grid_line_color = None
+        self.diff_image_plot.title.text_font_size = '22px'
+        self.diff_image_plot.title.align = 'center'
+
 
     def plot_readnoise_histogram(self):
         """Updates the readnoise histogram"""
 
-        diff_image_n = np.array(self.db.query_results[-1].diff_image_n)
-        diff_image_bin_centers = np.array(self.db.query_results[-1].diff_image_bin_centers)
+        if len(self.db.query_results) != 0:
+            diff_image_n = np.array(self.db.query_results[-1].diff_image_n)
+            diff_image_bin_centers = np.array(self.db.query_results[-1].diff_image_bin_centers)
+        else:
+            diff_image_n = np.array(list())
+            diff_image_bin_centers = np.array(list())
 
         hist_xr_start = diff_image_bin_centers.min()
         hist_xr_end = diff_image_bin_centers.max()
