@@ -23,24 +23,31 @@
     width: 100%;
     margin: auto;
   }
-  
+
+  /* Make sure bokeh widgets match default theme */
+  .bk-root, .bk-btn {
+      font-family: 'Overpass', sans-serif !important;
+      font-size: 1rem !important;
+      flex-grow: 0 !important;
+  }
+
   /*Make normal buttons and highlighted outline buttons orange*/
   .btn-primary, .btn-primary.disabled, .btn-outline-primary:hover,
-  .btn-outline-primary.active {
+  .btn-outline-primary.active, .bk-btn-primary {
       background-color: #c85108 !important;
       border-color: #c85108 !important;
       color: white !important;
-      border-radius: 0px;
+      border-radius: 0px !important;
       text-decoration: none;
   }
   
   /*Make outline buttons and highlighted normal buttons white*/
   .btn-primary:hover, .btn-primary.active, .btn-outline-primary,
-  .show > .btn-primary.dropdown-toggle {
+  .show > .btn-primary.dropdown-toggle, .bk-btn-primary:hover {
       background-color: white !important;
       border-color: #c85108 !important ;
       color: #c85108 !important;
-      border-radius: 0px;
+      border-radius: 0px !important;
       text-decoration: none;
   }
   
@@ -71,7 +78,13 @@
           display: block;
       }
   }
-  
+
+  /* Make disabled buttons opaque and unclickable */
+  .disabled_button {
+      pointer-events: none;
+      opacity: 0.65;
+    }
+
   /* Make disabled dropdown items grey and unclickable */
   .disabled-dropdown {
       color: #bec4d4 !important;
@@ -334,7 +347,7 @@
   }
   
   /* Get rid of padding around GitHub logo */
-  #github-link {
+  #github-link, #github-link-collapsed {
       padding-bottom: 0px;
       padding-top: 0px;
   }
@@ -526,7 +539,6 @@
       text-align: left;
       color: white;
       z-index: 2;
-      font-size: 0.75rem;
   }
   
   .thumbnail-staff {
@@ -537,7 +549,21 @@
       display: inline-block;
       margin: 0.1rem;
   }
-  
+
+   /*Format thumbnail groups when active*/
+  .thumbnail-group {
+      display: inline;
+      font-size: 0.75rem;
+  }
+  .thumbnail-group-active {
+      display: block;
+      width: 90%;
+      height: 90%;
+      border: 1px solid #2d353c;
+      box-shadow: 5px 5px #c85108, 10px 10px #bec4d4;
+      position: absolute;
+      font-size: 0.65rem;
+  }
   
   /*Format the version identifier text in bottom corner*/
   #version-div {
@@ -581,4 +607,3 @@
       padding-left:10px;
       line-height:25px;
   }
-  

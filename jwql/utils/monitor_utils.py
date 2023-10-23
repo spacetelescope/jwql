@@ -19,18 +19,34 @@ Use
 import datetime
 import os
 from astroquery.mast import Mast, Observations
+from django import setup
 
 
-from jwql.database.database_interface import Monitor
-from jwql.jwql_monitors import monitor_mast
+from jwql.database.database_interface import Monitor, engine
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
+from jwql.utils import mast_utils
 from jwql.utils.utils import filename_parser
 
 
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
+
+# Determine if the code is being run as part of a github action or Readthedocs build
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # These lines are needed in order to use the Django models in a standalone
+    # script (as opposed to code run as a result of a webpage request). If these
+    # lines are not run, the script will crash when attempting to import the
+    # Django models in the line below.
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    setup()
+    from jwql.website.apps.jwql.models import RootFileInfo
 
 
 def exclude_asic_tuning(mast_results):
@@ -121,7 +137,7 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
         instrument = 'MIRI'
         dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
 
-    # monitor_mast.instrument_inventory does not allow list inputs to
+    # instrument_inventory does not allow list inputs to
     # the added_filters input (or at least if you do provide a list, then
     # it becomes a nested list when it sends the query to MAST. The
     # nested list is subsequently ignored by MAST.)
@@ -137,8 +153,8 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
         if readpatt is not None:
             parameters["readpatt"] = readpatt
 
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
+        query = mast_utils.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                add_filters=parameters, return_data=True, caom=False)
         if 'data' in query.keys():
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
@@ -181,7 +197,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
         else:
             exp_types = ['NRS_TACQ', 'NRS_MSATA']
 
-    # monitor_mast.instrument_inventory does not allow list inputs to
+    # instrument_inventory does not allow list inputs to
     # the added_filters input (or at least if you do provide a list, then
     # it becomes a nested list when it sends the query to MAST. The
     # nested list is subsequently ignored by MAST.)
@@ -192,18 +208,62 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
 
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name }
+                      "apername": aperture, "exp_type": template_name}
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt
 
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
+        query = mast_utils.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                add_filters=parameters, return_data=True, caom=False)
         if 'data' in query.keys():
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
 
     return query_results
+
+
+def model_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
+    """Use local Django model to search for TA data.
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name (e.g. ``nirspec``)
+    aperture : str
+        Detector aperture to search for (e.g. ``NRS_S1600A1_SLIT``)
+    start_date : float
+        Starting date for the search in MJD
+    end_date : float
+        Ending date for the search in MJD
+    readpatt : str
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+    if aperture == 'NRS_S1600A1_SLIT':
+        exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
+    else:
+        exp_types = ['NRS_TACQ', 'NRS_MSATA']
+
+    filter_kwargs = {
+        'instrument__iexact': instrument,
+        'aperture__iexact': aperture,
+        'exp_type__in': exp_types,
+        'expstart__gte': start_date,
+        'expstart__lte': end_date
+    }
+
+    if readpatt is not None:
+        filter_kwargs['readpatt'] = readpatt
+
+    # get file info by instrument from local model
+    root_file_info = RootFileInfo.objects.filter(**filter_kwargs)
+
+    return root_file_info.values()
 
 
 def update_monitor_table(module, start_time, log_file):
@@ -226,4 +286,5 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['status'] = get_log_status(log_file)
     new_entry['log_file'] = os.path.basename(log_file)
 
-    Monitor.__table__.insert().execute(new_entry)
+    with engine.begin() as connection:
+        connection.execute(Monitor.__table__.insert(), new_entry)

@@ -48,6 +48,7 @@ from collections import defaultdict
 import datetime
 import glob
 import os
+import logging
 
 from astropy.time import Time, TimeDelta
 from django import forms
@@ -55,12 +56,13 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from jwql.edb.engineering_database import is_valid_mnemonic
+from jwql.website.apps.jwql.models import Anomalies
 
 
-from jwql.database import database_interface as di
 from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT, EXP_TYPE_PER_INSTRUMENT,
                                   FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT, GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE,
-                                  JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES)
+                                  JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
+                                  LOOK_OPTIONS, SORT_OPTIONS, PROPOSAL_CATEGORIES)
 from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
 
 from wtforms import SubmitField, StringField
@@ -92,9 +94,11 @@ class JwqlQueryForm(BaseForm):
         params[instrument]['readpatt_list'] = []
         params[instrument]['exptype_list'] = []
         params[instrument]['grating_list'] = []
+        params[instrument]['subarray_list'] = []
+        params[instrument]['pupil_list'] = []
         params[instrument]['anomalies_list'] = []
         # Generate dynamic lists of apertures to use in forms
-        for aperture in APERTURES_PER_INSTRUMENT[instrument.upper()]:
+        for aperture in APERTURES_PER_INSTRUMENT[instrument.lower()]:
             params[instrument]['aperture_list'].append([query_format(aperture), query_format(aperture)])
         # Generate dynamic lists of filters to use in forms
         for filt in FILTERS_PER_INSTRUMENT[instrument]:
@@ -116,19 +120,47 @@ class JwqlQueryForm(BaseForm):
         for grating in GRATING_PER_INSTRUMENT[instrument]:
             grating = query_format(grating)
             params[instrument]['grating_list'].append([grating, grating])
+        # Generate dynamic lists of subarray options to use in forms
+        for subarray in SUBARRAYS_PER_INSTRUMENT[instrument]:
+            subarray = query_format(subarray)
+            params[instrument]['subarray_list'].append([subarray, subarray])
+        # Generate dynamic lists of pupil options to use in forms
+        for pupil in PUPILS_PER_INSTRUMENT[instrument]:
+            pupil = query_format(pupil)
+            params[instrument]['pupil_list'].append([pupil, pupil])
         # Generate dynamic lists of anomalies to use in forms
         for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
             if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
                 item = [query_format(anomaly), query_format(anomaly)]
                 params[instrument]['anomalies_list'].append(item)
 
-    # Anomaly Parameters
-    instrument = forms.MultipleChoiceField(required=False,
-                                           choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
-                                           widget=forms.CheckboxSelectMultiple)
-    exp_time_max = forms.DecimalField(required=False, initial="685")
-    exp_time_min = forms.DecimalField(required=False, initial="680")
+    # general parameters
+    instrument = forms.MultipleChoiceField(
+        required=False,
+        choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+        widget=forms.CheckboxSelectMultiple)
 
+    look_choices = [(query_format(choice), query_format(choice)) for choice in LOOK_OPTIONS]
+    look_status = forms.MultipleChoiceField(
+        required=False, choices=look_choices, widget=forms.CheckboxSelectMultiple)
+
+    cat_choices = [(query_format(choice), query_format(choice)) for choice in PROPOSAL_CATEGORIES]
+    proposal_category = forms.MultipleChoiceField(
+        required=False, choices=cat_choices, widget=forms.CheckboxSelectMultiple)
+
+    sort_choices = [(choice, choice) for choice in SORT_OPTIONS]
+    sort_type = forms.ChoiceField(
+        required=True,
+        choices=sort_choices, initial=sort_choices[2],
+        widget=forms.RadioSelect)
+
+    num_choices = [(50, 50), (100, 100), (200, 200), (500, 500)]
+    num_per_page = forms.ChoiceField(
+        required=True,
+        choices=num_choices, initial=num_choices[1],
+        widget=forms.RadioSelect)
+
+    # instrument specific parameters
     miri_aper = forms.MultipleChoiceField(required=False, choices=params['miri']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_aper = forms.MultipleChoiceField(required=False, choices=params['nirspec']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     niriss_aper = forms.MultipleChoiceField(required=False, choices=params['niriss']['aperture_list'], widget=forms.CheckboxSelectMultiple)
@@ -171,6 +203,18 @@ class JwqlQueryForm(BaseForm):
     nircam_grating = forms.MultipleChoiceField(required=False, choices=params['nircam']['grating_list'], widget=forms.CheckboxSelectMultiple)
     fgs_grating = forms.MultipleChoiceField(required=False, choices=params['fgs']['grating_list'], widget=forms.CheckboxSelectMultiple)
 
+    miri_subarray = forms.MultipleChoiceField(required=False, choices=params['miri']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_subarray = forms.MultipleChoiceField(required=False, choices=params['nirspec']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_subarray = forms.MultipleChoiceField(required=False, choices=params['niriss']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_subarray = forms.MultipleChoiceField(required=False, choices=params['nircam']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_subarray = forms.MultipleChoiceField(required=False, choices=params['fgs']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_pupil = forms.MultipleChoiceField(required=False, choices=params['miri']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_pupil = forms.MultipleChoiceField(required=False, choices=params['nirspec']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_pupil = forms.MultipleChoiceField(required=False, choices=params['niriss']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_pupil = forms.MultipleChoiceField(required=False, choices=params['nircam']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_pupil = forms.MultipleChoiceField(required=False, choices=params['fgs']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+
     def clean_inst(self):
 
         inst = self.cleaned_data['instrument']
@@ -184,41 +228,34 @@ class InstrumentAnomalySubmitForm(forms.Form):
     def __init__(self, *args, **kwargs):
         instrument = kwargs.pop('instrument')
         super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
-        self.fields['anomaly_choices'] = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
+        self.fields['anomaly_choices'] = forms.MultipleChoiceField(
+            choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument],
+            widget=forms.CheckboxSelectMultiple(), required=False)
         self.instrument = instrument
 
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
+    def update_anomaly_table(self, rootfileinfo, user, anomaly_choices):
+        """Update the ``Anomalies`` model associated with the sent RootFileInfo.
+        All 'anomaly_choices' should be marked 'True' and the rest should be 'False'
 
         Parameters
         ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
+        rootfileinfo : RootFileInfo
+            The RootFileInfo model object of the image to update
         user : str
             The user that is flagging the anomaly
         anomaly_choices : list
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
         """
+        default_dict = {'flag_date': datetime.datetime.now(),
+                        'user': user}
+        for anomaly in Anomalies.get_all_anomalies():
+            default_dict[anomaly] = (anomaly in anomaly_choices)
 
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        if self.instrument == 'fgs':
-            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'nirspec':
-            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'miri':
-            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'niriss':
-            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument == 'nircam':
-            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
+        try:
+            Anomalies.objects.update_or_create(root_file_info=rootfileinfo, defaults=default_dict)
+        except Exception as e:
+            logging.warning('Unable to update anomaly table for {} due to {}'.format(rootfileinfo.root_name, e))
 
     def clean_anomalies(self):
 

@@ -47,7 +47,7 @@
 					 title="JWQL Logo">
 				<span style="padding: 0.5rem;">JWQL</span>
 				{% if inst != "" %}
-					<font color='#f2ce3a'>{{ inst }}</font>
+					<span style='color: #f2ce3a'>{{ inst }}</span>
 				{% endif %}
 			</a>
 
@@ -133,7 +133,7 @@
 
 					<!--Show GitHub link when navbar is collapsed-->
 	            	<li class="nav-item active d-xl-none">
-						<a id="github-link"
+						<a id="github-link-collapsed"
 						   class="nav-link"
 						   href="https://github.com/spacetelescope/jwql"
 						   target="_blank">
@@ -208,7 +208,7 @@
 						 alt="JWST Logo">
 	        	</a>
      	      	<div id='version-div'>
-	        		<p id="version_number"></p>
+	        		<p id="version_number">
 	        		   <script>document.getElementById("version_number").innerHTML = version_url('{{version}}');</script>
 	      	     	</p>
 	      	    </div>

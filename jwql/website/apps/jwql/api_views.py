@@ -27,6 +27,7 @@ Authors
 
     - Matthew Bourque
     - Teagan King
+    - Melanie Clarke
 
 Use
 ---
@@ -50,6 +51,7 @@ from .data_containers import get_all_proposals
 from .data_containers import get_filenames_by_proposal
 from .data_containers import get_filenames_by_rootname
 from .data_containers import get_instrument_proposals
+from .data_containers import get_instrument_looks
 from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_proposal
@@ -135,6 +137,46 @@ def instrument_proposals(request, inst):
 
     proposals = get_instrument_proposals(inst)
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
+
+
+def instrument_looks(request, inst, status=None):
+    """Return a table of looks information for the given instrument.
+
+    'Viewed' indicates whether an observation is new or has been reviewed
+    for QA.  In addition to 'filename', and 'viewed', observation
+    descriptors from the Django models may be added to the table. Keys
+    are specified by instrument in the REPORT_KEYS_PER_INSTRUMENT constant.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+    inst : str
+        The JWST instrument of interest.
+    status : str, optional
+        If set to None, all viewed values are returned. If set to
+        'viewed', only viewed data is returned. If set to 'new', only
+        new data is returned.
+
+    Returns
+    -------
+    JsonResponse
+        Outgoing response sent to the webpage, depending on return_type.
+    """
+    # get all observation looks from file info model
+    # and join with observation descriptors
+    keys, looks = get_instrument_looks(inst, look=status)
+
+    # return results by api key
+    if status is None:
+        status = 'looks'
+
+    response = JsonResponse({'instrument': inst,
+                             'keys': keys,
+                             'type': status,
+                             status: looks},
+                            json_dumps_params={'indent': 2})
+    return response
 
 
 def preview_images_by_proposal(request, proposal):

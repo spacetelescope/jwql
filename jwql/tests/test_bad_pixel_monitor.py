@@ -16,6 +16,7 @@ Use
 
         pytest -s test_badpix_monitor.py
 """
+import datetime
 
 import numpy as np
 import os
@@ -23,12 +24,14 @@ import pytest
 
 from jwst.datamodels import dqflags
 
+from jwql.database.database_interface import engine, session
 from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
 from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
 from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
+from jwql.tests.resources import has_test_db
 
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
@@ -214,3 +217,82 @@ def test_make_crds_parameter_dict():
     assert params['INSTRUME'] == 'NIRCAM'
     assert params['DETECTOR'] == 'NRCALONG'
     assert params['CHANNEL'] == 'LONG'
+
+
+@pytest.mark.skipif(not has_test_db(), reason='Modifies test database.')
+def test_add_bad_pix():
+    coord = ([1, 2, 3], [4, 5, 6])
+    pixel_type = 'test_new_pixel_type'
+    files = ['test.fits']
+    obs_start = obs_mid = obs_end = datetime.datetime.now()
+    baseline = 'baseline.fits'
+
+    badpix = bad_pixel_monitor.BadPixels()
+    badpix.instrument = 'nircam'
+    badpix.detector = 'nrcalong'
+    badpix.identify_tables()
+
+    try:
+        badpix.add_bad_pix(coord, pixel_type, files, obs_start,
+                           obs_mid, obs_end, baseline)
+        new_entries = session.query(badpix.pixel_table).filter(
+            badpix.pixel_table.type == pixel_type)
+
+        assert new_entries.count() == 1
+        assert new_entries[0].baseline_file == baseline
+        assert np.all(new_entries[0].x_coord == coord[0])
+        assert np.all(new_entries[0].y_coord == coord[1])
+    finally:
+        # clean up
+        session.query(badpix.pixel_table).filter(
+            badpix.pixel_table.type == pixel_type).delete()
+        session.commit()
+        assert session.query(badpix.pixel_table).filter(
+            badpix.pixel_table.type == pixel_type).count() == 0
+
+
+@pytest.mark.skipif(not has_test_db(), reason='Modifies test database.')
+def test_exclude_existing_badpix():
+    coord = ([9999], [9999])
+    pixel_type = 'hot'
+
+    badpix = bad_pixel_monitor.BadPixels()
+    badpix.instrument = 'nircam'
+    badpix.detector = 'nrcalong'
+    badpix.identify_tables()
+
+    # bad pixel type should raise error
+    with pytest.raises(ValueError) as err:
+        badpix.exclude_existing_badpix(coord, 'test_bad_type')
+    assert 'bad pixel type' in str(err)
+
+    # new pixel should not be found
+    new_x, new_y = badpix.exclude_existing_badpix(coord, pixel_type)
+    assert new_x == [9999]
+    assert new_y == [9999]
+
+    # add pixel, test again
+    files = ['test.fits']
+    obs_start = obs_mid = obs_end = datetime.datetime.now()
+    baseline = 'test_baseline.fits'
+
+    try:
+        badpix.add_bad_pix(coord, pixel_type, files, obs_start,
+                           obs_mid, obs_end, baseline)
+        new_entries = session.query(badpix.pixel_table).filter(
+            badpix.pixel_table.baseline_file == baseline)
+
+        assert new_entries.count() == 1
+
+        # new pixel should be found
+        new_x, new_y = badpix.exclude_existing_badpix(coord, pixel_type)
+        assert new_x == []
+        assert new_y == []
+
+    finally:
+        # clean up
+        session.query(badpix.pixel_table).filter(
+            badpix.pixel_table.baseline_file == baseline).delete()
+        session.commit()
+        assert session.query(badpix.pixel_table).filter(
+            badpix.pixel_table.baseline_file == baseline).count() == 0

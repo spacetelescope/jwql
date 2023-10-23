@@ -207,3 +207,14 @@ whether you want the function to return whether or not you have the lock into th
 variable (`blocking=False`). In the case where `blocking=False`, if `have_lock=False` then
 the lock is already in use, and you must **not** execute any code that requires the lock.
 If your code has no way to proceed without the lock, then you should use `blocking=True`.
+
+## Testing Celery and Redis
+
+- Create and activate your test environment
+- Make sure that in the ``config.json`` file, 
+  - ``redis_host`` is set to localhost
+  - ``test_data`` is set appropriately
+  - ``transfer_dir`` is set to the test or dev directory as appropriate
+- Start redis with ``redis-server &``
+- Start celery with ``celery -A shared_tasks worker -D -E -ldebug -Ofair -c1 --max-tasks-per-child=1 --prefetch-multiplier 1``
+- Run ``jwql/tests/test_redis_celery.py``

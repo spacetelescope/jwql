@@ -18,9 +18,9 @@ Use
 """
 from collections import defaultdict
 from copy import deepcopy
-import numpy as np
 import os
 import pytest
+from types import SimpleNamespace
 
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
@@ -30,10 +30,12 @@ import astropy.units as u
 import datetime
 import numpy as np
 
+from jwql.database.database_interface import session
 from jwql.edb.engineering_database import EdbMnemonic
 from jwql.instrument_monitors.common_monitors import edb_telemetry_monitor as etm
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition as cond
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils as etm_utils
+from jwql.tests.resources import has_test_db
 from jwql.utils.constants import MIRI_POS_RATIO_VALUES
 
 # Determine if tests are being run on Github Actions
@@ -41,7 +43,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 
 
 def test_add_every_change_history():
-    """Test that every_change data is correcly combined with an existing
+    """Test that every_change data is correctly combined with an existing
     set of every_change data
     """
     dates1 = np.array([datetime.datetime(2022, 3, 4, 1, 5, i) for i in range(10)])
@@ -178,8 +180,8 @@ def test_find_all_changes():
     inst.query_results[dependency[0]["name"]] = EdbMnemonic("CURRENT", start_time, end_time, current_data, meta, info)
 
     vals = inst.find_all_changes(temperature, dependency)
-    assert vals.mean == [359.07]
-    assert vals.median == [360.0]
+    assert np.isclose(vals.mean[0], 359.07)
+    assert np.isclose(vals.median[0], 360.0)
     assert np.isclose(vals.stdev[0], 6.9818407314976785)
 
 
@@ -323,3 +325,58 @@ def test_remove_outer_points():
     etm_utils.remove_outer_points(mnem)
     assert all(orig.data['dates'][1:-1] == mnem.data['dates'])
     assert all(orig.data['euvalues'][1:-1] == mnem.data['euvalues'])
+
+
+@pytest.mark.skipif(not has_test_db(), reason='Modifies test database.')
+def test_add_new_block_db_entry():
+    query_time = datetime.datetime.now()
+
+    # mock mnem structure
+    dates = SimpleNamespace(data=datetime.datetime.now())
+    euvalues = SimpleNamespace(data=1)
+    mnem = SimpleNamespace(data={'dates': dates, 'euvalues': euvalues},
+                           stdev=0, median=1, max=2, min=1,
+                           mnemonic_identifier='test')
+
+    monitor = etm.EdbMnemonicMonitor()
+    monitor.identify_tables('nircam', 'daily')
+
+    try:
+        monitor.add_new_block_db_entry(mnem, query_time)
+        new_entries = session.query(monitor.history_table).filter(
+            monitor.history_table.mnemonic == 'test')
+        assert new_entries.count() == 1
+    finally:
+        # clean up
+        session.query(monitor.history_table).filter(
+            monitor.history_table.mnemonic == 'test').delete()
+        session.commit()
+        assert session.query(monitor.history_table).filter(
+            monitor.history_table.mnemonic == 'test').count() == 0
+
+
+@pytest.mark.skipif(not has_test_db(), reason='Modifies test database.')
+def test_add_new_every_change_db_entry():
+    # mock mnem dict
+    mnem_dict = {'test1': (datetime.datetime.now(), 1., 1., 1.),
+                 'test2': (datetime.datetime.now(), 1., 1., 1.)}
+    mnem = 'test_mnem'
+    dependency_name = 'test_dependency'
+    query_time = datetime.datetime.now()
+
+    monitor = etm.EdbMnemonicMonitor()
+    monitor.identify_tables('nircam', 'every_change')
+
+    try:
+        monitor.add_new_every_change_db_entry(
+            mnem, mnem_dict, dependency_name, query_time)
+        new_entries = session.query(monitor.history_table).filter(
+            monitor.history_table.mnemonic == 'test_mnem')
+        assert new_entries.count() == 2
+    finally:
+        # clean up
+        session.query(monitor.history_table).filter(
+            monitor.history_table.mnemonic == 'test_mnem').delete()
+        session.commit()
+        assert session.query(monitor.history_table).filter(
+            monitor.history_table.mnemonic == 'test_mnem').count() == 0
