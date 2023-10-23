@@ -1,5 +1,5 @@
 sphinx_automodapi>=0.15.0
-bokeh==2.4.3
+bokeh==3.3.0
 celery==5.3.4
 cython>=3.0.0
 django==4.2.5
