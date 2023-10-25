@@ -2,7 +2,7 @@ astropy==5.3.3
 astroquery==0.4.6
 bandit==1.7.5
 beautifulsoup4==4.12.2
-bokeh==2.4.3
+bokeh==3.3.0
 celery==5.3.4
 cryptography==41.0.4
 django==4.2.5

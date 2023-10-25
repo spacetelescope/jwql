@@ -35,8 +35,6 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 import json
 
-from . import bokeh_containers
-from jwql.website.apps.jwql import bokeh_containers
 from jwql.website.apps.jwql.monitor_pages.monitor_readnoise_bokeh import ReadNoiseFigure
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, get_base_url

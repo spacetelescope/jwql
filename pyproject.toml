@@ -17,7 +17,7 @@ dependencies = [
   "asdf",
   "astropy",
   "astroquery",
-  "bokeh<3",
+  "bokeh",
   "crds",
   "cryptography",
   "django",
