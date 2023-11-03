@@ -31,7 +31,9 @@ import numpy as np
 from jwql.database.database_interface import session
 from jwql.database.database_interface import FGSReadnoiseStats, MIRIReadnoiseStats, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.utils import get_config
 
+OUTPUTS_DIR = get_config()['outputs']
 
 class ReadnoiseMonitorData():
     """Class to hold bias data to be plotted
@@ -107,12 +109,15 @@ class ReadNoisePlotTab():
     def __init__(self, instrument, aperture):
         self.instrument = instrument
         self.aperture = aperture
+        self.ins_ap = "{}_{}".format(self.instrument.lower(), self.aperture.lower())
 
         self.db = ReadnoiseMonitorData(self.instrument, self.aperture)
 
         self.plot_readnoise_amplifers()
         self.plot_readnoise_difference_image()
         self.plot_readnoise_histogram()
+        
+        self.file_path = os.path.join(OUTPUT_DIR, "readnoise_monitor", "data", self.ins_ap)
 
         self.tab = Panel(child=column(row(*self.amp_plots),
                                       self.diff_image_plot,
@@ -133,7 +138,7 @@ class ReadNoisePlotTab():
             else:
                 readnoise_vals = np.array(list())
 
-            filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.db.query_results]
+            filenames = [result.uncal_filename.replace('_uncal.fits', '') for result in self.db.query_results]
             expstarts_iso = np.array([result.expstart for result in self.db.query_results])
             expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
             nints = [result.nints for result in self.db.query_results]
@@ -151,7 +156,7 @@ class ReadNoisePlotTab():
                                                    ("nints", "@nints"),
                                                    ("ngroups", "@ngroups"),
                                                    ("readnoise", "@readnoise")]))
-
+ 
             amp_plot.circle(x='expstarts', y='readnoise', source=source)
 
             amp_plot.xaxis.axis_label = 'Date'
@@ -168,8 +173,7 @@ class ReadNoisePlotTab():
                                       height=500, width=500, sizing_mode='scale_width')
 
         if len(self.db.query_results) != 0:
-            diff_image_png = self.db.query_results[-1].readnoise_diff_image
-            diff_image_png = os.path.join('/static', '/'.join(diff_image_png.split('/')[-6:]))
+            diff_image_png = os.path.join(self.file_path, self.db.query_results[-1].readnoise_diff_image)
             self.diff_image_plot.image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
             
         self.diff_image_plot.xaxis.visible = False
