@@ -413,7 +413,7 @@ class Readnoise():
             processed_file = file.replace("uncal", "refpix")
             if not os.path.isfile(processed_file):
                 files_to_calibrate.append(file)
-        
+
         # Run the files through the necessary pipeline steps
         outputs = run_parallel_pipeline(files_to_calibrate, "uncal", "refpix", self.instrument)
 
@@ -422,7 +422,7 @@ class Readnoise():
 
             # Get relevant header information for this file
             self.get_metadata(filename)
-            
+
             if filename in outputs:
                 processed_file = outputs[filename]
             else:
