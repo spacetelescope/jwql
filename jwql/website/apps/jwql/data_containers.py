@@ -48,6 +48,7 @@ from operator import itemgetter
 import pandas as pd
 import pyvo as vo
 import requests
+from datetime import datetime
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
@@ -1500,6 +1501,18 @@ def get_rootnames_from_query(parameters):
     """
 
     filtered_rootnames = []
+    DATE_FORMAT = "%Y/%m/%d %I:%M%p" #noqa n806
+
+    # Parse DATE_RANGE string into correct format
+    date_range = parameters[QUERY_CONFIG_KEYS.DATE_RANGE]
+    start_date_range, stop_date_range = date_range.split(" - ")
+    # Parse the strings into datetime objects
+    start_datetime = datetime.strptime(start_date_range, DATE_FORMAT)
+    stop_datetime = datetime.strptime(stop_date_range, DATE_FORMAT)
+    # store as astroquery Time objects in isot format to be used in filter (with mjd format)
+    start_time  = Time(start_datetime.isoformat(), format="isot")
+    stop_time = Time(stop_datetime.isoformat(), format="isot")
+
     # Each Query Selection is Instrument specific
     for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
         # Make sure instruments are of the proper format for the archive query
@@ -1509,6 +1522,13 @@ def get_rootnames_from_query(parameters):
         # General fields
         sort_type = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
         look_status = parameters[QUERY_CONFIG_KEYS.LOOK_STATUS]
+
+        # Get a queryset of all observations STARTING within our date range
+        current_ins_rootfileinfos = current_ins_rootfileinfos.filter(
+            expstart__gte=start_time.mjd)
+        current_ins_rootfileinfos = current_ins_rootfileinfos.filter(
+            expstart__lte=stop_time.mjd)
+
         if len(look_status) == 1:
             viewed = (look_status[0] == 'VIEWED')
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(viewed=viewed)

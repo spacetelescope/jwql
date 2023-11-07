@@ -106,6 +106,27 @@
                             </div>
                         </div>
                         <div class="col-md-2">
+                            <span class="help-block">Date Range</span>
+                            <div class="form-control" id='date_range'>
+                                <input type="text" name="date_range" style="cursor: pointer; padding: 5px 10px; width: 100%"/>
+                                <script>
+                                $(function() {
+                                    $('input[name="date_range"]').daterangepicker({
+                                        timePicker: true,
+                                        timePicker24Hour: true,
+                                        showDropdowns: true,
+                                        minDate: "2021/12/05",
+                                        startDate: "2021/12/05",
+                                        endDate: moment().startOf('hour'),
+                                        locale: {
+                                        format: 'YYYY/MM/DD hh:mmA'
+                                        }
+                                    });
+                                });
+                                </script>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
                             <span class="help-block">Sort Type</span>
                             <div class="form-control" id='sort_type'>
                                 {% for option in form.sort_type %}

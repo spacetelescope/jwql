@@ -75,7 +75,6 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_instrument_looks
 from .data_containers import get_rootnames_from_query
-from .data_containers import get_thumbnail_by_rootname
 from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
@@ -111,7 +110,8 @@ def jwql_query(request):
                 query_configs[instrument]['pupils'] = [query_unformat(i) for i in form.cleaned_data['{}_pupil'.format(instrument)]]
                 query_configs[instrument]['anomalies'] = [query_unformat(i) for i in form.cleaned_data['{}_anomalies'.format(instrument)]]
 
-            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_subarrays, all_pupils, all_anomalies = {}, {}, {}, {}, {}, {}, {}, {}, {}
+            all_filters, all_apers, all_detectors, all_exptypes = {}, {}, {}, {}
+            all_readpatts, all_gratings, all_subarrays, all_pupils, all_anomalies = {}, {}, {}, {}, {}
             for instrument in query_configs:
                 all_filters[instrument] = query_configs[instrument]['filters']
                 all_apers[instrument] = query_configs[instrument]['apertures']
@@ -126,6 +126,7 @@ def jwql_query(request):
             parameters = QUERY_CONFIG_TEMPLATE.copy()
             parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
             parameters[QUERY_CONFIG_KEYS.LOOK_STATUS] = form.cleaned_data['look_status']
+            parameters[QUERY_CONFIG_KEYS.DATE_RANGE] = form.cleaned_data['date_range']
             parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
             parameters[QUERY_CONFIG_KEYS.SORT_TYPE] = form.cleaned_data['sort_type']
             parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
@@ -994,7 +995,8 @@ def explore_image(request, inst, file_root, filetype):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
+def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', low_lim=None, high_lim=None,
+                       ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
