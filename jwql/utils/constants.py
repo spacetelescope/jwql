@@ -235,9 +235,11 @@ FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'preview_images', 'thumbnails',
 FILTERS_PER_INSTRUMENT = {'fgs': [],
                           'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W', 'F1500W',
                                    'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W', 'F2550WR', 'FLENS', 'FND', 'OPAQUE', 'P750L'],
-                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M', 'F187N', 'F200W', 'F210M', 'F212N',
-                                     'WLP4', 'F277W', 'F356W', 'F444W', 'F300M', 'F335M', 'F360M', 'F410M', 'F430M', 'F460M', 'F480M', 'F250M', 'F322W2'],
-                          'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F200W', 'F277W', 'F356W', 'F380M', 'F430M', 'F444W', 'F480M', 'GR150C', 'GR150R'],
+                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M', 'F187N', 'F200W', 'F210M',
+                                     'F212N', 'WLP4', 'F277W', 'F356W', 'F444W', 'F300M', 'F335M', 'F360M', 'F410M', 'F430M',
+                                     'F460M', 'F480M', 'F250M', 'F322W2'],
+                          'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F200W', 'F277W', 'F356W', 'F380M', 'F430M', 'F444W',
+                                     'F480M', 'GR150C', 'GR150R'],
                           'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F110W', 'F140X', 'F170LP', 'F290LP', 'OPAQUE', 'P750L']}
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
@@ -435,7 +437,7 @@ PUPILS_PER_INSTRUMENT = {'nircam': ['CLEAR', 'FLAT', 'F162M', 'F164N', 'GDHS0', 
 # Keep keys defined via class as they are used many places with potential mispellings
 # Keys are in sort order from general to instrument specific, then alphabetical
 # within instrument specific fields.
-class QUERY_CONFIG_KEYS:
+class QueryConfigKeys:
     INSTRUMENTS = "INSTRUMENTS"
     PROPOSAL_CATEGORY = "PROPOSAL_CATEGORY"
     LOOK_STATUS = "LOOK_STATUS"
@@ -455,21 +457,21 @@ class QUERY_CONFIG_KEYS:
 
 # Template for parameters to be stored in "query_config" session for query_page
 QUERY_CONFIG_TEMPLATE = {
-    QUERY_CONFIG_KEYS.INSTRUMENTS: [],
-    QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY: [],
-    QUERY_CONFIG_KEYS.LOOK_STATUS: [],
-    QUERY_CONFIG_KEYS.NUM_PER_PAGE: 100,
-    QUERY_CONFIG_KEYS.SORT_TYPE: 'Recent',
-    QUERY_CONFIG_KEYS.DATE_RANGE: "",
-    QUERY_CONFIG_KEYS.ANOMALIES: {},
-    QUERY_CONFIG_KEYS.APERTURES: {},
-    QUERY_CONFIG_KEYS.DETECTORS: {},
-    QUERY_CONFIG_KEYS.EXP_TYPES: {},
-    QUERY_CONFIG_KEYS.FILTERS: {},
-    QUERY_CONFIG_KEYS.GRATINGS: {},
-    QUERY_CONFIG_KEYS.PUPILS: {},
-    QUERY_CONFIG_KEYS.READ_PATTS: {},
-    QUERY_CONFIG_KEYS.SUBARRAYS: {}
+    QueryConfigKeys.INSTRUMENTS: [],
+    QueryConfigKeys.PROPOSAL_CATEGORY: [],
+    QueryConfigKeys.LOOK_STATUS: [],
+    QueryConfigKeys.NUM_PER_PAGE: 100,
+    QueryConfigKeys.SORT_TYPE: 'Recent',
+    QueryConfigKeys.DATE_RANGE: "",
+    QueryConfigKeys.ANOMALIES: {},
+    QueryConfigKeys.APERTURES: {},
+    QueryConfigKeys.DETECTORS: {},
+    QueryConfigKeys.EXP_TYPES: {},
+    QueryConfigKeys.FILTERS: {},
+    QueryConfigKeys.GRATINGS: {},
+    QueryConfigKeys.PUPILS: {},
+    QueryConfigKeys.READ_PATTS: {},
+    QueryConfigKeys.SUBARRAYS: {}
 }
 
 # RAPID-style readout patterns for each instrument. Added so we can

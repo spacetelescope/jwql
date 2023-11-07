@@ -61,7 +61,7 @@ from sqlalchemy import inspect
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -124,20 +124,20 @@ def jwql_query(request):
                 all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
             parameters = QUERY_CONFIG_TEMPLATE.copy()
-            parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
-            parameters[QUERY_CONFIG_KEYS.LOOK_STATUS] = form.cleaned_data['look_status']
-            parameters[QUERY_CONFIG_KEYS.DATE_RANGE] = form.cleaned_data['date_range']
-            parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
-            parameters[QUERY_CONFIG_KEYS.SORT_TYPE] = form.cleaned_data['sort_type']
-            parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
-            parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
-            parameters[QUERY_CONFIG_KEYS.FILTERS] = all_filters
-            parameters[QUERY_CONFIG_KEYS.DETECTORS] = all_detectors
-            parameters[QUERY_CONFIG_KEYS.EXP_TYPES] = all_exptypes
-            parameters[QUERY_CONFIG_KEYS.READ_PATTS] = all_readpatts
-            parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
-            parameters[QUERY_CONFIG_KEYS.SUBARRAYS] = all_subarrays
-            parameters[QUERY_CONFIG_KEYS.PUPILS] = all_pupils
+            parameters[QueryConfigKeys.INSTRUMENTS] = form.cleaned_data['instrument']
+            parameters[QueryConfigKeys.LOOK_STATUS] = form.cleaned_data['look_status']
+            parameters[QueryConfigKeys.DATE_RANGE] = form.cleaned_data['date_range']
+            parameters[QueryConfigKeys.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
+            parameters[QueryConfigKeys.SORT_TYPE] = form.cleaned_data['sort_type']
+            parameters[QueryConfigKeys.ANOMALIES] = all_anomalies
+            parameters[QueryConfigKeys.APERTURES] = all_apers
+            parameters[QueryConfigKeys.FILTERS] = all_filters
+            parameters[QueryConfigKeys.DETECTORS] = all_detectors
+            parameters[QueryConfigKeys.EXP_TYPES] = all_exptypes
+            parameters[QueryConfigKeys.READ_PATTS] = all_readpatts
+            parameters[QueryConfigKeys.GRATINGS] = all_gratings
+            parameters[QueryConfigKeys.SUBARRAYS] = all_subarrays
+            parameters[QueryConfigKeys.PUPILS] = all_pupils
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
@@ -482,12 +482,12 @@ def archive_thumbnails_query_ajax(request):
     filtered_rootnames = get_rootnames_from_query(parameters)
 
     paginator = Paginator(filtered_rootnames,
-                          parameters[QUERY_CONFIG_KEYS.NUM_PER_PAGE])
+                          parameters[QueryConfigKeys.NUM_PER_PAGE])
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
     data = thumbnails_query_ajax(page_obj.object_list)
-    data['thumbnail_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+    data['thumbnail_sort'] = parameters[QueryConfigKeys.SORT_TYPE]
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     # add top level parameters for summarizing
@@ -511,7 +511,7 @@ def archive_thumbnails_query_ajax(request):
     data['total_pages'] = paginator.num_pages
     data['total_files'] = paginator.count
 
-    request.session['image_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+    request.session['image_sort'] = parameters[QueryConfigKeys.SORT_TYPE]
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
