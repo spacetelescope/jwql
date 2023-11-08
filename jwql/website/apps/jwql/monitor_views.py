@@ -41,11 +41,13 @@ from . import bokeh_containers
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamClawStats
 from jwql.website.apps.jwql import bokeh_containers
+from jwql.website.apps.jwql.monitor_pages.monitor_readnoise_bokeh import ReadNoiseFigure
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, get_base_url
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import msata_monitor
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import wata_monitor
 from jwql.utils import monitor_utils
+
 
 CONFIG = get_config()
 FILESYSTEM_DIR = os.path.join(CONFIG['jwql_dir'], 'filesystem')
@@ -100,7 +102,7 @@ def bad_pixel_monitor(request, inst):
 
     context = {
         'inst': inst,
-        }
+    }
 
     return render(request, template, context)
 
@@ -283,7 +285,7 @@ def readnoise_monitor(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get the html and JS needed to render the readnoise tab plots
-    tabs_components = bokeh_containers.readnoise_monitor_tabs(inst)
+    tabs_components = ReadNoiseFigure(inst).tab_components
 
     template = "readnoise_monitor.html"
 
