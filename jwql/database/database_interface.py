@@ -573,7 +573,7 @@ MONITOR_TABLES = {
             NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
             NIRSpecEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats,
             FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats],
-    'claw': [NIRCamClawQueryHistory, NIRCamClawStats],}
+    'claw': [NIRCamClawQueryHistory, NIRCamClawStats], }
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)
