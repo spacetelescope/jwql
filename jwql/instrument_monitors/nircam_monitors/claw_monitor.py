@@ -32,7 +32,6 @@ from astropy.stats import gaussian_fwhm_to_sigma, sigma_clipped_stats
 from astropy.time import Time
 from astroquery.mast import Mast
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -43,6 +42,8 @@ from jwql.database.database_interface import NIRCamClawQueryHistory, NIRCamClawS
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+
+matplotlib.use('Agg')
 
 
 class ClawMonitor():
@@ -62,7 +63,7 @@ class ClawMonitor():
     outfile : str
         The name of the output plot for a given claw stack combination.
 
-    output_dir : str
+    output_dir_claws : str
         Path into which claw stack plots will be placed.
 
     output_dir_bkg : str
@@ -74,7 +75,7 @@ class ClawMonitor():
     query_end : float
         MJD end date to use for querying MAST.
 
-    wv : str
+    channel : str
         NIRCam channel for a given claw stack, either ``SW`` or ``LW``.
 
     proposal : str
@@ -101,8 +102,8 @@ class ClawMonitor():
         """
 
         # Define and setup the output directories for the claw and background plots.
-        self.output_dir = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
-        ensure_dir_exists(self.output_dir)
+        self.output_dir_claws = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
+        ensure_dir_exists(self.output_dir_claws)
         self.output_dir_bkg = os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
         ensure_dir_exists(self.output_dir_bkg)
 
@@ -185,7 +186,7 @@ class ClawMonitor():
         """
 
         # Get detector order and plot settings, depending on the wavelength channel
-        if self.wv == 'SW':
+        if self.channel == 'SW':
             detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']  # in on-sky order, don't change order
             cols, rows = 5, 2
             grid = plt.GridSpec(rows, cols, hspace=.2, wspace=.2, width_ratios=[1, 1, 1, 1, .1])
@@ -207,20 +208,20 @@ class ClawMonitor():
             files = self.files[self.detectors == det]
             # Remove missing files; to avoid memory/speed issues, only use the first 20 files,
             # which should be plenty to see any claws.
-            files = [f for f in files if os.path.exists(f)][0:20]
+            files = [fname for fname in files if os.path.exists(fname)][0:20]
             stack = np.ma.ones((len(files), 2048, 2048))
-            for n, f in enumerate(files):
-                logging.info('Working on: {}'.format(f))
-                h = fits.open(f)
+            for n, fname in enumerate(files):
+                logging.info('Working on: {}'.format(fname))
+                hdu = fits.open(fname)
 
                 # Get plot label info from first image
                 if n == 0:
-                    obs_start = '{}T{}'.format(h[0].header['DATE-OBS'], h[0].header['TIME-OBS'])
-                    pa_v3 = h[1].header['PA_V3']
+                    obs_start = '{}T{}'.format(hdu[0].header['DATE-OBS'], hdu[0].header['TIME-OBS'])
+                    pa_v3 = hdu[1].header['PA_V3']
 
                 # Make source segmap, add the masked data to the stack, and get background stats
-                data = h['SCI'].data
-                dq = h['DQ'].data
+                data = hdu['SCI'].data
+                dq = hdu['DQ'].data
                 threshold = detect_threshold(data, 1.0)
                 sigma = 3.0 * gaussian_fwhm_to_sigma  # FWHM = 3.
                 kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
@@ -234,18 +235,18 @@ class ClawMonitor():
 
                 # Add this file's stats to the claw database table. Can't insert values with numpy.float32
                 # datatypes into database so need to change the datatypes of these values.
-                claw_db_entry = {'filename': os.path.basename(f),
+                claw_db_entry = {'filename': os.path.basename(fname),
                                  'proposal': self.proposal,
                                  'obs': self.obs,
                                  'detector': det.upper(),
                                  'filter': self.fltr.upper(),
                                  'pupil': self.pupil.upper(),
-                                 'expstart': '{}T{}'.format(h[0].header['DATE-OBS'], h[0].header['TIME-OBS']),
-                                 'expstart_mjd': h[0].header['EXPSTART'],
-                                 'effexptm': h[0].header['EFFEXPTM'],
-                                 'ra': h[1].header['RA_V1'],
-                                 'dec': h[1].header['DEC_V1'],
-                                 'pa_v3': h[1].header['PA_V3'],
+                                 'expstart': '{}T{}'.format(hdu[0].header['DATE-OBS'], hdu[0].header['TIME-OBS']),
+                                 'expstart_mjd': hdu[0].header['EXPSTART'],
+                                 'effexptm': hdu[0].header['EFFEXPTM'],
+                                 'ra': hdu[1].header['RA_V1'],
+                                 'dec': hdu[1].header['DEC_V1'],
+                                 'pa_v3': hdu[1].header['PA_V3'],
                                  'mean': float(mean),
                                  'median': float(med),
                                  'stddev': float(stddev),
@@ -255,7 +256,7 @@ class ClawMonitor():
                                  }
                 with engine.begin() as connection:
                     connection.execute(self.stats_table.__table__.insert(), claw_db_entry)
-                h.close()
+                hdu.close()
 
             # Make the normalized skyflat for this detector
             skyflat = np.ma.median(stack, axis=0)
@@ -264,7 +265,7 @@ class ClawMonitor():
             skyflat[~np.isfinite(skyflat)] = 1  # fill missing values
 
             # Add the skyflat for this detector to the claw stack plot
-            if (self.wv == 'SW') & (i > 3):  # skip colobar axis
+            if (self.channel == 'SW') & (i > 3):  # skip colobar axis
                 idx = i + 1
             else:
                 idx = i
@@ -274,7 +275,7 @@ class ClawMonitor():
                 ax.imshow(skyflat, cmap='coolwarm', vmin=999, vmax=999, origin='lower')
             elif (len(skyflat[skyflat != 1]) > 0) & (found_scale is False):  # match scaling to first non-empty stack
                 mean, med, stddev = sigma_clipped_stats(skyflat)
-                vmin, vmax =  med - 3 * stddev, med + 3 * stddev
+                vmin, vmax = med - 3 * stddev, med + 3 * stddev
                 found_scale = True
                 ax.set_title(det, fontsize=fs)
                 im = ax.imshow(skyflat, cmap='coolwarm', vmin=vmin, vmax=vmax, origin='lower')
@@ -340,25 +341,25 @@ class ClawMonitor():
         self.query_end_mjd = Time.now().mjd
         self.query_start_mjd = self.query_end_mjd - 2
         self.query_start_mjd, self.query_end_mjd = 59715.28951771492, 59715.29771992559  # todo remove
-        t = self.query_mast()
-        logging.info('{} files found between {} and {}.'.format(len(t), self.query_start_mjd, self.query_end_mjd))
+        mast_table = self.query_mast()
+        logging.info('{} files found between {} and {}.'.format(len(mast_table), self.query_start_mjd, self.query_end_mjd))
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
-        combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in t])
-        t['combos'] = combos
+        combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in mast_table])
+        mast_table['combos'] = combos
         monitor_run = False
         for combo in np.unique(combos):
-            tt = t[t['combos'] == combo]
-            if 'long' in tt['filename'][0]:
-                self.wv = 'LW'
+            mast_table_combo = mast_table[mast_table['combos'] == combo]
+            if 'long' in mast_table_combo['filename'][0]:
+                self.channel = 'LW'
             else:
-                self.wv = 'SW'
+                self.channel = 'SW'
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
-            self.outfile = os.path.join(self.output_dir, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
+            self.outfile = os.path.join(self.output_dir_claws, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
                                         self.obs, self.fltr, self.pupil).lower())
-            #self.files = np.array([filesystem_path(row['filename']) for row in tt])  # todo uncomment?
-            self.files = np.array([os.path.join(get_config()['filesystem'], 'public', filesystem_path(row['filename'])) for row in tt]) # todo remove
-            self.detectors = np.array(tt['detector'])
+            #self.files = np.array([filesystem_path(row['filename']) for row in mast_table_combo])  # todo uncomment?
+            self.files = np.array([os.path.join(get_config()['filesystem'], 'public', filesystem_path(row['filename'])) for row in mast_table_combo]) # todo remove
+            self.detectors = np.array(mast_table_combo['detector'])
             if not os.path.exists(self.outfile):
                 logging.info('Working on {}'.format(self.outfile))
                 self.process()
@@ -367,7 +368,7 @@ class ClawMonitor():
                 logging.info('{} already exists'.format(self.outfile))
 
         # Update the background trending plots, if any new data exists
-        if len(t) > 0:
+        if len(mast_table) > 0:
             logging.info('Making background trending plots.')
             self.make_background_plots()
 
