@@ -218,6 +218,7 @@ def save_page_navigation_data_ajax(request):
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
+
 def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 

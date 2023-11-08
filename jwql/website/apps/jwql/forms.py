@@ -62,7 +62,7 @@ from jwql.website.apps.jwql.models import Anomalies
 from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT,
                                   EXP_TYPE_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT,
                                   GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND,
-                                  READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES,  SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
+                                  READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
                                   LOOK_OPTIONS, SORT_OPTIONS, PROPOSAL_CATEGORIES)
 from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
 

@@ -406,8 +406,8 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
     untracked_suffixes = set(all_suffixes)
     for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
         if 'crf' not in poss_suffix:
-            if (poss_suffix in all_suffixes
-                    and poss_suffix not in suffixes):
+            if (poss_suffix in all_suffixes and
+                poss_suffix not in suffixes):
                 suffixes.append(poss_suffix)
                 untracked_suffixes.remove(poss_suffix)
         else:
@@ -417,8 +417,8 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
             # So in this case, we strip the e.g. o001 from the
             # suffixes and check which list elements match.
             for image_suffix in all_suffixes:
-                if (image_suffix.endswith(poss_suffix)
-                        and image_suffix not in suffixes):
+                if (image_suffix.endswith(poss_suffix) and
+                    image_suffix not in suffixes):
                     suffixes.append(image_suffix)
                     untracked_suffixes.remove(image_suffix)
 
@@ -1407,7 +1407,7 @@ def get_proposals_by_category(instrument):
     unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
 
     # Make a dictionary of {program: category} to pull from
-    proposals_by_category = {d['program']:d['category'] for d in unique_results}
+    proposals_by_category = {d['program']: d['category'] for d in unique_results}
 
     return proposals_by_category
 
@@ -1504,7 +1504,7 @@ def get_rootnames_from_query(parameters):
     """
 
     filtered_rootnames = []
-    DATE_FORMAT = "%Y/%m/%d %I:%M%p" #noqa n806
+    DATE_FORMAT = "%Y/%m/%d %I:%M%p"  # noqa n806
 
     # Parse DATE_RANGE string into correct format
     date_range = parameters[QueryConfigKeys.DATE_RANGE]
@@ -1513,7 +1513,7 @@ def get_rootnames_from_query(parameters):
     start_datetime = datetime.strptime(start_date_range, DATE_FORMAT)
     stop_datetime = datetime.strptime(stop_date_range, DATE_FORMAT)
     # store as astroquery Time objects in isot format to be used in filter (with mjd format)
-    start_time  = Time(start_datetime.isoformat(), format="isot")
+    start_time = Time(start_datetime.isoformat(), format="isot")
     stop_time = Time(stop_datetime.isoformat(), format="isot")
 
     # Each Query Selection is Instrument specific
@@ -2001,6 +2001,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict['exp_groups'] = sorted(exp_groups)
 
     return data_dict
+
 
 def thumbnails_query_ajax(rootnames):
     """Generate a page that provides data necessary to render the
