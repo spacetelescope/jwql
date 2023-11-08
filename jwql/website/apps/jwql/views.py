@@ -79,14 +79,11 @@ from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .data_containers import thumbnails_date_range_ajax
 from .forms import JwqlQueryForm
 from .forms import FileSearchForm
 if not os.environ.get("READTHEDOCS"):
-    from .models import Observation, RootFileInfo
+    from .models import RootFileInfo
 from astropy.io import fits
-from astropy.time import Time
-import astropy.units as u
 
 
 def jwql_query(request):
@@ -220,111 +217,6 @@ def save_page_navigation_data_ajax(request):
 
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-
-
-def archive_date_range(request, inst):
-    """Generate the page for date range images
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    template = 'archive_date_range.html'
-    sort_type = request.session.get('image_sort', 'Recent')
-    group_type = request.session.get('image_group', 'Exposure')
-    context = {'inst': inst,
-               'base_url': get_base_url(),
-               'sort': sort_type,
-               'group': group_type}
-
-    return render(request, template, context)
-
-
-def archive_date_range_ajax(request, inst, start_date, stop_date):
-    """Generate the page listing all archived images within the inclusive date range for all proposals
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-    start_date : str
-        Start date for date range
-    stop_date : str
-        stop date for date range
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    # Calculate start date/time in MJD format to begin our range
-    inclusive_start_time = Time(start_date)
-
-    # Add a minute to the stop time and mark it 'exclusive' for code clarity,
-    # doing this to get all seconds selected minute
-    exclusive_stop_time = Time(stop_date) + (1 * u.minute)
-
-    # Get a queryset of all observations STARTING WITHIN our date range
-    begin_after_start = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsstart__gte=inclusive_start_time.mjd)
-    all_entries_beginning_in_range = begin_after_start.filter(
-        obsstart__lt=exclusive_stop_time.mjd)
-
-    # Get a queryset of all observations ENDING WITHIN our date range
-    end_after_start = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsend__gte=inclusive_start_time.mjd)
-    all_entries_ending_in_range = end_after_start.filter(
-        obsend__lt=exclusive_stop_time.mjd)
-
-    # Get a queryset of all observations SPANNING
-    # (starting before and ending after) our date range.
-    # Bump our window out a few days to catch hypothetical
-    # observations that last over 24 hours.
-    # The larger the window the more time the query takes so keeping it tight.
-    two_days_before_start_time = Time(start_date) - (2 * u.day)
-    two_days_after_end_time = Time(stop_date) + (3 * u.day)
-    end_after_stop = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsend__gte=two_days_after_end_time.mjd)
-    all_entries_spanning_range = end_after_stop.filter(
-        obsstart__lt=two_days_before_start_time.mjd)
-
-    obs_beginning = [observation for observation in all_entries_beginning_in_range]
-    obs_ending = [observation for observation in all_entries_ending_in_range]
-    obs_spanning = [observation for observation in all_entries_spanning_range]
-
-    # Create a single list of all pertinent observations
-    all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
-    # Get all thumbnails that occurred within the time frame for these observations
-    data = thumbnails_date_range_ajax(
-        inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
-    data['thumbnail_group'] = request.session.get("image_group", "Exposure")
-
-    # Create Dictionary of Rootnames with expstart
-    save_page_navigation_data(request, data)
-    return JsonResponse(data, json_dumps_params={'indent': 2})
-
 
 def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
