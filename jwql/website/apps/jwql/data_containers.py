@@ -406,10 +406,10 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
     untracked_suffixes = set(all_suffixes)
     for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
         if 'crf' not in poss_suffix:
-            if (poss_suffix in all_suffixes and
-                poss_suffix not in suffixes):
-                suffixes.append(poss_suffix)
-                untracked_suffixes.remove(poss_suffix)
+            if (poss_suffix in all_suffixes
+                and poss_suffix not in suffixes):
+                    suffixes.append(poss_suffix)
+                    untracked_suffixes.remove(poss_suffix)
         else:
             # EXPOSURE_PAGE_SUFFIX_ORDER contains crf and crfints,
             # but the actual suffixes in the data will be e.g. o001_crf,
