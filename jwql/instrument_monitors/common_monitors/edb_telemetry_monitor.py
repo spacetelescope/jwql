@@ -660,8 +660,8 @@ class EdbMnemonicMonitor():
 
         # Set up directory structure to hold the saved plots
         config = get_config()
-        base_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
-        ensure_dir_exists(base_dir)
+        outputs_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
+        ensure_dir_exists(outputs_dir)
 
         # Case where the user is requesting the monitor run for some subset of
         # mnemonics for some non-standard time span
@@ -677,7 +677,7 @@ class EdbMnemonicMonitor():
                     monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                     # Define the output directory in which the html files will be saved
-                    self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                    self.plot_output_dir = os.path.join(outputs_dir, instrument_name)
                     ensure_dir_exists(self.plot_output_dir)
 
                     # File of mnemonics to monitor
@@ -710,7 +710,7 @@ class EdbMnemonicMonitor():
                 mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
-                self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                self.plot_output_dir = os.path.join(outputs_dir, instrument_name)
                 ensure_dir_exists(self.plot_output_dir)
 
                 # Read in file with nominal list of mnemonics

@@ -132,7 +132,7 @@ class Dark():
 
     Attributes
     ----------
-    output_dir : str
+    working_dir : str
         Path into which outputs will be placed
 
     data_dir : str
@@ -515,7 +515,7 @@ class Dark():
         else:
             filename = query.all()[0].baseline_file
             # Specify the full path
-            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
+            filename = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
         session.close()
@@ -889,7 +889,7 @@ class Dark():
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
         # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
+        self.working_dir = os.path.join(get_config()['working'], 'dark_monitor')
 
         # Read in config file that defines the thresholds for the number
         # of dark files that must be present in order for the monitor to run
@@ -1004,8 +1004,8 @@ class Dark():
 
                         if monitor_run:
                             # Set up directories for the copied data
-                            ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                            self.data_dir = os.path.join(self.output_dir,
+                            ensure_dir_exists(os.path.join(self.working_dir, 'data'))
+                            self.data_dir = os.path.join(self.working_dir,
                                                          'data/{}_{}'.format(self.instrument.lower(),
                                                                              self.aperture.lower()))
                             ensure_dir_exists(self.data_dir)

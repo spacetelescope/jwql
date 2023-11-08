@@ -230,7 +230,7 @@ FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'fgs': ['FGS_INTFLAT']}
 
 # output subdirectories to keep track of via the filesytem monitor
-FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'preview_images', 'thumbnails', 'all']
+FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'working', 'preview_images', 'thumbnails', 'all']
 
 FILTERS_PER_INSTRUMENT = {'fgs': [],
                           'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W', 'F1500W',
