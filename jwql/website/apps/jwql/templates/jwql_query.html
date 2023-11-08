@@ -73,6 +73,29 @@
             <form class='form-horizontal' id='searchform' method='post'>
                 <hr class="col-md-12">
                 <div class='instrument-form-group' id='instrument_form_group'>
+                    <div style="display: flex" id="DATERANGE">
+                        <div class="col-md-3">
+                            <span class="help-block">Date Range</span>
+                            <div class="form-control" id='date_range'>
+                                <input type="text" name="date_range" style="cursor: pointer; padding: 5px 10px; width: 100%"/>
+                                <script>
+                                $(function() {
+                                    $('input[name="date_range"]').daterangepicker({
+                                        timePicker: true,
+                                        timePicker24Hour: true,
+                                        showDropdowns: true,
+                                        minDate: "2021/12/05",
+                                        startDate: "2021/12/05",
+                                        endDate: moment().startOf('hour'),
+                                        locale: {
+                                        format: 'YYYY/MM/DD hh:mmA'
+                                        }
+                                    });
+                                });
+                                </script>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Initial INSTRUMENT Checkbox -->
                     <div style="display: flex" id="GENERAL">
                         <div class="col-md-2">
@@ -103,27 +126,6 @@
                                     {{ option }}
                                 </div>
                                 {% endfor %}
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <span class="help-block">Date Range</span>
-                            <div class="form-control" id='date_range'>
-                                <input type="text" name="date_range" style="cursor: pointer; padding: 5px 10px; width: 100%"/>
-                                <script>
-                                $(function() {
-                                    $('input[name="date_range"]').daterangepicker({
-                                        timePicker: true,
-                                        timePicker24Hour: true,
-                                        showDropdowns: true,
-                                        minDate: "2021/12/05",
-                                        startDate: "2021/12/05",
-                                        endDate: moment().startOf('hour'),
-                                        locale: {
-                                        format: 'YYYY/MM/DD hh:mmA'
-                                        }
-                                    });
-                                });
-                                </script>
                             </div>
                         </div>
                         <div class="col-md-2">
