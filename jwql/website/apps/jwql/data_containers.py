@@ -1396,7 +1396,7 @@ def get_proposals_by_category(instrument):
 
     service = "Mast.Jwst.Filtered.{}".format(instrument)
     params = {"columns": "program, category",
-              "filters": []}
+              "filters": [{'paramName':'instrume', 'values':[instrument]}]}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
 
