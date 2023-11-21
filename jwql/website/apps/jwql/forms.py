@@ -59,9 +59,10 @@ from jwql.edb.engineering_database import is_valid_mnemonic
 from jwql.website.apps.jwql.models import Anomalies
 
 
-from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT, EXP_TYPE_PER_INSTRUMENT,
-                                  FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT, GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE,
-                                  JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
+from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT,
+                                  EXP_TYPE_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT,
+                                  GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND,
+                                  READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
                                   LOOK_OPTIONS, SORT_OPTIONS, PROPOSAL_CATEGORIES)
 from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
 
@@ -143,6 +144,8 @@ class JwqlQueryForm(BaseForm):
     look_choices = [(query_format(choice), query_format(choice)) for choice in LOOK_OPTIONS]
     look_status = forms.MultipleChoiceField(
         required=False, choices=look_choices, widget=forms.CheckboxSelectMultiple)
+
+    date_range = forms.CharField(required=True)
 
     cat_choices = [(query_format(choice), query_format(choice)) for choice in PROPOSAL_CATEGORIES]
     proposal_category = forms.MultipleChoiceField(
@@ -304,8 +307,10 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             proposal_string = '{:05d}'.format(int(search))
-            search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
-            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string),
+                                                '*', '*{}*.fits'.format(proposal_string))
+            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string),
+                                                     '*', '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
 
@@ -335,9 +340,10 @@ class FileSearchForm(forms.Form):
 
                 if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
-                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
+                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:],
+                                                     all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
-                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # nosec
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # noqa
 
                 self.instrument = all_instruments[0]
             else:
