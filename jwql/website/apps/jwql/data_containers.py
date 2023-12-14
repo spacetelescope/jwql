@@ -2088,7 +2088,6 @@ def thumbnails_query_ajax(rootnames):
     visits = [data_dict['file_data'][rootname]['filename_dict']['visit'] for
                  rootname in list(data_dict['file_data'].keys())]
 
-    #SAPP TODO ADD VISIT HERE IN DROPDOWN MENUS
     dropdown_menus = {'instrument': instruments,
                       'detector': sorted(detectors),
                       'proposal': sorted(proposals),
