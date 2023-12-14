@@ -1968,23 +1968,29 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors, proposals = [], []
+    detectors, proposals, visits = [], [], []
     for rootname in list(data_dict['file_data'].keys()):
         proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
         try:  # Some rootnames cannot parse out detectors
             detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
         except KeyError:
             pass
+        try:  # Some rootnames cannot parse out visit
+            visits.append(data_dict['file_data'][rootname]['filename_dict']['visit'])
+        except KeyError:
+            pass
 
     if proposal is not None:
         dropdown_menus = {'detector': sorted(detectors),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(exp_types)}
+                          'exp_type': sorted(exp_types),
+                          'visit': sorted(visits)}
     else:
         dropdown_menus = {'detector': sorted(detectors),
                           'proposal': sorted(proposals),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(exp_types)}
+                          'exp_type': sorted(exp_types),
+                          'visit': sorted(visits)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -2079,10 +2085,14 @@ def thumbnails_query_ajax(rootnames):
                    rootname in list(data_dict['file_data'].keys())]
     proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
                  rootname in list(data_dict['file_data'].keys())]
+    visits = [data_dict['file_data'][rootname]['filename_dict']['visit'] for
+                 rootname in list(data_dict['file_data'].keys())]
 
+    #SAPP TODO ADD VISIT HERE IN DROPDOWN MENUS
     dropdown_menus = {'instrument': instruments,
-                      'detector': detectors,
-                      'proposal': proposals}
+                      'detector': sorted(detectors),
+                      'proposal': sorted(proposals),
+                      'visit': sorted(visits)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
