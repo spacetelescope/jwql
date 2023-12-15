@@ -26,6 +26,7 @@ from bokeh.models import Panel, Tabs  # bokeh <= 3.0
 from bokeh.models import ColumnDataSource, HoverTool
 # from bokeh.models import TabPanel, Tabs  # bokeh >= 3.0
 from bokeh.plotting import figure
+from django.templatetags.static import static
 import numpy as np
 
 from jwql.database.database_interface import session
@@ -114,7 +115,7 @@ class ReadNoisePlotTab():
 
         self.db = ReadnoiseMonitorData(self.instrument, self.aperture)
 
-        self.file_path = os.path.join(OUTPUTS_DIR, "readnoise_monitor", "data", self.ins_ap)
+        self.file_path = static(os.path.join("outputs", "readnoise_monitor", "data", self.ins_ap))
 
         self.plot_readnoise_amplifers()
         self.plot_readnoise_difference_image()
