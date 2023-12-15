@@ -114,11 +114,11 @@ class ReadNoisePlotTab():
 
         self.db = ReadnoiseMonitorData(self.instrument, self.aperture)
 
+        self.file_path = os.path.join(OUTPUTS_DIR, "readnoise_monitor", "data", self.ins_ap)
+
         self.plot_readnoise_amplifers()
         self.plot_readnoise_difference_image()
         self.plot_readnoise_histogram()
-
-        self.file_path = os.path.join(OUTPUT_DIR, "readnoise_monitor", "data", self.ins_ap)
 
         self.tab = Panel(child=column(row(*self.amp_plots),
                                       self.diff_image_plot,
