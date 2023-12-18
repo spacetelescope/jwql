@@ -356,14 +356,20 @@ class ClawMonitor():
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
             self.outfile = os.path.join(self.output_dir_claws, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
                                         self.obs, self.fltr, self.pupil).lower())
-            self.files = np.array([filesystem_path(row['filename']) for row in mast_table_combo])
+            existing_files = []
+            for row in mast_table_combo:
+                try:
+                    existing_files.append(filesystem_path(row['filename']))
+                except:
+                    pass
+            self.files = np.array(existing_files)
             self.detectors = np.array(mast_table_combo['detector'])
-            if not os.path.exists(self.outfile):
+            if (not os.path.exists(self.outfile)) & (len(existing_files) == len(mast_table_combo)):
                 logging.info('Working on {}'.format(self.outfile))
                 self.process()
                 monitor_run = True
             else:
-                logging.info('{} already exists'.format(self.outfile))
+                logging.info('{} already exists or is missing cal files ({}/{} files found).'.format(self.outfile, len(existing_files), len(mast_table_combo)))
 
         # Update the background trending plots, if any new data exists
         if len(mast_table) > 0:
