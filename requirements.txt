@@ -25,7 +25,7 @@ pytest-mock==3.11.1
 pyvo==1.4.2
 pyyaml==6.0.1
 redis==5.0.0
-ruff==0.1.6
+ruff==0.1.8
 scipy==1.11.4
 selenium==4.13.0
 setuptools==68.2.2
