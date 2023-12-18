@@ -26,7 +26,7 @@ pyvo==1.4.2
 pyyaml==6.0.1
 redis==5.0.0
 ruff==0.0.292
-scipy==1.9.3
+scipy==1.11.4
 selenium==4.13.0
 setuptools==68.2.2
 sphinx==7.2.6
