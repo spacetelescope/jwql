@@ -34,6 +34,7 @@ from astropy.time import Time
 from bokeh.resources import CDN, INLINE
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.templatetags.static import static
 import json
 import pandas as pd
 
@@ -70,7 +71,8 @@ def background_monitor(request):
     template = "background_monitor.html"
 
     # Get the background trending filters to display
-    output_dir_bkg = os.path.join(get_config()['outputs'], 'claw_monitor', 'backgrounds')
+    server_name = get_config()['outputs'].split("outputs/", 1)[1]
+    output_dir_bkg = static(os.path.join("outputs", server_name, "claw_monitor", "backgrounds"))
     fltrs = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']
     bkg_plots = [os.path.join(output_dir_bkg, '{}_backgrounds.png'.format(fltr)) for fltr in fltrs]
 
@@ -156,7 +158,10 @@ def claw_monitor(request):
     query = session.query(NIRCamClawStats.expstart_mjd, NIRCamClawStats.skyflat_filename).order_by(NIRCamClawStats.expstart_mjd.desc()).all()
     df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
     recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 1000]))  # todo change from 1000 to 10
-    output_dir_claws = os.path.join(get_config()['outputs'], 'claw_monitor', 'claw_stacks')
+    
+    server_name = get_config()['outputs'].split("outputs/", 1)[1]
+    output_dir_claws = static(os.path.join("outputs", server_name, "claw_monitor", "claw_stacks"))
+
     claw_stacks = [os.path.join(output_dir_claws, filename) for filename in recent_files]
 
     context = {
