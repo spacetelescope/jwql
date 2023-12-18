@@ -509,6 +509,8 @@ NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_his
 NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
 NIRSpecTAQueryHistory = monitor_orm_factory('nirspec_ta_query_history')
 NIRSpecTAStats = monitor_orm_factory('nirspec_ta_stats')
+NIRCamClawQueryHistory = monitor_orm_factory('nircam_claw_query_history')
+NIRCamClawStats = monitor_orm_factory('nircam_claw_stats')
 
 INSTRUMENT_TABLES = {
     'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
@@ -516,7 +518,7 @@ INSTRUMENT_TABLES = {
                NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
                NIRCamAnomaly, NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats,
                NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
-               NIRCamEDBEveryChangeStats],
+               NIRCamEDBEveryChangeStats, NIRCamClawQueryHistory, NIRCamClawStats],
     'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
                NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
                NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
@@ -570,7 +572,8 @@ MONITOR_TABLES = {
             MIRIEDBBlockStats, MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats,
             NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
             NIRSpecEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats,
-            FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats]}
+            FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats],
+    'claw': [NIRCamClawQueryHistory, NIRCamClawStats], }
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)
