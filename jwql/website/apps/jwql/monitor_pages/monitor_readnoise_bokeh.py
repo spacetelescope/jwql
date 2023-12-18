@@ -26,11 +26,15 @@ from bokeh.models import Panel, Tabs  # bokeh <= 3.0
 from bokeh.models import ColumnDataSource, HoverTool
 # from bokeh.models import TabPanel, Tabs  # bokeh >= 3.0
 from bokeh.plotting import figure
+from django.templatetags.static import static
 import numpy as np
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import FGSReadnoiseStats, MIRIReadnoiseStats, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.utils import get_config
+
+OUTPUTS_DIR = get_config()['outputs']
 
 
 class ReadnoiseMonitorData():
@@ -107,8 +111,13 @@ class ReadNoisePlotTab():
     def __init__(self, instrument, aperture):
         self.instrument = instrument
         self.aperture = aperture
+        self.ins_ap = "{}_{}".format(self.instrument.lower(), self.aperture.lower())
 
         self.db = ReadnoiseMonitorData(self.instrument, self.aperture)
+
+        # Use outputs directory to obtain server name in path.
+        server_name = OUTPUTS_DIR.split("outputs/", 1)[1]
+        self.file_path = static(os.path.join("outputs", server_name, "readnoise_monitor", "data", self.ins_ap))
 
         self.plot_readnoise_amplifers()
         self.plot_readnoise_difference_image()
@@ -133,7 +142,7 @@ class ReadNoisePlotTab():
             else:
                 readnoise_vals = np.array(list())
 
-            filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.db.query_results]
+            filenames = [result.uncal_filename.replace('_uncal.fits', '') for result in self.db.query_results]
             expstarts_iso = np.array([result.expstart for result in self.db.query_results])
             expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
             nints = [result.nints for result in self.db.query_results]
@@ -168,17 +177,15 @@ class ReadNoisePlotTab():
                                       height=500, width=500, sizing_mode='scale_width')
 
         if len(self.db.query_results) != 0:
-            diff_image_png = self.db.query_results[-1].readnoise_diff_image
-            diff_image_png = os.path.join('/static', '/'.join(diff_image_png.split('/')[-6:]))
+            diff_image_png = os.path.join(self.file_path, self.db.query_results[-1].readnoise_diff_image)
             self.diff_image_plot.image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
-            
+
         self.diff_image_plot.xaxis.visible = False
         self.diff_image_plot.yaxis.visible = False
         self.diff_image_plot.xgrid.grid_line_color = None
         self.diff_image_plot.ygrid.grid_line_color = None
         self.diff_image_plot.title.text_font_size = '22px'
         self.diff_image_plot.title.align = 'center'
-
 
     def plot_readnoise_histogram(self):
         """Updates the readnoise histogram"""
@@ -200,12 +207,9 @@ class ReadNoisePlotTab():
                                           y_range=(hist_yr_start, hist_yr_end),
                                           sizing_mode='scale_width')
 
-        source = ColumnDataSource(data=dict(
-                        x=diff_image_bin_centers,
-                        y=diff_image_n,
-                        ))
+        source = ColumnDataSource(data=dict(x=diff_image_bin_centers, y=diff_image_n, ))
 
-        self.readnoise_histogram.add_tools(HoverTool(tooltips=[("Data (x, y)", "(@x, @y)"),]))
+        self.readnoise_histogram.add_tools(HoverTool(tooltips=[("Data (x, y)", "(@x, @y)"), ]))
 
         self.readnoise_histogram.circle(x='x', y='y', source=source)
 
