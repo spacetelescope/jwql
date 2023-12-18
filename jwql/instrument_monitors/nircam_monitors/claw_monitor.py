@@ -340,7 +340,6 @@ class ClawMonitor():
         # Query MAST for new NIRCam full-frame imaging data from the last 2 days
         self.query_end_mjd = Time.now().mjd
         self.query_start_mjd = self.query_end_mjd - 2
-        self.query_start_mjd, self.query_end_mjd = 59715.28951771492, 59715.29771992559  # todo remove
         mast_table = self.query_mast()
         logging.info('{} files found between {} and {}.'.format(len(mast_table), self.query_start_mjd, self.query_end_mjd))
 
@@ -357,8 +356,7 @@ class ClawMonitor():
             self.proposal, self.obs, self.fltr, self.pupil = combo.split('_')
             self.outfile = os.path.join(self.output_dir_claws, 'prop{}_obs{}_{}_{}_cal_norm_skyflat.png'.format(str(self.proposal).zfill(5),
                                         self.obs, self.fltr, self.pupil).lower())
-            #self.files = np.array([filesystem_path(row['filename']) for row in mast_table_combo])  # todo uncomment?
-            self.files = np.array([os.path.join(get_config()['filesystem'], 'public', filesystem_path(row['filename'])) for row in mast_table_combo]) # todo remove
+            self.files = np.array([filesystem_path(row['filename']) for row in mast_table_combo])
             self.detectors = np.array(mast_table_combo['detector'])
             if not os.path.exists(self.outfile):
                 logging.info('Working on {}'.format(self.outfile))
