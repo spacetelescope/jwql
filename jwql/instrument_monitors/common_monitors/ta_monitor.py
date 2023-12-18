@@ -56,6 +56,57 @@ from jwql.utils.utils import ensure_dir_exists, get_config, filesystem_path
 from jwql.website.apps.jwql.models import RootFileInfo
 
 
+TA_FAILURE_THRESHOLD = 5. # this is arbitrary. for testing only.
+
+# for testing only
+MIRI_NON_CORON_TA_APERTURES = ['MIRIM_TAMRS',
+                         'MIRIM_TALRS',
+                         'MIRIM_TABLOCK'
+'MIRIM_TAFULL',
+ 'MIRIM_TAILLUM',
+ 'MIRIM_TABRIGHTSKY',
+ 'MIRIM_TASUB256',
+ 'MIRIM_TASUB128',
+ 'MIRIM_TASUB64',
+ 'MIRIM_TASLITLESSPRISM']
+
+
+"""
+                         'MIRIM_TA1065_UL',
+                         'MIRIM_TA1065_UR',
+                         'MIRIM_TA1065_LL',
+                         'MIRIM_TA1065_LR',
+                         'MIRIM_TA1065_CUL',
+                         'MIRIM_TA1065_CUR',
+                         'MIRIM_TA1065_CLL',
+                         'MIRIM_TA1065_CLR'
+                        'MIRIM_TA1140_UL',
+ 'MIRIM_TA1140_UR',
+ 'MIRIM_TA1140_LL',
+ 'MIRIM_TA1140_LR',
+ 'MIRIM_TA1140_CUL',
+ 'MIRIM_TA1140_CUR',
+ 'MIRIM_TA1140_CLL',
+ 'MIRIM_TA1140_CLR'
+'MIRIM_TA1550_UL',
+ 'MIRIM_TA1550_UR',
+ 'MIRIM_TA1550_LL',
+ 'MIRIM_TA1550_LR',
+ 'MIRIM_TA1550_CUL',
+ 'MIRIM_TA1550_CUR',
+ 'MIRIM_TA1550_CLL',
+ 'MIRIM_TA1550_CLR'
+'MIRIM_TALYOT_UL',
+ 'MIRIM_TALYOT_UR',
+ 'MIRIM_TALYOT_LL',
+ 'MIRIM_TALYOT_LR',
+ 'MIRIM_TALYOT_CUL',
+ 'MIRIM_TALYOT_CUR',
+ 'MIRIM_TALYOT_CLL',
+ 'MIRIM_TALYOT_CLR'
+]
+"""
+
 """For trending plots, model them on the code used for MSATA and WATA montiors, which have a slider to control date range, etc.
 But what about these images that Mike creates below? Could we have each point on a trending plot act as a link to a page
 that holds the images? Or have one page for each program ID's images? Or stack all the images into a single page that is
@@ -976,7 +1027,10 @@ Out[56]: (17.64133000000004, 40.69263000000001)
 
             # Update the dictionary such that the value is now a tuple of the TACONFIRM
             # RootFileInfo, and the science file dictionary
-            entry = (ta_rootfile, taconf_rootfile, science_file.root_name)
+            if science_file is not None:
+                entry = (ta_rootfile, taconf_rootfile, science_file.root_name)
+            else:
+                entry = (ta_rootfile, taconf_rootfile, None)
             tmp_list.append(entry)
 
         # Re-populate self.ta_query_results with the updated 3-tuples
@@ -1066,27 +1120,43 @@ Out[56]: (17.64133000000004, 40.69263000000001)
             non_coron = [row for row in self.ta_entries if 'MASK' not in row['aperture'] and 'WEDGE' not in row['aperture']]
 
         elif self.instrument == 'miri':
-            non_coron = [row for row in self.ta_entries if row['aperture'] not in MIRI_NON_CORON_TA_APERTURES]
+            non_coron = [row for row in self.ta_entries if row['aperture'] in MIRI_NON_CORON_TA_APERTURES]
+
+
+        print('non_coron:', non_coron)
+
 
         # Now check each unique program/obsnum for TACQ and TACONFIRM entries
         exptypes = np.array([row['exp_type'] for row in non_coron])
 
-        program_obsnum = np.array([f'{row["root_name"][7:10]}' for row in non_coron])
+        program_obsnum = np.array([f'{row["root_name"][2:10]}' for row in non_coron])
 
         # Why is there no obsnum information in this query set? am I referencing it incorrectly?
         #program_obsnum = np.array([f'{row["proposal"]}{row["obsnum"]["obsnum"]}' for row in non_coron])
 
         unique_program_obsnums = set(program_obsnum)
+
+        print('unique_program_obsnums: ', unique_program_obsnums)
+
         for probs in unique_program_obsnums:
             match = np.where(program_obsnum == probs)[0]
 
-            tas = np.where(exptypes[match] == 'NRC_TACQ')[0]
-            taconfirms = np.where(exptypes[match] == 'NRC_TACONFIRM')[0]
+            print('probs: ', probs)
+            print('program_obsnum: ', program_obsnum)
+
+
+            tas = np.where(exptypes[match] == f'{JWST_INSTRUMENT_NAMES_ABBREVIATIONS[self.instrument]}_TACQ')[0]
+            taconfirms = np.where(exptypes[match] == f'{JWST_INSTRUMENT_NAMES_ABBREVIATIONS[self.instrument]}_TACONFIRM')[0]
+
+            print('match: ', match)
+            print('tas: ', tas)
+
+
 
             if len(tas) > 1:
-                raise ValueError(f"For {self.instrument} program {probs[0:-3]}, observation {probs[-3:]}, there appears to be > 1 TACQ file. Unexpected.")
+                raise ValueError(f"For {self.instrument} program {probs[0:5]}, observation {probs[-3:]}, there appears to be > 1 TACQ file. Unexpected.")
             if len(taconfirms) > 1:
-                raise ValueError(f"For {self.instrument} program {probs[0:-3]}, observation {probs[-3:]}, there appears to be > 1 TACONFIRM file. Unexpected.")
+                raise ValueError(f"For {self.instrument} program {probs[0:5]}, observation {probs[-3:]}, there appears to be > 1 TACONFIRM file. Unexpected.")
 
             # Set up the results as a dictionary where the key is the TACQ RootFileInfo entry, and the value is
             # the TACONFIRM RootFileEntry (this is still ugly)
@@ -1647,17 +1717,33 @@ niriss soss and ami use TA observations. both use 64x64 subarray
         """
         self.ta_query_results = []
 
-        exptypes = [row.exp_type for row in self.ta_entries]
-        expstarts = [row.expstart for row in self.ta_entries]
-        program_obsnum = np.array([f'{row.proposal}{row.obsnum.obsnum}' for row in self.ta_entries])
+        exptypes = np.array([row['exp_type'] for row in self.ta_entries])
+        expstarts = np.array([row['expstart'] for row in self.ta_entries])
+        #program_obsnum = np.array([f'{row['proposal']}{row.obsnum.obsnum}' for row in self.ta_entries])
+        program_obsnum = np.array([f'{row["root_name"][7:10]}' for row in self.ta_entries])
 
         unique_program_obsnums = set(program_obsnum)
+
+
+        print('NIS check')
+        print(unique_program_obsnums)
+        print(program_obsnum)
+        print(expstarts)
+        print(exptypes)
+
+
+
         for probs in unique_program_obsnums:
             match = np.where(program_obsnum == probs)[0]
             # For each program/observation combination, we should have 4 entries.
             # 3 TA images and 1 TACONFIRM
             if len(match) != 4:
                 raise ValueError(f"WARNING: expected 4 entries for NIRISS TA/TACONFIRM in program {probs[0:-3]}, observation {probs[-3:]} but instead found {len(match)}")
+
+
+            print('NIS')
+            print(match)
+            print(expstarts)
 
             earliest = np.where(expstarts[match] == np.min(expstarts[match]))[0]
             latest = np.where(expstarts[match] == np.max(expstarts[match]))[0]
@@ -1748,15 +1834,17 @@ niriss soss and ami use TA observations. both use 64x64 subarray
                 self.query_end = 59714.8
             elif instrument == 'niriss':
                 self.query_start = 59722.33
-                self.query_end = 59722.375
+                self.query_end = 59722.380
             elif instrument == 'miri':
-                self.query_start = 60015.95
-                self.query_end = 60016.0
+                self.query_start = 60112.
+                self.query_end = 60138.
             ######!!!!!FOR DEVELOPMENT ######
 
 
             self.ta_entries = model_query_ta(self.instrument, '', self.query_start, self.query_end)
 
+
+            print(self.ta_entries)
 
             #For nircam: the results are:
             #<QuerySet [<RootFileInfo: jw01068007001_02102_00001-seg001_nrcalong>, <RootFileInfo: jw01068006001_02102_00001-seg001_nrcblong>, <RootFileInfo: jw01068005001_02102_00001-seg001_nrcblong>]>
@@ -1766,7 +1854,7 @@ niriss soss and ami use TA observations. both use 64x64 subarray
             # don't care about.
             self.organize_ta_files()
 
-            # At this point, self.ta_query_results is now a dictionary, with keys equal to the RootFileInfo entries of
+            # At this point, self.ta_query_results is now a list of tuples, with keys equal to the RootFileInfo entries of
             # the TACQ files, and values equal to the RootFileInfo entry for the associated TACONFIRM entries. In
             # this case (non-coron) there will never be >1 TACONFIRM entry associated with a given TACQ entry.
 
@@ -1799,20 +1887,26 @@ Out[22]:
 
 
 
-
-            # Query the Django models and retrieve the related science data taken after the TA.
-            # For imaging modes, we should grab the first science file after the TA. For LRS, we
-            # need to find the post-observation image (if it exists. It was not always required.)
-            # Should we bother with this for dispersed data??
-            self.get_post_ta_data()
-
-
             # At this point, the entries in self.ta_query_results should be 3-tuples, with the RootFileInfo
             # obj for the TA file, TACONFIRM file, and that for the following science file. If either of the
             # latter two don't exist, then they will be set to None.
 
             num_new_tas = len(self.ta_query_results)
+
+
+            logging.info(f'Number of new TA files: {num_new_tas}')
+
+
+
+
             if num_new_tas > 0:
+
+
+                # Query the Django models and retrieve the related science data taken after the TA.
+                # For imaging modes, we should grab the first science file after the TA. For LRS, we
+                # need to find the post-observation image (if it exists. It was not always required.)
+                # Should we bother with this for dispersed data??
+                self.get_post_ta_data()
 
                 ta_files_processed = []
                 for ta, ta_confirm, science in self.ta_query_results:
@@ -1824,11 +1918,14 @@ Out[22]:
                     if science is not None:
                         science_fullpath = find_in_filesystem(f'{science}_rate.fits')  # or should we grab cal?
 
+
+                    logging.info(f'TA file: {ta_fullpath}')
+                    logging.info(f'TA conf file: {ta_confirm_fullpath}')
+                    logging.info(f'Science file: {science_fullpath}')
+
                     if ta_fullpath is not None:
                         self.process(ta_fullpath, ta_confirm_fullpath, science_fullpath)
                         ta_files_processed.append(f'{ta["root_name"]}_rate.fits')
-
-                stop
 
                 if len(ta_files_processed) > 0:
                     monitor_run = True
