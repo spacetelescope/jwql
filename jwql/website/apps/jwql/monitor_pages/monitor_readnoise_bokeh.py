@@ -116,8 +116,8 @@ class ReadNoisePlotTab():
         self.db = ReadnoiseMonitorData(self.instrument, self.aperture)
 
         # Use outputs directory to obtain server name in path.
-        server_path = OUTPUTS_DIR.split("outputs/", 1)[1]
-        self.file_path = static(os.path.join("outputs", server_path, "readnoise_monitor", "data", self.ins_ap))
+        server_name = OUTPUTS_DIR.split("outputs/", 1)[1]
+        self.file_path = static(os.path.join("outputs", server_name, "readnoise_monitor", "data", self.ins_ap))
 
         self.plot_readnoise_amplifers()
         self.plot_readnoise_difference_image()
