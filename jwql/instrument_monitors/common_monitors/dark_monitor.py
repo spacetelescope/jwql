@@ -705,7 +705,7 @@ class Dark():
         pipeline_files = []
         slope_files = []
         for filename in file_list:
-            logging.info('\tWorking on file: {}'.format(filename))
+            logging.info(f'\tWorking on file: {filename}')
 
             rate_file = filename.replace("dark", output_suffix)
             rate_file_name = os.path.basename(rate_file)
@@ -728,7 +728,7 @@ class Dark():
                 os.remove(filename)
 
         obs_times = []
-        logging.info('\tSlope images to use in the dark monitor for {}, {}:'.format(self.instrument, self.aperture))
+        logging.info(f'\tSlope images to use in the dark monitor for {self.instrument}, {self.aperture}:')
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
             # Get the observation time for each file
@@ -923,7 +923,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['miri']: #JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -938,7 +938,7 @@ class Dark():
 
             for aperture in possible_apertures:
                 logging.info('')
-                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                logging.info(f'Working on aperture {aperture} in {instrument}')
 
                 # Find appropriate threshold for the number of new files needed
                 match = aperture == limits['Aperture']
@@ -958,7 +958,7 @@ class Dark():
                 # We need a separate search for each readout pattern
                 for readpatt in possible_readpatts:
                     self.readpatt = readpatt
-                    logging.info('\tWorking on readout pattern: {}'.format(self.readpatt))
+                    logging.info(f'\tWorking on readout pattern: {self.readpatt}')
 
                     # Locate the record of the most recent MAST search
                     #self.query_start = self.most_recent_search()
@@ -973,21 +973,21 @@ class Dark():
 
 
 
-                    logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+                    logging.info(f'\tQuery times: {self.query_start} {self.query_end}')
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
-                    new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+                    new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start,
+                                                                 self.query_end, readpatt=self.readpatt)
 
                     # Exclude ASIC tuning data
                     len_new_darks = len(new_entries)
                     new_entries = monitor_utils.exclude_asic_tuning(new_entries)
                     len_no_asic = len(new_entries)
                     num_asic = len_new_darks - len_no_asic
-                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+                    logging.info(f"\tFiltering out ASIC tuning files. Removed {num_asic} dark files.")
 
-                    logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
-                                                                                           len(new_entries)))
+                    logging.info(f'\tAperture: {self.aperture}, Readpattern: {self.readpatt}, new entries: {len(new_entries)}')
 
                     # Get full paths to the files
                     new_filenames = []
@@ -995,8 +995,7 @@ class Dark():
                         try:
                              new_filenames.append(filesystem_path(file_entry['filename']))
                         except FileNotFoundError:
-                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                            .format(file_entry['filename']))
+                            logging.warning(f"\t\tUnable to locate {file_entry['filename']} in filesystem. Not including in processing.")
 
                     # Generate a count of the total number of integrations across the files. This number will
                     # be compared to the threshold value to determine if the monitor is run.
@@ -1018,8 +1017,10 @@ class Dark():
                             ysize = hdulist[0].header['SUBSIZE2']
                             nints = hdulist[0].header['NINTS']
                         # If the array size matches expectataions, or if Siaf doesn't give an expected size, then
-                        # keep the file.
-                        if ((xsize == expected_xsize and ysize == expected_ysize) or expected_xsize is None or expected_ysize is None):
+                        # keep the file. Also, make sure there is at leasat one integration, after ignoring any user-input
+                        # number of integrations.
+                        keep_ints = int(nints) - self.skipped_initial_ints
+                        if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize) or expected_xsize is None or expected_ysize is None)):
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
                             integrations.append(int(nints) - self.skipped_initial_ints)
@@ -1299,6 +1300,19 @@ class Dark():
         #for a future run, where the final delta_t is long enough that we can assume
         #that epoch of the cal program has completed.
 
+
+
+        print('Splitting into sub-lists. Inputs at the beginning:')
+        print(files)
+        print(start_times)
+        print(end_times)
+        print(integration_list)
+        print(threshold)
+        print('\n')
+
+
+
+
         # Eventual return parameters
         self.file_batches = []
         self.start_time_batches = []
@@ -1306,7 +1320,8 @@ class Dark():
         self.integration_batches = []
 
         # Add the current time onto the end of start_times
-        start_times = np.append(start_times, Time.now().mjd)
+        #start_times = np.append(start_times, Time.now().mjd)
+        start_times = np.array(start_times)
 
         # Get the delta t between each pair of files. Insert 0 as the initial
         # delta_t, to make the coding easier
@@ -1317,8 +1332,14 @@ class Dark():
         # dark current during each "epoch" within a calibration proposal
         dividers = np.where(delta_t >= DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME[self.instrument])[0]
 
+
+        print('Initial dividers: ', dividers)
+
+
         # Add dividers at the beginning index to make the coding easier
         dividers = np.insert(dividers, 0, 0)
+
+        print('Prepend zero to dividers: ', dividers)
 
         # If there is no divider at the end of the list of files, then add one
         if dividers[-1] < len(delta_t):
@@ -1326,21 +1347,22 @@ class Dark():
 
 
         print('delta_t', delta_t)
-        print('dividers:', dividers)
-        print('threshold:', threshold)
+        print('Final dividers (divide data based on time gaps between files):', dividers)
+        print('threshold (number of integrations):', threshold)
+        print('\n')
 
 
         # Loop over epochs.
-        # Within each batch, divide up the integrations into multiple batches if the total
+        # Within each batch, divide up the exposures into multiple batches if the total
         # number of integrations are above 2*threshold.
-        for i in range(len(dividers) - 1):
+        for i in range(len(dividers) - 1):  # should this be len(dividers)-2??? we seem to be ending with empty results in the final loop
             batch_ints = integration_list[dividers[i]:dividers[i+1]]
             batch_files = files[dividers[i]:dividers[i+1]]
             batch_start_times = start_times[dividers[i]:dividers[i+1]]
             batch_end_times = end_times[dividers[i]:dividers[i+1]]
             batch_int_sum = np.sum(batch_ints)
 
-
+            print(f'Loop over time-based batches. Working on batch {i}')
             print('batch_ints', batch_ints)
             print('batch_files', batch_files)
 
@@ -1349,16 +1371,36 @@ class Dark():
             # Calculate how many subgroups to break up the batch into,
             # based on the threshold, and under the assumption that we
             # don't want to skip running on any of the files.
-            n_subgroups = int(np.ceil(batch_int_sum / threshold))
+            #n_subgroups = int(np.ceil(batch_int_sum / threshold)) - don't use this
+
+            # Don't create mulitple subgroups for a single file. Treat the exposure as the
+            # base unit.
+            #intsum = 0
+            #for batch_int, batch_file, start_time, end_time in zip(batch_ints, batch_files, batch_start_times, batch_end_times):
+            #    intsum += batch_int
+            #    if intsum >=
 
 
-            print('n_subgroups', n_subgroups)
-            print(batch_int_sum, threshold)
+
+            #print('n_subgroups (based on number of integrations vs threshold)', n_subgroups)
+            #print('total number of integs in the batch: ', batch_int_sum)
+            #print('integ-based threshold to use: ', threshold)
 
 
+
+            ## FOR TESTING
+            #n_subgroups = 1  # eventually n_subgroups should go away and the if else block below can
+            # be replaced by a single block of code that does not rely on n_subgroups
+
+
+
+
+
+            """
             if n_subgroups == 0:
 
                 print('IF N_SUBGROUPS USES NP.CEIL THEN IT IS NOT POSSIBLE TO HAVE N_SUBGROUPS == 0')
+                stop
 
                 print('i and len(dividers)-1:', i, len(dividers) - 1, dividers)
 
@@ -1391,85 +1433,196 @@ class Dark():
             #    self.integration_batches.append(batch_ints)
 
             elif n_subgroups >= 1:
+            """
                 # Here there are enough integrations to meet the threshold,
                 # or possibly enough to break the batch up
                 # into more than one subgroup. We can't split within a file,
                 # so we split after the file that gets the total number of
                 # integrations above the threshold.
 
-                # Calculate the total number of integrations up to each file
-                batch_int_sums = np.array([ np.sum(batch_ints[0:jj]) for jj in range(1, len(batch_ints)) ])
 
-                base = 0
-                startidx = 0
-                endidx = 0
-                complete = False
-                for batchnum in range(n_subgroups):
-                    endidx = np.where(batch_int_sums >= (base + threshold))[0]
 
-                    # Check if we reach the end of the file list
-                    if len(endidx) == 0:
-                        endidx = len(batch_int_sums)
+
+            """
+            ###### Potential replacement for the 'for batchnum' loop below
+            ###### Potential replacement for the 'for batchnum' loop below
+            ###### Potential replacement for the 'for batchnum' loop below
+            startidx = 0
+            working_batch_ints = deepcopy(batch_ints)
+
+
+
+            # still need an exiting condition below....
+            while True:
+
+            batch_int_sums = np.array([np.sum(working_batch_ints[0:jj]) for jj in range(1, len(working_batch_ints) + 1)])
+            ints_group = batch_int_sums // threshold
+            endidx = np.where(working_batch_ints > 0)[0]
+
+            # Check if we reach the end of the file list
+            if len(endidx) == 0:
+                endidx = len(batch_ints) - 1
+                complete = True
+             else:
+                endidx = endidx[0]
+
+            subgroup_ints = batch_ints[startidx: endidx + 1]
+            subgroup_files = batch_files[startidx: endidx + 1]
+            subgroup_start_times = batch_start_times[startidx: endidx + 1]
+            subgroup_end_times = batch_end_times[startidx: endidx + 1]
+            subgroup_int_sum = np.sum(subgroup_ints)
+
+            if (i == len(dividers) - 2) and endidx == len(batch_files) - 1:
+                if np.sum(subgroup_ints) >= threshold:
+                    print('ADDED - final subgroup of final epoch')
+                    self.file_batches.append(subgroup_files)
+                    self.start_time_batches.append(subgroup_start_times)
+                    self.end_time_batches.append(subgroup_end_times)
+                    self.integration_batches.append(subgroup_ints)
+                 else:
+                    # Here the final subgroup does not have enough integrations to reach the threshold
+                    # and we're not sure if the epoch is complete, so we skip these files and save them
+                    # for a future dark monitor run
+                    pass
+
+            else:
+                #if (i  < len(dividers) - 1) and (batchnum < (n_subgroups - 1)):
+                print('ADDED')
+                self.file_batches.append(subgroup_files)
+                self.start_time_batches.append(subgroup_start_times)
+                self.end_time_batches.append(subgroup_end_times)
+                self.integration_batches.append(subgroup_ints)
+
+            if not complete:
+                startidx = deepcopy(endidx + 1)
+                base = batch_int_sums[endidx]
+            else:
+                # If we reach the end of the list before the expected number of
+                # subgroups, then we quit.
+                break
+
+
+
+            ###### Potential replacement for the 'for batchnum' loop below
+            ###### Potential replacement for the 'for batchnum' loop below
+            ###### Potential replacement for the 'for batchnum' loop below
+            """
+
+
+
+
+
+
+
+            # Calculate the total number of integrations up to each file
+            batch_int_sums = np.array([np.sum(batch_ints[0:jj]) for jj in range(1, len(batch_ints) + 1)])
+
+            print('batch_int_sums: ', batch_int_sums)
+
+            base = 0
+            startidx = 0
+            endidx = 0
+            complete = False
+            #for batchnum in range(n_subgroups): - just need to fix this loop since we don't know n_subgroups ahead of time
+            #for batchnum in range(len(batch_files)): # worst case - each file is its own batch...  change batchnum to filenum, in order to make things easier to interpret
+
+
+            while True:   # this instead of "for batchnum" makes more sense
+
+
+                endidx = np.where(batch_int_sums >= (base + threshold))[0]
+
+                print('startidx: ', startidx)
+                print('endidx: ', endidx)
+
+                # Check if we reach the end of the file list
+                if len(endidx) == 0:
+                    endidx = len(batch_int_sums) - 1
+                    complete = True
+                else:
+                    endidx = endidx[0]
+                    if endidx == (len(batch_int_sums) - 1):
                         complete = True
-                    else:
-                        endidx = endidx[0]
 
-                    subgroup_ints = batch_ints[startidx: endidx + 1]
-                    subgroup_files = batch_files[startidx: endidx + 1]
-                    subgroup_start_times = batch_start_times[startidx: endidx + 1]
-                    subgroup_end_times = batch_end_times[startidx: endidx + 1]
-                    subgroup_int_sum = np.sum(subgroup_ints)
+                print('startidx: ', startidx)
+                print('endidx: ', endidx)
+                print('complete: ', complete)
 
-
-                    print('batchnum: ', batchnum)
-                    print(batch_ints[startidx: endidx + 1])
-                    print(batch_files[startidx: endidx + 1])
-                    print(i, len(dividers) - 1, batchnum, n_subgroups-1)
+                subgroup_ints = batch_ints[startidx: endidx + 1]
+                subgroup_files = batch_files[startidx: endidx + 1]
+                subgroup_start_times = batch_start_times[startidx: endidx + 1]
+                subgroup_end_times = batch_end_times[startidx: endidx + 1]
+                subgroup_int_sum = np.sum(subgroup_ints)
 
 
+                print('subgroup_ints: ', subgroup_ints)
+                print('subgroup_files: ', subgroup_files)
+                print('subgroup_int_sum: ', subgroup_int_sum)
+
+                #print('batchnum: ', batchnum)
+                #print(batch_ints[startidx: endidx + 1])
+                #print(batch_files[startidx: endidx + 1])
+                #print(i, len(dividers) - 1, batchnum, n_subgroups-1)
 
 
-                    # Add to output lists. The exception is if we are in the
-                    # final subgroup of the final epoch. In that case, we don't know
-                    # if more data are coming soon that may be able to be combined. So
-                    # in that case, we ignore the files for this run of the monitor.
-                    if (i == len(dividers) - 2) and (batchnum == (n_subgroups - 1)):
-                        # Here we are in the final subgroup of the final epoch, where we
-                        # mayb not necessarily know if there will be future data to combine
-                        # with these data
 
-                        #Here..... we do not know for sure the epoch is over? Confirm that we do not know this.
-                        #If that is true, we can still check to see if we have reached the threshold number of
-                        #integrations and run if so.
-                        #print('final subgroup of final epoch. if the epoch is not over, so skipping files')
 
-                        if np.sum(subgroup_ints) >= threshold:
-                            print('ADDED - final subgroup of final epoch')
-                            self.file_batches.append(subgroup_files)
-                            self.start_time_batches.append(subgroup_start_times)
-                            self.end_time_batches.append(subgroup_end_times)
-                            self.integration_batches.append(subgroup_ints)
-                        else:
-                            # Here the final subgroup does not have enough integrations to reach the threshold
-                            # and we're not sure if the epoch is complete, so we skip these files and save them
-                            # for a future dark monitor run
-                            pass
+                # Add to output lists. The exception is if we are in the
+                # final subgroup of the final epoch. In that case, we don't know
+                # if more data are coming soon that may be able to be combined. So
+                # in that case, we ignore the files for this run of the monitor.
+                #if (i == len(dividers) - 2) and (batchnum == (n_subgroups - 1)):
+                if (i == len(dividers) - 2) and endidx == len(batch_files) - 1:
+                    # Here we are in the final subgroup of the final epoch, where we
+                    # mayb not necessarily know if there will be future data to combine
+                    # with these data
 
-                    else:
-                        #if (i  < len(dividers) - 1) and (batchnum < (n_subgroups - 1)):
-                        print('ADDED')
+                    #Here..... we do not know for sure the epoch is over? Confirm that we do not know this.
+                    #If that is true, we can still check to see if we have reached the threshold number of
+                    #integrations and run if so.
+                    #print('final subgroup of final epoch. if the epoch is not over, so skipping files')
+
+                    print('should be final epoch and final subgroup. epoch number: ', i)
+
+                    if np.sum(subgroup_ints) >= threshold:
+                        print('ADDED - final subgroup of final epoch')
                         self.file_batches.append(subgroup_files)
                         self.start_time_batches.append(subgroup_start_times)
                         self.end_time_batches.append(subgroup_end_times)
                         self.integration_batches.append(subgroup_ints)
-
-                    if not complete:
-                        startidx = deepcopy(endidx + 1)
-                        base = batch_int_sums[endidx]
                     else:
-                        # If we reach the end of the list before the expected number of
-                        # subgroups, then we quit.
-                        break
+                        # Here the final subgroup does not have enough integrations to reach the threshold
+                        # and we're not sure if the epoch is complete, so we skip these files and save them
+                        # for a future dark monitor run
+                        pass
+
+                else:
+                    #if (i  < len(dividers) - 1) and (batchnum < (n_subgroups - 1)):
+                    print('Not the final epoch, and not the final subgroup')
+                    print('ADDED')
+                    self.file_batches.append(subgroup_files)
+                    self.start_time_batches.append(subgroup_start_times)
+                    self.end_time_batches.append(subgroup_end_times)
+                    self.integration_batches.append(subgroup_ints)
+
+                if not complete:
+                    startidx = deepcopy(endidx + 1)
+                    base = batch_int_sums[endidx]
+                else:
+                    # If we reach the end of the list before the expected number of
+                    # subgroups, then we quit.
+                    break
+
+
+
+            print('Epoch number: ', i)
+            print('batch_files: ', batch_files)
+            print('batch_ints: ', batch_ints)
+            print('self.file_batches: ', self.file_batches)
+            print('self.integration_batches: ', self.integration_batches)
+            print('threshold: ', threshold)
+            print('DONE WITH SUBGROUPS\n\n\n\n')
+
 
     def stats_by_amp(self, image, amps):
         """Calculate statistics in the input image for each amplifier as
