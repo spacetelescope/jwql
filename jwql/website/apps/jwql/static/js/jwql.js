@@ -1327,7 +1327,8 @@ function update_thumbnail_array(data) {
         var content = '<div class="thumbnail" data-instrument="' + instrument +
                       '" data-detector="' + filename_dict.detector + '" data-proposal="' + filename_dict.program_id +
                       '" data-file_root="' + rootname + '" data-group_root="' + filename_dict.group_root +
-                      '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type + '">';
+                      '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type +
+                      '" data-visit="' + filename_dict.visit + '">';
         content += '<div class="thumbnail-group">'
         content += '<a class="thumbnail-link" href="#" data-image-href="/' +
                    instrument + '/' + rootname + '/" data-group-href="/' +

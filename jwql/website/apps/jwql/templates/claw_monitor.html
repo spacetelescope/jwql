@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+<title>{{ inst }} Claw Monitor - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} Claw Monitor</h1>
+		<hr>
+
+		<div width=100%>
+			{% for claw_stack in claw_stacks %}
+				<img src={{ claw_stack | safe }} width="100%">
+				<br><br><hr>
+			{% endfor %}
+		</div>
+
+	</main>
+
+{% endblock %}
