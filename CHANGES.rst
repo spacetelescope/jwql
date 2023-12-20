@@ -1,5 +1,18 @@
 ## What's Changed
 
+1.2.1 (2023-12-20)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Visit Filter on query and archive thumbnails pages by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1412
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- NIRCam Claw Monitor by @bsunnquist in https://github.com/spacetelescope/jwql/pull/1152
+- Stop storing absolute paths in the database by @york-stsci in https://github.com/spacetelescope/jwql/pull/1394
+
+
 1.2.0 (2023-11-21)
 ==================
 
