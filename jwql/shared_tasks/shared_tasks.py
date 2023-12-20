@@ -231,7 +231,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
     process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)
     with process.stderr:
         log_subprocess_output(process.stderr)
-    result = process.wait()    
+    result = process.wait()
     logging.info("Subprocess result was {}".format(result))
 
     if not os.path.isfile(res_file):
@@ -241,7 +241,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
             for line in status:
                 logging.error(line.strip())
             return status
-        
+
     with open(res_file, 'r') as inf:
         status = inf.readlines()
     return status
@@ -251,17 +251,17 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
 def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
-    in the reduction directory. Once all requested extensions have been produced, the 
+    in the reduction directory. Once all requested extensions have been produced, the
     pipeline will return.
 
     Parameters
     ----------
     input_file_name : str
         File on which to run the pipeline steps
-    
+
     short_name : str
         Name of the file to be calibrated after any extensions have been stripped off.
-    
+
     ext_or_exts : list
         List of extensions to be retrieved.
 
@@ -291,7 +291,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
     msg = "Input from {}, calibrate in {}, output to {}"
     logging.info(msg.format(input_dir, cal_dir, output_dir))
-    
+
     input_file = os.path.join(input_dir, input_file_name)
     current_dir = os.path.dirname(__file__)
     cmd_name = os.path.join(current_dir, "run_pipeline.py")
@@ -308,9 +308,9 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         logging.info("Requesting {}".format(calibrated_files))
 
     cores = 'all'
-    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file, 
+    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file,
                             short_name, result_file, cores)
-    
+
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
@@ -323,7 +323,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
             logging.error("\t{}".format(line.strip()))
         if core_fail:
             cores = "half"
-            status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
+            status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
@@ -337,7 +337,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                     logging.error("\t{}".format(line.strip()))
                 if core_fail:
                     cores = "none"
-                    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
+                    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
                                             input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
@@ -346,7 +346,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                         logging.error("Pipeline subprocess failed.")
         if not managed:
             raise ValueError("Pipeline Failed")
-    
+
     for file in calibrated_files:
         logging.info("Checking for output {}".format(file))
         if not os.path.isfile(os.path.join(cal_dir, file)):
@@ -420,14 +420,14 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "").replace(".fits", "")
     ensure_dir_exists(cal_dir)
     output_dir = os.path.join(config["transfer_dir"], "outgoing")
-    
+
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
     result_file = os.path.join(cal_dir, short_name+"_status.txt")
 
     cores = 'all'
-    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file, 
+    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file,
                             short_name, result_file, cores)
-    
+
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
@@ -440,7 +440,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
             logging.error("\t{}".format(line.strip()))
         if core_fail:
             cores = "half"
-            status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
+            status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
                                     input_file, short_name, result_file, cores)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
@@ -454,7 +454,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                     logging.error("\t{}".format(line.strip()))
                 if core_fail:
                     cores = "none"
-                    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
+                    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
                                             input_file, short_name, result_file, cores)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
@@ -762,7 +762,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     file_or_files : str or list-of-str
         Name (or names) of the result file(s), including path(s)
     """
-    logging.info("Pipeline call requestion calibrated extensions {}".format(ext_or_exts))
+    logging.info("Pipeline call requesting calibrated extensions {}".format(ext_or_exts))
     for input_file in input_files:
         logging.info("\tCalibrating {}".format(input_file))
 

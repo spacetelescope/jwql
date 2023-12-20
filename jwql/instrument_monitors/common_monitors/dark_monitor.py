@@ -923,15 +923,20 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['miri']: #JWST_INSTRUMENT_NAMES:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
+            logging.info(f'\n\nWorking on {instrument}')
 
             # Identify which database tables to use
             self.identify_tables()
 
             # Get a list of all possible apertures from pysiaf
-            possible_apertures = list(Siaf(instrument).apernames)
-            possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
+            #possible_apertures = list(Siaf(instrument).apernames)
+            #possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
+
+            # Run the monitor only on the apertures listed in the threshold file. Skip all others.
+            instrument_entries = limits['Instrument'] == instrument
+            possible_apertures = limits['Aperture'][instrument_entries]
 
             # Get a list of all possible readout patterns associated with the aperture
             possible_readpatts = RAPID_READPATTERNS[instrument]
@@ -985,7 +990,7 @@ class Dark():
                     new_entries = monitor_utils.exclude_asic_tuning(new_entries)
                     len_no_asic = len(new_entries)
                     num_asic = len_new_darks - len_no_asic
-                    logging.info(f"\tFiltering out ASIC tuning files. Removed {num_asic} dark files.")
+                    #logging.info(f"\tFiltering out ASIC tuning files. Removed {num_asic} dark files.")
 
                     logging.info(f'\tAperture: {self.aperture}, Readpattern: {self.readpatt}, new entries: {len(new_entries)}')
 
@@ -1029,27 +1034,22 @@ class Dark():
                         else:
                             bad_size_filenames.append(new_file)
                     if len(temp_filenames) != len(new_filenames):
-                        logging.info('\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
+                        logging.info('\t\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
                         for badfile in bad_size_filenames:
-                            logging.info('\t\t{}'.format(badfile))
+                            logging.info('\t\t\t{}'.format(badfile))
                     new_filenames = deepcopy(temp_filenames)
 
                     # Check to see if there are enough new integrations to meet the
                     # monitor's signal-to-noise requirements
-                    logging.info((f'\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
-                                  f'{self.readpatt} has found {total_integrations} integrations spread across {len(new_filenames)} files.'))
+                    if len(new_filenames) > 0:
+                        logging.info((f'\t\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
+                                      f'{self.readpatt} has found {total_integrations} integrations spread across {len(new_filenames)} files.'))
                     if total_integrations >= integration_count_threshold:
-
-
-
                         # for testing
-                        logging.info('FULL BATCH STARTING TIMES:')
-                        logging.info(starting_times)
-                        logging.info('ENDING TIMES:')
-                        logging.info(ending_times)
-
-
-
+                        #logging.info('FULL BATCH STARTING TIMES:')
+                        #logging.info(starting_times)
+                        #logging.info('ENDING TIMES:')
+                        #logging.info(ending_times)
 
                         logging.info(f'\tThis meets the threshold of {integration_count_threshold} integrations.')
                         monitor_run = True
@@ -1075,10 +1075,10 @@ class Dark():
 
 
 
-                            #dark_files, not_copied = copy_files(new_file_list, self.data_dir)
+                            dark_files, not_copied = copy_files(new_file_list, self.data_dir)
                             # Fake dark_files and not_copied, for testing
-                            dark_files = new_file_list
-                            not_copied = []
+                            #dark_files = new_file_list
+                            #not_copied = []
 
 
 
@@ -1086,7 +1086,7 @@ class Dark():
 
                             logging.info('\tNew_filenames: {}'.format(new_file_list))
                             logging.info('\tData dir: {}'.format(self.data_dir))
-                            logging.info('\tCopied to working dir: {}'.format(dark_files))
+                            logging.info('\tCopied to data dir: {}'.format(dark_files))
                             logging.info('\tNot copied: {}'.format(not_copied))
 
 
@@ -1104,8 +1104,8 @@ class Dark():
 
 
                             # Run the dark monitor
-                            #self.process(dark_files)
-                            logging.info('HERE IS WHERE THE MONITOR WOULD RUN ON THE GIVEN BATCH OF FILES. THIS IS TURNED OFF FOR TESTING.')
+                            self.process(dark_files)
+                            #logging.info('HERE IS WHERE THE MONITOR WOULD RUN ON THE GIVEN BATCH OF FILES. THIS IS TURNED OFF FOR TESTING.')
 
 
 
@@ -1126,13 +1126,13 @@ class Dark():
 
 
 
-                            #with engine.begin() as connection:
-                            #    connection.execute(
-                            #        self.query_table.__table__.insert(), new_entry)
-                            #logging.info('\tUpdated the query history table')
+                            with engine.begin() as connection:
+                                connection.execute(
+                                    self.query_table.__table__.insert(), new_entry)
+                            logging.info('\tUpdated the query history table')
                             logging.info('NEW ENTRY: ')
                             logging.info(new_entry)
-                            logging.info('TURNED OFF DATABASE UPDATES DURING TESTING')
+                            #logging.info('TURNED OFF DATABASE UPDATES DURING TESTING')
 
 
 
@@ -1155,13 +1155,13 @@ class Dark():
 
 
 
-                        #with engine.begin() as connection:
-                        #    connection.execute(
-                        #        self.query_table.__table__.insert(), new_entry)
-                        #logging.info('\tUpdated the query history table')
+                        with engine.begin() as connection:
+                            connection.execute(
+                                self.query_table.__table__.insert(), new_entry)
+                        logging.info('\tUpdated the query history table')
                         logging.info('NEW ENTRY: ')
                         logging.info(new_entry)
-                        logging.info('TURNED OFF DATABASE UPDATES DURING TESTING')
+                        #logging.info('TURNED OFF DATABASE UPDATES DURING TESTING')
 
 
 
@@ -1302,13 +1302,10 @@ class Dark():
 
 
 
-        print('Splitting into sub-lists. Inputs at the beginning:')
-        print(files)
-        print(start_times)
-        print(end_times)
-        print(integration_list)
-        print(threshold)
-        print('\n')
+        logging.info('\t\tSplitting into sub-lists. Inputs at the beginning: (file, start time, end time, nints, threshold)')
+        for f, st, et, inte in zip(files, start_times, end_times, integration_list):
+            logging.info(f'\t\t {f}, {st}, {et}, {inte}, {threshold}')
+        logging.info('\n')
 
 
 
@@ -1332,25 +1329,16 @@ class Dark():
         # dark current during each "epoch" within a calibration proposal
         dividers = np.where(delta_t >= DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME[self.instrument])[0]
 
-
-        print('Initial dividers: ', dividers)
-
-
         # Add dividers at the beginning index to make the coding easier
         dividers = np.insert(dividers, 0, 0)
-
-        print('Prepend zero to dividers: ', dividers)
 
         # If there is no divider at the end of the list of files, then add one
         if dividers[-1] < len(delta_t):
             dividers = np.insert(dividers, len(dividers), len(delta_t))
 
-
-        print('delta_t', delta_t)
-        print('Final dividers (divide data based on time gaps between files):', dividers)
-        print('threshold (number of integrations):', threshold)
-        print('\n')
-
+        logging.info(f'\t\t\tdelta_t between files: {delta_t}')
+        logging.info(f'\t\t\tFinal dividers (divide data based on time gaps between files): {dividers}')
+        logging.info('\n')
 
         # Loop over epochs.
         # Within each batch, divide up the exposures into multiple batches if the total
@@ -1362,11 +1350,10 @@ class Dark():
             batch_end_times = end_times[dividers[i]:dividers[i+1]]
             batch_int_sum = np.sum(batch_ints)
 
-            print(f'Loop over time-based batches. Working on batch {i}')
-            print('batch_ints', batch_ints)
-            print('batch_files', batch_files)
-
-
+            logging.info(f'\t\t\tLoop over time-based batches. Working on batch {i}')
+            logging.info(f'\t\t\tBatch Files, Batch integrations')
+            for bi, bf in zip(batch_ints, batch_files):
+                logging.info(f'\t\t\t{bf}, {bi}')
 
             # Calculate how many subgroups to break up the batch into,
             # based on the threshold, and under the assumption that we
@@ -1517,8 +1504,6 @@ class Dark():
             # Calculate the total number of integrations up to each file
             batch_int_sums = np.array([np.sum(batch_ints[0:jj]) for jj in range(1, len(batch_ints) + 1)])
 
-            print('batch_int_sums: ', batch_int_sums)
-
             base = 0
             startidx = 0
             endidx = 0
@@ -1532,9 +1517,6 @@ class Dark():
 
                 endidx = np.where(batch_int_sums >= (base + threshold))[0]
 
-                print('startidx: ', startidx)
-                print('endidx: ', endidx)
-
                 # Check if we reach the end of the file list
                 if len(endidx) == 0:
                     endidx = len(batch_int_sums) - 1
@@ -1544,9 +1526,9 @@ class Dark():
                     if endidx == (len(batch_int_sums) - 1):
                         complete = True
 
-                print('startidx: ', startidx)
-                print('endidx: ', endidx)
-                print('complete: ', complete)
+                logging.info(f'\t\t\tstartidx: {startidx}')
+                logging.info(f'\t\t\tendidx: {endidx}')
+                logging.info(f'\t\t\tcomplete: {complete}')
 
                 subgroup_ints = batch_ints[startidx: endidx + 1]
                 subgroup_files = batch_files[startidx: endidx + 1]
@@ -1555,9 +1537,9 @@ class Dark():
                 subgroup_int_sum = np.sum(subgroup_ints)
 
 
-                print('subgroup_ints: ', subgroup_ints)
-                print('subgroup_files: ', subgroup_files)
-                print('subgroup_int_sum: ', subgroup_int_sum)
+                logging.info(f'\t\t\tsubgroup_ints: {subgroup_ints}')
+                logging.info(f'\t\t\tsubgroup_files: {subgroup_files}')
+                logging.info(f'\t\t\tsubgroup_int_sum: {subgroup_int_sum}')
 
                 #print('batchnum: ', batchnum)
                 #print(batch_ints[startidx: endidx + 1])
@@ -1582,10 +1564,10 @@ class Dark():
                     #integrations and run if so.
                     #print('final subgroup of final epoch. if the epoch is not over, so skipping files')
 
-                    print('should be final epoch and final subgroup. epoch number: ', i)
+                    logging.info(f'\t\t\tShould be final epoch and final subgroup. epoch number: {i}')
 
                     if np.sum(subgroup_ints) >= threshold:
-                        print('ADDED - final subgroup of final epoch')
+                        logging.info('\t\t\tADDED - final subgroup of final epoch')
                         self.file_batches.append(subgroup_files)
                         self.start_time_batches.append(subgroup_start_times)
                         self.end_time_batches.append(subgroup_end_times)
@@ -1594,12 +1576,11 @@ class Dark():
                         # Here the final subgroup does not have enough integrations to reach the threshold
                         # and we're not sure if the epoch is complete, so we skip these files and save them
                         # for a future dark monitor run
+                        logging.info('\t\t\tSkipping final subgroup. Not clear if the epoch is complete')
                         pass
 
                 else:
                     #if (i  < len(dividers) - 1) and (batchnum < (n_subgroups - 1)):
-                    print('Not the final epoch, and not the final subgroup')
-                    print('ADDED')
                     self.file_batches.append(subgroup_files)
                     self.start_time_batches.append(subgroup_start_times)
                     self.end_time_batches.append(subgroup_end_times)
@@ -1613,15 +1594,15 @@ class Dark():
                     # subgroups, then we quit.
                     break
 
-
-
-            print('Epoch number: ', i)
-            print('batch_files: ', batch_files)
-            print('batch_ints: ', batch_ints)
-            print('self.file_batches: ', self.file_batches)
-            print('self.integration_batches: ', self.integration_batches)
-            print('threshold: ', threshold)
-            print('DONE WITH SUBGROUPS\n\n\n\n')
+            logging.info(f'\n\t\t\tEpoch number: {i}')
+            logging.info('\t\t\tBatch File, Bath integration')
+            for bi, bf in zip(batch_ints, batch_files):
+                logging.info(f'\t\t\t{bf}, {bi}')
+            logging.info(f'\n\t\t\tSplit into separate subgroups for processing:')
+            logging.info('\t\t\tFile batches, integration batches')
+            for fb, ib in zip(self.file_batches, self.integration_batches):
+                logging.info(f'\t\t\t{fb}, {ib}')
+            logging.info(f'\t\t\tDONE WITH SUBGROUPS\n\n\n\n')
 
 
     def stats_by_amp(self, image, amps):

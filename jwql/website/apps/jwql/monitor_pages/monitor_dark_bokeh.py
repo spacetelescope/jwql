@@ -60,7 +60,7 @@ class DarkHistPlot():
     plot : bokeh.figure
         Figure containing the histogram plot
     """
-    def __init__(self, aperture, data):
+    def __init__(self, aperture, data, obsdate):
         """Create the plot
 
         Parameters
@@ -74,6 +74,7 @@ class DarkHistPlot():
         """
         self.data = data
         self.aperture = aperture
+        self.obsdate = obsdate
         self.create_plot()
 
     def calc_bin_edges(self, centers):
@@ -109,7 +110,7 @@ class DarkHistPlot():
             else:
                 use_amp = '1'
 
-            title_str = f'{self.aperture}: Dark Rate Histogram'
+            title_str = f'{self.aperture}: Dark Rate Histogram. {self.obsdate.strftime("%d %b %Y")}'
             x_label = 'Dark Rate (DN/sec)'
             y_label = 'Number of Pixels'
 
@@ -462,7 +463,7 @@ class DarkMonitorPlots():
 
             # Retrieve data from database. Since the mean dark image plots are
             # produced by the dark monitor itself, all we need for that is the
-            # name of the file. then we need the histogram and trending data. All
+            # name of the file. Then we need the histogram and trending data. All
             # of this is in the dark monitor stats table. No need to query the
             # dark monitor pixel table.
             self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
@@ -479,7 +480,7 @@ class DarkMonitorPlots():
             self.get_trending_data()
 
             # Now that we have all the data, create the acutal plots
-            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data).plot
+            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data, self.hist_date).plot
             self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime).plot
 
     def ensure_all_full_frame_apertures(self):
@@ -549,11 +550,14 @@ class DarkMonitorPlots():
             most_recent_idx = np.where(self._entry_dates > (latest_date - delta_time))[0]
 
             # Store the histogram data in a dictionary where the keys are the
-            # amplifier values (note that these are strings e.g. '1''), and the
+            # amplifier values (note that these are strings e.g. '1'), and the
             # values are tuples of (x, y) lists
             for idx in most_recent_idx:
                 self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
                                                                      self.db.stats_data[idx].hist_amplitudes)
+
+            # Keep track of the observation date of the most recent entry
+            self.hist_date = self.db.stats_data[most_recent_idx[0].obs_mid_time]
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
@@ -576,7 +580,6 @@ class DarkMonitorPlots():
         """Create arrays from some of the stats database columns that are
         used by multiple plot types
         """
-        #apertures = np.array([e.aperture for e in self.db.stats_data])
         self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])
         self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])
         self._mean = np.array([e.mean for e in self.db.stats_data])
