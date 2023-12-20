@@ -448,7 +448,7 @@ class DarkMonitorPlots():
         self.db = DarkMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        self.available_apertures = get_unique_values_per_column(self.db, 'aperture')
+        self.available_apertures = get_unique_values_per_column(self.db.stats_table, 'aperture')
 
         # Require entries for all full frame apertures. If there are no data for a
         # particular full frame entry, then produce an empty plot, in order to
@@ -654,8 +654,10 @@ class DarkTrendPlot():
             # for each amp, we can get away with using use_amp=1 at the moment.
             if '5' in self.mean_dark:
                 use_amp = '5'
+                legend_label = 'Full aperture'
             else:
                 use_amp = '1'
+                legend_label = 'Amp 1'
 
             # If there are trending data for multiple amps, then we can plot each
             if len(self.mean_dark) > 1:
@@ -685,7 +687,7 @@ class DarkTrendPlot():
                                background_fill_color="#fafafa")
 
             # Plot the "main" amp data along with error bars
-            self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source)
+            self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label=legend_label)
             self.plot.add_layout(Whisker(source=source, base="time", upper="error_upper", lower="error_lower", line_color='navy'))
             hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
                                              ('Date:', '@time{%d %b %Y}')

@@ -2,78 +2,53 @@ name: JWQL CI
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -l {0}
+
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - run: pip install bandit
+      - run: bandit ./jwql/ -c .bandit
 
-  JWQL-CI:
-
-    name: Python - ${{ matrix.python-version }}
+  test:
+    name: test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 5
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.8, 3.9]
+        python-version: [3.9, "3.10"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: mamba-org/provision-with-micromamba@v15
         with:
-          activate-environment: jwql-${{ matrix.python-version }}
+          environment-file: ./environment_python_${{ matrix.python-version }}.yml
+          cache-env: true
+          cache-downloads: true
 
-      - name: Bandit Check
-        uses: jpetrucciani/bandit-check@master
-        with:
-          path: "./jwql/"
-          bandit_flags: "-c .bandit"
-        continue-on-error: false
-        if: runner.os == 'Linux'
+      - run: pip install -e .[test]
 
-      - name: Start Redis
-        uses: supercharge/redis-github-action@1.4.0
+      - run: conda env export
+
+      - uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
         if: runner.os == 'Linux'
 
-      - name: Build jwql conda environment and run tests
-        shell: bash -l {0}
-        run: |
+      - run: python -c "import jwql; print('Version ' + jwql.__version__); print('Path ' + jwql.__path__[0])"
 
-          echo "Setting useful environment variables:"
-          echo " "
-          export PYTHONVERSION=${{ matrix.python-version }}
-          export MAJOR="$(echo $PYTHONVERSION | head -c 1)"
-          export MINOR="$(echo $PYTHONVERSION | tail -c 2)"
-          echo "PYTHONVERSION: $PYTHONVERSION"
-
-          echo " "
-          echo "Installing jwql conda environment"
-          echo " "
-          cd $RUNNER_WORKSPACE/
-          cd jwql/
-          $CONDA/bin/conda env update -f environment_python_${MAJOR}_${MINOR}.yml -n jwql-${{ matrix.python-version }}
-
-          echo " "
-          echo "Installing jwql package"
-          echo " "
-          python setup.py develop
-
-          echo " "
-          echo "Testing package installation"
-          echo " "
-          python -c "import jwql; print('Version: ' + jwql.__version__); print('Path: ' + jwql.__path__[0])"
-
-          # echo " "
-          # echo "Reinstall numpy to fix numpy.core.multiarray error"
-          # echo " "
-          pip install -U numpy
-
-          echo " "
-          echo "The conda environment being used:"
-          echo " "
-          $CONDA/bin/conda env export
-
-          echo " "
-          echo "Running pytests"
-          echo " "
-          pytest jwql/tests/
+      - run: pytest jwql/tests/

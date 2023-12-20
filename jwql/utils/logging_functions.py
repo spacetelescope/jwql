@@ -65,6 +65,11 @@ import sys
 import time
 import traceback
 
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
 from functools import wraps
 
 from jwql.utils.permissions import set_permissions
@@ -218,15 +223,11 @@ def log_info(func):
         logging.info('Running as PID {}'.format(os.getpid()))
 
         # Read in setup.py file to build list of required modules
-        with open(get_config()['setup_file']) as f:
-            data = f.readlines()
+        toml_file = os.path.join(os.path.dirname(get_config()['setup_file']), 'pyproject.toml')
+        with open(toml_file, "rb") as f:
+            data = tomllib.load(f)
 
-        for i, line in enumerate(data):
-            if 'REQUIRES = [' in line:
-                begin = i + 1
-            elif 'setup(' in line:
-                end = i - 2
-        required_modules = data[begin:end]
+        required_modules = data['project']['dependencies']
 
         # Clean up the module list
         module_list = [item.strip().replace("'", "").replace(",", "").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]

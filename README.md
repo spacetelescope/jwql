@@ -44,12 +44,12 @@ Getting `jwql` up and running on your own computer requires four steps, detailed
 
 ### Prerequisites
 
-It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.8.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.9+.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
 
-Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
+Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `pyproject.toml` file included in the repository.
 
 ### Clone the `jwql` repo
 
@@ -83,16 +83,16 @@ source activate base/root
 
 **Note:** If you have added a step activating conda to your default terminal/shell (e.g. the `.bashrc`, `.zshrc`, or `.profile` file) then you don't need to do the above step.
 
-Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3_8.yml`, for python 3.8, and `environment_python_3.9.yml`, for python 3.9, are supported by `jwql`):
+Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3.9.yml`, for python 3.9, and `environment_python_3.10.yml`, for python 3.10, are supported by `jwql`):
 
 ```
-conda env create -f environment_python_3_8.yml
+conda env create -f environment_python_3.9.yml
 ```
 
 or
 
 ```
-conda env create -f environment_python_3_9.yml
+conda env create -f environment_python_3.10.yml
 ```
 
 ### Configuration File
@@ -154,10 +154,11 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Mees Fix (Technical Lead, INS) [@mfixstsci](https://github.com/mfixstsci)
 - Misty Cracraft (INS) [@cracraft](https://github.com/cracraft)
 - Mike Engesser (INS) [@mengesser](https://github.com/mengesser)
-- Shannon Osborne (INS) [@shanosborne](https://github.com/shanosborne)
 - Maria Pena-Guerrero [@penaguerrero](https://github.com/penaguerrero)
 - Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
 - Brian York (INS) [@york-stsci](https://github.com/york-stsci)
+- Bradley Sappington (INS) [@bradleysappington](https://github.com/bradleysappington)
+- Melanie Clarke (INS) [@melanieclarke](https://github.com/melanieclarke)
 
 ## Past Development Team Members
 - Matthew Bourque (INS) [@bourque](https://github.com/bourque)
@@ -168,7 +169,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
 - Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
-
+- Shannon Osborne (INS) [@shanosborne](https://github.com/shanosborne)
 
 ## Acknowledgments:
 - Faith Abney (DMD)

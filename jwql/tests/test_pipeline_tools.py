@@ -67,7 +67,6 @@ def test_completed_pipeline_steps():
     assert completed_steps == true_completed
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Drizzle import issue with python 3.8')
 def test_get_pipeline_steps():
     """Test that the proper pipeline steps are returned for an
     instrument
@@ -108,9 +107,10 @@ def test_get_pipeline_steps():
 
     # MIRI
     miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
-    miri_steps = ['dq_init', 'saturation', 'firstframe', 'lastframe',
-                  'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate']
-    not_required = ['group_scale', 'ipc', 'superbias', 'persistence']
+    miri_steps = ['group_scale', 'dq_init', 'saturation', 'firstframe', 'lastframe',
+                  'reset', 'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate',
+                  'gain_scale']
+    not_required = ['ipc', 'superbias', 'persistence']
     miri_dict = OrderedDict({})
     for step in miri_steps:
         miri_dict[step] = True
@@ -139,7 +139,6 @@ def test_image_stack():
     assert exptimes == [[10.5], [10.5], [10.5]]
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Drizzle import issue with python 3.8')
 def test_steps_to_run():
     """Test that the dictionaries for steps required and steps completed
     are correctly combined to create a dictionary of pipeline steps to

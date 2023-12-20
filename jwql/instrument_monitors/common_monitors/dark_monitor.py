@@ -84,7 +84,6 @@ from astropy.io import ascii, fits
 from astropy.modeling import models
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
-from bokeh.io import export_png
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
 from bokeh.models import LinearColorMapper
 from bokeh.plotting import figure
@@ -100,15 +99,14 @@ from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixel
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
-from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
-from jwql.utils import calculations, instrument_properties, monitor_utils
+from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_DATAPRODUCTS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, save_png
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -278,14 +276,14 @@ class Dark():
 
             # Create figure
             start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
-            end_time  = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            end_time = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
 
             self.plot = figure(title=f'{self.aperture}: {num_files} files. {start_time} to {end_time}', tools='')
             #                   tools='pan,box_zoom,reset,wheel_zoom,save')
             self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
             # Create the color mapper that will be used to scale the image
-            mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+            mapper = LinearColorMapper(palette='Viridis256', low=(img_med - (5 * img_dev)), high=(img_med + (5 * img_dev)))
 
             # Plot image and add color bar
             imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
@@ -293,13 +291,6 @@ class Dark():
 
             color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
             self.plot.add_layout(color_bar, 'right')
-
-            # Add hover tool for all pixel values
-            #hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
-            #                                 ('value:', '@image')
-            #                                 ],
-            #                       renderers=[imgplot])
-            #self.plot.tools.append(hover_tool)
 
             if (('FULL' in self.aperture) or ('_CEN' in self.aperture)):
 
@@ -340,21 +331,20 @@ class Dark():
                     base_start = Time(float(base_parts[3]), format='mjd').tt.datetime
                     base_end = Time(float(base_parts[5]), format='mjd').tt.datetime
                     base_start_time = base_start.strftime("%m/%d/%Y")
-                    base_end_time  = base_end.strftime("%m/%d/%Y")
+                    base_end_time = base_end.strftime("%m/%d/%Y")
                     legend_title = f'Compared to dark from {base_start_time} to {base_end_time}'
                 else:
                     legend_title = 'Compared to previous mean dark'
                 legend = Legend(items=[hot_legend, dead_legend, noisy_legend],
                                 location="center",
                                 orientation='vertical',
-                                title = legend_title)
+                                title=legend_title)
 
                 self.plot.add_layout(legend, 'below')
 
             # Save the plot in a png
-            export_png(self.plot, filename=output_filename)
+            save_png(self.plot, filename=output_filename)
             set_permissions(output_filename)
-
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file
@@ -651,25 +641,16 @@ class Dark():
             values = []
 
         sources[pix_type] = ColumnDataSource(data=dict(pixels_x=coords[0],
-                                                       pixels_y=coords[1],
-                                                       values=values
-                                                      )
+                                                       pixels_y=coords[1]
+                                                       )
                                              )
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
                                                  source=sources[pix_type], color=colors[pix_type])
 
-        # Create hover tools for the bad pixel types
-        #hover_tools[pix_type] = HoverTool(tooltips=[(f'{pix_type} (x, y):', '(@pixels_x, @pixels_y)'),
-        #                                            ('value:', f'@values'),
-        #                                            ],
-        #                                    renderers=[badpixplots[pix_type]])
-        # Add tool to plot
-        #self.plot.tools.append(hover_tools[pix_type])
-
         # Add to the legend
-        if  numpix > 0:
+        if numpix > 0:
             if numpix <= DARK_MONITOR_MAX_BADPOINTS_TO_PLOT:
                 text = f"{numpix} pix {adjective[pix_type]} than baseline"
             else:
@@ -718,8 +699,11 @@ class Dark():
                 logging.info("\t\tAdding {} to calibration set".format(filename))
                 pipeline_files.append(filename)
 
-        # For other instruments, just save the rate files
-        outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument)
+        # Specify that we want to skip the dark current correction step
+        step_args = {'dark_current': {'skip': True}}
+
+        # Call the pipeline
+        outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
 
         for filename in file_list:
             processed_file = filename.replace("_dark", f"_{output_suffix}")
@@ -821,6 +805,7 @@ class Dark():
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
             logging.info("Creating Mean Slope Image {}".format(slope_image))
+
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
                                           noisyxy=new_noisy_pixels, baseline_file=baseline_file)
@@ -1073,18 +1058,27 @@ class Dark():
                             # Copy files from filesystem
 
 
-
-
                             dark_files, not_copied = copy_files(new_file_list, self.data_dir)
                             # Fake dark_files and not_copied, for testing
                             #dark_files = new_file_list
                             #not_copied = []
 
 
-
-
+                            # Check that there were no problems with the file copying. If any of the copied
+                            # files have different sizes between the MAST filesystem and the JWQL filesystem,
+                            # then throw them out.
+                            for dark_file in dark_files:
+                                copied_size = os.stat(dark_file).st_size
+                                orig_size = os.stat(filesystem_path(os.path.basename(dark_file))).st_size
+                                if orig_size != copied_size:
+                                    logging.info(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem.")
+                                    logging.info(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                    not_copied.append(dark_file)
+                                    dark_files.remove(dark_file)
+                                    os.remove(dark_file)
 
                             logging.info('\tNew_filenames: {}'.format(new_file_list))
+
                             logging.info('\tData dir: {}'.format(self.data_dir))
                             logging.info('\tCopied to data dir: {}'.format(dark_files))
                             logging.info('\tNot copied: {}'.format(not_copied))

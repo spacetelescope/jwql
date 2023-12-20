@@ -59,9 +59,11 @@ from jwql.edb.engineering_database import is_valid_mnemonic
 from jwql.website.apps.jwql.models import Anomalies
 
 
-from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT, EXP_TYPE_PER_INSTRUMENT,
-                                  FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT, GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE,
-                                  JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES)
+from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT,
+                                  EXP_TYPE_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT,
+                                  GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND,
+                                  READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
+                                  LOOK_OPTIONS, SORT_OPTIONS, PROPOSAL_CATEGORIES)
 from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
 
 from wtforms import SubmitField, StringField
@@ -93,9 +95,11 @@ class JwqlQueryForm(BaseForm):
         params[instrument]['readpatt_list'] = []
         params[instrument]['exptype_list'] = []
         params[instrument]['grating_list'] = []
+        params[instrument]['subarray_list'] = []
+        params[instrument]['pupil_list'] = []
         params[instrument]['anomalies_list'] = []
         # Generate dynamic lists of apertures to use in forms
-        for aperture in APERTURES_PER_INSTRUMENT[instrument.upper()]:
+        for aperture in APERTURES_PER_INSTRUMENT[instrument.lower()]:
             params[instrument]['aperture_list'].append([query_format(aperture), query_format(aperture)])
         # Generate dynamic lists of filters to use in forms
         for filt in FILTERS_PER_INSTRUMENT[instrument]:
@@ -117,19 +121,49 @@ class JwqlQueryForm(BaseForm):
         for grating in GRATING_PER_INSTRUMENT[instrument]:
             grating = query_format(grating)
             params[instrument]['grating_list'].append([grating, grating])
+        # Generate dynamic lists of subarray options to use in forms
+        for subarray in SUBARRAYS_PER_INSTRUMENT[instrument]:
+            subarray = query_format(subarray)
+            params[instrument]['subarray_list'].append([subarray, subarray])
+        # Generate dynamic lists of pupil options to use in forms
+        for pupil in PUPILS_PER_INSTRUMENT[instrument]:
+            pupil = query_format(pupil)
+            params[instrument]['pupil_list'].append([pupil, pupil])
         # Generate dynamic lists of anomalies to use in forms
         for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
             if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
                 item = [query_format(anomaly), query_format(anomaly)]
                 params[instrument]['anomalies_list'].append(item)
 
-    # Anomaly Parameters
-    instrument = forms.MultipleChoiceField(required=False,
-                                           choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
-                                           widget=forms.CheckboxSelectMultiple)
-    exp_time_max = forms.DecimalField(required=False, initial="685")
-    exp_time_min = forms.DecimalField(required=False, initial="680")
+    # general parameters
+    instrument = forms.MultipleChoiceField(
+        required=False,
+        choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+        widget=forms.CheckboxSelectMultiple)
 
+    look_choices = [(query_format(choice), query_format(choice)) for choice in LOOK_OPTIONS]
+    look_status = forms.MultipleChoiceField(
+        required=False, choices=look_choices, widget=forms.CheckboxSelectMultiple)
+
+    date_range = forms.CharField(required=True)
+
+    cat_choices = [(query_format(choice), query_format(choice)) for choice in PROPOSAL_CATEGORIES]
+    proposal_category = forms.MultipleChoiceField(
+        required=False, choices=cat_choices, widget=forms.CheckboxSelectMultiple)
+
+    sort_choices = [(choice, choice) for choice in SORT_OPTIONS]
+    sort_type = forms.ChoiceField(
+        required=True,
+        choices=sort_choices, initial=sort_choices[2],
+        widget=forms.RadioSelect)
+
+    num_choices = [(50, 50), (100, 100), (200, 200), (500, 500)]
+    num_per_page = forms.ChoiceField(
+        required=True,
+        choices=num_choices, initial=num_choices[1],
+        widget=forms.RadioSelect)
+
+    # instrument specific parameters
     miri_aper = forms.MultipleChoiceField(required=False, choices=params['miri']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_aper = forms.MultipleChoiceField(required=False, choices=params['nirspec']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     niriss_aper = forms.MultipleChoiceField(required=False, choices=params['niriss']['aperture_list'], widget=forms.CheckboxSelectMultiple)
@@ -171,6 +205,18 @@ class JwqlQueryForm(BaseForm):
     niriss_grating = forms.MultipleChoiceField(required=False, choices=params['niriss']['grating_list'], widget=forms.CheckboxSelectMultiple)
     nircam_grating = forms.MultipleChoiceField(required=False, choices=params['nircam']['grating_list'], widget=forms.CheckboxSelectMultiple)
     fgs_grating = forms.MultipleChoiceField(required=False, choices=params['fgs']['grating_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_subarray = forms.MultipleChoiceField(required=False, choices=params['miri']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_subarray = forms.MultipleChoiceField(required=False, choices=params['nirspec']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_subarray = forms.MultipleChoiceField(required=False, choices=params['niriss']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_subarray = forms.MultipleChoiceField(required=False, choices=params['nircam']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_subarray = forms.MultipleChoiceField(required=False, choices=params['fgs']['subarray_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_pupil = forms.MultipleChoiceField(required=False, choices=params['miri']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_pupil = forms.MultipleChoiceField(required=False, choices=params['nirspec']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_pupil = forms.MultipleChoiceField(required=False, choices=params['niriss']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_pupil = forms.MultipleChoiceField(required=False, choices=params['nircam']['pupil_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_pupil = forms.MultipleChoiceField(required=False, choices=params['fgs']['pupil_list'], widget=forms.CheckboxSelectMultiple)
 
     def clean_inst(self):
 
@@ -261,8 +307,10 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             proposal_string = '{:05d}'.format(int(search))
-            search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
-            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string),
+                                                '*', '*{}*.fits'.format(proposal_string))
+            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string),
+                                                     '*', '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
 
@@ -292,9 +340,10 @@ class FileSearchForm(forms.Form):
 
                 if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
-                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
+                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:],
+                                                     all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
-                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # nosec
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # noqa
 
                 self.instrument = all_instruments[0]
             else:

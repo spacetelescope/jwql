@@ -11,6 +11,7 @@ Authors
 -------
 
     - Mees B. Fix
+    - Bryan Hilbert
 
 Use
 ---
@@ -32,9 +33,10 @@ Dependencies
 from datetime import datetime as dt
 from math import pi
 from operator import itemgetter
+import os
 
 from bokeh.layouts import column
-from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
+from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, HoverTool, OpenURL, TapTool
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
@@ -43,7 +45,8 @@ import pandas as pd
 from sqlalchemy import func, and_
 
 import jwql.database.database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT
+from jwql.database.database_interface import CentralStore
+from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
 
@@ -155,6 +158,198 @@ class GeneralDashboard:
         now = dt.now()
         self.date = pd.Timestamp('{}-{}-{}'.format(now.year, now.month, now.day))
 
+    def dashboard_disk_usage(self):
+        """Create trending plot of data volume for various disks. Here we are plotting
+        the results of a "df -hk" call for top-level directories. The results (i.e. on
+        central store) may contain contributions from non-JWQL files, since JWQL can
+        share disks with other projects. These plots are useful for tracking disk usage
+        and requesting more disk space if needed.
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            Set of tabs containing plots of the used and available disk space
+        """
+        # There are two main disks that we want to show usage for. The central store
+        # area, and the disk that is internal to the server. Use the logs entry to
+        # get the central store information, and the preview_image entry to get
+        # server disk information.
+        config = get_config()
+
+        log_data = di.session.query(CentralStore.date, CentralStore.size, CentralStore.available) \
+            .filter(CentralStore.area == 'logs') \
+            .all()
+
+        # Convert to dataframe
+        log_data = pd.DataFrame(log_data)
+
+        preview_data = di.session.query(CentralStore.date, CentralStore.size, CentralStore.available) \
+            .filter(CentralStore.area == 'preview_images') \
+            .all()
+
+        # Convert to dataframe
+        preview_data = pd.DataFrame(preview_data)
+
+        # If the user is requesting a certain time range, cut down the entries
+        if not pd.isnull(self.delta_t):
+            log_data = log_data[(log_data['date'] >= self.date - self.delta_t) & (log_data['date'] <= self.date)]
+            preview_data = preview_data[(preview_data['date'] >= self.date - self.delta_t) & (preview_data['date'] <= self.date)]
+
+        log_results = {'dirname': os.path.abspath(os.path.join(config['log_dir'], '../')),
+                       'results': log_data,
+                       'shortname': 'Central Store'
+                       }
+
+        preview_results = {'dirname': os.path.abspath(os.path.join(config['preview_image_filesystem'], '../')),
+                           'results': preview_data,
+                           'shortname': 'Server'
+                           }
+
+        # Plot total data volume and available disk space versus time
+        plots = {}
+        hover_tool = {}
+        tabs = []
+        for data in [preview_results, log_results]:
+
+            # Calculate the size of the data
+            data['results']['used'] = data['results']['size'] - data['results']['available']
+            source = ColumnDataSource(data['results'])
+
+            # Initialize plot
+            plots[data['shortname']] = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                                              plot_width=800,
+                                              x_axis_type='datetime',
+                                              title=f"Available & Used Storage on {data['shortname']}",
+                                              x_axis_label='Date',
+                                              y_axis_label='Disk Space (TB)')
+
+            plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_dash='dashed', line_color='#C85108', line_width=3)
+            plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', size=10)
+            plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
+            plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
+
+            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
+                                                                             days=["%d %B %Y"],
+                                                                             months=["%d %B %Y"],
+                                                                             years=["%B %Y"],
+                                                                             )
+            plots[data['shortname']].xaxis.major_label_orientation = pi / 4
+            plots[data['shortname']].legend.location = 'top_left'
+
+            hover_tool[data['shortname']] = HoverTool(tooltips=[('Available:', '@available'),
+                                                                ('Used:', '@used'),
+                                                                ('Date:', '@date{%d %b %Y}')
+                                                                ])
+            hover_tool[data['shortname']].formatters = {'@date': 'datetime'}
+            plots[data['shortname']].tools.append(hover_tool[data['shortname']])
+            tabs.append(Panel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
+
+        tabs = Tabs(tabs=tabs)
+
+        di.session.close()
+        return tabs
+
+
+    def dashboard_central_store_data_volume(self):
+        """Create trending plot of data volume for various JWQL-related areas on disk.
+        These plots show data volumes calculated by walking over subdirectories/files in
+        the JWQL-specific directories. So these plots may not include the total used
+        disk volume, in the cases where JWQL is sharing a disk with other projects. These
+        plots are useful for monitoring the total volume of e.g. our preview images.
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each central store area
+        """
+        # Initialize plot
+        plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                      plot_width=800,
+                      x_axis_type='datetime',
+                      title='JWQL directory size',
+                      x_axis_label='Date',
+                      y_axis_label='Disk Space (TB)')
+
+        # This part of the plot should cycle through areas and plot area used values vs. date
+        #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+        arealist = ['logs', 'outputs', 'preview_images', 'thumbnails']
+        colors = ['#F8B195', '#F67280', '#6C5B7B', '#355C7D']
+        for area, color in zip(arealist, colors):
+
+            # Query for used sizes
+            results = di.session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area).all()
+
+            if results:
+                # Convert to dataframe
+                results = pd.DataFrame(results)
+
+                if not pd.isnull(self.delta_t):
+                    results = results[(results['date'] >= self.date - self.delta_t) & (results['date'] <= self.date)]
+
+                # Plot the results
+                source = ColumnDataSource(results)
+                plot.line(x='date', y='used', source=source, line_color=color, line_dash='dashed', legend_label=area, line_width=3)
+                plot.circle(x='date', y='used', source=source, color=color, size=10)
+
+                hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
+                                                 ('Date:', '@date{%d %b %Y}')
+                                                 ])
+                hover_tool.formatters = {'@date': 'datetime'}
+                plot.tools.append(hover_tool)
+
+        plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
+                                                     days=["%d %B %Y"],
+                                                     months=["%d %B %Y"],
+                                                     years=["%B %Y"],
+                                                     )
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.legend.location = 'top_left'
+
+        # Put the "all" plot in a separate figure because it will be larger than all the pieces, which would
+        # throw off the y range if it were in a single plot
+        cen_store_plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
+                                plot_width=800,
+                                x_axis_type='datetime',
+                                title='JWQL central store directory, total data volume',
+                                x_axis_label='Date',
+                                y_axis_label='Disk Space (TB)')
+
+        cen_store_results = di.session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == 'all').all()
+
+        # Group by date
+        if cen_store_results:
+
+            # Convert to dataframe
+            cen_store_results = pd.DataFrame(cen_store_results)
+
+            if not pd.isnull(self.delta_t):
+                cen_store_results = cen_store_results[(cen_store_results['date'] >= self.date - self.delta_t) & (cen_store_results['date'] <= self.date)]
+
+            # Group by date
+            cen_store_source = ColumnDataSource(cen_store_results)
+
+            # Plot the results
+            legend_str = 'File volume'
+            cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_dash='dashed', line_color='#355C7D', line_width=3)
+            cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', size=10)
+            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
+                                                                   days=["%d %B %Y"],
+                                                                   months=["%d %B %Y"],
+                                                                   years=["%B %Y"],
+                                                                   )
+            cen_store_plot.xaxis.major_label_orientation = pi / 4
+            cen_store_plot.legend.location = 'top_left'
+
+            hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
+                                             ('Date:', '@date{%d %b %Y}')
+                                             ])
+            hover_tool.formatters = {'@date': 'datetime'}
+            cen_store_plot.tools.append(hover_tool)
+
+        di.session.close()
+        return plot, cen_store_plot
+
+
     def dashboard_filetype_bar_chart(self):
         """Build bar chart of files based off of type
 
@@ -170,9 +365,9 @@ class GeneralDashboard:
 
         # Keep only the rows containing the most recent timestamp
         data = data[data['date'] == data['date'].max()]
+        date_string = data['date'].max().strftime("%d %b %Y")
 
         # Set title and figures list to make panels
-        title = 'Files per Filetype by Instrument'
         figures = []
 
         # For unique instrument values, loop through data
@@ -181,6 +376,7 @@ class GeneralDashboard:
         for instrument in data.instrument.unique():
             index = data["instrument"] == instrument
             inst_only = data[index].sort_values('filetype')
+            title = f'{JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]} files per Filetype: {date_string}'
             figures.append(self.make_panel(inst_only['filetype'], inst_only['count'], instrument, title, 'File Type'))
 
         tabs = Tabs(tabs=figures)
@@ -195,12 +391,12 @@ class GeneralDashboard:
         plot : bokeh.plotting.figure
             Pie chart figure
         """
-
         # Replace with jwql.website.apps.jwql.data_containers.build_table
         data = build_table('filesystem_instrument')
 
         # Keep only the rows containing the most recent timestamp
         data = data[data['date'] == data['date'].max()]
+        date_string = data['date'].max().strftime("%d %b %Y")
 
         try:
             file_counts = {'nircam': data[data.instrument == 'nircam']['count'].sum(),
@@ -218,12 +414,12 @@ class GeneralDashboard:
         data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index': 'instrument'})
         data['angle'] = data['value'] / data['value'].sum() * 2 * pi
         data['color'] = ['#F8B195', '#F67280', '#C06C84', '#6C5B7B', '#355C7D']
-        plot = figure(title="Number of Files Per Instrument", toolbar_location=None,
+        plot = figure(title=f"Number of Files Per Instrument {date_string}", toolbar_location=None,
                       tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
 
         plot.wedge(x=0, y=1, radius=0.4,
                    start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-                   line_color="white", color='color', legend='instrument', source=data)
+                   line_color="white", color='color', legend_label='instrument', source=data)
 
         url = "{}/@instrument".format(get_base_url())
         taptool = plot.select(type=TapTool)
@@ -251,7 +447,7 @@ class GeneralDashboard:
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        p1 = figure(title="Number of Files in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1 = figure(title="Number of Files in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         p1.scatter(x='date', y='total_file_count', source=source, color='#C85108', size=10)
         disable_scientific_notation(p1)
@@ -260,27 +456,28 @@ class GeneralDashboard:
         # Create separate tooltip for storage plot.
         # Show date and used and available storage together
 
-        p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
-        p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend='Available Storage')
-        p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
+        p2 = figure(title="Available & Used Storage in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Disk Space (TB)')
+        p2.line(x='date', y='available', source=source, color='#C85108', line_dash='dashed', line_width=3, legend_label='Available Storage')
+        p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
-        p2.scatter(x='date', y='used', source=source, color='#C85108', size=10)
+        p2.scatter(x='date', y='used', source=source, color='#355C7D', size=10)
         disable_scientific_notation(p2)
         tab2 = Panel(child=p2, title='Storage')
 
-        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                    days=["%d %B %Y"],
                                                    months=["%d %B %Y"],
-                                                   years=["%d %B %Y"],
+                                                   years=["%B %Y"],
                                                    )
         p1.xaxis.major_label_orientation = pi / 4
 
-        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                    days=["%d %B %Y"],
                                                    months=["%d %B %Y"],
-                                                   years=["%d %B %Y"],
+                                                   years=["%B %Y"],
                                                    )
         p2.xaxis.major_label_orientation = pi / 4
+        p2.legend.location = 'top_left'
 
         tabs = Tabs(tabs=[tab1, tab2])
 
@@ -304,13 +501,14 @@ class GeneralDashboard:
         if not pd.isnull(self.delta_t):
             data = data[(data['start_time'] >= self.date - self.delta_t) & (data['start_time'] <= self.date)]
 
+        # Sort the data by start_time before translating into strings
+        data.sort_values(by='start_time', ascending=False, inplace=True)
+
+        # Now translate times to strings
         data['start_time'] = data['start_time'].map(lambda x: x.strftime('%m-%d-%Y %H:%M:%S'))
         data['end_time'] = data['end_time'].map(lambda x: x.strftime('%m-%d-%Y %H:%M:%S'))
-        # data = data.drop(columns='affected_tables')
-        table_values = data.sort_values(by='start_time', ascending=False).values
-        table_columns = data.columns.values
 
-        return table_columns, table_values
+        return data.columns.values, data.values
 
     def make_panel(self, x_value, top, instrument, title, x_axis_label):
         """Make tab panel for tablulated figure.
@@ -362,9 +560,9 @@ class GeneralDashboard:
         figures = []
         # This is a loop over instruments
         for i in range(len(data)):
-            instrument = data.loc[i]['instrument']
-            filterpupil = data.loc[i]['filter_pupil']
-            num_obs = data.loc[i]['obs_per_filter_pupil']
+            instrument = data.iloc[i]['instrument']
+            filterpupil = np.array(data.iloc[i]['filter_pupil'])
+            num_obs = np.array(data.iloc[i]['obs_per_filter_pupil'])
 
             # Sort by num_obs in order to make the plot more readable
             idx = np.argsort(num_obs)
@@ -379,29 +577,29 @@ class GeneralDashboard:
             for filt, val in zip(filterpupil, num_obs):
                 data_dict[filt] = val
 
-            data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
+            inst_data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
 
             if instrument != 'nircam':
                 # Calculate the angle covered by each filter
-                data['angle'] = data['value']/data['value'].sum() * 2 * np.pi
+                inst_data['angle'] = inst_data['value'] / inst_data['value'].sum() * 2 * np.pi
 
                 # Keep all wedges the same color, except for those that are a very
                 # small fraction, and will be covered in the second pie chart. Make
                 # those wedges grey in the primary pie chart.
-                data['colors'] = ['#c85108'] * len(data)
-                data.loc[data['value'] < 0.5, 'colors'] = '#bec4d4'
+                inst_data['colors'] = ['#c85108'] * len(inst_data)
+                inst_data.loc[inst_data['value'] < 0.5, 'colors'] = '#bec4d4'
 
                 # Make a dataframe containing only the filters that are used in less
                 # than some threshold percentage of observations
-                small = data.loc[data['value'] <0.5].copy()
+                small = inst_data.loc[inst_data['value'] < 0.5].copy()
 
                 # Recompute the angles for these, and make them all the same color.
                 small['angle'] = small['value'] / small['value'].sum() * 2 * np.pi
                 small['colors'] = ['#bec4d4'] * len(small)
 
                 # Create two pie charts
-                pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", data)
-                small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", sw_small)
+                pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", inst_data)
+                small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", small)
 
                 # Place the pie charts in a column/Panel, and append to the figure
                 colplots = column(pie_fig, small_pie_fig)
@@ -426,19 +624,19 @@ class GeneralDashboard:
                             channel.append('LW')
                     else:
                         channel.append('SW')
-                data['channel'] = channel
+                inst_data['channel'] = channel
 
                 # Set the colors. All wedges with a pie chart have the same color.
                 color_options = {'LW': '#c85108', 'SW': '#3d85c6', 'Dark': '#bec4d4'}
                 colors = []
                 for entry in channel:
                     colors.append(color_options[entry])
-                data['colors'] = colors
+                inst_data['colors'] = colors
 
                 # Even though it's not quite correct, create separate charts for SW vs LW. This will
                 # hopefully make them much easier to read
-                sw_data = data.loc[data['channel'] == 'SW'].copy()
-                lw_data = data.loc[data['channel'] == 'LW'].copy()
+                sw_data = inst_data.loc[inst_data['channel'] == 'SW'].copy()
+                lw_data = inst_data.loc[inst_data['channel'] == 'LW'].copy()
 
                 # Recalculate the angles. These won't be strictly correct since SW and LW filters
                 # are not both used exactly 50% of the time, but it's close enough for now.
@@ -554,21 +752,21 @@ class GeneralDashboard:
                 figures.append(tab_sw)
                 figures.append(tab_lw)
 
-            # Add in a placeholder plot for FGS, in order to keep the page looking consistent
-            # from instrument to instrument
-            instrument = 'fgs'
-            data_dict = {}
-            data_dict['None'] = 100.
-            data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
-            data['angle'] = 2 * np.pi
-            data['colors'] = ['#c85108']
-            pie_fig = create_filter_based_pie_chart("FGS has no filters", data)
-            small_pie_fig = create_filter_based_pie_chart("FGS has no filters", data)
+        # Add in a placeholder plot for FGS, in order to keep the page looking consistent
+        # from instrument to instrument
+        instrument = 'fgs'
+        data_dict = {}
+        data_dict['None'] = 100.
+        inst_data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
+        inst_data['angle'] = 2 * np.pi
+        inst_data['colors'] = ['#c85108']
+        pie_fig = create_filter_based_pie_chart("FGS has no filters", inst_data)
+        small_pie_fig = create_filter_based_pie_chart("FGS has no filters", inst_data)
 
-            # Place the pie charts in a column/Panel, and append to the figure
-            colplots = column(pie_fig, small_pie_fig)
-            tab = Panel(child=colplots, title=f'{instrument}')
-            figures.append(tab)
+        # Place the pie charts in a column/Panel, and append to the figure
+        colplots = column(pie_fig, small_pie_fig)
+        tab = Panel(child=colplots, title=f'{instrument}')
+        figures.append(tab)
 
         tabs = Tabs(tabs=figures)
 

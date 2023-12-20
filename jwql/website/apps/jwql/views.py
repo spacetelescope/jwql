@@ -42,7 +42,6 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
-from copy import deepcopy
 import csv
 import datetime
 import json
@@ -54,6 +53,7 @@ import socket
 
 from bokeh.layouts import layout
 from bokeh.embed import components
+from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from sqlalchemy import inspect
@@ -61,7 +61,7 @@ from sqlalchemy import inspect
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -74,25 +74,23 @@ from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_instrument_looks
-from .data_containers import get_thumbnails_all_instruments
+from .data_containers import get_rootnames_from_query
 from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .data_containers import thumbnails_date_range_ajax
 from .forms import JwqlQueryForm
 from .forms import FileSearchForm
 if not os.environ.get("READTHEDOCS"):
-    from .models import Observation, Proposal, RootFileInfo
+    from .models import RootFileInfo
 from astropy.io import fits
-from astropy.time import Time
-import astropy.units as u
 
 
 def jwql_query(request):
     """The anomaly query form page"""
 
     form = JwqlQueryForm(request.POST or None)
+    form.fields['sort_type'].initial = request.session.get('image_sort', 'Recent')
 
     if request.method == 'POST':
         if form.is_valid():
@@ -105,9 +103,12 @@ def jwql_query(request):
                 query_configs[instrument]['exptypes'] = [query_unformat(i) for i in form.cleaned_data['{}_exptype'.format(instrument)]]
                 query_configs[instrument]['readpatts'] = [query_unformat(i) for i in form.cleaned_data['{}_readpatt'.format(instrument)]]
                 query_configs[instrument]['gratings'] = [query_unformat(i) for i in form.cleaned_data['{}_grating'.format(instrument)]]
+                query_configs[instrument]['subarrays'] = [query_unformat(i) for i in form.cleaned_data['{}_subarray'.format(instrument)]]
+                query_configs[instrument]['pupils'] = [query_unformat(i) for i in form.cleaned_data['{}_pupil'.format(instrument)]]
                 query_configs[instrument]['anomalies'] = [query_unformat(i) for i in form.cleaned_data['{}_anomalies'.format(instrument)]]
 
-            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_anomalies = {}, {}, {}, {}, {}, {}, {}
+            all_filters, all_apers, all_detectors, all_exptypes = {}, {}, {}, {}
+            all_readpatts, all_gratings, all_subarrays, all_pupils, all_anomalies = {}, {}, {}, {}, {}
             for instrument in query_configs:
                 all_filters[instrument] = query_configs[instrument]['filters']
                 all_apers[instrument] = query_configs[instrument]['apertures']
@@ -115,19 +116,25 @@ def jwql_query(request):
                 all_exptypes[instrument] = query_configs[instrument]['exptypes']
                 all_readpatts[instrument] = query_configs[instrument]['readpatts']
                 all_gratings[instrument] = query_configs[instrument]['gratings']
+                all_subarrays[instrument] = query_configs[instrument]['subarrays']
+                all_pupils[instrument] = query_configs[instrument]['pupils']
                 all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
             parameters = QUERY_CONFIG_TEMPLATE.copy()
-            parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
-            parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
-            parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
-            parameters[QUERY_CONFIG_KEYS.FILTERS] = all_filters
-            parameters[QUERY_CONFIG_KEYS.DETECTORS] = all_detectors
-            parameters[QUERY_CONFIG_KEYS.EXP_TYPES] = all_exptypes
-            parameters[QUERY_CONFIG_KEYS.READ_PATTS] = all_readpatts
-            parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
-            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MIN] = str(form.cleaned_data['exp_time_min'])
-            parameters[QUERY_CONFIG_KEYS.EXP_TIME_MAX] = str(form.cleaned_data['exp_time_max'])
+            parameters[QueryConfigKeys.INSTRUMENTS] = form.cleaned_data['instrument']
+            parameters[QueryConfigKeys.LOOK_STATUS] = form.cleaned_data['look_status']
+            parameters[QueryConfigKeys.DATE_RANGE] = form.cleaned_data['date_range']
+            parameters[QueryConfigKeys.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
+            parameters[QueryConfigKeys.SORT_TYPE] = form.cleaned_data['sort_type']
+            parameters[QueryConfigKeys.ANOMALIES] = all_anomalies
+            parameters[QueryConfigKeys.APERTURES] = all_apers
+            parameters[QueryConfigKeys.FILTERS] = all_filters
+            parameters[QueryConfigKeys.DETECTORS] = all_detectors
+            parameters[QueryConfigKeys.EXP_TYPES] = all_exptypes
+            parameters[QueryConfigKeys.READ_PATTS] = all_readpatts
+            parameters[QueryConfigKeys.GRATINGS] = all_gratings
+            parameters[QueryConfigKeys.SUBARRAYS] = all_subarrays
+            parameters[QueryConfigKeys.PUPILS] = all_pupils
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
@@ -202,114 +209,14 @@ def save_page_navigation_data_ajax(request):
     if request.method == 'POST':
         navigate_dict = request.POST.get('navigate_dict')
         # Save session in form {rootname:expstart}
-        rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
+        rootname_expstarts = dict()
+        for item in navigate_dict.split(','):
+            rootname, expstart = item.split("=")
+            rootname_expstarts[rootname] = float(expstart)
         request.session['navigation_data'] = rootname_expstarts
+
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-
-
-def archive_date_range(request, inst):
-    """Generate the page for date range images
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    template = 'archive_date_range.html'
-    sort_type = request.session.get('image_sort', 'Recent')
-    group_type = request.session.get('image_group', 'Exposure')
-    context = {'inst': inst,
-               'base_url': get_base_url(),
-               'sort': sort_type,
-               'group': group_type}
-
-    return render(request, template, context)
-
-
-def archive_date_range_ajax(request, inst, start_date, stop_date):
-    """Generate the page listing all archived images within the inclusive date range for all proposals
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-    start_date : str
-        Start date for date range
-    stop_date : str
-        stop date for date range
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    # Calculate start date/time in MJD format to begin our range
-    inclusive_start_time = Time(start_date)
-
-    # Add a minute to the stop time and mark it 'exclusive' for code clarity,
-    # doing this to get all seconds selected minute
-    exclusive_stop_time = Time(stop_date) + (1 * u.minute)
-
-    # Get a queryset of all observations STARTING WITHIN our date range
-    begin_after_start = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsstart__gte=inclusive_start_time.mjd)
-    all_entries_beginning_in_range = begin_after_start.filter(
-        obsstart__lt=exclusive_stop_time.mjd)
-
-    # Get a queryset of all observations ENDING WITHIN our date range
-    end_after_start = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsend__gte=inclusive_start_time.mjd)
-    all_entries_ending_in_range = end_after_start.filter(
-        obsend__lt=exclusive_stop_time.mjd)
-
-    # Get a queryset of all observations SPANNING
-    # (starting before and ending after) our date range.
-    # Bump our window out a few days to catch hypothetical
-    # observations that last over 24 hours.
-    # The larger the window the more time the query takes so keeping it tight.
-    two_days_before_start_time = Time(start_date) - (2 * u.day)
-    two_days_after_end_time = Time(stop_date) + (3 * u.day)
-    end_after_stop = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsend__gte=two_days_after_end_time.mjd)
-    all_entries_spanning_range = end_after_stop.filter(
-        obsstart__lt=two_days_before_start_time.mjd)
-
-    obs_beginning = [observation for observation in all_entries_beginning_in_range]
-    obs_ending = [observation for observation in all_entries_ending_in_range]
-    obs_spanning = [observation for observation in all_entries_spanning_range]
-
-    # Create a single list of all pertinent observations
-    all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
-    # Get all thumbnails that occurred within the time frame for these observations
-    data = thumbnails_date_range_ajax(
-        inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
-    data['thumbnail_group'] = request.session.get("image_group", "Exposure")
-
-    # Create Dictionary of Rootnames with expstart
-    save_page_navigation_data(request, data)
-    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def archived_proposals(request, inst):
@@ -387,7 +294,7 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     save_page_navigation_data(request, data)
@@ -431,7 +338,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
@@ -465,26 +372,45 @@ def archive_thumbnails_query_ajax(request):
     """
 
     parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
-    # Ensure the instrument is correctly capitalized
-    instruments_list = []
-    for instrument in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
-        instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
-        instruments_list.append(instrument)
+    filtered_rootnames = get_rootnames_from_query(parameters)
 
-    # when parameters only contains nirspec as instrument,
-    # thumbnails still end up being all niriss data
-    thumbnails = get_thumbnails_all_instruments(parameters)
+    paginator = Paginator(filtered_rootnames,
+                          parameters[QueryConfigKeys.NUM_PER_PAGE])
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
 
-    data = thumbnails_query_ajax(thumbnails)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    data = thumbnails_query_ajax(page_obj.object_list)
+    data['thumbnail_sort'] = parameters[QueryConfigKeys.SORT_TYPE]
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
+    # add top level parameters for summarizing
+    data['query_config'] = {}
+    for key in parameters:
+        value = parameters[key]
+        if isinstance(value, dict):
+            for subkey in value:
+                subvalue = value[subkey]
+                if subvalue:
+                    data['query_config'][f'{key}_{subkey}'] = subvalue
+        elif value:
+            data['query_config'][key] = value
+
+    # pass pagination info
+    if page_obj.has_previous():
+        data['previous_page'] = page_obj.previous_page_number()
+    data['current_page'] = page_obj.number
+    if page_obj.has_next():
+        data['next_page'] = page_obj.next_page_number()
+    data['total_pages'] = paginator.num_pages
+    data['total_files'] = paginator.count
+
+    request.session['image_sort'] = parameters[QueryConfigKeys.SORT_TYPE]
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
-    """Generate the dashbaord page
+    """Generate the dashboard page
 
     Parameters
     ----------
@@ -502,12 +428,16 @@ def dashboard(request):
     db = get_dashboard_components(request)
     pie_graph = db.dashboard_instrument_pie_chart()
     files_graph = db.dashboard_files_per_day()
+    useage_graph = db.dashboard_disk_usage()
+    directories_usage_graph, central_store_usage_graph = db.dashboard_central_store_data_volume()
     filetype_bar = db.dashboard_filetype_bar_chart()
     table_columns, table_values = db.dashboard_monitor_tracking()
     grating_plot = db.dashboard_exposure_count_by_filter()
     anomaly_plot = db.dashboard_anomaly_per_instrument()
 
-    plot = layout([[files_graph], [pie_graph, filetype_bar],
+    plot = layout([[files_graph, useage_graph],
+                   [directories_usage_graph, central_store_usage_graph],
+                   [pie_graph, filetype_bar],
                    [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
     script, div = components(plot)
 
@@ -825,13 +755,14 @@ def query_submit(request):
     """
 
     template = 'query_submit.html'
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
+    page_number = request.GET.get("page", 1)
     context = {'inst': '',
                'base_url': get_base_url(),
                'sort': sort_type,
-               'group': group_type
-               }
+               'group': group_type,
+               'page': page_number}
 
     return render(request, template, context)
 
@@ -891,7 +822,7 @@ def view_header(request, inst, filename, filetype):
 
 
 def explore_image(request, inst, file_root, filetype):
-    """Generate the header view page
+    """Generate the explore image page.
 
     Parameters
     ----------
@@ -957,7 +888,8 @@ def explore_image(request, inst, file_root, filetype):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
+def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', low_lim=None, high_lim=None,
+                       ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -971,8 +903,8 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         FITS file_root of selected image in filesystem
     filetype : str
         Type of file (e.g. ``uncal``)
-    scaling : str
-        Scaling to implement in interactive preview image ("log" or "lin")
+    line_plots : str
+        If 'true', column and row plots will be computed and shown with the image.
     low_lim : str
         Signal value to use as the lower limit of the displayed image. If "None", it will be calculated using the ZScale function
     high_lim : str
@@ -1030,7 +962,14 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         else:
             integ = int(int1_nr)
 
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name, group, integ)
+    if str(line_plots).strip().lower() == 'true':
+        line_plots = True
+    else:
+        line_plots = False
+
+    int_preview_image = InteractivePreviewImg(
+        full_fits_file, low_lim=low_lim, high_lim=high_lim, extname=ext_name,
+        group=group, integ=integ, line_plots=line_plots)
 
     context = {'inst': "inst",
                'script': int_preview_image.script,
@@ -1202,7 +1141,7 @@ def view_exposure(request, inst, group_root):
 
     # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     if sort_type in ['Descending']:
         matching_rootfiles = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
@@ -1300,7 +1239,7 @@ def view_image(request, inst, file_root):
     # sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in
     # jwql.js->sort_by_thumbnails
-    sort_type = request.session.get('image_sort', 'Ascending')
+    sort_type = request.session.get('image_sort', 'Recent')
     if sort_type in ['Descending']:
         file_root_list = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
