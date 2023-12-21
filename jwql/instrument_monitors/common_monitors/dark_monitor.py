@@ -234,7 +234,8 @@ class Dark():
         with engine.begin() as connection:
             connection.execute(self.pixel_table.__table__.insert(), entry)
 
-    def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None):
+    def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None,
+                                 min_time='', max_time=''):
         """Create and save a png containing the mean dark slope image,
         to be displayed in the web app
 
@@ -258,10 +259,17 @@ class Dark():
         baseline_file : str
             Name of fits file containing the mean slope image to which ``image`` was compared
             when looking for new hot/dead/noisy pixels
+
+        min_time : str
+            Earliest observation time, in MJD, used in the creation of ``image``.
+
+        max_time : str
+            Latest observation time, in MJD, used in the creation of ``image``.
+
         """
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.png'.format(self.instrument.lower(),
                                                                        self.aperture.lower(),
-                                                                       self.query_start, self.query_end)
+                                                                       min_time, max_time)
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
 
@@ -275,8 +283,8 @@ class Dark():
             img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
 
             # Create figure
-            start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
-            end_time = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            start_time = Time(float(min_time), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            end_time = Time(float(max_time), format='mjd').tt.datetime.strftime("%m/%d/%Y")
 
             self.plot = figure(title=f'{self.aperture}: {num_files} files. {start_time} to {end_time}', tools='')
             #                   tools='pan,box_zoom,reset,wheel_zoom,save')
@@ -733,7 +741,16 @@ class Dark():
 
             # Calculate a mean slope image from the inputs
             slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
-            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
+
+            # Use the min and max observation time of the input files to create the slope file name
+            min_time_str = min_time.strftime('%Y-%m-%dT%H:%m:%S')
+            min_time_mjd = Time(min_time_str, format='isot', scale='utc').mjd
+            min_time_mjd_trunc = "{:.4f}".format(min_time_mjd)
+            max_time_str = max_time.strftime('%Y-%m-%dT%H:%m:%S')
+            max_time_mjd = Time(max_time_str, format='isot', scale='utc').mjd
+            max_time_mjd_trunc = "{:.4f}".format(max_time_mjd)
+            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files,
+                                                         min_time_mjd_trunc, max_time_mjd_trunc)
 
             # Free up memory
             del slope_image_stack
@@ -761,7 +778,15 @@ class Dark():
                     baseline_stdev = deepcopy(stdev_image)
                 else:
                     logging.info('\tBaseline file is {}'.format(baseline_file))
-                    baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
+
+                    if not os.path.isfile(baseline_file):
+                        logging.warning((f'\tBaseline file {baseline_file} does not exist. Setting '
+                                         'the current mean slope image to be the new baseline.'))
+                        baseline_file = mean_slope_file
+                        baseline_mean = deepcopy(slope_image)
+                        baseline_stdev = deepcopy(stdev_image)
+                    else:
+                        baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
                 # Check the hot/dead pixel population for changes
                 logging.info("\tFinding new hot/dead pixels")
@@ -804,17 +829,22 @@ class Dark():
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-            logging.info("Creating Mean Slope Image {}".format(slope_image))
-
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
-                                          noisyxy=new_noisy_pixels, baseline_file=baseline_file)
+                                          noisyxy=new_noisy_pixels, baseline_file=baseline_file,
+                                          min_time=min_time_mjd_trunc, max_time=max_time_mjd_trunc)
             logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
             # ----- Calculate image statistics -----
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
+
+            print('amps:')
+            print(number_of_amps, amp_bounds)
+            stop
+
+
             logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
             # Calculate mean and stdev values, and fit a Gaussian to the
@@ -935,14 +965,14 @@ class Dark():
 
                 # If the aperture is not listed in the threshold file, we need
                 # a default
-                if not np.any(match):
-                    integration_count_threshold = 1
-                    self.skipped_initial_ints = 0
-                    logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
-                                     'with the default threshold of 1 file, and no skipped integrations.'.format(aperture)))
-                else:
-                    integration_count_threshold = limits['Threshold'][match][0]
-                    self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
+                #if not np.any(match):
+                #    integration_count_threshold = 1
+                #    self.skipped_initial_ints = 0
+                #    logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
+                #                     'with the default threshold of 1 file, and no skipped integrations.'.format(aperture)))
+                #else:
+                integration_count_threshold = limits['Threshold'][match][0]
+                self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
                 self.aperture = aperture
 
                 # We need a separate search for each readout pattern
@@ -1165,7 +1195,7 @@ class Dark():
 
         logging.info('Dark Monitor completed successfully.')
 
-    def save_mean_slope_image(self, slope_img, stdev_img, files):
+    def save_mean_slope_image(self, slope_img, stdev_img, files, min_time, max_time):
         """Save the mean slope image and associated stdev image to a
         file
 
@@ -1181,6 +1211,12 @@ class Dark():
         files : list
             List of input files used to construct the mean slope image
 
+        min_time : str
+            Earliest observation time, in MJD, corresponding to ``files``.
+
+        max_time : str
+            Latest observation time, in MJD, corresponding to ``files``.
+
         Returns
         -------
         output_filename : str
@@ -1189,7 +1225,7 @@ class Dark():
 
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
-                                                                        self.query_start, self.query_end)
+                                                                        min_time, max_time)
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
@@ -1201,6 +1237,8 @@ class Dark():
         primary_hdu.header['APERTURE'] = (self.aperture, 'Aperture name')
         primary_hdu.header['QRY_STRT'] = (self.query_start, 'MAST Query start time (MJD)')
         primary_hdu.header['QRY_END'] = (self.query_end, 'MAST Query end time (MJD)')
+        primary_hdu.header['MIN_TIME'] = (min_time, 'Beginning obs time (MJD)')
+        primary_hdu.header['MAX_TIME'] = (max_time, 'Ending obs time (MJD)')
 
         files_string = 'FILES USED: '
         for filename in files:
@@ -1691,6 +1729,11 @@ class Dark():
             # Create a histogram
             lower_bound = (amp_mean - 7 * amp_stdev)
             upper_bound = (amp_mean + 7 * amp_stdev)
+
+
+            print(y_start,y_end,y_step, x_start,x_end,x_step)
+            print(amp_mean, amp_stdev, lower_bound, upper_bound)
+
 
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
