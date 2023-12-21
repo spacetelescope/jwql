@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+<title>{{ inst }} Background Monitor - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} Background Monitor</h1>
+		<hr>
+
+		<div width=100%>
+			{% for bkg_plot in bkg_plots %}
+				<img src={{ bkg_plot | safe }} width="100%">
+				<br><br><hr>
+			{% endfor %}
+		</div>
+
+	</main>
+
+{% endblock %}

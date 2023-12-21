@@ -657,48 +657,39 @@ MSA_SUFFIX = ["msa"]
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
-    "fgs": [
-        ("Bad Pixel Monitor", "/fgs/bad_pixel_monitor"),
-        ("Cosmic Ray Monitor", "#"),
-        ("Dark Current Monitor", "/fgs/dark_monitor"),
-        ("EDB Telemetry Monitor", "/fgs/edb_monitor"),
-        ("Readnoise Monitor", "/fgs/readnoise_monitor"),
-    ],
-    "miri": [
-        ("Bad Pixel Monitor", "/miri/bad_pixel_monitor"),
-        ("Cosmic Ray Monitor", "#"),
-        ("Dark Current Monitor", "/miri/dark_monitor"),
-        ("EDB Telemetry Monitor", "/miri/edb_monitor"),
-        ("Readnoise Monitor", "/miri/readnoise_monitor"),
-    ],
-    "nircam": [
-        ("Bad Pixel Monitor", "/nircam/bad_pixel_monitor"),
-        ("Bias Monitor", "/nircam/bias_monitor"),
-        ("Cosmic Ray Monitor", "#"),
-        ("Dark Current Monitor", "/nircam/dark_monitor"),
-        ("EDB Telemetry Monitor", "/nircam/edb_monitor"),
-        ("Readnoise Monitor", "/nircam/readnoise_monitor"),
-    ],
-    "niriss": [
-        ("Bad Pixel Monitor", "/niriss/bad_pixel_monitor"),
-        ("Bias Monitor", "/niriss/bias_monitor"),
-        ("Cosmic Ray Monitor", "#"),
-        ("Dark Current Monitor", "/niriss/dark_monitor"),
-        ("EDB Telemetry Monitor", "/niriss/edb_monitor"),
-        ("Readnoise Monitor", "/niriss/readnoise_monitor"),
-    ],
-    "nirspec": [
-        ("Bad Pixel Monitor", "/nirspec/bad_pixel_monitor"),
-        ("Bias Monitor", "/nirspec/bias_monitor"),
-        ("Dark Monitor", "/nirspec/dark_monitor"),
-        ("Cosmic Ray Monitor", "#"),
-        ("EDB Telemetry Monitor", "/nirspec/edb_monitor"),
-        ("MSATA Monitor", "/nirspec/msata_monitor"),
-        ("Readnoise Monitor", "/nirspec/readnoise_monitor"),
-        ("WATA Monitor", "/nirspec/wata_monitor"),
-    ],
-}
-
+    'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
+            ('Cosmic Ray Monitor', '#'),
+            ('Dark Current Monitor', '/fgs/dark_monitor'),
+            ('EDB Telemetry Monitor', '/fgs/edb_monitor'),
+            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
+    'miri': [('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
+             ('Cosmic Ray Monitor', '#'),
+             ('Dark Current Monitor', '/miri/dark_monitor'),
+             ('EDB Telemetry Monitor', '/miri/edb_monitor'),
+             ('Readnoise Monitor', '/miri/readnoise_monitor')],
+    'nircam': [('Background Monitor', '/nircam/background_monitor'),
+               ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
+               ('Bias Monitor', '/nircam/bias_monitor'),
+               ('Claw Monitor', '/nircam/claw_monitor'),
+               ('Cosmic Ray Monitor', '#'),
+               ('Dark Current Monitor', '/nircam/dark_monitor'),
+               ('EDB Telemetry Monitor', '/nircam/edb_monitor'),
+               ('Readnoise Monitor', '/nircam/readnoise_monitor')],
+    'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
+               ('Bias Monitor', '/niriss/bias_monitor'),
+               ('Cosmic Ray Monitor', '#'),
+               ('Dark Current Monitor', '/niriss/dark_monitor'),
+               ('EDB Telemetry Monitor', '/niriss/edb_monitor'),
+               ('Readnoise Monitor', '/niriss/readnoise_monitor')],
+    'nirspec': [('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
+                ('Bias Monitor', '/nirspec/bias_monitor'),
+                ('Dark Monitor', '/nirspec/dark_monitor'),
+                ('Cosmic Ray Monitor', '#'),
+                ('EDB Telemetry Monitor', '/nirspec/edb_monitor'),
+                ('MSATA Monitor', '/nirspec/msata_monitor'),
+                ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
+                ('WATA Monitor', '/nirspec/wata_monitor')
+                ]}
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ["psfstack", "psfalign", "psfsub"]
 
