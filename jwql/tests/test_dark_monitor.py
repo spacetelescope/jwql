@@ -153,6 +153,12 @@ def generate_data_for_file_splitting_test():
                 ]
     test12 = (files, start_times, end_times, integration_list, threshold, expected)
 
+    # In this case, the final 2 files are grouped together due to being taken close
+    # in time to one another. However, they do not contain enough integrations to
+    # reach the threshold. Since these are the final two files, we have no way of
+    # knowing if they are just the first two observations of a larger set that should
+    # be grouped. Therefore, the dark monitor ignores these final two files, under
+    # the assumption that they will be used the next time the monitor is run.
     deltat = [50., 49., 48., 47., 34., 33., 32., 31., 20., 19.]
     start_times = [now - dt for dt in deltat]
     end_times = [s+0.1 for s in start_times]
@@ -160,8 +166,7 @@ def generate_data_for_file_splitting_test():
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
                 ['file_2.fits', 'file_3.fits'],
-                ['file_4.fits', 'file_5.fits', 'file_6.fits', 'file_7.fits'],
-                ['file_8.fits', 'file_9.fits']
+                ['file_4.fits', 'file_5.fits', 'file_6.fits', 'file_7.fits']
                 ]
     test13 = (files, start_times, end_times, integration_list, threshold, expected)
 
@@ -279,6 +284,10 @@ def test_split_files_into_sub_lists(files, start_times, end_times, integration_l
     d = dark_monitor.Dark()
     d.instrument = 'nircam'
     d.split_files_into_sub_lists(files, start_times, end_times, integration_list, threshold)
+
+    print(files, start_times, end_times, integration_list, threshold, expected)
+
+
     assert d.file_batches == expected
 
 
