@@ -839,12 +839,6 @@ class Dark():
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-
-            print('amps:')
-            print(number_of_amps, amp_bounds)
-            stop
-
-
             logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
             # Calculate mean and stdev values, and fit a Gaussian to the
@@ -1729,11 +1723,6 @@ class Dark():
             # Create a histogram
             lower_bound = (amp_mean - 7 * amp_stdev)
             upper_bound = (amp_mean + 7 * amp_stdev)
-
-
-            print(y_start,y_end,y_step, x_start,x_end,x_step)
-            print(amp_mean, amp_stdev, lower_bound, upper_bound)
-
 
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))

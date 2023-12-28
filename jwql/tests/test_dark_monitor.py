@@ -40,7 +40,7 @@ def generate_data_for_file_splitting_test():
     now = Time.now().mjd
     deltat = [26., 25., 24., 23., 22., 4., 3., 2., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 5.  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
@@ -52,7 +52,7 @@ def generate_data_for_file_splitting_test():
     # Final epoch may not be over. Not enough ints in final epoch
     deltat = [26., 25., 24., 23., 22., 4., 3., 2., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 6.  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
@@ -63,18 +63,18 @@ def generate_data_for_file_splitting_test():
     # Final epoch may not be over. Not enough ints in final subgroup of final epoch
     deltat = [26., 25., 24., 23., 22., 4., 3., 2., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 6.  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 3, 3, 2, 2]
     expected = [['file_0.fits', 'file_1.fits'],
                 ['file_2.fits', 'file_3.fits', 'file_4.fits'],
                 ['file_5.fits', 'file_6.fits', 'file_7.fits']
                 ]
-    test3= (files, start_times, end_times, integration_list, threshold, expected)
+    test3 = (files, start_times, end_times, integration_list, threshold, expected)
 
     deltat = [40., 39., 38., 37., 36., 18., 17., 16., 15., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 5.  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
@@ -85,7 +85,7 @@ def generate_data_for_file_splitting_test():
 
     deltat = [40., 39., 38., 37., 36., 18., 17., 16., 15., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 6.  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
@@ -96,7 +96,7 @@ def generate_data_for_file_splitting_test():
 
     deltat = [9., 8., 7., 6., 5., 4., 3., 2., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     integration_list = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     threshold = 6
     expected = [['file_0.fits', 'file_1.fits', 'file_2.fits', 'file_3.fits', 'file_4.fits', 'file_5.fits']]
@@ -111,32 +111,32 @@ def generate_data_for_file_splitting_test():
     threshold = 10
     expected = [['file_0.fits', 'file_1.fits', 'file_2.fits', 'file_3.fits', 'file_4.fits', 'file_5.fits',
                  'file_6.fits', 'file_7.fits', 'file_8.fits', 'file_9.fits']
-                 ]
+                ]
     test8 = (files, start_times, end_times, integration_list, threshold, expected)
 
     deltat = [23., 22., 21., 20., 19., 18., 17., 16., 15., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     integration_list = [1] * len(start_times)
     threshold = 10
     expected = [['file_0.fits', 'file_1.fits', 'file_2.fits', 'file_3.fits', 'file_4.fits', 'file_5.fits',
                  'file_6.fits', 'file_7.fits', 'file_8.fits']
-                 ]
+                ]
     test9 = (files, start_times, end_times, integration_list, threshold, expected)
 
     deltat = [9., 8., 7., 6., 5., 4., 3., 2., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     integration_list = [1] * len(start_times)
     threshold = 10
     expected = [['file_0.fits', 'file_1.fits', 'file_2.fits', 'file_3.fits', 'file_4.fits', 'file_5.fits',
                  'file_6.fits', 'file_7.fits', 'file_8.fits', 'file_9.fits']
-                 ]
+                ]
     test10 = (files, start_times, end_times, integration_list, threshold, expected)
 
     deltat = [9., 8., 7., 6., 5., 4., 3., 2., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     integration_list = [1] * len(start_times)
     threshold = 11
     expected = []
@@ -144,7 +144,7 @@ def generate_data_for_file_splitting_test():
 
     deltat = [40., 39., 38., 37., 24., 23., 22., 21., 1., 0.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 6  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
@@ -161,7 +161,7 @@ def generate_data_for_file_splitting_test():
     # the assumption that they will be used the next time the monitor is run.
     deltat = [50., 49., 48., 47., 34., 33., 32., 31., 20., 19.]
     start_times = [now - dt for dt in deltat]
-    end_times = [s+0.1 for s in start_times]
+    end_times = [s + 0.1 for s in start_times]
     threshold = 6  # integrations
     integration_list = [3, 3, 2, 2, 2, 1, 1, 1, 1, 1]
     expected = [['file_0.fits', 'file_1.fits'],
@@ -284,9 +284,6 @@ def test_split_files_into_sub_lists(files, start_times, end_times, integration_l
     d = dark_monitor.Dark()
     d.instrument = 'nircam'
     d.split_files_into_sub_lists(files, start_times, end_times, integration_list, threshold)
-
-    print(files, start_times, end_times, integration_list, threshold, expected)
-
 
     assert d.file_batches == expected
 
