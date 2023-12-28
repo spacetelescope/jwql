@@ -28,7 +28,7 @@ from astropy.stats import sigma_clip
 from bokeh.embed import components, file_html
 from bokeh.layouts import layout
 from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models.widgets import Tabs, TabPanel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
 from datetime import datetime, timedelta
@@ -281,7 +281,7 @@ class BiasMonitorPlots():
                                   ]
                                  )
             bias_layout.sizing_mode = 'scale_width'
-            bias_tab = Panel(child=bias_layout, title=aperture)
+            bias_tab = TabPanel(child=bias_layout, title=aperture)
             tabs.append(bias_tab)
 
         # Build tabs

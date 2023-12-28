@@ -22,9 +22,8 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import column, row
-# from bokeh.models import Panel, Tabs  # bokeh <= 3.0
 from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.models import TabPanel, Tabs  # bokeh >= 3.0
+from bokeh.models import TabPanel, Tabs
 from bokeh.plotting import figure
 from django.templatetags.static import static
 import numpy as np
