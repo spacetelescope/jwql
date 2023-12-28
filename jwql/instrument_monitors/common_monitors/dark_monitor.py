@@ -989,7 +989,7 @@ class Dark():
                     new_filenames = []
                     for file_entry in new_entries:
                         try:
-                             new_filenames.append(filesystem_path(file_entry['filename']))
+                            new_filenames.append(filesystem_path(file_entry['filename']))
                         except FileNotFoundError:
                             logging.warning(f"\t\tUnable to locate {file_entry['filename']} in filesystem. Not including in processing.")
 
@@ -1080,14 +1080,14 @@ class Dark():
                             self.process(dark_files)
 
                             # Get the starting and ending time of the files in this monitor run
-                            batch_start_time  = np.min(np.array(batch_start_time))
+                            batch_start_time = np.min(np.array(batch_start_time))
                             batch_end_time = np.max(np.array(batch_end_time))
 
                             # Update the query history once for each group of files
                             new_entry = {'instrument': instrument,
                                          'aperture': aperture,
                                          'readpattern': self.readpatt,
-                                         'start_time_mjd': batch_start_time, #-- something is wrong here. Seeing 0.0 and 2.0 in testing on server
+                                         'start_time_mjd': batch_start_time,
                                          'end_time_mjd': batch_end_time,
                                          'files_found': len(dark_files),
                                          'run_monitor': monitor_run,
@@ -1305,10 +1305,10 @@ class Dark():
         # Within each batch, divide up the exposures into multiple batches if the total
         # number of integrations are above 2*threshold.
         for i in range(len(dividers) - 1):
-            batch_ints = integration_list[dividers[i]:dividers[i+1]]
-            batch_files = files[dividers[i]:dividers[i+1]]
-            batch_start_times = start_times[dividers[i]:dividers[i+1]]
-            batch_end_times = end_times[dividers[i]:dividers[i+1]]
+            batch_ints = integration_list[dividers[i]:dividers[i + 1]]
+            batch_files = files[dividers[i]:dividers[i + 1]]
+            batch_start_times = start_times[dividers[i]:dividers[i + 1]]
+            batch_end_times = end_times[dividers[i]:dividers[i + 1]]
             batch_int_sum = np.sum(batch_ints)
 
             logging.info(f'\t\t\tLoop over time-based batches. Working on batch {i}')
@@ -1398,7 +1398,6 @@ class Dark():
             for fb, ib in zip(self.file_batches, self.integration_batches):
                 logging.info(f'\t\t\t{fb}, {ib}')
             logging.info(f'\t\t\tDONE WITH SUBGROUPS\n\n\n\n')
-
 
     def stats_by_amp(self, image, amps):
         """Calculate statistics in the input image for each amplifier as
