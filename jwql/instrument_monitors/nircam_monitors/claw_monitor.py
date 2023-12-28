@@ -25,6 +25,7 @@ Use
 import datetime
 import logging
 import os
+import warnings
 
 from astropy.convolution import Gaussian2DKernel, convolve
 from astropy.io import fits
@@ -44,6 +45,8 @@ from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 matplotlib.use('Agg')
+warnings.filterwarnings('ignore', message="nan_treatment='interpolate', however, NaN values detected post convolution*")
+warnings.filterwarnings('ignore', message='Input data contains invalid values (NaNs or infs)*')
 
 
 class ClawMonitor():
