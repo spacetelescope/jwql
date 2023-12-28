@@ -96,6 +96,9 @@ class DarkHistPlot():
     def create_plot(self):
         """Place the data in a CoumnDataSource and create the plot
         """
+        title_str = f'{self.aperture}: Dark Rate Histogram. {self.obsdate.strftime("%d %b %Y")}'
+        x_label = 'Dark Rate (DN/sec)'
+        y_label = 'Number of Pixels'
         if len(self.data) > 0:
             # Specify which key ("amplifier") to show. If there is data for amp='5',
             # show that, as it will be the data for the entire detector. If not then
@@ -109,10 +112,6 @@ class DarkHistPlot():
                 use_amp = '5'
             else:
                 use_amp = '1'
-
-            title_str = f'{self.aperture}: Dark Rate Histogram. {self.obsdate.strftime("%d %b %Y")}'
-            x_label = 'Dark Rate (DN/sec)'
-            y_label = 'Number of Pixels'
 
             # If there are histogram data for multiple amps, then we can plot each histogram.
             if len(self.data) > 1:
@@ -254,7 +253,7 @@ class DarkImagePlot():
 
 
 class DarkMonitorData():
-    """Retrive dark monitor data from the database tables
+    """Retrieve dark monitor data from the database tables
 
     Attributes
     ----------
@@ -556,7 +555,7 @@ class DarkMonitorPlots():
                                                                      self.db.stats_data[idx].hist_amplitudes)
 
             # Keep track of the observation date of the most recent entry
-            self.hist_date = self.db.stats_data[most_recent_idx[0].obs_mid_time]
+            self.hist_date = self.db.stats_data[most_recent_idx[0]].obs_mid_time
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
