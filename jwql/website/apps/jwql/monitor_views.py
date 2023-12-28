@@ -41,7 +41,6 @@ import pandas as pd
 from . import bokeh_containers
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamClawStats
-from jwql.website.apps.jwql import bokeh_containers
 from jwql.website.apps.jwql.monitor_pages.monitor_readnoise_bokeh import ReadNoiseFigure
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, get_base_url
