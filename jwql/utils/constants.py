@@ -58,38 +58,45 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
 # Dictionary describing instruments to which anomalies apply
 ANOMALIES_PER_INSTRUMENT = {
     # anomalies affecting all instruments:
-    'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss'],
     'diffraction_spike': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss'],
     'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     # anomalies affecting multiple instruments:
-    'crosstalk': ['fgs', 'nircam', 'niriss', 'nirspec'],
-    'data_transfer_error': ['fgs', 'nircam', 'niriss', 'nirspec'],
-    'ghost': ['fgs', 'nircam', 'niriss', 'nirspec'],
-    'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'crosstalk': ['fgs', 'nircam', 'niriss'],
+    'data_transfer_error': ['fgs', 'nircam', 'niriss'],
+    'ghost': ['fgs', 'nircam', 'niriss'],
+    'snowball': ['fgs', 'nircam', 'niriss'],
     # instrument-specific anomalies:
+    'bright_object_(not_a_short)': ['nirspec'],
+    'claws': ['nircam'],
     'column_pull_up': ['miri'],
     'column_pull_down': ['miri'],
-    'Dominant_MSA_Leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
+    'internal_reflection': ['miri'],
+    'monitored_short': ['nirspec'],
+    'light_saber': ['niriss'],
+    'LRS_Contamination': ['miri'],
     'MRS_Glow': ['miri'],
     'MRS_Zipper': ['miri'],
-    'internal_reflection': ['miri'],
-    'optical_short': ['nirspec'],  # Only for MOS observations
+    'needs_discussion': ['nirspec'],
+    'Noticeable_MSA_Leakage': ['nirspec'],
+    'new_short': ['nirspec'],  # Only for MOS observations
     'row_pull_up': ['miri'],
     'row_pull_down': ['miri'],
-    'LRS_Contamination': ['miri'],
-    'tree_rings': ['miri'],
-    'scattered_light': ['niriss', 'nircam'],
-    'claws': ['nircam'],
-    'wisps': ['nircam'],
+    'scattered_light': ['niriss', 'nircam', 'nirspec'],
+    'subsequently_masked_short': ['nirspec'],
     'tilt_event': ['nircam'],
-    'light_saber': ['niriss'],
+    'transient_short': ['nirspec'],
+    'tree_rings': ['miri'],
+    'unusual_cosmic_ray': ['nirspec'],
+    'unusual_snowball': ['nirspec'],
+    'wisps': ['nircam'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 # anomalies that shouldn't be 'titleized'
-special_cases = ['Dominant_MSA_Leakage', 'MRS_Glow', 'MRS_Zipper', 'LRS_Contamination']
+special_cases = ['Noticeable_MSA_Leakage', 'MRS_Glow', 'MRS_Zipper', 'LRS_Contamination']
 
 # Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
