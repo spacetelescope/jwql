@@ -875,7 +875,10 @@ class Dark():
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]
         for key in amp_mean.keys():
-            dark_db_entry = {'aperture': self.aperture, 'amplifier': key, 'mean': amp_mean[key],
+            dark_db_entry = {'aperture': self.aperture,
+                             'amplifier': key,
+                             'readpattern': self.readpatt,
+                             'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
                              'source_files': source_files,
                              'obs_start_time': min_time,
@@ -949,7 +952,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['miri', 'nircam']:  # JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
             logging.info(f'\n\nWorking on {instrument}')
 
@@ -963,6 +966,13 @@ class Dark():
             # Get a list of all possible readout patterns associated with the aperture
             possible_readpatts = RAPID_READPATTERNS[instrument]
 
+            ########FOR TESTING########TO LIMIT THE TEST CASE
+            if instrument == 'miri':
+                possible_apertures = ['MIRIM_FULL']
+            elif instrument == 'nircam':
+                possible_apertures = ['NRCA1_FULL']
+            #########FOR TESTING#######
+
             for aperture in possible_apertures:
                 logging.info('')
                 logging.info(f'Working on aperture {aperture} in {instrument}')
@@ -974,6 +984,13 @@ class Dark():
                 self.aperture = aperture
 
                 # We need a separate search for each readout pattern
+                ########FOR TESTING########TO LIMIT THE TEST CASE
+                if instrument == 'miri':
+                    possible_readpatts = ['FAST']
+                elif instrument == 'nircam':
+                    possible_readpatts = ['RAPID']
+                #########FOR TESTING#######
+
                 for readpatt in possible_readpatts:
                     self.readpatt = readpatt
                     logging.info(f'\tWorking on readout pattern: {self.readpatt}')
@@ -1071,12 +1088,24 @@ class Dark():
                                                                          self.aperture.lower()))
                         ensure_dir_exists(self.data_dir)
 
+
+
+                        print('Before splitting into sublists:')
+                        for f in new_filenames:
+                            print(f)
+
                         # Split the list of good files into sub-lists based on the integration
                         # threshold. The monitor will then be run on each sub-list independently,
                         # in order to produce results with roughly the same signal-to-noise. This
                         # also prevents the monitor running on a huge chunk of files in the case
                         # where it hasn't been run in a while and data have piled up in the meantime.
                         self.split_files_into_sub_lists(new_filenames, starting_times, ending_times, integrations, integration_count_threshold)
+
+
+                        print('in sublists:')
+                        print(self.file_batches)
+
+
 
                         # Run the monitor once on each list
                         for new_file_list, batch_start_time, batch_end_time, batch_integrations in zip(self.file_batches, self.start_time_batches, self.end_time_batches, self.integration_batches):
@@ -1092,6 +1121,7 @@ class Dark():
                                 if orig_size != copied_size:
                                     logging.info(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem.")
                                     logging.info(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                    print(f'CAN"T COPY {os.path.basename(dark_file)} CORRECTLY!')
                                     not_copied.append(dark_file)
                                     dark_files.remove(dark_file)
                                     os.remove(dark_file)
@@ -1102,7 +1132,10 @@ class Dark():
                             logging.info('\tNot copied: {}'.format(not_copied))
 
                             # Run the dark monitor
-                            self.process(dark_files)
+                            #self.process(dark_files)
+                            print(instrument, aperture, readpatt)
+                            for f in new_file_list:
+                                print(f)
 
                             # Get the starting and ending time of the files in this monitor run
                             batch_start_time = np.min(np.array(batch_start_time))
@@ -1118,9 +1151,9 @@ class Dark():
                                          'run_monitor': monitor_run,
                                          'entry_date': datetime.datetime.now()}
 
-                            with engine.begin() as connection:
-                                connection.execute(
-                                    self.query_table.__table__.insert(), new_entry)
+                            #with engine.begin() as connection:
+                            #    connection.execute(
+                            #        self.query_table.__table__.insert(), new_entry)
                             logging.info('\tUpdated the query history table')
                             logging.info('NEW ENTRY: ')
                             logging.info(new_entry)
@@ -1139,9 +1172,9 @@ class Dark():
                                      'run_monitor': monitor_run,
                                      'entry_date': datetime.datetime.now()}
 
-                        with engine.begin() as connection:
-                            connection.execute(
-                                self.query_table.__table__.insert(), new_entry)
+                        #with engine.begin() as connection:
+                        #    connection.execute(
+                        #        self.query_table.__table__.insert(), new_entry)
                         logging.info('\tUpdated the query history table')
                         logging.info('NEW ENTRY: ')
                         logging.info(new_entry)
@@ -1582,7 +1615,7 @@ class Dark():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+    #start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Dark()
     monitor.run()

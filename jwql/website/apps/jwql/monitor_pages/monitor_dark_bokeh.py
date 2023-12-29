@@ -581,6 +581,7 @@ class DarkMonitorPlots():
         self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])
         self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])
         self._mean = np.array([e.mean for e in self.db.stats_data])
+        self._readpatt = np.array([e.readpattern for e in self.db.stats_data])
         self._stdev = np.array([e.stdev for e in self.db.stats_data])
         self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data])
         self._stats_mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.stats_data])
