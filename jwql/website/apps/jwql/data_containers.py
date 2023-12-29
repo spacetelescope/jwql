@@ -48,6 +48,7 @@ from operator import itemgetter
 import pandas as pd
 import pyvo as vo
 import requests
+from datetime import datetime
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
@@ -57,7 +58,7 @@ from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE,
 from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QUERY_CONFIG_KEYS
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QueryConfigKeys
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
@@ -406,7 +407,7 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
     for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
         if 'crf' not in poss_suffix:
             if (poss_suffix in all_suffixes
-                    and poss_suffix not in suffixes):
+            and poss_suffix not in suffixes):
                 suffixes.append(poss_suffix)
                 untracked_suffixes.remove(poss_suffix)
         else:
@@ -417,7 +418,7 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
             # suffixes and check which list elements match.
             for image_suffix in all_suffixes:
                 if (image_suffix.endswith(poss_suffix)
-                        and image_suffix not in suffixes):
+                and image_suffix not in suffixes):
                     suffixes.append(image_suffix)
                     untracked_suffixes.remove(image_suffix)
 
@@ -616,7 +617,8 @@ def get_edb_components(request):
                     mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
 
                     if len(mnemonic_query_result.data) == 0:
-                        mnemonic_query_status = "QUERY RESULT RETURNED NO DATA FOR {} ON DATES {} - {}".format(mnemonic_identifier, start_time, end_time)
+                        mnemonic_query_status = "QUERY RESULT RETURNED NO DATA FOR {} ON DATES {} - {}".format(mnemonic_identifier,
+                                                                                                               start_time, end_time)
                     else:
                         mnemonic_query_status = 'SUCCESS'
 
@@ -1248,7 +1250,8 @@ def get_instrument_proposals(instrument):
         List of proposals for the given instrument
     """
     tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select distinct prpID from CaomObservation where collection='JWST' and maxLevel>0 and insName like '{instrument.lower()}%'")
+    tap_results = tap_service.search(f"""select distinct prpID from CaomObservation where collection='JWST'
+                                     and maxLevel>0 and insName like '{instrument.lower()}%'""")
     prop_table = tap_results.to_table()
     proposals = prop_table['prpID'].data
     inst_proposals = sorted(proposals.compressed(), reverse=True)
@@ -1396,7 +1399,7 @@ def get_proposals_by_category(instrument):
 
     service = "Mast.Jwst.Filtered.{}".format(instrument)
     params = {"columns": "program, category",
-              "filters": []}
+              "filters": [{'paramName': 'instrume', 'values': [instrument]}]}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
 
@@ -1404,7 +1407,7 @@ def get_proposals_by_category(instrument):
     unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
 
     # Make a dictionary of {program: category} to pull from
-    proposals_by_category = {d['program']:d['category'] for d in unique_results}
+    proposals_by_category = {d['program']: d['category'] for d in unique_results}
 
     return proposals_by_category
 
@@ -1478,7 +1481,8 @@ def get_rootnames_for_proposal(proposal):
         List of rootnames for the given instrument and proposal number
     """
     tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and prpID='{int(proposal)}'")
+    tap_results = tap_service.search(f"""select observationID from dbo.CaomObservation where
+                                     collection='JWST' and maxLevel=2 and prpID='{int(proposal)}'""")
     prop_table = tap_results.to_table()
     rootnames = prop_table['observationID'].data
     return rootnames.compressed()
@@ -1500,32 +1504,51 @@ def get_rootnames_from_query(parameters):
     """
 
     filtered_rootnames = []
+    DATE_FORMAT = "%Y/%m/%d %I:%M%p"  # noqa n806
+
+    # Parse DATE_RANGE string into correct format
+    date_range = parameters[QueryConfigKeys.DATE_RANGE]
+    start_date_range, stop_date_range = date_range.split(" - ")
+    # Parse the strings into datetime objects
+    start_datetime = datetime.strptime(start_date_range, DATE_FORMAT)
+    stop_datetime = datetime.strptime(stop_date_range, DATE_FORMAT)
+    # store as astroquery Time objects in isot format to be used in filter (with mjd format)
+    start_time = Time(start_datetime.isoformat(), format="isot")
+    stop_time = Time(stop_datetime.isoformat(), format="isot")
+
     # Each Query Selection is Instrument specific
-    for inst in parameters[QUERY_CONFIG_KEYS.INSTRUMENTS]:
+    for inst in parameters[QueryConfigKeys.INSTRUMENTS]:
         # Make sure instruments are of the proper format for the archive query
         inst = inst.lower()
         current_ins_rootfileinfos = RootFileInfo.objects.filter(instrument=JWST_INSTRUMENT_NAMES_MIXEDCASE[inst])
 
         # General fields
-        sort_type = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
-        look_status = parameters[QUERY_CONFIG_KEYS.LOOK_STATUS]
+        sort_type = parameters[QueryConfigKeys.SORT_TYPE]
+        look_status = parameters[QueryConfigKeys.LOOK_STATUS]
+
+        # Get a queryset of all observations STARTING within our date range
+        current_ins_rootfileinfos = current_ins_rootfileinfos.filter(
+            expstart__gte=start_time.mjd)
+        current_ins_rootfileinfos = current_ins_rootfileinfos.filter(
+            expstart__lte=stop_time.mjd)
+
         if len(look_status) == 1:
             viewed = (look_status[0] == 'VIEWED')
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(viewed=viewed)
-        proposal_category = parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY]
+        proposal_category = parameters[QueryConfigKeys.PROPOSAL_CATEGORY]
         if len(proposal_category) > 0:
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(obsnum__proposal__category__in=proposal_category)
 
         # Instrument fields
-        inst_anomalies = parameters[QUERY_CONFIG_KEYS.ANOMALIES][inst]
-        inst_aperture = parameters[QUERY_CONFIG_KEYS.APERTURES][inst]
-        inst_detector = parameters[QUERY_CONFIG_KEYS.DETECTORS][inst]
-        inst_exp_type = parameters[QUERY_CONFIG_KEYS.EXP_TYPES][inst]
-        inst_filter = parameters[QUERY_CONFIG_KEYS.FILTERS][inst]
-        inst_grating = parameters[QUERY_CONFIG_KEYS.GRATINGS][inst]
-        inst_pupil = parameters[QUERY_CONFIG_KEYS.PUPILS][inst]
-        inst_read_patt = parameters[QUERY_CONFIG_KEYS.READ_PATTS][inst]
-        inst_subarray = parameters[QUERY_CONFIG_KEYS.SUBARRAYS][inst]
+        inst_anomalies = parameters[QueryConfigKeys.ANOMALIES][inst]
+        inst_aperture = parameters[QueryConfigKeys.APERTURES][inst]
+        inst_detector = parameters[QueryConfigKeys.DETECTORS][inst]
+        inst_exp_type = parameters[QueryConfigKeys.EXP_TYPES][inst]
+        inst_filter = parameters[QueryConfigKeys.FILTERS][inst]
+        inst_grating = parameters[QueryConfigKeys.GRATINGS][inst]
+        inst_pupil = parameters[QueryConfigKeys.PUPILS][inst]
+        inst_read_patt = parameters[QueryConfigKeys.READ_PATTS][inst]
+        inst_subarray = parameters[QueryConfigKeys.SUBARRAYS][inst]
 
         if (inst_aperture != []):
             current_ins_rootfileinfos = current_ins_rootfileinfos.filter(aperture__in=inst_aperture)
@@ -1945,23 +1968,29 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors, proposals = [], []
+    detectors, proposals, visits = [], [], []
     for rootname in list(data_dict['file_data'].keys()):
         proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
         try:  # Some rootnames cannot parse out detectors
             detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
         except KeyError:
             pass
+        try:  # Some rootnames cannot parse out visit
+            visits.append(data_dict['file_data'][rootname]['filename_dict']['visit'])
+        except KeyError:
+            pass
 
     if proposal is not None:
         dropdown_menus = {'detector': sorted(detectors),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(exp_types)}
+                          'exp_type': sorted(exp_types),
+                          'visit': sorted(visits)}
     else:
         dropdown_menus = {'detector': sorted(detectors),
                           'proposal': sorted(proposals),
                           'look': THUMBNAIL_FILTER_LOOK,
-                          'exp_type': sorted(exp_types)}
+                          'exp_type': sorted(exp_types),
+                          'visit': sorted(visits)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -1975,131 +2004,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Add list of observation numbers and group roots
     data_dict['obs_list'] = obs_list
-    data_dict['exp_groups'] = sorted(exp_groups)
-
-    return data_dict
-
-
-def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exclusive_stop_time_mjd):
-    """Generate a page that provides data necessary to render thumbnails for
-    ``archive_date_range`` template.
-
-    Parameters
-    ----------
-    inst : str
-        Name of JWST instrument
-    observations: list
-        observation models to use to get filenames
-    inclusive_start_time_mjd : float
-        Start time in mjd format for date range
-    exclusive_stop_time_mjd : float
-        Stop time in mjd format for date range
-
-    Returns
-    -------
-    data_dict : dict
-        Dictionary of data needed for the ``thumbnails`` template
-    """
-
-    data_dict = {'inst': inst,
-                 'file_data': dict()}
-    exp_types = set()
-    exp_groups = set()
-
-    # Get the available files for the instrument
-    for observation in observations:
-        obs_num = observation.obsnum
-        proposal = observation.proposal.prop_id
-        filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
-        # Get set of unique rootnames
-        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-        # Gather data for each rootname, and construct a list of all observations in the proposal
-        for rootname in rootnames:
-            # Parse filename
-            try:
-                filename_dict = filename_parser(rootname)
-
-                # Weed out file types that are not supported by generate_preview_images
-                if 'stage_3' in filename_dict['filename_type']:
-                    continue
-
-            except ValueError:
-                # Temporary workaround for noncompliant files in filesystem
-                filename_dict = {'activity': rootname[17:19],
-                                 'detector': rootname[26:],
-                                 'exposure_id': rootname[20:25],
-                                 'observation': rootname[7:10],
-                                 'parallel_seq_id': rootname[16],
-                                 'program_id': rootname[2:7],
-                                 'visit': rootname[10:13],
-                                 'visit_group': rootname[14:16],
-                                 'group_root': rootname[:26]}
-
-            # Get list of available filenames and exposure start times. All files with a given
-            # rootname will have the same exposure start time, so just keep the first.
-            available_files = []
-            exp_start = None
-            exp_type = None
-            for i, item in enumerate(filenames):
-                if rootname in item:
-                    available_files.append(item)
-                    if exp_start is None:
-                        exp_start = columns['expstart'][i]
-                        exp_type = columns['exp_type'][i]
-
-            if exp_start >= inclusive_start_time_mjd and exp_start < exclusive_stop_time_mjd:
-                exp_types.add(exp_type)
-                # Viewed is stored by rootname in the Model db.  Save it with the data_dict
-                # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
-                try:
-                    root_file_info = RootFileInfo.objects.get(root_name=rootname)
-                    viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
-                except RootFileInfo.DoesNotExist:
-                    viewed = THUMBNAIL_FILTER_LOOK[0]
-
-                # Add to list of all exposure groups
-                exp_groups.add(filename_dict['group_root'])
-
-                # Add data to dictionary
-                data_dict['file_data'][rootname] = {}
-                data_dict['file_data'][rootname]['filename_dict'] = filename_dict
-                data_dict['file_data'][rootname]['available_files'] = available_files
-                data_dict['file_data'][rootname]["viewed"] = viewed
-                data_dict['file_data'][rootname]["exp_type"] = exp_type
-                data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
-
-                try:
-                    data_dict['file_data'][rootname]['expstart'] = exp_start
-                    data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
-                except (ValueError, TypeError) as e:
-                    logging.warning("Unable to populate exp_start info for {}".format(rootname))
-                    logging.warning(e)
-                except KeyError:
-                    print("KeyError with get_expstart for {}".format(rootname))
-
-    # Extract information for sorting with dropdown menus
-    # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors, proposals = [], []
-    for rootname in list(data_dict['file_data'].keys()):
-        proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
-        try:  # Some rootnames cannot parse out detectors
-            detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
-        except KeyError:
-            pass
-
-    dropdown_menus = {'detector': sorted(detectors),
-                      'proposal': sorted(proposals),
-                      'look': THUMBNAIL_FILTER_LOOK,
-                      'exp_type': sorted(set(exp_types))}
-
-    data_dict['tools'] = MONITORS
-    data_dict['dropdown_menus'] = dropdown_menus
-
-    # Order dictionary by descending expstart time.
-    sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
-                                   key=lambda x: getitem(x[1], 'expstart'), reverse=True))
-
-    data_dict['file_data'] = sorted_file_data
     data_dict['exp_groups'] = sorted(exp_groups)
 
     return data_dict
@@ -2181,10 +2085,13 @@ def thumbnails_query_ajax(rootnames):
                    rootname in list(data_dict['file_data'].keys())]
     proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
                  rootname in list(data_dict['file_data'].keys())]
+    visits = [data_dict['file_data'][rootname]['filename_dict']['visit'] for
+              rootname in list(data_dict['file_data'].keys())]
 
     dropdown_menus = {'instrument': instruments,
-                      'detector': detectors,
-                      'proposal': proposals}
+                      'detector': sorted(detectors),
+                      'proposal': sorted(proposals),
+                      'visit': sorted(visits)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus

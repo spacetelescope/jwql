@@ -34,26 +34,38 @@ import inflection
 # and the second for y coordinates. Within each tuple are value for
 # starting, ending, and step size. Step size is needed for MIRI, where
 # the pixels corresponding to the 4 amplifiers are interleaved.
-AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
-                                   '2': [(512, 1024, 1), (0, 2048, 1)],
-                                   '3': [(1024, 1536, 1), (0, 2048, 1)],
-                                   '4': [(1536, 2048, 1), (0, 2048, 1)]},
-                        'niriss': {'1': [(0, 2048, 1), (0, 512, 1)],
-                                   '2': [(0, 2048, 1), (512, 1024, 1)],
-                                   '3': [(0, 2048, 1), (1024, 1536, 1)],
-                                   '4': [(0, 2048, 1), (1536, 2048, 1)]},
-                        'fgs': {'1': [(0, 512, 1), (0, 2048, 1)],
-                                '2': [(512, 1024, 1), (0, 2048, 1)],
-                                '3': [(1024, 1536, 1), (0, 2048, 1)],
-                                '4': [(1536, 2048, 1), (0, 2048, 1)]},
-                        'nirspec': {'1': [(0, 2048, 1), (0, 512, 1)],
-                                    '2': [(0, 2048, 1), (512, 1024, 1)],
-                                    '3': [(0, 2048, 1), (1024, 1536, 1)],
-                                    '4': [(0, 2048, 1), (1536, 2048, 1)]},
-                        'miri': {'1': [(0, 1032, 4), (0, 1024, 1)],
-                                 '2': [(1, 1032, 4), (0, 1024, 1)],
-                                 '3': [(2, 1032, 4), (0, 1024, 1)],
-                                 '4': [(3, 1032, 4), (0, 1024, 1)]}}
+AMPLIFIER_BOUNDARIES = {
+    "nircam": {
+        "1": [(0, 512, 1), (0, 2048, 1)],
+        "2": [(512, 1024, 1), (0, 2048, 1)],
+        "3": [(1024, 1536, 1), (0, 2048, 1)],
+        "4": [(1536, 2048, 1), (0, 2048, 1)],
+    },
+    "niriss": {
+        "1": [(0, 2048, 1), (0, 512, 1)],
+        "2": [(0, 2048, 1), (512, 1024, 1)],
+        "3": [(0, 2048, 1), (1024, 1536, 1)],
+        "4": [(0, 2048, 1), (1536, 2048, 1)],
+    },
+    "fgs": {
+        "1": [(0, 512, 1), (0, 2048, 1)],
+        "2": [(512, 1024, 1), (0, 2048, 1)],
+        "3": [(1024, 1536, 1), (0, 2048, 1)],
+        "4": [(1536, 2048, 1), (0, 2048, 1)],
+    },
+    "nirspec": {
+        "1": [(0, 2048, 1), (0, 512, 1)],
+        "2": [(0, 2048, 1), (512, 1024, 1)],
+        "3": [(0, 2048, 1), (1024, 1536, 1)],
+        "4": [(0, 2048, 1), (1536, 2048, 1)],
+    },
+    "miri": {
+        "1": [(0, 1032, 4), (0, 1024, 1)],
+        "2": [(1, 1032, 4), (0, 1024, 1)],
+        "3": [(2, 1032, 4), (0, 1024, 1)],
+        "4": [(3, 1032, 4), (0, 1024, 1)],
+    },
+}
 
 # Dictionary describing instruments to which anomalies apply
 ANOMALIES_PER_INSTRUMENT = {
@@ -94,56 +106,94 @@ ANOMALIES_PER_INSTRUMENT = {
     'unusual_snowball': ['nirspec'],
     'wisps': ['nircam'],
     # additional anomalies:
-    'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
+    "other": ["fgs", "miri", "nircam", "niriss", "nirspec"],
+}
 # anomalies that shouldn't be 'titleized'
 special_cases = ['Noticeable_MSA_Leakage', 'MRS_Glow', 'MRS_Zipper', 'LRS_Contamination']
 
 # Defines the possible anomalies to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                   else (anomaly, anomaly.replace('_', ' '))
-                   for anomaly in ANOMALIES_PER_INSTRUMENT]
+ANOMALY_CHOICES = [
+    (anomaly, inflection.titleize(anomaly))
+    if anomaly not in special_cases
+    else (anomaly, anomaly.replace("_", " "))
+    for anomaly in ANOMALIES_PER_INSTRUMENT
+]
 
-ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                       if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_FGS = [
+    (anomaly, inflection.titleize(anomaly))
+    for anomaly in ANOMALIES_PER_INSTRUMENT
+    if "fgs" in ANOMALIES_PER_INSTRUMENT[anomaly]
+]
 
-ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                        else (anomaly, anomaly.replace('_', ' '))
-                        for anomaly in ANOMALIES_PER_INSTRUMENT
-                        if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_MIRI = [
+    (anomaly, inflection.titleize(anomaly))
+    if anomaly not in special_cases
+    else (anomaly, anomaly.replace("_", " "))
+    for anomaly in ANOMALIES_PER_INSTRUMENT
+    if "miri" in ANOMALIES_PER_INSTRUMENT[anomaly]
+]
 
-ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                          if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_NIRCAM = [
+    (anomaly, inflection.titleize(anomaly))
+    for anomaly in ANOMALIES_PER_INSTRUMENT
+    if "nircam" in ANOMALIES_PER_INSTRUMENT[anomaly]
+]
 
-ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                          if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_NIRISS = [
+    (anomaly, inflection.titleize(anomaly))
+    for anomaly in ANOMALIES_PER_INSTRUMENT
+    if "niriss" in ANOMALIES_PER_INSTRUMENT[anomaly]
+]
 
-ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                           else (anomaly, anomaly.replace('_', ' '))
-                           for anomaly in ANOMALIES_PER_INSTRUMENT
-                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_NIRSPEC = [
+    (anomaly, inflection.titleize(anomaly))
+    if anomaly not in special_cases
+    else (anomaly, anomaly.replace("_", " "))
+    for anomaly in ANOMALIES_PER_INSTRUMENT
+    if "nirspec" in ANOMALIES_PER_INSTRUMENT[anomaly]
+]
 
-ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
-                                  'miri': ANOMALY_CHOICES_MIRI,
-                                  'nircam': ANOMALY_CHOICES_NIRCAM,
-                                  'niriss': ANOMALY_CHOICES_NIRISS,
-                                  'nirspec': ANOMALY_CHOICES_NIRSPEC
-                                  }
+ANOMALY_CHOICES_PER_INSTRUMENT = {
+    "fgs": ANOMALY_CHOICES_FGS,
+    "miri": ANOMALY_CHOICES_MIRI,
+    "nircam": ANOMALY_CHOICES_NIRCAM,
+    "niriss": ANOMALY_CHOICES_NIRISS,
+    "nirspec": ANOMALY_CHOICES_NIRSPEC,
+}
 
-APERTURES_PER_INSTRUMENT = {'nircam': [],  # NIRCAM aperture redundant, can just use Subarray + Detector
-                            'niriss': [],  # NIRISS preferred subarray only
-                            'nirspec': ['NRS_FULL_MSA', 'NRS_FULL_IFU', 'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT',
-                                        'NRS_S400A1_SLIT', 'NRS_S1600A1_SLIT', 'NRS_S200B1_SLIT'],
-                            'miri': [],   # MIRI preferred subarray only
-                            'fgs': ['FGS1_FULL', 'FGS2_FULL']}
+APERTURES_PER_INSTRUMENT = {
+    "nircam": [],  # NIRCAM aperture redundant, can just use Subarray + Detector
+    "niriss": [],  # NIRISS preferred subarray only
+    "nirspec": [
+        "NRS_FULL_MSA",
+        "NRS_FULL_IFU",
+        "NRS_S200A1_SLIT",
+        "NRS_S200A2_SLIT",
+        "NRS_S400A1_SLIT",
+        "NRS_S1600A1_SLIT",
+        "NRS_S200B1_SLIT",
+    ],
+    "miri": [],  # MIRI preferred subarray only
+    "fgs": ["FGS1_FULL", "FGS2_FULL"],
+}
 
 # Observing templates used for ASIC tuning. MAST query results that
 # have one of these templates will be ignored
-ASIC_TEMPLATES = ['ISIM ASIC Tuning']
+ASIC_TEMPLATES = ["ISIM ASIC Tuning"]
 
 # Bad pixel types by the type of data used to find them
-BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
-DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
-FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
+BAD_PIXEL_TYPES = [
+    "DEAD",
+    "HOT",
+    "LOW_QE",
+    "RC",
+    "OPEN",
+    "ADJ_OPEN",
+    "TELEGRAPH",
+    "OTHER_BAD_PIXEL",
+]
+DARKS_BAD_PIXEL_TYPES = ["HOT", "RC", "OTHER_BAD_PIXEL", "TELEGRAPH"]
+FLATS_BAD_PIXEL_TYPES = ["DEAD", "OPEN", "ADJ_OPEN", "LOW_QE"]
 
 # The maximum number of bad pixels allowed on a bad pixel monitor plot. If there
 # are more than this number of bad pixels identified for a particular type of
@@ -152,14 +202,16 @@ FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
 BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT = 15000
 
 # Possible exposure types for dark current data
-DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
-                  'niriss': ['NIS_DARK'],
-                  'miri': ['MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL'],
-                  'nirspec': ['NRS_DARK'],
-                  'fgs': ['FGS_DARK']}
+DARK_EXP_TYPES = {
+    "nircam": ["NRC_DARK"],
+    "niriss": ["NIS_DARK"],
+    "miri": ["MIR_DARKIMG", "MIR_DARKMRS", "MIR_DARKALL"],
+    "nirspec": ["NRS_DARK"],
+    "fgs": ["FGS_DARK"],
+}
 
 # Types of potential bad pixels identified by the dark current monitor
-DARK_MONITOR_BADPIX_TYPES = ['hot', 'dead', 'noisy']
+DARK_MONITOR_BADPIX_TYPES = ["hot", "dead", "noisy"]
 
 # Maximum number of potential new bad pixels to overplot on the dark monitor
 # mean dark image plot. Too many overplotted points starts to obscure the image
@@ -167,48 +219,144 @@ DARK_MONITOR_BADPIX_TYPES = ['hot', 'dead', 'noisy']
 DARK_MONITOR_MAX_BADPOINTS_TO_PLOT = 1000
 
 # Dictionary of observing modes available for each instrument
-DETECTOR_PER_INSTRUMENT = {'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
-                           'nircam': ['NRCB4', 'NRCA4', 'NRCA2', 'NRCALONG',
-                                      'NRCBLONG', 'NRCB2', 'NRCB3', 'NRCA1',
-                                      'NRCA3', 'NRCB1'],
-                           'niriss': ['NIS'],
-                           'nirspec': ['NRS1', 'NRS2'],
-                           'fgs': ['GUIDER1', 'GUIDER2']}
+DETECTOR_PER_INSTRUMENT = {
+    "miri": ["MIRIFULONG", "MIRIFUSHORT", "MIRIMAGE"],
+    "nircam": [
+        "NRCB4",
+        "NRCA4",
+        "NRCA2",
+        "NRCALONG",
+        "NRCBLONG",
+        "NRCB2",
+        "NRCB3",
+        "NRCA1",
+        "NRCA3",
+        "NRCB1",
+    ],
+    "niriss": ["NIS"],
+    "nirspec": ["NRS1", "NRS2"],
+    "fgs": ["GUIDER1", "GUIDER2"],
+}
 
 # Default time range to use for EDB monitor telemetry plots. The plots will
 # go from this starting time to the monitor run time, unless otherwise requested.
 EDB_DEFAULT_PLOT_RANGE = 14  # days.
 
-EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
-                                   'FGS_SKYFLAT', 'FGS_DARK'],
-                           'miri': ['MIR_FLATMRS', 'MIR_MRS', 'MIR_FLATIMAGE',
-                                    'MIR_DARK', 'MIR_LYOT', 'MIR_IMAGE',
-                                    'MIR_LRS-FIXEDSLIT', 'MIR_LRS-SLITLESS',
-                                    'MIR_CORONCAL', 'MIR_4QPM', 'MIR_FLATIMAGE-EXT',
-                                    'MIR_TACQ', 'MIR_DARKMRS',
-                                    'MIR_DARKIMG', 'MIR_FLATMRS-EXT', 'MIR_TACONFIRM'],
-                           'nircam': ['NRC_LED', 'NRC_DARK', 'NRC_CORON',
-                                      'NRC_IMAGE', 'NRC_FOCUS', 'NRC_TSGRISM',
-                                      'NRC_TSIMAGE', 'NRC_WFSS', 'NRC_TACQ',
-                                      'NRC_TACONFIRM', 'NRC_FLAT', 'NRC_GRISM'],
-                           'niriss': ['NIS_IMAGE', 'NIS_FOCUS', 'NIS_SOSS',
-                                      'NIS_AMI', 'NIS_LAMP', 'NIS_WFSS', 'NIS_DARK',
-                                      'NIS_EXTCAL', 'NIS_TACONFIRM', 'NIS_TACQ'],
-                           'nirspec': ['NRS_IFU', 'NRS_MSASPEC', 'NRS_BRIGHTOBJ', 'NRS_DARK',
-                                       'NRS_AUTOWAVE', 'NRS_LAMP', 'NRS_AUTOFLAT', 'NRS_IMAGE',
-                                       'NRS_CONFIRM', 'NRS_FIXEDSLIT', 'NRS_MIMF', 'NRS_FOCUS',
-                                       'NRS_TACONFIRM', 'NRS_WATA', 'NRS_MSATA']}
+EXP_TYPE_PER_INSTRUMENT = {
+    "fgs": ["FGS_FOCUS", "FGS_IMAGE", "FGS_INTFLAT", "FGS_SKYFLAT", "FGS_DARK"],
+    "miri": [
+        "MIR_FLATMRS",
+        "MIR_MRS",
+        "MIR_FLATIMAGE",
+        "MIR_DARK",
+        "MIR_LYOT",
+        "MIR_IMAGE",
+        "MIR_LRS-FIXEDSLIT",
+        "MIR_LRS-SLITLESS",
+        "MIR_CORONCAL",
+        "MIR_4QPM",
+        "MIR_FLATIMAGE-EXT",
+        "MIR_TACQ",
+        "MIR_DARKMRS",
+        "MIR_DARKIMG",
+        "MIR_FLATMRS-EXT",
+        "MIR_TACONFIRM",
+    ],
+    "nircam": [
+        "NRC_LED",
+        "NRC_DARK",
+        "NRC_CORON",
+        "NRC_IMAGE",
+        "NRC_FOCUS",
+        "NRC_TSGRISM",
+        "NRC_TSIMAGE",
+        "NRC_WFSS",
+        "NRC_TACQ",
+        "NRC_TACONFIRM",
+        "NRC_FLAT",
+        "NRC_GRISM",
+    ],
+    "niriss": [
+        "NIS_IMAGE",
+        "NIS_FOCUS",
+        "NIS_SOSS",
+        "NIS_AMI",
+        "NIS_LAMP",
+        "NIS_WFSS",
+        "NIS_DARK",
+        "NIS_EXTCAL",
+        "NIS_TACONFIRM",
+        "NIS_TACQ",
+    ],
+    "nirspec": [
+        "NRS_IFU",
+        "NRS_MSASPEC",
+        "NRS_BRIGHTOBJ",
+        "NRS_DARK",
+        "NRS_AUTOWAVE",
+        "NRS_LAMP",
+        "NRS_AUTOFLAT",
+        "NRS_IMAGE",
+        "NRS_CONFIRM",
+        "NRS_FIXEDSLIT",
+        "NRS_MIMF",
+        "NRS_FOCUS",
+        "NRS_TACONFIRM",
+        "NRS_WATA",
+        "NRS_MSATA",
+    ],
+}
 
-EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
-                       "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
-            "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE",
-                       "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
-            "fgs": {"imaging": "FGS_IMAGE"}}
+EXPTYPES = {
+    "nircam": {
+        "imaging": "NRC_IMAGE",
+        "ts_imaging": "NRC_TSIMAGE",
+        "wfss": "NRC_WFSS",
+        "ts_grism": "NRC_TSGRISM",
+    },
+    "niriss": {
+        "imaging": "NIS_IMAGE",
+        "ami": "NIS_IMAGE",
+        "pom": "NIS_IMAGE",
+        "wfss": "NIS_WFSS",
+    },
+    "fgs": {"imaging": "FGS_IMAGE"},
+}
 
-EXPOSURE_PAGE_SUFFIX_ORDER = ['uncal', 'dark', 'trapsfilled', 'ramp', 'rate', 'rateints', 'fitopt', 'cal', 'calints',
-                              'msa', 'crf', 'crfints', 'bsub', 'bsubints', 'i2d', 's2d', 's3d', 'x1d', 'x1dints',
-                              'cat', 'segm', 'c1d', 'psfstack', 'psfalign', 'psfsub', 'amiavg', 'aminorm', 'ami',
-                              'psf-amiavg', 'phot', 'whtlt', 'wfscmb']
+EXPOSURE_PAGE_SUFFIX_ORDER = [
+    "uncal",
+    "dark",
+    "trapsfilled",
+    "ramp",
+    "rate",
+    "rateints",
+    "fitopt",
+    "cal",
+    "calints",
+    "msa",
+    "crf",
+    "crfints",
+    "bsub",
+    "bsubints",
+    "i2d",
+    "s2d",
+    "s3d",
+    "x1d",
+    "x1dints",
+    "cat",
+    "segm",
+    "c1d",
+    "psfstack",
+    "psfalign",
+    "psfsub",
+    "amiavg",
+    "aminorm",
+    "ami",
+    "psf-amiavg",
+    "phot",
+    "whtlt",
+    "wfscmb",
+]
 
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4
@@ -228,107 +376,248 @@ FILE_VISIT_GRP_LEN = 2
 FILE_VISIT_LEN = 3
 
 # MSA metadata file do not have a standard suffix attached
-FILETYPE_WO_STANDARD_SUFFIX = 'msa.fits'
+FILETYPE_WO_STANDARD_SUFFIX = "msa.fits"
 
-FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
-                  'niriss': ['NIS_LAMP'],
-                  'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],
-                  'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
-                  'fgs': ['FGS_INTFLAT']}
+FLAT_EXP_TYPES = {
+    "nircam": ["NRC_FLAT"],
+    "niriss": ["NIS_LAMP"],
+    "miri": ["MIR_FLATIMAGE", "MIR_FLATMRS"],
+    "nirspec": ["NRS_AUTOFLAT", "NRS_LAMP"],
+    "fgs": ["FGS_INTFLAT"],
+}
 
 # output subdirectories to keep track of via the filesytem monitor
-FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'preview_images', 'thumbnails', 'all']
+FILESYSTEM_MONITOR_SUBDIRS = ["logs", "outputs", "preview_images", "thumbnails", "all"]
 
-FILTERS_PER_INSTRUMENT = {'fgs': [],
-                          'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W', 'F1500W',
-                                   'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W', 'F2550WR', 'FLENS', 'FND', 'OPAQUE', 'P750L'],
-                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M', 'F187N', 'F200W', 'F210M', 'F212N',
-                                     'WLP4', 'F277W', 'F356W', 'F444W', 'F300M', 'F335M', 'F360M', 'F410M', 'F430M', 'F460M', 'F480M', 'F250M', 'F322W2'],
-                          'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F200W', 'F277W', 'F356W', 'F380M', 'F430M', 'F444W', 'F480M', 'GR150C', 'GR150R'],
-                          'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F110W', 'F140X', 'F170LP', 'F290LP', 'OPAQUE', 'P750L']}
+FILTERS_PER_INSTRUMENT = {
+    "fgs": [],
+    "miri": [
+        "F560W",
+        "F770W",
+        "F1000W",
+        "F1065C",
+        "F1130W",
+        "F1140C",
+        "F1280W",
+        "F1500W",
+        "F1550C",
+        "F1800W",
+        "F2100W",
+        "F2300C",
+        "F2550W",
+        "F2550WR",
+        "FLENS",
+        "FND",
+        "OPAQUE",
+        "P750L",
+    ],
+    "nircam": [
+        "F070W",
+        "F090W",
+        "F115W",
+        "F140M",
+        "F150W",
+        "F150W2",
+        "F182M",
+        "F187N",
+        "F200W",
+        "F210M",
+        "F212N",
+        "WLP4",
+        "F277W",
+        "F356W",
+        "F444W",
+        "F300M",
+        "F335M",
+        "F360M",
+        "F410M",
+        "F430M",
+        "F460M",
+        "F480M",
+        "F250M",
+        "F322W2",
+    ],
+    "niriss": [
+        "F090W",
+        "F115W",
+        "F140M",
+        "F150W",
+        "F200W",
+        "F277W",
+        "F356W",
+        "F380M",
+        "F430M",
+        "F444W",
+        "F480M",
+        "GR150C",
+        "GR150R",
+    ],
+    "nirspec": [
+        "CLEAR",
+        "F070LP",
+        "F100LP",
+        "F110W",
+        "F140X",
+        "F170LP",
+        "F290LP",
+        "OPAQUE",
+        "P750L",
+    ],
+}
 
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+FOUR_AMP_SUBARRAYS = ["WFSS128R", "WFSS64R"]
 
 # Names of full-frame apertures for all instruments
-FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
-                                   'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
-                                   'NRCB4_FULL', 'NRCB5_FULL'],
-                        'NIRISS': ['NIS_CEN'],
-                        'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
-                        'MIRI': ['MIRIM_FULL'],
-                        'FGS': ['FGS1_FULL', 'FGS2_FULL']
-                        }
+FULL_FRAME_APERTURES = {
+    "NIRCAM": [
+        "NRCA1_FULL",
+        "NRCA2_FULL",
+        "NRCA3_FULL",
+        "NRCA4_FULL",
+        "NRCA5_FULL",
+        "NRCB1_FULL",
+        "NRCB2_FULL",
+        "NRCB3_FULL",
+        "NRCB4_FULL",
+        "NRCB5_FULL",
+    ],
+    "NIRISS": ["NIS_CEN"],
+    "NIRSPEC": ["NRS1_FULL", "NRS2_FULL"],
+    "MIRI": ["MIRIM_FULL"],
+    "FGS": ["FGS1_FULL", "FGS2_FULL"],
+}
 
 # Possible suffix types for nominal files
-GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
-                        'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
-                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat', 'segm', 'c1d']
+GENERIC_SUFFIX_TYPES = [
+    "uncal",
+    "cal",
+    "rateints",
+    "rate",
+    "trapsfilled",
+    "i2d",
+    "x1dints",
+    "x1d",
+    "s2d",
+    "s3d",
+    "dark",
+    "crfints",
+    "crf",
+    "ramp",
+    "fitopt",
+    "bsubints",
+    "bsub",
+    "cat",
+    "segm",
+    "c1d",
+]
 
 # Gratings available for each instrument
-GRATING_PER_INSTRUMENT = {'fgs': [],
-                          'miri': [],
-                          'nircam': [],
-                          'niriss': [],
-                          'nirspec': ['G140M', 'G235M', 'G395M', 'G140H',
-                                      'G235H', 'G395H', 'PRISM', 'MIRROR']
-                          }
+GRATING_PER_INSTRUMENT = {
+    "fgs": [],
+    "miri": [],
+    "nircam": [],
+    "niriss": [],
+    "nirspec": [
+        "G140M",
+        "G235M",
+        "G395M",
+        "G140H",
+        "G235H",
+        "G395H",
+        "PRISM",
+        "MIRROR",
+    ],
+}
 
 # Filename extensions for guider data
-GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
+GUIDER_FILENAME_TYPE = ["gs-fg", "gs-track", "gs-id", "gs-acq1", "gs-acq2"]
 
 # Possible suffix types for guider exposures
-GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
+GUIDER_SUFFIX_TYPES = [
+    "stream",
+    "stacked_uncal",
+    "image_uncal",
+    "stacked_cal",
+    "image_cal",
+]
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d', 'pre-image']
+IGNORED_SUFFIXES = ["original", "stream", "x1d", "x1dints", "c1d", "pre-image"]
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
-    'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
-    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
-    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history'],
-    'msata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history'],
-    'wata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history']
+    "dark_monitor": [
+        "<instrument>_dark_dark_current",
+        "<instrument>_dark_pixel_stats",
+        "<instrument>_dark_query_history",
+    ],
+    "bad_pixel_monitor": [
+        "<instrument>_bad_pixel_stats",
+        "<instrument>_bad_pixel_query_history",
+    ],
+    "cosmic_ray_monitor": [
+        "<instrument>_cosmic_ray_stats",
+        "<instrument>_cosmic_ray_query_history",
+    ],
+    "msata_monitor": ["<instrument>_ta_stats", "<instrument>_ta_query_history"],
+    "wata_monitor": ["<instrument>_ta_stats", "<instrument>_ta_query_history"],
 }
 
 INSTRUMENT_SERVICE_MATCH = {
-    'FGS': 'Mast.Jwst.Filtered.Fgs',
-    'MIRI': 'Mast.Jwst.Filtered.Miri',
-    'NIRCam': 'Mast.Jwst.Filtered.Nircam',
-    'NIRISS': 'Mast.Jwst.Filtered.Niriss',
-    'NIRSpec': 'Mast.Jwst.Filtered.Nirspec'}
+    "FGS": "Mast.Jwst.Filtered.Fgs",
+    "MIRI": "Mast.Jwst.Filtered.Miri",
+    "NIRCam": "Mast.Jwst.Filtered.Nircam",
+    "NIRISS": "Mast.Jwst.Filtered.Niriss",
+    "NIRSpec": "Mast.Jwst.Filtered.Nirspec",
+}
 
 # JWST data products
-JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
-                     'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
+JWST_DATAPRODUCTS = [
+    "IMAGE",
+    "SPECTRUM",
+    "SED",
+    "TIMESERIES",
+    "VISIBILITY",
+    "EVENTLIST",
+    "CUBE",
+    "CATALOG",
+    "ENGINEERING",
+    "NULL",
+]
 
 # Lowercase JWST instrument names
-JWST_INSTRUMENT_NAMES = sorted(['niriss', 'nircam', 'nirspec', 'miri', 'fgs'])
+JWST_INSTRUMENT_NAMES = sorted(["niriss", "nircam", "nirspec", "miri", "fgs"])
 
 # JWST instrument names with shorthand notation
-JWST_INSTRUMENT_NAMES_SHORTHAND = {'gui': 'fgs',
-                                   'mir': 'miri',
-                                   'nis': 'niriss',
-                                   'nrc': 'nircam',
-                                   'nrs': 'nirspec'}
+JWST_INSTRUMENT_NAMES_SHORTHAND = {
+    "gui": "fgs",
+    "mir": "miri",
+    "nis": "niriss",
+    "nrc": "nircam",
+    "nrs": "nirspec",
+}
 
 # Mixed case JWST instrument names
-JWST_INSTRUMENT_NAMES_MIXEDCASE = {'fgs': 'FGS',
-                                   'miri': 'MIRI',
-                                   'nircam': 'NIRCam',
-                                   'niriss': 'NIRISS',
-                                   'nirspec': 'NIRSpec'}
+JWST_INSTRUMENT_NAMES_MIXEDCASE = {
+    "fgs": "FGS",
+    "miri": "MIRI",
+    "nircam": "NIRCam",
+    "niriss": "NIRISS",
+    "nirspec": "NIRSpec",
+}
 
 # Upper case JWST instrument names
-JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
-                                   JWST_INSTRUMENT_NAMES_MIXEDCASE.items()}
+JWST_INSTRUMENT_NAMES_UPPERCASE = {
+    key: value.upper() for key, value in JWST_INSTRUMENT_NAMES_MIXEDCASE.items()
+}
 
 # Astoquery service string for each JWST instrument
-JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
-                      JWST_INSTRUMENT_NAMES]
+JWST_MAST_SERVICES = [
+    "Mast.Jwst.Filtered.{}".format(value.title()) for value in JWST_INSTRUMENT_NAMES
+]
 
 # Possible values for look status filter
-LOOK_OPTIONS = ['New', 'Viewed']
+LOOK_OPTIONS = ["New", "Viewed"]
 
 # Maximum number of records returned by MAST for a single query
 MAST_QUERY_LIMIT = 500000
@@ -336,40 +625,42 @@ MAST_QUERY_LIMIT = 500000
 # Expected position sensor values for MIRI. Used by the EDB monitor
 # to filter out bad values. Tuple values are the expected value and
 # the standard deviation associated with the value
-MIRI_POS_RATIO_VALUES = {'FW': {'FND': (-164.8728073, 0.204655346),
-                                'OPAQUE':  (380.6122145, 0.078856646),
-                                'F1000W':  (-24.15638797, 0.182865887),
-                                'F1130W':  (137.8245397, 0.24910941),
-                                'F1280W':  (-298.7062532, 0.229963508),
-                                'P750L':   (12.39439777, 0.246932037),
-                                'F1500W':  (-377.9888235, 0.263432415),
-                                'F1800W':  (435.9046314, 0.27885876),
-                                'F2100W':  (-126.5991201, 0.197193968),
-                                'F560W':   (218.0010353, 0.282554884),
-                                'FLENS':   (-212.7978283, 0.409300208),
-                                'F2300C':  (306.0488778, 0.265448583),
-                                'F770W':   (-62.48455213, 0.340861733),
-                                'F1550C':  (188.7366748, 0.291288105),
-                                'F2550W':  (-324.2364737, 0.176262309),
-                                'F1140C':  (82.81057729, 0.169772457),
-                                'F2550WR': (-255.5816917, 0.251581688),
-                                'F1065C':  (261.4486618, 0.16177981),
-                                },
-                         'CCC': {'CLOSED': (398.0376386, 0.173703628),
-                                 'OPEN': (504.0482685, 0.328112274)
-                                 },
-                         'GW14': {'SHORT': (626.9411005, 0.116034024),
-                                  'MEDIUM': (342.8685233, 0.127123169),
-                                  'LONG': (408.8339259, 0.117079193)
-                                  },
-                         'GW23': {'SHORT': (619.7948107, 0.215417336),
-                                  'MEDIUM': (373.1697309, 0.204314122),
-                                  'LONG': (441.6632325, 0.349161169)
-                                  }
-                         }
+MIRI_POS_RATIO_VALUES = {
+    "FW": {
+        "FND": (-164.8728073, 0.204655346),
+        "OPAQUE": (380.6122145, 0.078856646),
+        "F1000W": (-24.15638797, 0.182865887),
+        "F1130W": (137.8245397, 0.24910941),
+        "F1280W": (-298.7062532, 0.229963508),
+        "P750L": (12.39439777, 0.246932037),
+        "F1500W": (-377.9888235, 0.263432415),
+        "F1800W": (435.9046314, 0.27885876),
+        "F2100W": (-126.5991201, 0.197193968),
+        "F560W": (218.0010353, 0.282554884),
+        "FLENS": (-212.7978283, 0.409300208),
+        "F2300C": (306.0488778, 0.265448583),
+        "F770W": (-62.48455213, 0.340861733),
+        "F1550C": (188.7366748, 0.291288105),
+        "F2550W": (-324.2364737, 0.176262309),
+        "F1140C": (82.81057729, 0.169772457),
+        "F2550WR": (-255.5816917, 0.251581688),
+        "F1065C": (261.4486618, 0.16177981),
+    },
+    "CCC": {"CLOSED": (398.0376386, 0.173703628), "OPEN": (504.0482685, 0.328112274)},
+    "GW14": {
+        "SHORT": (626.9411005, 0.116034024),
+        "MEDIUM": (342.8685233, 0.127123169),
+        "LONG": (408.8339259, 0.117079193),
+    },
+    "GW23": {
+        "SHORT": (619.7948107, 0.215417336),
+        "MEDIUM": (373.1697309, 0.204314122),
+        "LONG": (441.6632325, 0.349161169),
+    },
+}
 
 # Suffix for msa files
-MSA_SUFFIX = ['msa']
+MSA_SUFFIX = ["msa"]
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
@@ -383,8 +674,10 @@ MONITORS = {
              ('Dark Current Monitor', '/miri/dark_monitor'),
              ('EDB Telemetry Monitor', '/miri/edb_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor')],
-    'nircam': [('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
+    'nircam': [('Background Monitor', '/nircam/background_monitor'),
+               ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Bias Monitor', '/nircam/bias_monitor'),
+               ('Claw Monitor', '/nircam/claw_monitor'),
                ('Cosmic Ray Monitor', '#'),
                ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('EDB Telemetry Monitor', '/nircam/edb_monitor'),
@@ -404,48 +697,92 @@ MONITORS = {
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
                 ('WATA Monitor', '/nirspec/wata_monitor')
                 ]}
-
 # Possible suffix types for coronograph exposures
-NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
+NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ["psfstack", "psfalign", "psfsub"]
 
 # NIRCam subarrays that use four amps for readout
-NIRCAM_FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+NIRCAM_FOUR_AMP_SUBARRAYS = ["WFSS128R", "WFSS64R"]
 
 # NIRCam long wavelength detector names
-NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
+NIRCAM_LONGWAVE_DETECTORS = ["NRCA5", "NRCB5"]
 
 # NIRCam short wavelength detector names
-NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
-                              'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
+NIRCAM_SHORTWAVE_DETECTORS = [
+    "NRCA1",
+    "NRCA2",
+    "NRCA3",
+    "NRCA4",
+    "NRCB1",
+    "NRCB2",
+    "NRCB3",
+    "NRCB4",
+]
 
 # NIRCam subarrays that use either one or four amps
-NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = [
+    "SUBGRISMSTRIPE64",
+    "SUBGRISMSTRIPE128",
+    "SUBGRISMSTRIPE256",
+]
 
 # Possible suffix types for AMI files
-NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
+NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg"]
 
 # Base name for the file listing the preview images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
-PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
+PREVIEW_IMAGE_LISTFILE = "preview_image_inventory"
 
 # All possible proposal categories
-PROPOSAL_CATEGORIES = ['AR', 'CAL', 'COM', 'DD', 'ENG', 'GO', 'GTO', 'NASA', 'SURVEY']
+PROPOSAL_CATEGORIES = ["AR", "CAL", "COM", "DD", "ENG", "GO", "GTO", "NASA", "SURVEY"]
 
-PUPILS_PER_INSTRUMENT = {'nircam': ['CLEAR', 'FLAT', 'F162M', 'F164N', 'GDHS0', 'GDHS60', 'MASKBAR', 'MASKIPR', 'MASKRND',
-                                    'PINHOLES', 'WLM8', 'WLP8', 'F323N', 'F405N', 'F466N', 'F470N', 'GRISMC', 'GRISMR', 'GRISMV2', 'GRISMV3'],
-                         'niriss': ['CLEARP', 'F090W', 'F115W', 'F140M', 'F150W', 'F158M', 'F200W', 'GR700XD', 'NRM'],
-                         'nirspec': [],
-                         'miri': [],
-                         'fgs': []}
+PUPILS_PER_INSTRUMENT = {
+    "nircam": [
+        "CLEAR",
+        "FLAT",
+        "F162M",
+        "F164N",
+        "GDHS0",
+        "GDHS60",
+        "MASKBAR",
+        "MASKIPR",
+        "MASKRND",
+        "PINHOLES",
+        "WLM8",
+        "WLP8",
+        "F323N",
+        "F405N",
+        "F466N",
+        "F470N",
+        "GRISMC",
+        "GRISMR",
+        "GRISMV2",
+        "GRISMV3",
+    ],
+    "niriss": [
+        "CLEARP",
+        "F090W",
+        "F115W",
+        "F140M",
+        "F150W",
+        "F158M",
+        "F200W",
+        "GR700XD",
+        "NRM",
+    ],
+    "nirspec": [],
+    "miri": [],
+    "fgs": [],
+}
 
 
 # Keep keys defined via class as they are used many places with potential mispellings
 # Keys are in sort order from general to instrument specific, then alphabetical
 # within instrument specific fields.
-class QUERY_CONFIG_KEYS:
+class QueryConfigKeys:
     INSTRUMENTS = "INSTRUMENTS"
     PROPOSAL_CATEGORY = "PROPOSAL_CATEGORY"
     LOOK_STATUS = "LOOK_STATUS"
+    DATE_RANGE = "DATE_RANGE"
     NUM_PER_PAGE = "NUM_PER_PAGE"
     SORT_TYPE = "SORT_TYPE"
     ANOMALIES = "ANOMALIES"
@@ -461,102 +798,219 @@ class QUERY_CONFIG_KEYS:
 
 # Template for parameters to be stored in "query_config" session for query_page
 QUERY_CONFIG_TEMPLATE = {
-    QUERY_CONFIG_KEYS.INSTRUMENTS: [],
-    QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY: [],
-    QUERY_CONFIG_KEYS.LOOK_STATUS: [],
-    QUERY_CONFIG_KEYS.NUM_PER_PAGE: 100,
-    QUERY_CONFIG_KEYS.SORT_TYPE: 'Recent',
-    QUERY_CONFIG_KEYS.ANOMALIES: {},
-    QUERY_CONFIG_KEYS.APERTURES: {},
-    QUERY_CONFIG_KEYS.DETECTORS: {},
-    QUERY_CONFIG_KEYS.EXP_TYPES: {},
-    QUERY_CONFIG_KEYS.FILTERS: {},
-    QUERY_CONFIG_KEYS.GRATINGS: {},
-    QUERY_CONFIG_KEYS.PUPILS: {},
-    QUERY_CONFIG_KEYS.READ_PATTS: {},
-    QUERY_CONFIG_KEYS.SUBARRAYS: {}
+    QueryConfigKeys.INSTRUMENTS: [],
+    QueryConfigKeys.PROPOSAL_CATEGORY: [],
+    QueryConfigKeys.LOOK_STATUS: [],
+    QueryConfigKeys.NUM_PER_PAGE: 100,
+    QueryConfigKeys.SORT_TYPE: "Recent",
+    QueryConfigKeys.DATE_RANGE: "",
+    QueryConfigKeys.ANOMALIES: {},
+    QueryConfigKeys.APERTURES: {},
+    QueryConfigKeys.DETECTORS: {},
+    QueryConfigKeys.EXP_TYPES: {},
+    QueryConfigKeys.FILTERS: {},
+    QueryConfigKeys.GRATINGS: {},
+    QueryConfigKeys.PUPILS: {},
+    QueryConfigKeys.READ_PATTS: {},
+    QueryConfigKeys.SUBARRAYS: {},
 }
 
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
-RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
-                      'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
-                               'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
-                               'FASTGRPAVG64', 'FASTR100'],
-                      'nircam': ['RAPID'],
-                      'niriss': ['NISRAPID'],
-                      'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
+RAPID_READPATTERNS = {
+    "fgs": ["FGSRAPID"],
+    "miri": [
+        "FAST",
+        "FASTR1",
+        "SLOW",
+        "SLOWR1",
+        "FASTGRPAVG",
+        "FASTGRPAVG8",
+        "FASTGRPAVG16",
+        "FASTGRPAVG32",
+        "FASTGRPAVG64",
+        "FASTR100",
+    ],
+    "nircam": ["RAPID"],
+    "niriss": ["NISRAPID"],
+    "nirspec": ["NRSRAPID", "NRSIRS2RAPID"],
+}
 
-READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS8370'],
-                           'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
-                                    'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
-                                    'FASTGRPAVG64', 'FASTR100'],
-                           'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
-                                      'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
-                           'niriss': ['NISRAPID', 'NIS'],
-                           'nirspec': ['NRS', 'NRSRAPID', 'NRSIRS2RAPID',
-                                       'NRSRAPIDD2', 'NRSRAPIDD6']}
+READPATT_PER_INSTRUMENT = {
+    "fgs": ["FGS", "FGSRAPID", "FGS60", "FGS840", "FGS8370"],
+    "miri": [
+        "FAST",
+        "FASTR1",
+        "SLOW",
+        "SLOWR1",
+        "FASTGRPAVG",
+        "FASTGRPAVG8",
+        "FASTGRPAVG16",
+        "FASTGRPAVG32",
+        "FASTGRPAVG64",
+        "FASTR100",
+    ],
+    "nircam": [
+        "RAPID",
+        "SHALLOW2",
+        "BRIGHT2",
+        "MEDIUM2",
+        "SHALLOW4",
+        "MEDIUM8",
+        "BRIGHT1",
+        "DEEP2",
+        "DEEP8",
+    ],
+    "niriss": ["NISRAPID", "NIS"],
+    "nirspec": ["NRS", "NRSRAPID", "NRSIRS2RAPID", "NRSRAPIDD2", "NRSRAPIDD6"],
+}
 
 
-REPORT_KEYS_PER_INSTRUMENT = {'fgs': ['proposal', 'exp_type',
-                                      'expstart', 'filter', 'aperture',
-                                      'detector', 'subarray', 'viewed'],
-                              'miri': ['proposal', 'exp_type',
-                                       'expstart', 'filter', 'aperture',
-                                       'detector', 'subarray', 'viewed'],
-                              'nircam': ['proposal', 'exp_type', 'expstart',
-                                         'filter', 'pupil', 'aperture',
-                                         'detector', 'subarray', 'viewed'],
-                              'niriss': ['proposal', 'exp_type', 'expstart',
-                                         'filter', 'pupil', 'aperture',
-                                         'detector', 'subarray', 'viewed'],
-                              'nirspec': ['exp_type', 'filter', 'grating',
-                                          'read_patt_num', 'viewed']}
+REPORT_KEYS_PER_INSTRUMENT = {
+    "fgs": [
+        "proposal",
+        "exp_type",
+        "expstart",
+        "filter",
+        "aperture",
+        "detector",
+        "subarray",
+        "viewed",
+    ],
+    "miri": [
+        "proposal",
+        "exp_type",
+        "expstart",
+        "filter",
+        "aperture",
+        "detector",
+        "subarray",
+        "viewed",
+    ],
+    "nircam": [
+        "proposal",
+        "exp_type",
+        "expstart",
+        "filter",
+        "pupil",
+        "aperture",
+        "detector",
+        "subarray",
+        "viewed",
+    ],
+    "niriss": [
+        "proposal",
+        "exp_type",
+        "expstart",
+        "filter",
+        "pupil",
+        "aperture",
+        "detector",
+        "subarray",
+        "viewed",
+    ],
+    "nirspec": ["exp_type", "filter", "grating", "read_patt_num", "viewed"],
+}
 
 # Possible values for sort order
-SORT_OPTIONS = ['Ascending', 'Descending', 'Recent', 'Oldest']
+SORT_OPTIONS = ["Ascending", "Descending", "Recent", "Oldest"]
 
-SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+SUBARRAYS_ONE_OR_FOUR_AMPS = [
+    "SUBGRISMSTRIPE64",
+    "SUBGRISMSTRIPE128",
+    "SUBGRISMSTRIPE256",
+]
 
-SUBARRAYS_PER_INSTRUMENT = {'nircam': ['FULL', 'FULLP', 'SUB640', 'SUB320', 'SUB160', 'SUB400P', 'SUB160P', 'SUB64P',
-                                       'SUB32TATS', 'SUB640A210R', 'SUB640ASWB', 'SUB320A335R', 'SUB320A430R', 'SUB320ALWB',
-                                       'SUBGRISM256', 'SUBGRISM128', 'SUBGRISM64', 'SUB32TATSGRISM'],
-                            'niriss': ['FULL', 'SUBSTRIP96', 'SUBSTRIP256', 'SUB80', 'SUB64', 'SUB128', 'SUB256',
-                                       'WFSS64R', 'WFSS128R', 'WFSS64C', 'WFSS128C', 'SUBAMPCAL', 'SUBTAAMI', 'SUBTASOSS'],
-                            'nirspec': [],
-                            'miri': ['BRIGHTSKY', 'FULL', 'MASK1065', 'MASK1140', 'MASK1550', 'MASKLYOT', 'SLITLESSPRISM',
-                                     'SUB64', 'SUB128', 'SUB256'],
-                            'fgs': []}
+SUBARRAYS_PER_INSTRUMENT = {
+    "nircam": [
+        "FULL",
+        "FULLP",
+        "SUB640",
+        "SUB320",
+        "SUB160",
+        "SUB400P",
+        "SUB160P",
+        "SUB64P",
+        "SUB32TATS",
+        "SUB640A210R",
+        "SUB640ASWB",
+        "SUB320A335R",
+        "SUB320A430R",
+        "SUB320ALWB",
+        "SUBGRISM256",
+        "SUBGRISM128",
+        "SUBGRISM64",
+        "SUB32TATSGRISM",
+    ],
+    "niriss": [
+        "FULL",
+        "SUBSTRIP96",
+        "SUBSTRIP256",
+        "SUB80",
+        "SUB64",
+        "SUB128",
+        "SUB256",
+        "WFSS64R",
+        "WFSS128R",
+        "WFSS64C",
+        "WFSS128C",
+        "SUBAMPCAL",
+        "SUBTAAMI",
+        "SUBTASOSS",
+    ],
+    "nirspec": [],
+    "miri": [
+        "BRIGHTSKY",
+        "FULL",
+        "MASK1065",
+        "MASK1140",
+        "MASK1550",
+        "MASKLYOT",
+        "SLITLESSPRISM",
+        "SUB64",
+        "SUB128",
+        "SUB256",
+    ],
+    "fgs": [],
+}
 
 # Filename suffixes that need to include the association value in the suffix in
 # order to identify the preview image file. This should only be crf and crfints,
 # since those are essentially level 2 files that are output by the level 3 pipeline.
-SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
+SUFFIXES_TO_ADD_ASSOCIATION = ["crf", "crfints"]
 
 # Filename suffixes where data have been averaged over integrations
-SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf', 'i2d', 'bsub']
+SUFFIXES_WITH_AVERAGED_INTS = ["rate", "cal", "crf", "i2d", "bsub"]
 
 # boolean accessed according to a viewed flag
-THUMBNAIL_FILTER_LOOK = ['New', 'Viewed']
+THUMBNAIL_FILTER_LOOK = ["New", "Viewed"]
 
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
-THUMBNAIL_LISTFILE = 'thumbnail_inventory'
+THUMBNAIL_LISTFILE = "thumbnail_inventory"
 
 # Possible suffix types for time-series exposures
-TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
+TIME_SERIES_SUFFIX_TYPES = ["phot", "whtlt"]
 
 # Possible suffix types for WFS&C files
-WFSC_SUFFIX_TYPES = ['wfscmb']
+WFSC_SUFFIX_TYPES = ["wfscmb"]
 
 # Concatenate all suffix types (ordered to ensure successful matching)
-FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES + MSA_SUFFIX
+FILE_SUFFIX_TYPES = (
+    GUIDER_SUFFIX_TYPES
+    + GENERIC_SUFFIX_TYPES
+    + TIME_SERIES_SUFFIX_TYPES
+    + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES
+    + NIRISS_AMI_SUFFIX_TYPES
+    + WFSC_SUFFIX_TYPES
+    + MSA_SUFFIX
+)
 
 # Instrument Documentation Links
-URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor',
-            'miri': 'https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument',
-            'niriss': 'https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph',
-            'nirspec': 'https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph',
-            'nircam': 'https://jwst-docs.stsci.edu/jwst-near-infrared-camera'}
+URL_DICT = {
+    "fgs": "https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor",
+    "miri": "https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument",
+    "niriss": "https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph",
+    "nirspec": "https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph",
+    "nircam": "https://jwst-docs.stsci.edu/jwst-near-infrared-camera",
+}

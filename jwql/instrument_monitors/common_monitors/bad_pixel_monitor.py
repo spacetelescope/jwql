@@ -984,9 +984,10 @@ class BadPixels():
                 else:
                     index += 1
 
-            min_dark_time = min(dark_obstimes)
-            max_dark_time = max(dark_obstimes)
-            mid_dark_time = instrument_properties.mean_time(dark_obstimes)
+            if len(dark_slope_files) > 0:
+                min_dark_time = min(dark_obstimes)
+                max_dark_time = max(dark_obstimes)
+                mid_dark_time = instrument_properties.mean_time(dark_obstimes)
 
         # Check whether there are still enough files left to meet the threshold
         if illuminated_slope_files is None:
