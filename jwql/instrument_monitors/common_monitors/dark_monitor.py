@@ -103,7 +103,7 @@ from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_
 from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_DATAPRODUCTS, RAPID_READPATTERNS
+from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, save_png
@@ -444,6 +444,27 @@ class Dark():
 
         session.close()
         return (new_pixels_x, new_pixels_y)
+
+    def exclude_too_few_groups(self, result_list):
+        """Given a list of mast query results, go through and exlclude
+        files that have too few groups to be useful
+
+        Parameters
+        ----------
+        result_list : list
+            List of dictionaries containing a MAST query result
+
+        Returns
+        -------
+        filtered_results : list
+            List of dictionaries with files containing too few groups excluded
+        """
+        filtered_results = []
+        for result in result_list:
+            if result['ngroups'] >= MINIMUM_DARK_CURRENT_GROUPS:
+                filtered_results.append(result)
+        return filtered_results
+
 
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Create the ratio of the slope image to a baseline slope
@@ -982,6 +1003,10 @@ class Dark():
                     new_entries = monitor_utils.exclude_asic_tuning(new_entries)
                     len_no_asic = len(new_entries)
                     num_asic = len_new_darks - len_no_asic
+
+                    # Exclude files that don't have enough groups to be useful
+                    new_entries = self.exclude_too_few_groups(new_entries)
+                    len_new_darks = len(new_entries)
 
                     logging.info(f'\tAperture: {self.aperture}, Readpattern: {self.readpatt}, new entries: {len(new_entries)}')
 

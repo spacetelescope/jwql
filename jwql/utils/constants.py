@@ -627,6 +627,10 @@ LOOK_OPTIONS = ["New", "Viewed"]
 # Maximum number of records returned by MAST for a single query
 MAST_QUERY_LIMIT = 500000
 
+# Minimum number of groups per integration required to include data
+# in the dark current monitor
+MINIMUM_DARK_CURRENT_GROUPS = 10
+
 # Expected position sensor values for MIRI. Used by the EDB monitor
 # to filter out bad values. Tuple values are the expected value and
 # the standard deviation associated with the value
