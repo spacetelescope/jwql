@@ -4,7 +4,7 @@ celery==5.3.4
 cython>=3.0.0
 django==4.2.5
 docutils>=0.18.1
-jwst==1.12.3
+jwst==1.12.5
 pygments==2.16.1
 pytest==7.4.2
 redis==5.0.0
