@@ -581,6 +581,13 @@ JWST_DATAPRODUCTS = [
 # Lowercase JWST instrument names
 JWST_INSTRUMENT_NAMES = sorted(["niriss", "nircam", "nirspec", "miri", "fgs"])
 
+# Abbreviations used in exp_types and other locations.
+JWST_INSTRUMENT_NAMES_ABBREVIATIONS = {'fgs': 'FGS',
+                                       'miri': 'MIR',
+                                       'nircam': 'NRC',
+                                       'niriss': 'NIS',
+                                       'nirspec': 'NRS'}
+
 # JWST instrument names with shorthand notation
 JWST_INSTRUMENT_NAMES_SHORTHAND = {
     "gui": "fgs",
