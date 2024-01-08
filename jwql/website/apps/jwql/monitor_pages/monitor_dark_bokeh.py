@@ -196,6 +196,7 @@ class DarkHistPlot():
             self.plot.grid.grid_line_color="white"
         else:
             # If self.data is empty, then make a placeholder plot
+            title_str = f'{self.aperture}: Dark Rate Histogram'
             self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
 
 
