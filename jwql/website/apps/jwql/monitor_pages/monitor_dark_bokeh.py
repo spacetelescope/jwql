@@ -197,6 +197,8 @@ class DarkHistPlot():
         else:
             # If self.data is empty, then make a placeholder plot
             title_str = f'{self.aperture}: Dark Rate Histogram'
+            x_label = 'Dark Rate (DN/sec)'
+            y_label = 'Number of Pixels'
             self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
 
 
