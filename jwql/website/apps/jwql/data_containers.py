@@ -308,7 +308,7 @@ def create_archived_proposals_context(inst):
         except KeyError:
             cat_types.append("MISSING")
             logging.error(f"""Unable to populate proposals by category in MAST for proposal number {proposal_num}
-                          Proposal number {proposal_num} will 'MISSING' category type associated with it
+                          Proposal number {proposal_num} will have 'MISSING' category type associated with it
                           """)
 
     thumbnails_dict['proposals'] = proposal_nums
