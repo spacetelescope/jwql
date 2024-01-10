@@ -306,8 +306,10 @@ def create_archived_proposals_context(inst):
             # Add category type to list based on proposal number
             cat_types.append(proposals_by_category[int(proposal_num)])
         except KeyError:
-            logging.error(f"""Unable to populate proposals by category in MAST for proposal number {proposal_num}\n
-                          Proposal number {proposal_num} will not have category type associated with it""")
+            cat_types.append("MISSING")
+            logging.error(f"""Unable to populate proposals by category in MAST for proposal number {proposal_num}
+                          Proposal number {proposal_num} will 'MISSING' category type associated with it
+                          """)
 
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
