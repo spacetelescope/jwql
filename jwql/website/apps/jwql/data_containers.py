@@ -309,7 +309,6 @@ def create_archived_proposals_context(inst):
             logging.error(f"""Unable to populate proposals by category in MAST for proposal number {proposal_num}\n
                           Proposal number {proposal_num} will not have category type associated with it""")
 
-
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
     thumbnails_dict['num_files'] = total_files
