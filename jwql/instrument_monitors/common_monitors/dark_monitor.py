@@ -951,6 +951,14 @@ class Dark():
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
 
+
+        #####FOR TESTING######
+        self.query_end = 59699.  # For nircam full and miriim testing
+        #####FOR TESTING######
+
+
+
+
         # Loop over all instruments
         for instrument in ['miri', 'nircam']:  # JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
@@ -1002,7 +1010,8 @@ class Dark():
 
 
                     logging.info('SETTING SELF.QUERY_START TO 59500 (PRE-LAUNCH) FOR TESTING.')
-                    self.query_start = 59500.
+                    #self.query_start = 59500.
+                    self.query_start = 59680.  # for nircam full and mirim testing
 
 
 
@@ -1090,6 +1099,15 @@ class Dark():
 
 
 
+
+                        if instrument == 'miri':
+                            new_filenames = ['/Volumes/jwst_ins/jwql/filesystem/public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits',
+                                             '/Volumes/jwst_ins/jwql/filesystem/public/jw01546/jw01546001001/jw01546001001_02102_00001_mirimage_dark.fits']
+                            starting_times = starting_times[0:2]
+                            ending_times = ending_times[0:2]
+                            integrations = integrations[0:2]
+
+
                         print('Before splitting into sublists:')
                         for f in new_filenames:
                             print(f)
@@ -1118,13 +1136,12 @@ class Dark():
                             for dark_file in dark_files:
                                 copied_size = os.stat(dark_file).st_size
                                 orig_size = os.stat(filesystem_path(os.path.basename(dark_file))).st_size
-                                if orig_size != copied_size:
-                                    logging.info(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem.")
-                                    logging.info(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
-                                    print(f'CAN"T COPY {os.path.basename(dark_file)} CORRECTLY!')
-                                    not_copied.append(dark_file)
-                                    dark_files.remove(dark_file)
-                                    os.remove(dark_file)
+                                #if orig_size != copied_size:
+                                #    logging.error(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem!")
+                                #    logging.error(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                #    not_copied.append(dark_file)
+                                #    dark_files.remove(dark_file)
+                                #    os.remove(dark_file)
 
                             logging.info('\tNew_filenames: {}'.format(new_file_list))
                             logging.info('\tData dir: {}'.format(self.data_dir))
@@ -1132,7 +1149,7 @@ class Dark():
                             logging.info('\tNot copied: {}'.format(not_copied))
 
                             # Run the dark monitor
-                            #self.process(dark_files)
+                            self.process(dark_files)
                             print(instrument, aperture, readpatt)
                             for f in new_file_list:
                                 print(f)
@@ -1615,7 +1632,7 @@ class Dark():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    #start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Dark()
     monitor.run()
