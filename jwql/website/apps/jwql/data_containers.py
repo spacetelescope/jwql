@@ -1409,6 +1409,9 @@ def get_proposals_by_category(instrument):
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
 
+    if len(results) == MAST_QUERY_LIMIT:
+        logging.error(f"MAST_QUERY_LIMIT of {MAST_QUERY_LIMIT} reached for {instrument} in get_proposals_by_category")
+
     # Get all unique dictionaries
     unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
 
