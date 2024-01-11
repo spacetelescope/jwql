@@ -1,5 +1,14 @@
 ## What's Changed
 
+1.2.2 (2024-01-11)
+==================
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Increase MAST query limit by @ bhilbert4 in https://github.com/spacetelescope/jwql/pull/1427
+- Hotfix: Crashing archive_database_update @ BradleySappington in https://github.com/spacetelescope/jwql/pull/1425
+
+
 1.2.1 (2023-12-20)
 ==================
 
