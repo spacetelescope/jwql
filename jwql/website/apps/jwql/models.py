@@ -162,6 +162,7 @@ class Anomalies(models.Model):
     tilt_event = models.BooleanField(default=False)
     light_saber = models.BooleanField(default=False)
     other = models.BooleanField(default=False)
+    unusual_cosmic_rays = models.BooleanField(default=False)
 
     def get_marked_anomalies(self):
         """Return all boolean field names (anomalies) currently set"""

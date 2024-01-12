@@ -78,6 +78,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "crosstalk": ["fgs", "nircam", "niriss", "nirspec"],
     "data_transfer_error": ["fgs", "nircam", "niriss", "nirspec"],
     "ghost": ["fgs", "nircam", "niriss", "nirspec"],
+    "unusual_cosmic_rays": ["fgs", "nircam", "niriss", "nirspec"],
     "unusual_snowballs": ["fgs", "nircam", "niriss", "nirspec"],
     # instrument-specific anomalies:
     "cosmic_ray_shower": ["miri"],
