@@ -151,7 +151,7 @@ class Anomalies(models.Model):
     mrs_glow = models.BooleanField(default=False)
     mrs_zipper = models.BooleanField(default=False)
     internal_reflection = models.BooleanField(default=False)
-    optical_short = models.BooleanField(default=False)
+    new_short = models.BooleanField(default=False)
     row_pull_up = models.BooleanField(default=False)
     row_pull_down = models.BooleanField(default=False)
     lrs_contamination = models.BooleanField(default=False)

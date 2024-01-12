@@ -88,7 +88,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "MRS_Glow": ["miri"],
     "MRS_Zipper": ["miri"],
     "internal_reflection": ["miri"],
-    "optical_short": ["nirspec"],  # Only for MOS observations
+    "new_short": ["nirspec"],  # Only for MOS observations
     "row_pull_up": ["miri"],
     "row_pull_down": ["miri"],
     "LRS_Contamination": ["miri"],
