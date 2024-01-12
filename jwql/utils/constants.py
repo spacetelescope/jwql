@@ -79,7 +79,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "crosstalk": ["fgs", "nircam", "niriss", "nirspec"],
     "data_transfer_error": ["fgs", "nircam", "niriss", "nirspec"],
     "ghost": ["fgs", "nircam", "niriss", "nirspec"],
-    "snowball": ["fgs", "nircam", "niriss", "nirspec"],
+    "unusual_snowballs": ["fgs", "nircam", "niriss", "nirspec"],
     # instrument-specific anomalies:
     "column_pull_up": ["miri"],
     "column_pull_down": ["miri"],

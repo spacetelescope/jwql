@@ -143,7 +143,7 @@ class Anomalies(models.Model):
     crosstalk = models.BooleanField(default=False)
     data_transfer_error = models.BooleanField(default=False)
     ghost = models.BooleanField(default=False)
-    snowball = models.BooleanField(default=False)
+    unusual_snowballs = models.BooleanField(default=False)
     column_pull_up = models.BooleanField(default=False)
     column_pull_down = models.BooleanField(default=False)
     dominant_msa_leakage = models.BooleanField(default=False)
@@ -170,7 +170,7 @@ class Anomalies(models.Model):
             if isinstance(value, bool) and value:
                 true_anomalies.append(field)
         return true_anomalies
-    
+
     @classmethod
     def get_all_anomalies(cls):
         """Return list of all anomalies (assumed as any field with default of False)"""
