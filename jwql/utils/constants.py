@@ -70,7 +70,6 @@ AMPLIFIER_BOUNDARIES = {
 # Dictionary describing instruments to which anomalies apply
 ANOMALIES_PER_INSTRUMENT = {
     # anomalies affecting all instruments:
-    "cosmic_ray_shower": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "diffraction_spike": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "excessive_saturation": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "guidestar_failure": ["fgs", "miri", "nircam", "niriss", "nirspec"],
@@ -81,6 +80,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "ghost": ["fgs", "nircam", "niriss", "nirspec"],
     "unusual_snowballs": ["fgs", "nircam", "niriss", "nirspec"],
     # instrument-specific anomalies:
+    "cosmic_ray_shower": ["miri"],
     "column_pull_up": ["miri"],
     "column_pull_down": ["miri"],
     "Noticeable_MSA_Leakage": ["nirspec"],
