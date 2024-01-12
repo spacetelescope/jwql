@@ -83,7 +83,7 @@ ANOMALIES_PER_INSTRUMENT = {
     # instrument-specific anomalies:
     "column_pull_up": ["miri"],
     "column_pull_down": ["miri"],
-    "Dominant_MSA_Leakage": ["nirspec"],
+    "Noticeable_MSA_Leakage": ["nirspec"],
     "dragons_breath": ["nircam"],
     "MRS_Glow": ["miri"],
     "MRS_Zipper": ["miri"],
@@ -102,7 +102,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "other": ["fgs", "miri", "nircam", "niriss", "nirspec"],
 }
 # anomalies that shouldn't be 'titleized'
-special_cases = ["Dominant_MSA_Leakage", "MRS_Glow", "MRS_Zipper", "LRS_Contamination"]
+special_cases = ["Noticeable_MSA_Leakage", "MRS_Glow", "MRS_Zipper", "LRS_Contamination"]
 
 # Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [

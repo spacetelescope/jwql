@@ -146,7 +146,7 @@ class Anomalies(models.Model):
     unusual_snowballs = models.BooleanField(default=False)
     column_pull_up = models.BooleanField(default=False)
     column_pull_down = models.BooleanField(default=False)
-    dominant_msa_leakage = models.BooleanField(default=False)
+    noticeable_msa_leakage = models.BooleanField(default=False)
     dragons_breath = models.BooleanField(default=False)
     mrs_glow = models.BooleanField(default=False)
     mrs_zipper = models.BooleanField(default=False)
