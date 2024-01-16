@@ -302,8 +302,14 @@ def create_archived_proposals_context(inst):
         proposal_obs_times = [observation.obsstart for observation in prop_entries]
         thumb_obs_time.append(max(proposal_obs_times))
 
-        # Add category type to list based on proposal number
-        cat_types.append(proposals_by_category[int(proposal_num)])
+        try:
+            # Add category type to list based on proposal number
+            cat_types.append(proposals_by_category[int(proposal_num)])
+        except KeyError:
+            cat_types.append("MISSING")
+            logging.error(f"""Unable to populate proposals by category in MAST for proposal number {proposal_num}
+                          Proposal number {proposal_num} will have 'MISSING' category type associated with it
+                          """)
 
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
@@ -1402,6 +1408,9 @@ def get_proposals_by_category(instrument):
               "filters": [{'paramName': 'instrume', 'values': [instrument]}]}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
+
+    if len(results) == MAST_QUERY_LIMIT:
+        logging.error(f"MAST_QUERY_LIMIT of {MAST_QUERY_LIMIT} reached for {instrument} in get_proposals_by_category")
 
     # Get all unique dictionaries
     unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))

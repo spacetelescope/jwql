@@ -613,7 +613,7 @@ JWST_MAST_SERVICES = [
 LOOK_OPTIONS = ["New", "Viewed"]
 
 # Maximum number of records returned by MAST for a single query
-MAST_QUERY_LIMIT = 500000
+MAST_QUERY_LIMIT = 550000
 
 # Expected position sensor values for MIRI. Used by the EDB monitor
 # to filter out bad values. Tuple values are the expected value and
