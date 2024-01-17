@@ -77,7 +77,7 @@ ANOMALIES_PER_INSTRUMENT = {
     # anomalies affecting multiple instruments:
     "crosstalk": ["fgs", "nircam", "niriss", "nirspec"],
     "data_transfer_error": ["fgs", "nircam", "niriss", "nirspec"],
-    "ghost": ["fgs", "nircam", "niriss", "nirspec"],
+    "ghost": ["fgs", "nircam", "niriss"],
     "unusual_cosmic_rays": ["fgs", "nircam", "niriss", "nirspec"],
     "unusual_snowballs": ["fgs", "nircam", "niriss", "nirspec"],
     # instrument-specific anomalies:
@@ -94,7 +94,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "row_pull_down": ["miri"],
     "LRS_Contamination": ["miri"],
     "tree_rings": ["miri"],
-    "scattered_light": ["niriss", "nircam"],
+    "scattered_light": ["niriss", "nircam", "nirspec"],
     "claws": ["nircam"],
     "wisps": ["nircam"],
     "tilt_event": ["nircam"],
