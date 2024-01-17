@@ -72,12 +72,12 @@ ANOMALIES_PER_INSTRUMENT = {
     # anomalies affecting all instruments:
     "diffraction_spike": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "excessive_saturation": ["fgs", "miri", "nircam", "niriss", "nirspec"],
-    "guidestar_failure": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "persistence": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     # anomalies affecting multiple instruments:
-    "crosstalk": ["fgs", "nircam", "niriss", "nirspec"],
-    "data_transfer_error": ["fgs", "nircam", "niriss", "nirspec"],
+    "crosstalk": ["fgs", "nircam", "niriss"],
+    "data_transfer_error": ["fgs", "nircam", "niriss"],
     "ghost": ["fgs", "nircam", "niriss"],
+    "guidestar_failure": ["fgs", "miri", "nircam", "niriss"],
     "unusual_cosmic_rays": ["fgs", "nircam", "niriss", "nirspec"],
     "unusual_snowballs": ["fgs", "nircam", "niriss", "nirspec"],
     # instrument-specific anomalies:
