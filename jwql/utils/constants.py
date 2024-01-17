@@ -101,6 +101,7 @@ ANOMALIES_PER_INSTRUMENT = {
     "light_saber": ["niriss"],
     # additional anomalies:
     "other": ["fgs", "miri", "nircam", "niriss", "nirspec"],
+    "needs_discussion": ["fgs", "miri", "nircam", "niriss", "nirspec"],
 }
 # anomalies that shouldn't be 'titleized'
 special_cases = ["Noticeable_MSA_Leakage", "MRS_Glow", "MRS_Zipper", "LRS_Contamination"]

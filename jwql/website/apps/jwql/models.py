@@ -163,6 +163,7 @@ class Anomalies(models.Model):
     light_saber = models.BooleanField(default=False)
     other = models.BooleanField(default=False)
     unusual_cosmic_rays = models.BooleanField(default=False)
+    needs_discussion = models.BooleanField(default=False)
 
     def get_marked_anomalies(self):
         """Return all boolean field names (anomalies) currently set"""
