@@ -83,7 +83,7 @@ class Readnoise():
     output_dir : str
         Path into which outputs will be placed.
 
-    data_dir : str
+    working_dir : str
         Path into which new dark files will be copied to be worked on.
 
     query_start : float

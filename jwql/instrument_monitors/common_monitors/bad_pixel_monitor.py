@@ -1255,9 +1255,9 @@ class BadPixels():
                 ensure_dir_exists(os.path.join(self.working_dir, 'data'))
                 ensure_dir_exists(os.path.join(self.output_dir, 'data'))
                 self.working_data_dir = os.path.join(self.working_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
-                self.outputs_data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                self.output_data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
                 ensure_dir_exists(self.working_data_dir)
-                ensure_dir_exists(self.outputs_data_dir)
+                ensure_dir_exists(self.output_data_dir)
 
                 # Copy files from filesystem
                 if run_flats:
