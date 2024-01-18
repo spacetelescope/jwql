@@ -99,6 +99,10 @@ ANOMALIES_PER_INSTRUMENT = {
     "wisps": ["nircam"],
     "tilt_event": ["nircam"],
     "light_saber": ["niriss"],
+    "transient_short": ["nirspec"],
+    "subsequently_masked_short": ["nirspec"],
+    "monitored_short": ["nirspec"],
+    "bright_object_not_a_short": ["nirspec"],
     # additional anomalies:
     "other": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "needs_discussion": ["fgs", "miri", "nircam", "niriss", "nirspec"],

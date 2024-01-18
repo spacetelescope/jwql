@@ -47,9 +47,15 @@ class RootFileInfoAdmin(admin.ModelAdmin):
 
 @admin.register(Anomalies)
 class AnomaliesAdmin(admin.ModelAdmin):
-    list_display = ('root_file_info', 'flag_date', 'user', 'cosmic_ray_shower', 'unusual_cosmic_rays', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error',
-                    'ghost', 'unusual_snowballs', 'column_pull_up', 'column_pull_down', 'noticeable_msa_leakage', 'dragons_breath', 'mrs_glow', 'mrs_zipper', 'internal_reflection', 'new_short', 'row_pull_up',
-                    'row_pull_down', 'lrs_contamination', 'tree_rings', 'scattered_light', 'claws', 'wisps', 'tilt_event', 'light_saber', 'other', 'needs_discussion')
-    list_filter = ('flag_date', 'user', 'cosmic_ray_shower', 'unusual_cosmic_rays', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error',
-                   'ghost', 'unusual_snowballs', 'column_pull_up', 'column_pull_down', 'noticeable_msa_leakage', 'dragons_breath', 'mrs_glow', 'mrs_zipper', 'internal_reflection', 'new_short', 'row_pull_up',
-                   'row_pull_down', 'lrs_contamination', 'tree_rings', 'scattered_light', 'claws', 'wisps', 'tilt_event', 'light_saber', 'other', 'needs_discussion', 'root_file_info')
+    list_display = ('root_file_info', 'flag_date', 'user', 'cosmic_ray_shower', 'unusual_cosmic_rays', 'diffraction_spike', 'excessive_saturation',
+                    'guidestar_failure', 'persistence', 'crosstalk', 'data_transfer_error', 'ghost', 'unusual_snowballs', 'column_pull_up',
+                    'column_pull_down', 'noticeable_msa_leakage', 'dragons_breath', 'mrs_glow', 'mrs_zipper', 'internal_reflection', 'new_short',
+                    'row_pull_up', 'row_pull_down', 'lrs_contamination', 'tree_rings', 'scattered_light', 'claws', 'wisps', 'tilt_event',
+                    'light_saber', 'other', 'needs_discussion', 'transient_short', 'subsequently_masked_short', 'monitored_short',
+                    'bright_object_not_a_short')
+    list_filter = ('flag_date', 'user', 'cosmic_ray_shower', 'unusual_cosmic_rays', 'diffraction_spike', 'excessive_saturation', 'guidestar_failure',
+                   'persistence', 'crosstalk', 'data_transfer_error', 'ghost', 'unusual_snowballs', 'column_pull_up', 'column_pull_down',
+                   'noticeable_msa_leakage', 'dragons_breath', 'mrs_glow', 'mrs_zipper', 'internal_reflection', 'new_short', 'row_pull_up',
+                   'row_pull_down', 'lrs_contamination', 'tree_rings', 'scattered_light', 'claws', 'wisps', 'tilt_event', 'light_saber', 'other',
+                   'needs_discussion', 'transient_short', 'subsequently_masked_short', 'monitored_short', 'bright_object_not_a_short',
+                   'root_file_info')
