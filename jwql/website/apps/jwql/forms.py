@@ -250,6 +250,7 @@ class InstrumentAnomalySubmitForm(forms.Form):
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
         """
+        anomaly_choices = list(map(str.lower, anomaly_choices))
         default_dict = {'flag_date': datetime.datetime.now(),
                         'user': user}
         for anomaly in Anomalies.get_all_anomalies():
