@@ -34,8 +34,10 @@ if not ON_GITHUB_ACTIONS:
 def test_astroquery_mast():
     """Test if the astroquery.mast service can complete a request"""
     service = 'Mast.Caom.Filtered'
-    params = {'columns': 'COUNT_BIG(*)', 'filters': [], 'pagesize': 1,
-              'page': 1}
+    params = {'columns': 'COUNT_BIG(*)', 
+              'filters': [{"paramName": "obs_collection",
+                           "values": ["JWST"]},], 
+              'pagesize': 1, 'page': 1}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
 

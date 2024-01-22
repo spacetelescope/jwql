@@ -498,7 +498,10 @@ class Readnoise():
             # Construct new entry for this file for the readnoise database table.
             # Can't insert values with numpy.float32 datatypes into database
             # so need to change the datatypes of these values.
-            readnoise_db_entry = {'uncal_filename': filename,
+            #
+            # Store files as file name only (file path will be built at retrieval based
+            # on runtime configuration)
+            readnoise_db_entry = {'uncal_filename': os.path.basename(filename),
                                   'aperture': self.aperture,
                                   'detector': self.detector,
                                   'subarray': self.subarray,
@@ -506,12 +509,12 @@ class Readnoise():
                                   'nints': self.nints,
                                   'ngroups': self.ngroups,
                                   'expstart': self.expstart,
-                                  'readnoise_filename': readnoise_outfile,
+                                  'readnoise_filename': os.path.basename(readnoise_outfile),
                                   'full_image_mean': float(full_image_mean),
                                   'full_image_stddev': float(full_image_stddev),
                                   'full_image_n': full_image_n.astype(float),
                                   'full_image_bin_centers': full_image_bin_centers.astype(float),
-                                  'readnoise_diff_image': readnoise_diff_png,
+                                  'readnoise_diff_image': os.path.basename(readnoise_diff_png),
                                   'diff_image_mean': float(diff_image_mean),
                                   'diff_image_stddev': float(diff_image_stddev),
                                   'diff_image_n': diff_image_n.astype(float),
