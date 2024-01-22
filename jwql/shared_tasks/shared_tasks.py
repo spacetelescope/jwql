@@ -185,15 +185,15 @@ def only_one(function=None, key="", timeout=None):
 
 def create_task_log_handler(logger, propagate):
     log_file_name = configure_logging('shared_tasks')
-    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
-    ensure_dir_exists(output_dir)
+    working_dir = os.path.join(get_config()['working'], 'calibrated_data')
+    ensure_dir_exists(working_dir)
     celery_log_file_handler = FileHandler(log_file_name)
     logger.addHandler(celery_log_file_handler)
     for handler in logger.handlers:
         handler.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
     logger.propagate = propagate
-    if not os.path.exists(os.path.join(output_dir, "celery_pipeline_log.cfg")):
-        with open(os.path.join(output_dir, "celery_pipeline_log.cfg"), "w") as cfg_file:
+    if not os.path.exists(os.path.join(working_dir, "celery_pipeline_log.cfg")):
+        with open(os.path.join(working_dir, "celery_pipeline_log.cfg"), "w") as cfg_file:
             cfg_file.write("[*]\n")
             cfg_file.write("level = WARNING\n")
             cfg_file.write("handler = append:{}\n".format(log_file_name))
@@ -323,7 +323,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         ext_or_exts = [ext_or_exts]
 
     input_dir = os.path.join(config['transfer_dir'], "incoming")
-    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    cal_dir = os.path.join(config['working'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
     msg = "Input from {}, calibrate in {}, output to {}"
     logging.info(msg.format(input_dir, cal_dir, output_dir))
@@ -457,7 +457,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     config = get_config()
 
     input_dir = os.path.join(config["transfer_dir"], "incoming")
-    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    cal_dir = os.path.join(config['working'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
     msg = "Input from {}, calibrate in {}, output to {}"
     logging.info(msg.format(input_dir, cal_dir, output_dir))

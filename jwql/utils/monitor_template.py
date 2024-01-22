@@ -130,6 +130,7 @@ def monitor_template_main():
     plt.sizing_mode = 'stretch_both'  # Necessary for responsive sizing on web app
     script, div = components(plt)
 
+    working_data_dir = SETTINGS['working']
     plot_output_dir = SETTINGS['outputs']
     div_outfile = os.path.join(plot_output_dir, 'monitor_name',
                                filename_of_interest + "_component.html")
