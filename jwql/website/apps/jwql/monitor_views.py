@@ -71,14 +71,19 @@ def background_monitor(request):
     template = "background_monitor.html"
 
     # Get the background trending filters to display
-    server_name = get_config()['outputs'].split("outputs/", 1)[1]
-    output_dir_bkg = static(os.path.join("outputs", server_name, "claw_monitor", "backgrounds"))
+    #server_name = get_config()['outputs'].split("outputs/", 1)[1]  # todo uncomment
+    # output_dir_bkg = static(os.path.join("outputs", server_name, "claw_monitor", "backgrounds"))  # todo uncomment
+    output_dir_bkg = os.path.join('/static/miri1/outputs', "claw_monitor", "backgrounds")  # todo remove line
     fltrs = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']
     bkg_plots = [os.path.join(output_dir_bkg, '{}_backgrounds.png'.format(fltr)) for fltr in fltrs]
+    bkg_rms_plots = [os.path.join(output_dir_bkg, '{}_backgrounds_rms.png'.format(fltr)) for fltr in fltrs]
+    bkg_model_plots = [os.path.join(output_dir_bkg, '{}_backgrounds_vs_models.png'.format(fltr)) for fltr in fltrs]
 
     context = {
         'inst': 'NIRCam',
-        'bkg_plots': bkg_plots
+        'bkg_plots': bkg_plots,
+        'bkg_rms_plots': bkg_rms_plots,
+        'bkg_model_plots': bkg_model_plots
     }
 
     # Return a HTTP response with the template and dictionary of variables
