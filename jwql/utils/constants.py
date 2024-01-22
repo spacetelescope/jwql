@@ -84,15 +84,15 @@ ANOMALIES_PER_INSTRUMENT = {
     "cosmic_ray_shower": ["miri"],
     "column_pull_up": ["miri"],
     "column_pull_down": ["miri"],
-    "Noticeable_MSA_Leakage": ["nirspec"],
+    "noticeable_msa_leakage": ["nirspec"],
     "dragons_breath": ["nircam"],
-    "MRS_Glow": ["miri"],
-    "MRS_Zipper": ["miri"],
+    "mrs_glow": ["miri"],
+    "mrs_zipper": ["miri"],
     "internal_reflection": ["miri"],
     "new_short": ["nirspec"],  # Only for MOS observations
     "row_pull_up": ["miri"],
     "row_pull_down": ["miri"],
-    "LRS_Contamination": ["miri"],
+    "lrs_contamination": ["miri"],
     "tree_rings": ["miri"],
     "scattered_light": ["niriss", "nircam", "nirspec"],
     "claws": ["nircam"],
@@ -107,47 +107,40 @@ ANOMALIES_PER_INSTRUMENT = {
     "other": ["fgs", "miri", "nircam", "niriss", "nirspec"],
     "needs_discussion": ["fgs", "miri", "nircam", "niriss", "nirspec"],
 }
-# anomalies that shouldn't be 'titleized'
-special_cases = ["Noticeable_MSA_Leakage", "MRS_Glow", "MRS_Zipper", "LRS_Contamination"]
 
 # Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [
-    (anomaly, inflection.titleize(anomaly))
-    if anomaly not in special_cases
-    else (anomaly, anomaly.replace("_", " "))
+    (anomaly, anomaly.replace("_", " ").upper())
+    for anomaly in ANOMALIES_PER_INSTRUMENT
     for anomaly in ANOMALIES_PER_INSTRUMENT
 ]
 
 ANOMALY_CHOICES_FGS = [
-    (anomaly, inflection.titleize(anomaly))
+    (anomaly, inflection.titleize(anomaly).upper())
     for anomaly in ANOMALIES_PER_INSTRUMENT
     if "fgs" in ANOMALIES_PER_INSTRUMENT[anomaly]
 ]
 
 ANOMALY_CHOICES_MIRI = [
-    (anomaly, inflection.titleize(anomaly))
-    if anomaly not in special_cases
-    else (anomaly, anomaly.replace("_", " "))
+    (anomaly, anomaly.replace("_", " ").upper())
     for anomaly in ANOMALIES_PER_INSTRUMENT
     if "miri" in ANOMALIES_PER_INSTRUMENT[anomaly]
 ]
 
 ANOMALY_CHOICES_NIRCAM = [
-    (anomaly, inflection.titleize(anomaly))
+    (anomaly, anomaly.replace("_", " ").upper())
     for anomaly in ANOMALIES_PER_INSTRUMENT
     if "nircam" in ANOMALIES_PER_INSTRUMENT[anomaly]
 ]
 
 ANOMALY_CHOICES_NIRISS = [
-    (anomaly, inflection.titleize(anomaly))
+    (anomaly, anomaly.replace("_", " ").upper())
     for anomaly in ANOMALIES_PER_INSTRUMENT
     if "niriss" in ANOMALIES_PER_INSTRUMENT[anomaly]
 ]
 
 ANOMALY_CHOICES_NIRSPEC = [
-    (anomaly, inflection.titleize(anomaly))
-    if anomaly not in special_cases
-    else (anomaly, anomaly.replace("_", " "))
+    (anomaly, anomaly.replace("_", " ").upper())
     for anomaly in ANOMALIES_PER_INSTRUMENT
     if "nirspec" in ANOMALIES_PER_INSTRUMENT[anomaly]
 ]
