@@ -185,7 +185,7 @@ class ClawMonitor():
 
                 # Plot the background data over time
                 ax = fig.add_subplot(grid[i])
-                ax.scatter(plot_expstarts, plot_data)
+                ax.scatter(plot_expstarts, plot_data, alpha=0.5)
 
                 # Match scaling in all plots to the first detector with data.
                 if len(df) > 0:
@@ -199,7 +199,7 @@ class ClawMonitor():
                         time_tick_vals = np.linspace(start_mjd, end_mjd, 5)
                         time_tick_labels = [Time(m, format='mjd').isot.split('T')[0] for m in time_tick_vals]
                         found_limits = True
-                    ax.set_ylim(first_med - 5 * first_stddev, first_med + 5 * first_stddev)
+                    ax.set_ylim(first_med - 8 * first_stddev, first_med + 8 * first_stddev)
 
                     # Plot overall median line with shaded stddev
                     mean, med, stddev = sigma_clipped_stats(plot_data)
