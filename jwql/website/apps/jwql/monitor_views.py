@@ -162,7 +162,7 @@ def claw_monitor(request):
     query = session.query(NIRCamClawStats.expstart_mjd, NIRCamClawStats.skyflat_filename).order_by(NIRCamClawStats.expstart_mjd.desc()).all()
     df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
     recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 10]))
-    
+
     server_name = get_config()['outputs'].split("outputs/", 1)[1]
     output_dir_claws = static(os.path.join("outputs", server_name, "claw_monitor", "claw_stacks"))
 

@@ -119,7 +119,7 @@ class ClawMonitor():
 
     def make_background_plots(self, plot_type='bkg'):
         """Makes plots of the background levels over time in NIRCam data.
-        
+
         Attributes
         ----------
         plot_type : str
@@ -173,7 +173,7 @@ class ClawMonitor():
                              (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
                 if len(df) > 0:
                     df = df.sort_values(by=['expstart_mjd'])
-                
+
                 # Get relevant background stat for plot type
                 if plot_type == 'bkg':
                     plot_data = df['median'].values
@@ -270,7 +270,7 @@ class ClawMonitor():
                 segmap_orig = detect_sources(data_conv, threshold, npixels=6)
                 segmap_orig = segmap_orig.data
                 stack[n] = np.ma.masked_array(data, mask=(segmap_orig != 0) | (dq & 1 != 0))
-                
+
                 # Calculate image stats. Before calculating, expand segmap of extended objects.
                 # This is only done after adding the data to the claw stack to avoid flagging the claws
                 # themselves from those stacks, but is needed here since extended wings can impact image
@@ -293,7 +293,7 @@ class ClawMonitor():
                 date = hdu[0].header['DATE-BEG']
                 doy = int(Time(date).yday.split(':')[1])
                 try:
-                    jbt.get_background(ra, dec, wv, thisday=doy, plot_background=False, plot_bathtub=False, 
+                    jbt.get_background(ra, dec, wv, thisday=doy, plot_background=False, plot_bathtub=False,
                                        write_bathtub=True, bathtub_file='background_versus_day.txt')
                     bkg_table = Table.read('background_versus_day.txt', names=('day', 'total_bkg'), format='ascii')
                     total_bkg = bkg_table['total_bkg'][bkg_table['day'] == doy][0]
@@ -414,9 +414,10 @@ class ClawMonitor():
         logging.info('{} files found between {} and {}.'.format(len(mast_table), self.query_start_mjd, self.query_end_mjd))
 
         # Define pivot wavelengths
-        self.filter_wave = {'F070W': 0.704, 'F090W': 0.902, 'F115W': 1.154, 'F150W': 1.501, 'F150W2': 1.659, \
-                            'F200W': 1.989, 'F212N': 2.121, 'F250M': 2.503, 'F277W': 2.762, 'F300M': 2.989, \
-                            'F322W2': 3.232, 'F356W': 3.568, 'F410M': 4.082, 'F430M': 4.281,  'F444W': 4.408, 'F480M': 4.874}
+        self.filter_wave = {'F070W': 0.704, 'F090W': 0.902, 'F115W': 1.154, 'F150W': 1.501, 'F150W2': 1.659,
+                            'F200W': 1.989, 'F212N': 2.121, 'F250M': 2.503, 'F277W': 2.762, 'F300M': 2.989,
+                            'F322W2': 3.232, 'F356W': 3.568, 'F410M': 4.082, 'F430M': 4.281,  'F444W': 4.408,
+                            'F480M': 4.874}
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
         combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in mast_table])
@@ -438,8 +439,6 @@ class ClawMonitor():
                 except:
                     pass
             self.files = np.array(existing_files)
-            print(self.files)
-            print(mast_table_combo)
             self.detectors = np.array(mast_table_combo['detector'])
             if (not os.path.exists(self.outfile)) & (len(existing_files) == len(mast_table_combo)):
                 logging.info('Working on {}'.format(self.outfile))
