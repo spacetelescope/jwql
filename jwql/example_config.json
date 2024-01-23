@@ -26,6 +26,7 @@
     "mast_base_url" : "",
     "mast_request_url": "",
     "outputs" : "",
+    "working": "",
     "preview_image_filesystem" : "",
     "filesystem" : "",
     "setup_file" : "",
