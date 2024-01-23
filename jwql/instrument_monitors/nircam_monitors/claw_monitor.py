@@ -154,13 +154,13 @@ class ClawMonitor():
             if int(fltr[1:4]) < 250:  # i.e. SW
                 detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']   # in on-sky order, don't change order
                 grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1, 1, 1, 1])
-                fig = plt.figure(figsize=(40, 20))
+                fig = plt.figure(figsize=(45, 20))
                 fig.suptitle(fltr, fontsize=70)
                 frack_masked_thresh = 0.075
             else:  # i.e. LW
                 detectors_to_run = ['NRCALONG', 'NRCBLONG']
                 grid = plt.GridSpec(1, 2, hspace=.2, wspace=.4, width_ratios=[1, 1])
-                fig = plt.figure(figsize=(20, 10))
+                fig = plt.figure(figsize=(25, 10))
                 fig.suptitle(fltr, fontsize=70, y=1.05)
                 frack_masked_thresh = 0.15
             for i, det in enumerate(detectors_to_run):
@@ -178,6 +178,7 @@ class ClawMonitor():
                 if plot_type == 'bkg':
                     plot_data = df['median'].values
                 if plot_type == 'bkg_rms':
+                    df = df[df['stddev'] != 0]  # older data has no accurate stddev measures
                     plot_data = df['stddev'].values
                 if plot_type == 'model':
                     plot_data = df['median'].values / df['total_bkg'].values
@@ -185,7 +186,7 @@ class ClawMonitor():
 
                 # Plot the background data over time
                 ax = fig.add_subplot(grid[i])
-                ax.scatter(plot_expstarts, plot_data, alpha=0.5)
+                ax.scatter(plot_expstarts, plot_data, alpha=0.3)
 
                 # Match scaling in all plots to the first detector with data.
                 if len(df) > 0:

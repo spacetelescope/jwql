@@ -17,53 +17,60 @@
 	<style>
 
 	/* Style the tab */
-	.tab {
-	overflow: hidden;
-	border: 1px solid #ccc;
-	background-color: #f1f1f1;
+	.tabs {
+		overflow: hidden;
+		border: 1px solid #ccc;
+		background-color: #f1f1f1;
 	}
 
 	/* Style the buttons inside the tab */
-	.tab button {
-	background-color: inherit;
-	float: left;
-	border: none;
-	outline: none;
-	cursor: pointer;
-	padding: 14px 16px;
-	transition: 0.3s;
-	font-size: 17px;
+	.tabs button {
+		float: left;
+		border: none;
+		outline: none;
+		cursor: pointer;
+		padding: 14px 16px;
+		transition: 0.3s;
+		font-size: 17px;
 	}
 
 	/* Change background color of buttons on hover */
-	.tab button:hover {
-	background-color: #ddd;
+	.tabs button:hover {
+		background-color: #ddd;
 	}
-
-	/* Create an active/current tablink class */
-	.tab button.active {
-	background-color: #ccc;
-	}
+	
+	/* Change background color of active tabs */
+	.active-tab {
+        background-color: #ddd;
+    }
 
 	/* Style the tab content */
-	.tabcontent {
-	display: none;
-	padding: 6px 12px;
-	border: 1px solid #ccc;
-	border-top: none;
+	.tab-content {
+		display: none;
+		padding: 6px 12px;
+		border: 1px solid #ccc;
+		border-top: none;
+	}
+
+	/* Style the active tab content */
+	.active-content {
+		display: block;
+		padding: 6px 12px;
+		border: 1px solid #ccc;
+		border-top: none;
 	}
 	</style>
 	</head>
 
 	<body>
 
-	<div class="tab">
-	<button class="tablinks" onclick="openCity(event, 'Background')">Background</button>
-	<button class="tablinks" onclick="openCity(event, 'Background RMS')">Background RMS</button>
-	<button class="tablinks" onclick="openCity(event, 'Background vs Model')">Background vs Model</button>
+	<div class="tabs">
+		<button class="tab active-tab" onclick="displayPlots('Background')">Background</button>
+		<button class="tab" onclick="displayPlots('BackgroundRMS')">Background RMS</button>
+		<button class="tab" onclick="displayPlots('BackgroundModel')">Background vs Model</button>
 	</div>
 
-	<div id="Background" class="tabcontent">
+	<div id="Background" class="tab-content active-content">
 		<div width=100% id="bkg">
 			{% for plot in bkg_plots %}
 				<img src={{ plot | safe }} width="100%">
@@ -72,7 +79,7 @@
 		</div>
 	</div>
 
-	<div id="Background RMS" class="tabcontent">
+	<div id="BackgroundRMS" class="tab-content">
 		<div width=100% id="bkg_rms">
 			{% for plot in bkg_rms_plots %}
 				<img src={{ plot | safe }} width="100%">
@@ -81,7 +88,7 @@
 		</div>
 	</div>
 
-	<div id="Background vs Model" class="tabcontent">
+	<div id="BackgroundModel" class="tab-content">
 		<div width=100% id="bkg">
 			{% for plot in bkg_model_plots %}
 				<img src={{ plot | safe }} width="100%">
@@ -91,23 +98,27 @@
 	</div>
 
 	<script>
-	function openCity(evt, cityName) {
-	var i, tabcontent, tablinks;
-	tabcontent = document.getElementsByClassName("tabcontent");
-	for (i = 0; i < tabcontent.length; i++) {
-		tabcontent[i].style.display = "none";
-	}
-	tablinks = document.getElementsByClassName("tablinks");
-	for (i = 0; i < tablinks.length; i++) {
-		tablinks[i].className = tablinks[i].className.replace(" active", "");
-	}
-	document.getElementById(cityName).style.display = "block";
-	evt.currentTarget.className += " active";
-	}
+		function displayPlots(tabId) {
+			// Hide all tab contents
+			var tabContents = document.getElementsByClassName('tab-content');
+			for (var i = 0; i < tabContents.length; i++) {
+				tabContents[i].style.display = 'none';
+			}
+	
+			// Remove 'active-tab' class from all tabs
+			var tabs = document.getElementsByClassName('tab');
+			for (var i = 0; i < tabs.length; i++) {
+				tabs[i].classList.remove('active-tab');
+			}
+	
+			// Show the selected tab content and mark the tab as active
+			document.getElementById(tabId).style.display = 'block';
+			document.querySelector('[onclick="displayPlots(\'' + tabId + '\')"]').classList.add('active-tab');
+		}
 	</script>
 
-	</main>
-	
 	</body>
+
+</main>
 
 {% endblock %}
