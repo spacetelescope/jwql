@@ -416,7 +416,7 @@ class ClawMonitor():
         # Define pivot wavelengths
         self.filter_wave = {'F070W': 0.704, 'F090W': 0.902, 'F115W': 1.154, 'F150W': 1.501, 'F150W2': 1.659,
                             'F200W': 1.989, 'F212N': 2.121, 'F250M': 2.503, 'F277W': 2.762, 'F300M': 2.989,
-                            'F322W2': 3.232, 'F356W': 3.568, 'F410M': 4.082, 'F430M': 4.281,  'F444W': 4.408,
+                            'F322W2': 3.232, 'F356W': 3.568, 'F410M': 4.082, 'F430M': 4.281, 'F444W': 4.408,
                             'F480M': 4.874}
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
