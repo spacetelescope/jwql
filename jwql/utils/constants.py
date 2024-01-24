@@ -379,7 +379,7 @@ FLAT_EXP_TYPES = {
 }
 
 # output subdirectories to keep track of via the filesytem monitor
-FILESYSTEM_MONITOR_SUBDIRS = ["logs", "outputs", "preview_images", "thumbnails", "all"]
+FILESYSTEM_MONITOR_SUBDIRS = ['logs', 'outputs', 'working', 'preview_images', 'thumbnails', 'all']
 
 FILTERS_PER_INSTRUMENT = {
     "fgs": [],
