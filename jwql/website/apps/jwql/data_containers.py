@@ -1594,8 +1594,8 @@ def get_rootnames_from_query(parameters):
             current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
 
         # Django is doing something wonky here.  I can't call values_list with a single parameter, even with 'flat=True' as per Django Docs.
-        #TODO: This is hacky and should be fixed.
-        filtered_list = list(current_ins_rootfileinfos.values_list('root_name','expstart'))
+        # TODO: This is hacky and should be fixed.
+        filtered_list = list(current_ins_rootfileinfos.values_list('root_name', 'expstart'))
         rootnames = [name[0] for name in filtered_list]
         filtered_rootnames.extend(rootnames)
 
