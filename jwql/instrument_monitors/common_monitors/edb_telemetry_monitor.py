@@ -21,12 +21,12 @@ Statistics
 After filtering the data, the monitor calcualtes statistics. The monitor supports several different types
 averaging. These include:
 
-1. **daily\_means** - This is designed for mnemonics whose values do not change much over the course of a
+1. **daily_means** - This is designed for mnemonics whose values do not change much over the course of a
 day. In this case, mnemonic data is retrieved over a small amount of time each day (e.g. 12:00 - 12:15).
 From these data, a daily mean is calculated. For all other types of telemetry, the EDB queries span
 the full day.
 
-2. **block\_means** - These are mnemonics where the user wishes to see mean values associated with each
+2. **block_means** - These are mnemonics where the user wishes to see mean values associated with each
 block of entries in the retrieved and filtered data. For example, you want to examine a voltage at times
 when some other current is less than 0.25A. The script will read in all telemetry data, and filter out
 data points for times where the current did not meet the criteria. It will then calculate the mean of
@@ -34,15 +34,15 @@ each remaining block of continuous good data. So if the data were good from 2:00
 3:00, and good again from 3:00-4:00, then the monitor will calculate a mean value for the 2:00-2:30
 period, and a mean from the 3:00-4:00 period.
 
-3. **time\_interval** - Mnemonics in this category have their data retrieved and filtered, and then averaged
+3. **time_interval** - Mnemonics in this category have their data retrieved and filtered, and then averaged
 over the requested time interval. For example, if the user sets a time interval of 5 minutes, then the
 monitor caculates the mean value within each 5-minute block of the total time range of the data, and plots
 the average values.
 
-4. **every\_change** - This is the most complex case. Mnemonics in this category have their data filtered
-and organized based on the value of a secondary mnemonic. For example, the IMIR\_HK\_GW14\_POS\_RATIO returns
+4. **every_change** - This is the most complex case. Mnemonics in this category have their data filtered
+and organized based on the value of a secondary mnemonic. For example, the IMIR_HK_GW14_POS_RATIO returns
 a measure of the position of MIRI's grating wheel. We can plot this position as a function of the commanded
-location of the grating wheel, which is provided by IMIR\_HK\_GW14\_CUR\_POS. In this case, the monitor will
+location of the grating wheel, which is provided by IMIR_HK_GW14_CUR_POS. In this case, the monitor will
 loop over the commanded positions and for each, gather the measured position information. The measured
 positions associated with each commanded position will then be plotted separately. Note that this use
 of "every change" is separate from the idea of every-change telemetry, in which telemetry points are
@@ -52,15 +52,15 @@ change-only telemetry data, but this should be largely invisible to the EDB Tele
 5. **all** - In this case, no averaging is done. (Although filtering is still done) All filtered data
 are kept as they are retrived from the EDB, and plotted without any modification.
 
-6. **all+daily\_means** - This is a combination of the "all" and "daily\_means" cases above. All data points
+6. **all+daily_means** - This is a combination of the "all" and "daily_means" cases above. All data points
 are retrieved from the EDB and optionally filtered by dependencies. Then daily means are calculated.
 Both the full set of data and the daily means are plotted, along with deviations from the mean.
 
-7. **all+block\_means** - This is a combination of the "all" and "block\_means" cases above. All data points
+7. **all+block_means** - This is a combination of the "all" and "block_means" cases above. All data points
 are retrieved from the EDB and optionally filtered by dependencies. Then means for each block of good data
 are calculated. Both the full set of data and the means are plotted, along with deviations from the mean.
 
-8. **all+time\_interval** - This is a combination of the "all" and "time\_interval" cases above. All data points
+8. **all+time_interval** - This is a combination of the "all" and "time_interval" cases above. All data points
 are retrieved from the EDB and optionally filtered by dependencies. Then means are calculated for each block
 of time lasting the duration of the time interval. Both the full set of data and the means are plotted, along
 with deviations from the mean.
@@ -72,24 +72,24 @@ The type of data averaging is at the top level of the JSON file. Values must mat
 The entry for each mnemonic has several pieces of information, described below.
 
 - **name**: Name of the mnemonic as it appears in the EDB.
-- **database\_id** Optional name to use in the plot title for this mnemonic. Any averaged data saved to the JWQL database will be saved under this name if it is present.
+- **database_id** Optional name to use in the plot title for this mnemonic. Any averaged data saved to the JWQL database will be saved under this name if it is present.
 - **description**: Summary describing the data contained in the mnemonic. Placed in the plot title.
 - **dependency**: This is a list of mnemonics and conditions that will be used to filter the data
-- **plot\_data**: Description of how the data are to be plotted. There are two options: "nominal", in which case
+- **plot_data**: Description of how the data are to be plotted. There are two options: "nominal", in which case
   the mnemonic data are plotted as-is, and "*<mnem>" where <mnem> is the name of another mnemonic. In this case, the
   data for this second mnemonic are retrieved using the same dependencies as the primary mnemonic. The primary mnemonic
   and this second mnemonic are then multiplied together and plotted. This option was designed around plotting power as
   the product of current and voltage.
 
-A further option for the **"plot\_data"** field is the addition of a comma-separated list of statistics to be overplotted.
+A further option for the **"plot_data"** field is the addition of a comma-separated list of statistics to be overplotted.
 Options are: "mean", "median", "max", and "min". Note that this is a little confusing, because in many cases the menmonic's
 data will already contain the median value of the data (and the original data as returned from the EDB will not be
-available). The monitor realized this though, so if you specify "mean" for a mnemonic in the "daily\_mean" list, it will simply
+available). The monitor realized this though, so if you specify "mean" for a mnemonic in the "daily_mean" list, it will simply
 plot the same data twice, on top of itself.
 
-As an example, in order to plot the daily mean and maximum values of the product of SE\_ZIMIRICEA and SE\_ZBUSVLT, the plot\_data
-entry would be: "*SE\_ZBUSVLT,max". If you also wanted to plot the minimum daily value, the entry would be: "*SE\_ZBUSVLT,max,min".
-And similarly, to plot SE\_ZIMIRICEA on its own (not as a product), the plot\_data entries shown above would become: "nominal,max"
+As an example, in order to plot the daily mean and maximum values of the product of SE_ZIMIRICEA and SE_ZBUSVLT, the plot_data
+entry would be: "*SE_ZBUSVLT,max". If you also wanted to plot the minimum daily value, the entry would be: "*SE_ZBUSVLT,max,min".
+And similarly, to plot SE_ZIMIRICEA on its own (not as a product), the plot_data entries shown above would become: "nominal,max"
 and "nominal,max,min".
 
 * **nominal_value**: Optional. The "expected" value for this mnemonic. If provided, a horizontal dashed line will be added at this value.
@@ -660,8 +660,8 @@ class EdbMnemonicMonitor():
 
         # Set up directory structure to hold the saved plots
         config = get_config()
-        base_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
-        ensure_dir_exists(base_dir)
+        outputs_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
+        ensure_dir_exists(outputs_dir)
 
         # Case where the user is requesting the monitor run for some subset of
         # mnemonics for some non-standard time span
@@ -677,7 +677,7 @@ class EdbMnemonicMonitor():
                     monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                     # Define the output directory in which the html files will be saved
-                    self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                    self.plot_output_dir = os.path.join(outputs_dir, instrument_name)
                     ensure_dir_exists(self.plot_output_dir)
 
                     # File of mnemonics to monitor
@@ -710,7 +710,7 @@ class EdbMnemonicMonitor():
                 mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
-                self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                self.plot_output_dir = os.path.join(outputs_dir, instrument_name)
                 ensure_dir_exists(self.plot_output_dir)
 
                 # Read in file with nominal list of mnemonics
@@ -991,14 +991,14 @@ class EdbMnemonicMonitor():
         if dependency["name"] in self.query_results:
 
             # We need the full time to be covered
-            if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
-                 and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+            if ((self.query_results[dependency["name"]].requested_start_time <= starttime) and
+              (self.query_results[dependency["name"]].requested_end_time >= endtime)):
 
                 logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
 
                 # Extract data for the requested time range
-                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime)
-                                          & (self.query_results[dependency["name"]].data["dates"] <= endtime))
+                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime) &
+                                          (self.query_results[dependency["name"]].data["dates"] <= endtime))
                 dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
                                 "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
 
@@ -1138,16 +1138,16 @@ class EdbMnemonicMonitor():
                     devs = []
 
                 # Keep only data that fall at least partially within the plot range
-                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) \
-                    | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
+                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) 
+                  | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     times.extend(row.time)
                     values.extend(row.mnemonic_value)
                     medians.append(row.median)
                     devs.append(row.stdev)
                     hist[row.dependency_value] = (times, values, medians, devs)
             else:
-                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) \
-                    | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
+                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) 
+                  | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     hist[row.dependency_value] = (row.time, row.mnemonic_value, row.median, row.stdev)
 
         return hist
@@ -1854,7 +1854,7 @@ def calculate_statistics(mnemonic_instance, telemetry_type):
         mnemonic_instance.block_stats()
     elif telemetry_type == "every_change":
         mnemonic_instance.block_stats_filter_positions()
-        #mnemonic_instance.block_stats(ignore_vals=[0.], ignore_edges=True, every_change=True)
+        # mnemonic_instance.block_stats(ignore_vals=[0.], ignore_edges=True, every_change=True)
     elif telemetry_type == "time_interval":
         mnemonic_instance.timed_stats()
     elif telemetry_type == "all":

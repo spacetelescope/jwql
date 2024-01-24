@@ -135,7 +135,7 @@ class Dark():
     output_dir : str
         Path into which outputs will be placed
 
-    data_dir : str
+    working_dir : str
         Path into which new dark files will be copied to be worked on
 
     query_start : float
@@ -515,7 +515,7 @@ class Dark():
         else:
             filename = query.all()[0].baseline_file
             # Specify the full path
-            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
+            filename = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
         session.close()
@@ -684,7 +684,7 @@ class Dark():
 
             rate_file = filename.replace("dark", "rate")
             rate_file_name = os.path.basename(rate_file)
-            local_rate_file = os.path.join(self.data_dir, rate_file_name)
+            local_rate_file = os.path.join(self.working_data_dir, rate_file_name)
 
             if os.path.isfile(local_rate_file):
                 logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
@@ -814,7 +814,7 @@ class Dark():
                 histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
             # Remove the input files in order to save disk space
-            files_to_remove = glob(f'{self.data_dir}/*fits')
+            files_to_remove = glob(f'{self.working_data_dir}/*fits')
             for filename in files_to_remove:
                 os.remove(filename)
 
@@ -888,8 +888,8 @@ class Dark():
 
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
-        # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
+        # Get the working directory
+        self.working_dir = os.path.join(get_config()['working'], 'dark_monitor')
 
         # Read in config file that defines the thresholds for the number
         # of dark files that must be present in order for the monitor to run
@@ -1004,11 +1004,11 @@ class Dark():
 
                         if monitor_run:
                             # Set up directories for the copied data
-                            ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                            self.data_dir = os.path.join(self.output_dir,
-                                                         'data/{}_{}'.format(self.instrument.lower(),
-                                                                             self.aperture.lower()))
-                            ensure_dir_exists(self.data_dir)
+                            ensure_dir_exists(os.path.join(self.working_dir, 'data'))
+                            self.working_data_dir = os.path.join(self.working_dir,
+                                                                 'data/{}_{}'.format(self.instrument.lower(),
+                                                                                     self.aperture.lower()))
+                            ensure_dir_exists(self.working_data_dir)
 
                             # Copy files from filesystem
                             dark_files, not_copied = copy_files(new_filenames, self.data_dir)
