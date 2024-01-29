@@ -1391,7 +1391,7 @@ def get_preview_images_by_rootname(rootname):
 
 
 def get_proposals_by_category(instrument):
-    """Return a dictionary of program numbers based on category type
+    """Return a dictionary of program numbers and category type
     Parameters
     ----------
     instrument : str
