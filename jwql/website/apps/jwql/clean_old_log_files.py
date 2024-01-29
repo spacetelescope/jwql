@@ -67,7 +67,8 @@ def run(time_limit=timedelta(days=14)):
         if logtype.is_dir():
             for item in os.scandir(logtype):
                 # We only try to delete log files produced by the machine on which
-                # this script is running. e.g.
+                # this script is running. e.g. log files produced by the test server
+                # can only be deleted by running this script on the test server.
                 if HOSTNAME in item.name and item.name[-4:] == '.log':
                     stat_result = item.stat()
                     last_modified_time = datetime.fromtimestamp(stat_result.st_mtime)
