@@ -42,6 +42,7 @@ def define_options():
                         help='Time limit in days. Log files older than this will be deleted.')
     return parser
 
+
 def run(time_limit=timedelta(days=14)):
     """Look through log directories and delete log files that are older than ``time_limit``.
     Have time_limit default to be 14 days.
@@ -65,7 +66,7 @@ def run(time_limit=timedelta(days=14)):
     for logtype in os.scandir(log_dir):
         if logtype.is_dir():
             for item in os.scandir(logtype):
-                # We only try to delete log files produced by the machine one which
+                # We only try to delete log files produced by the machine on which
                 # this script is running. e.g.
                 if HOSTNAME in item.name and item.name[-4:] == '.log':
                     stat_result = item.stat()
@@ -76,6 +77,7 @@ def run(time_limit=timedelta(days=14)):
                         full_path = os.path.join(log_dir, logtype, item)
                         print(f'DELETING {full_path}')
     print('Once initial testing is complete, replace the print statement above with the os.remove line above it.')
+
 
 if __name__ == '__main__':
     parser = define_options()
