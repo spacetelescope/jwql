@@ -1391,7 +1391,7 @@ def get_preview_images_by_rootname(rootname):
 
 
 def get_proposals_by_category(instrument):
-    """Return a dictionary of program numbers based on category type
+    """Return a dictionary of program numbers and category type
     Parameters
     ----------
     instrument : str
@@ -1400,24 +1400,16 @@ def get_proposals_by_category(instrument):
     Returns
     -------
     category_sorted_dict : dict
-        Dictionary with category as the key and a list of program id's as the value
+        Dictionary with program number as the key and program category as the value
     """
+    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"""select distinct prpID,prpProject from CaomObservation where collection='JWST'
+                                     and maxLevel>0 and insName like '{instrument.lower()}%'""")
+    # Put the results into an astropy Table
+    prop_table = tap_results.to_table()
 
-    service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "program, category",
-              "filters": [{'paramName': 'instrume', 'values': [instrument]}]}
-    response = Mast.service_request_async(service, params)
-    results = response[0].json()['data']
-
-    if len(results) == MAST_QUERY_LIMIT:
-        logging.error(f"MAST_QUERY_LIMIT of {MAST_QUERY_LIMIT} reached for {instrument} in get_proposals_by_category")
-
-    # Get all unique dictionaries
-    unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
-
-    # Make a dictionary of {program: category} to pull from
-    proposals_by_category = {d['program']: d['category'] for d in unique_results}
-
+    # Convert to a dictionary
+    proposals_by_category = {int(d['prpID']): d['prpProject'] for d in prop_table}
     return proposals_by_category
 
 
