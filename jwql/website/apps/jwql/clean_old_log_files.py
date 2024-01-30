@@ -74,10 +74,8 @@ def run(time_limit=timedelta(days=14)):
                     last_modified_time = datetime.fromtimestamp(stat_result.st_mtime)
                     age = now - last_modified_time
                     if age > time_limit:
-                        #os.remove(item.name)
                         full_path = os.path.join(log_dir, logtype, item)
-                        print(f'DELETING {full_path}')
-    print('Once initial testing is complete, replace the print statement above with the os.remove line above it.')
+                        os.remove(full_path)
 
 
 if __name__ == '__main__':
