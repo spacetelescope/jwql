@@ -1099,8 +1099,9 @@ class Dark():
                         ensure_dir_exists(self.working_data_dir)
 
                         if instrument == 'miri':
-                            new_filenames = ['/Volumes/jwst_ins/jwql/filesystem/public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits',
-                                             '/Volumes/jwst_ins/jwql/filesystem/public/jw01546/jw01546001001/jw01546001001_02102_00001_mirimage_dark.fits']
+                            filesystem = get_config()['filesystem']
+                            new_filenames = [os.path.join(filesystem, '/public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits'),
+                                             os.path.join(filesystem, '/public/jw01546/jw01546001001/jw01546001001_02102_00001_mirimage_dark.fits')]
                             starting_times = starting_times[0:2]
                             ending_times = ending_times[0:2]
                             integrations = integrations[0:2]
