@@ -1074,8 +1074,11 @@ class Dark():
                             starting_times.append(hdulist[0].header['EXPSTART'])
                             ending_times.append(hdulist[0].header['EXPEND'])
                         else:
-
                             bad_size_filenames.append(new_file)
+                            logging.info(f'\t\t{new_file} has unexpected aperture size. Expecting {expected_xsize}x{expected_ysize}. Got {xsize}x{ysize}')
+
+
+
                     if len(temp_filenames) != len(new_filenames):
                         logging.info('\t\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
                         for badfile in bad_size_filenames:
@@ -1100,16 +1103,13 @@ class Dark():
 
                         if instrument == 'miri':
                             filesystem = get_config()['filesystem']
-                            new_filenames = [os.path.join(filesystem, '/public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits'),
-                                             os.path.join(filesystem, '/public/jw01546/jw01546001001/jw01546001001_02102_00001_mirimage_dark.fits')]
+                            new_filenames = [os.path.join(filesystem, 'public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits'),
+                                             os.path.join(filesystem, 'public/jw01546/jw01546001001/jw01546001001_02102_00001_mirimage_dark.fits')]
+                            print('manually set new_filenames: ', new_filenames)
+
                             starting_times = starting_times[0:2]
                             ending_times = ending_times[0:2]
                             integrations = integrations[0:2]
-
-
-                        print('Before splitting into sublists:')
-                        for f in new_filenames:
-                            print(f)
 
                         # Split the list of good files into sub-lists based on the integration
                         # threshold. The monitor will then be run on each sub-list independently,
@@ -1118,16 +1118,10 @@ class Dark():
                         # where it hasn't been run in a while and data have piled up in the meantime.
                         self.split_files_into_sub_lists(new_filenames, starting_times, ending_times, integrations, integration_count_threshold)
 
-
-                        print('in sublists:')
-                        print(self.file_batches)
-
-
-
                         # Run the monitor once on each list
                         for new_file_list, batch_start_time, batch_end_time, batch_integrations in zip(self.file_batches, self.start_time_batches, self.end_time_batches, self.integration_batches):
                             # Copy files from filesystem
-                            dark_files, not_copied = copy_files(new_file_list, self.data_dir)
+                            dark_files, not_copied = copy_files(new_file_list, self.working_data_dir)
 
                             # Check that there were no problems with the file copying. If any of the copied
                             # files have different sizes between the MAST filesystem and the JWQL filesystem,
@@ -1135,27 +1129,31 @@ class Dark():
                             for dark_file in dark_files:
                                 copied_size = os.stat(dark_file).st_size
                                 orig_size = os.stat(filesystem_path(os.path.basename(dark_file))).st_size
-                                #if orig_size != copied_size:
-                                #    logging.error(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem!")
-                                #    logging.error(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
-                                #    not_copied.append(dark_file)
-                                #    dark_files.remove(dark_file)
-                                #    os.remove(dark_file)
+                                if orig_size != copied_size:
+                                    logging.error(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem!")
+                                    logging.error(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                    not_copied.append(dark_file)
+                                    dark_files.remove(dark_file)
+                                    os.remove(dark_file)
 
                             logging.info('\tNew_filenames: {}'.format(new_file_list))
-                            logging.info('\tData dir: {}'.format(self.data_dir))
+                            logging.info('\tData dir: {}'.format(self.working_data_dir))
                             logging.info('\tCopied to data dir: {}'.format(dark_files))
                             logging.info('\tNot copied: {}'.format(not_copied))
-
-                            # Run the dark monitor
-                            self.process(dark_files)
-                            print(instrument, aperture, readpatt)
-                            for f in new_file_list:
-                                print(f)
 
                             # Get the starting and ending time of the files in this monitor run
                             batch_start_time = np.min(np.array(batch_start_time))
                             batch_end_time = np.max(np.array(batch_end_time))
+
+                            if len(dark_files) > 0:
+                                # Run the dark monitor
+                                logging.info(f'\tRunning process for {instrument}, {aperture}, {readpatt} with:')
+                                for dkfile in dark_files:
+                                    logging.info(f'\t{dkfile}')
+                                self.process(dark_files)
+                            else:
+                                logging.info('\tNo files remaining to process. Skipping monitor.')
+                                monitor_run = False
 
                             # Update the query history once for each group of files
                             new_entry = {'instrument': instrument,
@@ -1371,7 +1369,7 @@ class Dark():
             dividers = np.insert(dividers, len(dividers), len(delta_t))
 
         logging.info(f'\t\t\tThreshold delta time used to divide epochs: {DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME[self.instrument]} days')
-        logging.info(f'\t\t\tdelta_t between files: {delta_t}')
+        logging.info(f'\t\t\tdelta_t between files: {delta_t} days.')
         logging.info(f'\t\t\tFinal dividers (divide data based on time gaps between files): {dividers}')
         logging.info('\n')
 
@@ -1434,10 +1432,10 @@ class Dark():
                     # Here we are in the final subgroup of the final epoch, where we
                     # do not necessarily know if there will be future data to combine
                     # with these data
-                    logging.info(f'\t\t\tShould be final epoch and final subgroup. epoch number: {i}')
+                    logging.debug(f'\t\t\tShould be final epoch and final subgroup. epoch number: {i}')
 
                     if np.sum(subgroup_ints) >= threshold:
-                        logging.info('\t\t\tADDED - final subgroup of final epoch')
+                        logging.debug('\t\t\tADDED - final subgroup of final epoch')
                         self.file_batches.append(subgroup_files)
                         self.start_time_batches.append(subgroup_start_times)
                         self.end_time_batches.append(subgroup_end_times)
@@ -1464,11 +1462,11 @@ class Dark():
                     break
 
             logging.info(f'\n\t\t\tEpoch number: {i}')
-            logging.info('\t\t\tBatch File, Bath integration')
+            logging.info('\t\t\tFiles, integrations in file batch:')
             for bi, bf in zip(batch_ints, batch_files):
                 logging.info(f'\t\t\t{bf}, {bi}')
             logging.info(f'\n\t\t\tSplit into separate subgroups for processing:')
-            logging.info('\t\t\tFile batches, integration batches')
+            logging.info('\t\t\tFiles and number of integrations in each subgroup:')
             for fb, ib in zip(self.file_batches, self.integration_batches):
                 logging.info(f'\t\t\t{fb}, {ib}')
             logging.info(f'\t\t\tDONE WITH SUBGROUPS\n\n\n\n')
