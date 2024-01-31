@@ -71,8 +71,7 @@ def background_monitor(request):
     template = "background_monitor.html"
 
     # Get the background trending filters to display
-    server_name = get_config()['outputs'].split("outputs/", 1)[1]
-    output_dir_bkg = static(os.path.join("outputs", server_name, "claw_monitor", "backgrounds"))
+    output_dir_bkg = static(os.path.join("outputs", "claw_monitor", "backgrounds"))
     fltrs = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']
     bkg_plots = [os.path.join(output_dir_bkg, '{}_backgrounds.png'.format(fltr)) for fltr in fltrs]
 
@@ -159,8 +158,7 @@ def claw_monitor(request):
     df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
     recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 10]))
     
-    server_name = get_config()['outputs'].split("outputs/", 1)[1]
-    output_dir_claws = static(os.path.join("outputs", server_name, "claw_monitor", "claw_stacks"))
+    output_dir_claws = static(os.path.join("outputs", "claw_monitor", "claw_stacks"))
 
     claw_stacks = [os.path.join(output_dir_claws, filename) for filename in recent_files]
 

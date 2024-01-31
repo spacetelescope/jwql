@@ -83,7 +83,7 @@ class Readnoise():
     output_dir : str
         Path into which outputs will be placed.
 
-    data_dir : str
+    working_dir : str
         Path into which new dark files will be copied to be worked on.
 
     query_start : float
@@ -253,7 +253,7 @@ class Readnoise():
             The full path to the output png file.
         """
 
-        output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
+        output_filename = os.path.join(self.output_data_dir, '{}.png'.format(outname))
 
         # Get image scale limits
         zscale = ZScaleInterval()
@@ -445,7 +445,7 @@ class Readnoise():
                 cal_data = cal_data[:, 5:-1, :, :]
 
             # Make the readnoise image
-            readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
+            readnoise_outfile = os.path.join(self.output_data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
             readnoise = self.make_readnoise_image(cal_data)
             # fits.writeto(readnoise_outfile, readnoise, overwrite=True)
             # logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
@@ -549,6 +549,8 @@ class Readnoise():
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'readnoise_monitor')
         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+        self.working_dir = os.path.join(get_config()['working'], 'readnoise_monitor')
+        ensure_dir_exists(os.path.join(self.working_dir, 'data'))
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -589,15 +591,18 @@ class Readnoise():
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                self.output_data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
                 if len(new_entries) > 0:
-                    ensure_dir_exists(self.data_dir)
+                    ensure_dir_exists(self.output_data_dir)
+                self.working_data_dir = os.path.join(self.working_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                if len(new_entries) > 0:
+                    ensure_dir_exists(self.working_data_dir)
 
                 # Get any new files to process
                 new_files = []
                 checked_files = []
                 for file_entry in new_entries:
-                    output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
+                    output_filename = os.path.join(self.working_data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
                     if output_filename in checked_files:
@@ -627,7 +632,7 @@ class Readnoise():
                             # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
                             # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
                             if total_cds_frames >= 10:
-                                shutil.copy(uncal_filename, self.data_dir)
+                                shutil.copy(uncal_filename, self.working_data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
                                 new_files.append(output_filename)

@@ -216,7 +216,7 @@ def test_get_anomaly_form_post(mocker):
                         MockSessionFileAnomaly())
 
     # post a different selection: others are deselected
-    request.POST['anomaly_choices'] = ['optical_short']
+    request.POST['anomaly_choices'] = ['new_short']
 
     # mock form validity and update functions
     mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,
@@ -260,7 +260,7 @@ def test_get_anomaly_form_post_group(mocker):
     # post a different selection: others are deselected,
     # unless they belong only to the file, not to the group
     # as a whole
-    request.POST['anomaly_choices'] = ['optical_short']
+    request.POST['anomaly_choices'] = ['new_short']
 
     # mock form validity and update functions
     mocker.patch.object(data_containers.InstrumentAnomalySubmitForm,

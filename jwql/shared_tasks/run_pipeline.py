@@ -313,8 +313,8 @@ def run_save_jump(input_file, short_name, work_directory, instrument, ramp_fit=T
 
 
 if __name__ == '__main__':
-    status_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
-    general_status_file = os.path.join(status_dir, "general_status.txt")
+    working_dir = os.path.join(get_config()['working'], 'calibrated_data')
+    general_status_file = os.path.join(working_dir, "general_status.txt")
 
     with open(general_status_file, "w") as status_file:
         status_file.write("Started at {}\n".format(time.ctime()))

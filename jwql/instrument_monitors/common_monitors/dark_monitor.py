@@ -136,7 +136,7 @@ class Dark():
     output_dir : str
         Path into which outputs will be placed
 
-    data_dir : str
+    working_dir : str
         Path into which new dark files will be copied to be worked on
 
     query_start : float
@@ -541,7 +541,7 @@ class Dark():
         else:
             filename = query.all()[0].baseline_file
             # Specify the full path
-            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
+            filename = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
         session.close()
@@ -715,7 +715,7 @@ class Dark():
 
             rate_file = filename.replace("dark", output_suffix)
             rate_file_name = os.path.basename(rate_file)
-            local_rate_file = os.path.join(self.data_dir, rate_file_name)
+            local_rate_file = os.path.join(self.working_data_dir, rate_file_name)
 
             if os.path.isfile(local_rate_file):
                 logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
@@ -864,7 +864,7 @@ class Dark():
                 histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
             # Remove the input files in order to save disk space
-            files_to_remove = glob(f'{self.data_dir}/*fits')
+            files_to_remove = glob(f'{self.working_data_dir}/*fits')
             for filename in files_to_remove:
                 os.remove(filename)
 
@@ -941,8 +941,8 @@ class Dark():
 
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
-        # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
+        # Get the working directory
+        self.working_dir = os.path.join(get_config()['working'], 'dark_monitor')
 
         # Read in config file that defines the thresholds for the number
         # of dark files that must be present in order for the monitor to run
@@ -1074,6 +1074,7 @@ class Dark():
                             starting_times.append(hdulist[0].header['EXPSTART'])
                             ending_times.append(hdulist[0].header['EXPEND'])
                         else:
+
                             bad_size_filenames.append(new_file)
                     if len(temp_filenames) != len(new_filenames):
                         logging.info('\t\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
@@ -1091,14 +1092,11 @@ class Dark():
                         monitor_run = True
 
                         # Set up directories for the copied data
-                        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                        self.data_dir = os.path.join(self.output_dir,
-                                                     'data/{}_{}'.format(self.instrument.lower(),
-                                                                         self.aperture.lower()))
-                        ensure_dir_exists(self.data_dir)
-
-
-
+                        ensure_dir_exists(os.path.join(self.working_dir, 'data'))
+                        self.working_data_dir = os.path.join(self.working_dir,
+                                                             'data/{}_{}'.format(self.instrument.lower(),
+                                                                                 self.aperture.lower()))
+                        ensure_dir_exists(self.working_data_dir)
 
                         if instrument == 'miri':
                             new_filenames = ['/Volumes/jwst_ins/jwql/filesystem/public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits',

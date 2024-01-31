@@ -1,5 +1,27 @@
 ## What's Changed
 
+1.2.3 (2024-01-26)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Update Anomaly Names by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1435
+- Bug fix for multiple query anomalies by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1442
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Moving monitor outputs used by the server to central storage by @york-stsci in https://github.com/spacetelescope/jwql/pull/1397
+- Update Path for Claw and Background Monitor by @mfix in https://github.com/spacetelescope/jwql/pull/1444
+
+1.2.2 (2024-01-11)
+==================
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Increase MAST query limit by @ bhilbert4 in https://github.com/spacetelescope/jwql/pull/1427
+- Hotfix: Crashing archive_database_update @ BradleySappington in https://github.com/spacetelescope/jwql/pull/1425
+
+
 1.2.1 (2023-12-20)
 ==================
 
