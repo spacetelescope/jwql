@@ -1165,9 +1165,9 @@ class Dark():
                                          'run_monitor': monitor_run,
                                          'entry_date': datetime.datetime.now()}
 
-                            #with engine.begin() as connection:
-                            #    connection.execute(
-                            #        self.query_table.__table__.insert(), new_entry)
+                            with engine.begin() as connection:
+                                connection.execute(
+                                    self.query_table.__table__.insert(), new_entry)
                             logging.info('\tUpdated the query history table')
                             logging.info('NEW ENTRY: ')
                             logging.info(new_entry)
@@ -1186,9 +1186,9 @@ class Dark():
                                      'run_monitor': monitor_run,
                                      'entry_date': datetime.datetime.now()}
 
-                        #with engine.begin() as connection:
-                        #    connection.execute(
-                        #        self.query_table.__table__.insert(), new_entry)
+                        with engine.begin() as connection:
+                            connection.execute(
+                                self.query_table.__table__.insert(), new_entry)
                         logging.info('\tUpdated the query history table')
                         logging.info('NEW ENTRY: ')
                         logging.info(new_entry)
