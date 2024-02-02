@@ -1033,7 +1033,7 @@ class Dark():
                         # number of integrations.
                         keep_ints = int(nints) - self.skipped_initial_ints
                         if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize)
-                              or expected_xsize is None or expected_ysize is None)):
+                                                 or expected_xsize is None or expected_ysize is None)):
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
                             integrations.append(int(nints) - self.skipped_initial_ints)
