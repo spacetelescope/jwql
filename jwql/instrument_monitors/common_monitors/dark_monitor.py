@@ -465,7 +465,6 @@ class Dark():
                 filtered_results.append(result)
         return filtered_results
 
-
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Create the ratio of the slope image to a baseline slope
         image. Pixels in the ratio image with values above
@@ -1033,8 +1032,8 @@ class Dark():
                         # keep the file. Also, make sure there is at leasat one integration, after ignoring any user-input
                         # number of integrations.
                         keep_ints = int(nints) - self.skipped_initial_ints
-                        if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize) or
-                            expected_xsize is None or expected_ysize is None)):
+                        if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize)
+                          or expected_xsize is None or expected_ysize is None)):
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
                             integrations.append(int(nints) - self.skipped_initial_ints)
