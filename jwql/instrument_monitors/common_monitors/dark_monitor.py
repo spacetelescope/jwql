@@ -951,14 +951,6 @@ class Dark():
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
 
-
-        #####FOR TESTING######
-        self.query_end = 59699.  # For nircam full and miriim testing
-        #####FOR TESTING######
-
-
-
-
         # Loop over all instruments
         for instrument in ['miri', 'nircam']:  # JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
@@ -974,13 +966,6 @@ class Dark():
             # Get a list of all possible readout patterns associated with the aperture
             possible_readpatts = RAPID_READPATTERNS[instrument]
 
-            ########FOR TESTING########TO LIMIT THE TEST CASE
-            if instrument == 'miri':
-                possible_apertures = ['MIRIM_FULL']
-            elif instrument == 'nircam':
-                possible_apertures = ['NRCA1_FULL']
-            #########FOR TESTING#######
-
             for aperture in possible_apertures:
                 logging.info('')
                 logging.info(f'Working on aperture {aperture} in {instrument}')
@@ -991,32 +976,12 @@ class Dark():
                 self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
                 self.aperture = aperture
 
-                # We need a separate search for each readout pattern
-                ########FOR TESTING########TO LIMIT THE TEST CASE
-                if instrument == 'miri':
-                    possible_readpatts = ['FAST']
-                elif instrument == 'nircam':
-                    possible_readpatts = ['RAPID']
-                #########FOR TESTING#######
-
                 for readpatt in possible_readpatts:
                     self.readpatt = readpatt
                     logging.info(f'\tWorking on readout pattern: {self.readpatt}')
 
                     # Locate the record of the most recent MAST search
-                    #self.query_start = self.most_recent_search()
-
-
-
-
-                    logging.info('SETTING SELF.QUERY_START TO 59500 (PRE-LAUNCH) FOR TESTING.')
-                    #self.query_start = 59500.
-                    self.query_start = 59680.  # for nircam full and mirim testing
-
-
-
-
-
+                    self.query_start = self.most_recent_search()
                     logging.info(f'\tQuery times: {self.query_start} {self.query_end}')
 
                     # Query MAST using the aperture and the time of the
@@ -1042,7 +1007,8 @@ class Dark():
                         try:
                             new_filenames.append(filesystem_path(file_entry['filename']))
                         except FileNotFoundError:
-                            logging.warning(f"\t\tUnable to locate {file_entry['filename']} in filesystem. Not including in processing.")
+                            logging.warning((f"\t\tUnable to locate {file_entry['filename']} in filesystem. "
+                                             "Not including in processing."))
 
                     # Generate a count of the total number of integrations across the files. This number will
                     # be compared to the threshold value to determine if the monitor is run.
@@ -1067,7 +1033,8 @@ class Dark():
                         # keep the file. Also, make sure there is at leasat one integration, after ignoring any user-input
                         # number of integrations.
                         keep_ints = int(nints) - self.skipped_initial_ints
-                        if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize) or expected_xsize is None or expected_ysize is None)):
+                        if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize) or
+                            expected_xsize is None or expected_ysize is None)):
                             temp_filenames.append(new_file)
                             total_integrations += int(nints)
                             integrations.append(int(nints) - self.skipped_initial_ints)
@@ -1075,12 +1042,12 @@ class Dark():
                             ending_times.append(hdulist[0].header['EXPEND'])
                         else:
                             bad_size_filenames.append(new_file)
-                            logging.info(f'\t\t{new_file} has unexpected aperture size. Expecting {expected_xsize}x{expected_ysize}. Got {xsize}x{ysize}')
-
-
+                            logging.info((f'\t\t{new_file} has unexpected aperture size. Expecting '
+                                          f'{expected_xsize}x{expected_ysize}. Got {xsize}x{ysize}'))
 
                     if len(temp_filenames) != len(new_filenames):
-                        logging.info('\t\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
+                        logging.info(('\t\tSome files returned by MAST have unexpected aperture sizes. These files '
+                                      'will be ignored: '))
                         for badfile in bad_size_filenames:
                             logging.info('\t\t\t{}'.format(badfile))
                     new_filenames = deepcopy(temp_filenames)
@@ -1089,7 +1056,8 @@ class Dark():
                     # monitor's signal-to-noise requirements
                     if len(new_filenames) > 0:
                         logging.info((f'\t\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
-                                      f'{self.readpatt} has found {total_integrations} integrations spread across {len(new_filenames)} files.'))
+                                      f'{self.readpatt} has found {total_integrations} integrations spread '
+                                      f'across {len(new_filenames)} files.'))
                     if total_integrations >= integration_count_threshold:
                         logging.info(f'\tThis meets the threshold of {integration_count_threshold} integrations.')
                         monitor_run = True
@@ -1101,25 +1069,19 @@ class Dark():
                                                                                  self.aperture.lower()))
                         ensure_dir_exists(self.working_data_dir)
 
-                        if instrument == 'miri':
-                            filesystem = get_config()['filesystem']
-                            new_filenames = [os.path.join(filesystem, 'public/jw01546/jw01546001001/jw01546001001_02101_00001_mirimage_dark.fits'),
-                                             os.path.join(filesystem, 'public/jw01546/jw01546001001/jw01546001001_02102_00001_mirimage_dark.fits')]
-                            print('manually set new_filenames: ', new_filenames)
-
-                            starting_times = starting_times[0:2]
-                            ending_times = ending_times[0:2]
-                            integrations = integrations[0:2]
-
                         # Split the list of good files into sub-lists based on the integration
                         # threshold. The monitor will then be run on each sub-list independently,
                         # in order to produce results with roughly the same signal-to-noise. This
                         # also prevents the monitor running on a huge chunk of files in the case
                         # where it hasn't been run in a while and data have piled up in the meantime.
-                        self.split_files_into_sub_lists(new_filenames, starting_times, ending_times, integrations, integration_count_threshold)
+                        self.split_files_into_sub_lists(new_filenames, starting_times, ending_times,
+                                                        integrations, integration_count_threshold)
 
                         # Run the monitor once on each list
-                        for new_file_list, batch_start_time, batch_end_time, batch_integrations in zip(self.file_batches, self.start_time_batches, self.end_time_batches, self.integration_batches):
+                        for new_file_list, batch_start_time, batch_end_time, batch_integrations in zip(self.file_batches,
+                                                                                                       self.start_time_batches,
+                                                                                                       self.end_time_batches,
+                                                                                                       self.integration_batches):
                             # Copy files from filesystem
                             dark_files, not_copied = copy_files(new_file_list, self.working_data_dir)
 
@@ -1173,7 +1135,8 @@ class Dark():
                             logging.info(new_entry)
 
                     else:
-                        logging.info(f'\tThis is below the threshold of {integration_count_threshold} integrations. Monitor not run.')
+                        logging.info((f'\tThis is below the threshold of {integration_count_threshold} '
+                                      'integrations. Monitor not run.'))
                         monitor_run = False
 
                         # Update the query history
