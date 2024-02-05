@@ -24,7 +24,6 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
-# from bokeh.models.widgets import Tabs, Panel
 from bokeh.models import TabPanel, Tabs
 from bokeh.plotting import figure, output_file
 import numpy as np
