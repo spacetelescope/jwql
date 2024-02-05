@@ -1011,7 +1011,7 @@ class Dark():
                             ensure_dir_exists(self.working_data_dir)
 
                             # Copy files from filesystem
-                            dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+                            dark_files, not_copied = copy_files(new_filenames, self.working_data_dir)
 
                             # Check that there were no problems with the file copying. If any of the copied
                             # files have different sizes between the MAST filesystem and the JWQL filesystem,
@@ -1027,7 +1027,7 @@ class Dark():
                                     os.remove(dark_file)
 
                             logging.info('\tNew_filenames: {}'.format(new_filenames))
-                            logging.info('\tData dir: {}'.format(self.data_dir))
+                            logging.info('\tData dir: {}'.format(self.working_data_dir))
                             logging.info('\tCopied to working dir: {}'.format(dark_files))
                             logging.info('\tNot copied: {}'.format(not_copied))
 
