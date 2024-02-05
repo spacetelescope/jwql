@@ -37,7 +37,7 @@ import os
 
 from bokeh.layouts import column
 from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, HoverTool, OpenURL, TapTool
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models import TabPanel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
 import numpy as np
