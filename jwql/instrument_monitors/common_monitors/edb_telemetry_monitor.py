@@ -381,7 +381,7 @@ import astropy.units as u
 from bokeh.embed import components, json_item
 from bokeh.layouts import gridplot
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models import Tabs, Panel
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
 from jwql.database import database_interface
