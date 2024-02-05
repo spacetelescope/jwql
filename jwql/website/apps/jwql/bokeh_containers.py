@@ -445,8 +445,7 @@ def standard_monitor_plot_layout(instrument, plots):
 
     # Combine full frame and subarray aperture lists
     full_list = full_frame_lists + subarr_lists
-    print(full_frame_lists)
-    print(subarr_lists)
+
     # Now create a layout that holds the lists
     plot_layout = layout(full_list)
 
