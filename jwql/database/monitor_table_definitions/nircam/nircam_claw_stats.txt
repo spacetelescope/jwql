@@ -15,4 +15,6 @@ MEDIAN, float
 STDDEV, float
 FRAC_MASKED, float
 SKYFLAT_FILENAME, string
+DOY, float
+TOTAL_BKG, float
 ENTRY_DATE, datetime

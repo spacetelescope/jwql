@@ -1391,7 +1391,7 @@ def get_preview_images_by_rootname(rootname):
 
 
 def get_proposals_by_category(instrument):
-    """Return a dictionary of program numbers based on category type
+    """Return a dictionary of program numbers and category type
     Parameters
     ----------
     instrument : str
@@ -1400,24 +1400,16 @@ def get_proposals_by_category(instrument):
     Returns
     -------
     category_sorted_dict : dict
-        Dictionary with category as the key and a list of program id's as the value
+        Dictionary with program number as the key and program category as the value
     """
+    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"""select distinct prpID,prpProject from CaomObservation where collection='JWST'
+                                     and maxLevel>0 and insName like '{instrument.lower()}%'""")
+    # Put the results into an astropy Table
+    prop_table = tap_results.to_table()
 
-    service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "program, category",
-              "filters": [{'paramName': 'instrume', 'values': [instrument]}]}
-    response = Mast.service_request_async(service, params)
-    results = response[0].json()['data']
-
-    if len(results) == MAST_QUERY_LIMIT:
-        logging.error(f"MAST_QUERY_LIMIT of {MAST_QUERY_LIMIT} reached for {instrument} in get_proposals_by_category")
-
-    # Get all unique dictionaries
-    unique_results = list(map(dict, set(tuple(sorted(sub.items())) for sub in results)))
-
-    # Make a dictionary of {program: category} to pull from
-    proposals_by_category = {d['program']: d['category'] for d in unique_results}
-
+    # Convert to a dictionary
+    proposals_by_category = {int(d['prpID']): d['prpProject'] for d in prop_table}
     return proposals_by_category
 
 
@@ -1593,7 +1585,10 @@ def get_rootnames_from_query(parameters):
         else:
             current_ins_rootfileinfos = current_ins_rootfileinfos.order_by('-root_name')
 
-        rootnames = [name[0] for name in current_ins_rootfileinfos.values_list('root_name')]
+        # Django is doing something wonky here.  I can't call values_list with a single parameter, even with 'flat=True' as per Django Docs.
+        # TODO: This is hacky and should be fixed.
+        filtered_list = list(current_ins_rootfileinfos.values_list('root_name', 'expstart'))
+        rootnames = [name[0] for name in filtered_list]
         filtered_rootnames.extend(rootnames)
 
     return filtered_rootnames
