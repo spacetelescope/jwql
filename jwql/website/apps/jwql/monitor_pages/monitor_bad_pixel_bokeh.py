@@ -24,7 +24,7 @@ from astropy.time import Time
 from bokeh.embed import components, file_html
 from bokeh.io import show
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, TabPanel, Tabs, Text, Title
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
@@ -149,7 +149,7 @@ class BadPixelPlots():
             plot_layout = badpix_monitor_plot_layout(all_plots)
 
             # Create a tab for each type of plot
-            detector_panels.append(Panel(child=plot_layout, title=detector))
+            detector_panels.append(TabPanel(child=plot_layout, title=detector))
 
         # Build tabs
         tabs = Tabs(tabs=detector_panels)

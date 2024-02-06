@@ -22,9 +22,8 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import column, row
-from bokeh.models import Panel, Tabs  # bokeh <= 3.0
 from bokeh.models import ColumnDataSource, HoverTool
-# from bokeh.models import TabPanel, Tabs  # bokeh >= 3.0
+from bokeh.models import TabPanel, Tabs
 from bokeh.plotting import figure
 from django.templatetags.static import static
 import numpy as np
@@ -122,7 +121,7 @@ class ReadNoisePlotTab():
         self.plot_readnoise_difference_image()
         self.plot_readnoise_histogram()
 
-        self.tab = Panel(child=column(row(*self.amp_plots),
+        self.tab = TabPanel(child=column(row(*self.amp_plots),
                                       self.diff_image_plot,
                                       self.readnoise_histogram),
                          title=self.aperture)
