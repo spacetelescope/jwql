@@ -28,6 +28,7 @@ References
     ``utils.py``
 """
 
+import asdf
 import inflection
 
 # Each amplifier is represented by 2 tuples, the first for x coordinates
@@ -913,58 +914,14 @@ SUBARRAYS_ONE_OR_FOUR_AMPS = [
     "SUBGRISMSTRIPE256",
 ]
 
+schema = asdf.schema.load_schema("http://stsci.edu/schemas/jwst_datamodel/subarray.schema")
 SUBARRAYS_PER_INSTRUMENT = {
-    "nircam": [
-        "FULL",
-        "FULLP",
-        "SUB640",
-        "SUB320",
-        "SUB160",
-        "SUB400P",
-        "SUB160P",
-        "SUB64P",
-        "SUB32TATS",
-        "SUB640A210R",
-        "SUB640ASWB",
-        "SUB320A335R",
-        "SUB320A430R",
-        "SUB320ALWB",
-        "SUBGRISM256",
-        "SUBGRISM128",
-        "SUBGRISM64",
-        "SUB32TATSGRISM",
-    ],
-    "niriss": [
-        "FULL",
-        "SUBSTRIP96",
-        "SUBSTRIP256",
-        "SUB80",
-        "SUB64",
-        "SUB128",
-        "SUB256",
-        "WFSS64R",
-        "WFSS128R",
-        "WFSS64C",
-        "WFSS128C",
-        "SUBAMPCAL",
-        "SUBTAAMI",
-        "SUBTASOSS",
-    ],
-    "nirspec": [],
-    "miri": [
-        "BRIGHTSKY",
-        "FULL",
-        "MASK1065",
-        "MASK1140",
-        "MASK1550",
-        "MASKLYOT",
-        "SLITLESSPRISM",
-        "SUB64",
-        "SUB128",
-        "SUB256",
-    ],
-    "fgs": [],
-}
+    "nircam": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][2]['enum']),
+    "niriss": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][4]['enum']),
+    "nirspec": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][6]['enum']),
+    "miri": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][1]['enum']),
+    "fgs": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][0]['enum'])
+    }
 
 # Filename suffixes that need to include the association value in the suffix in
 # order to identify the preview image file. This should only be crf and crfints,
