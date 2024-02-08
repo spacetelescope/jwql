@@ -24,7 +24,7 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models import TabPanel, Tabs
 from bokeh.plotting import figure, output_file
 import numpy as np
 import pysiaf
@@ -162,9 +162,9 @@ def cosmic_ray_monitor_tabs(instrument):
 
     # Allow figure sizes to scale with window
     histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-    histogram_tab = Panel(child=histogram_layout, title="Histogram")
+    histogram_tab = TabPanel(child=histogram_layout, title="Histogram")
     line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-    line_tab = Panel(child=line_layout, title="Trending")
+    line_tab = TabPanel(child=line_layout, title="Trending")
 
     # Build tabs
     tabs = Tabs(tabs=[histogram_tab, line_tab])
@@ -199,9 +199,9 @@ def dark_monitor_tabs(instrument):
     image_layout = standard_monitor_plot_layout(instrument, plots.dark_image_data)
 
     # Create a tab for each type of plot
-    histogram_tab = Panel(child=histogram_layout, title="Dark Rate Histogram")
-    line_tab = Panel(child=trending_layout, title="Trending")
-    image_tab = Panel(child=image_layout, title="Mean Dark Image")
+    histogram_tab = TabPanel(child=histogram_layout, title="Dark Rate Histogram")
+    line_tab = TabPanel(child=trending_layout, title="Trending")
+    image_tab = TabPanel(child=image_layout, title="Mean Dark Image")
 
     # Build tabs
     tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
@@ -354,7 +354,7 @@ def readnoise_monitor_tabs(instrument):
             plots[5:6]
         )
         readnoise_layout.sizing_mode = 'scale_width'
-        readnoise_tab = Panel(child=readnoise_layout, title=aperture)
+        readnoise_tab = TabPanel(child=readnoise_layout, title=aperture)
         tabs.append(readnoise_tab)
 
     # Build tabs

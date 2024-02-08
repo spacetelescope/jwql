@@ -74,10 +74,14 @@ def background_monitor(request):
     output_dir_bkg = static(os.path.join("outputs", "claw_monitor", "backgrounds"))
     fltrs = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']
     bkg_plots = [os.path.join(output_dir_bkg, '{}_backgrounds.png'.format(fltr)) for fltr in fltrs]
+    bkg_rms_plots = [os.path.join(output_dir_bkg, '{}_backgrounds_rms.png'.format(fltr)) for fltr in fltrs]
+    bkg_model_plots = [os.path.join(output_dir_bkg, '{}_backgrounds_vs_models.png'.format(fltr)) for fltr in fltrs]
 
     context = {
         'inst': 'NIRCam',
-        'bkg_plots': bkg_plots
+        'bkg_plots': bkg_plots,
+        'bkg_rms_plots': bkg_rms_plots,
+        'bkg_model_plots': bkg_model_plots
     }
 
     # Return a HTTP response with the template and dictionary of variables
@@ -157,9 +161,7 @@ def claw_monitor(request):
     query = session.query(NIRCamClawStats.expstart_mjd, NIRCamClawStats.skyflat_filename).order_by(NIRCamClawStats.expstart_mjd.desc()).all()
     df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
     recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 10]))
-    
     output_dir_claws = static(os.path.join("outputs", "claw_monitor", "claw_stacks"))
-
     claw_stacks = [os.path.join(output_dir_claws, filename) for filename in recent_files]
 
     context = {

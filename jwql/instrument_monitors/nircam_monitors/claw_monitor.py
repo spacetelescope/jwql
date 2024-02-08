@@ -30,6 +30,7 @@ import warnings
 from astropy.convolution import Gaussian2DKernel, convolve
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma, sigma_clipped_stats
+from astropy.table import Table
 from astropy.time import Time
 from astroquery.mast import Mast
 import matplotlib
@@ -37,12 +38,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from photutils.segmentation import detect_sources, detect_threshold
+from scipy.ndimage import binary_dilation
 
 from jwql.database.database_interface import session, engine
 from jwql.database.database_interface import NIRCamClawQueryHistory, NIRCamClawStats
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+from jwst_backgrounds import jbt
 
 matplotlib.use('Agg')
 warnings.filterwarnings('ignore', message="nan_treatment='interpolate', however, NaN values detected post convolution*")
@@ -114,38 +117,50 @@ class ClawMonitor():
         self.query_table = eval('NIRCamClawQueryHistory')
         self.stats_table = eval('NIRCamClawStats')
 
-    def make_background_plots(self):
+    def make_background_plots(self, plot_type='bkg'):
         """Makes plots of the background levels over time in NIRCam data.
+
+        Attributes
+        ----------
+        plot_type : str
+            The type of plot to make, either ``bkg`` for background trending,
+            ``bkg_rms`` for background rms trending, or ``model`` for background
+            measured vs model trending.
         """
 
         # Get all of the background data.
         query = session.query(NIRCamClawStats.filename, NIRCamClawStats.filter, NIRCamClawStats.pupil, NIRCamClawStats.detector,
                               NIRCamClawStats.effexptm, NIRCamClawStats.expstart_mjd, NIRCamClawStats.entry_date, NIRCamClawStats.mean,
-                              NIRCamClawStats.median, NIRCamClawStats.frac_masked).all()
+                              NIRCamClawStats.median, NIRCamClawStats.stddev, NIRCamClawStats.frac_masked, NIRCamClawStats.total_bkg).all()
         df_orig = pd.DataFrame(query, columns=['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd',
-                                               'entry_date', 'mean', 'median', 'frac_masked'])
+                                               'entry_date', 'mean', 'median', 'stddev', 'frac_masked', 'total_bkg'])
         df_orig = df_orig.drop_duplicates(subset='filename', keep="last")  # remove any duplicate filename entries, keep the most recent
 
-        # Use the same time xlimits/xticks for all plots
-        start_mjd = 59650  # March 2022, middle of commissioning
-        end_mjd = Time.now().mjd + 0.05 * (Time.now().mjd - start_mjd)
-        time_tick_vals = np.linspace(start_mjd, end_mjd, 5)
-        time_tick_labels = [Time(m, format='mjd').isot.split('T')[0] for m in time_tick_vals]
+        # Get label info based on plot type
+        if plot_type == 'bkg':
+            plot_title = 'backgrounds'
+            plot_label = 'Background [MJy/sr]'
+        if plot_type == 'bkg_rms':
+            plot_title = 'backgrounds_rms'
+            plot_label = 'Background RMS [MJy/sr]'
+        if plot_type == 'model':
+            plot_title = 'backgrounds_vs_models'
+            plot_label = 'Measured / Predicted'
 
         # Make backgroud trending plots for all wide filters
         for fltr in ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']:
-            logging.info('Working on background trending plots for {}'.format(fltr))
+            logging.info('Working on {} trending plots for {}'.format(plot_title, fltr))
             found_limits = False
             if int(fltr[1:4]) < 250:  # i.e. SW
                 detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']   # in on-sky order, don't change order
                 grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1, 1, 1, 1])
-                fig = plt.figure(figsize=(40, 20))
+                fig = plt.figure(figsize=(45, 20))
                 fig.suptitle(fltr, fontsize=70)
                 frack_masked_thresh = 0.075
             else:  # i.e. LW
                 detectors_to_run = ['NRCALONG', 'NRCBLONG']
                 grid = plt.GridSpec(1, 2, hspace=.2, wspace=.4, width_ratios=[1, 1])
-                fig = plt.figure(figsize=(20, 10))
+                fig = plt.figure(figsize=(25, 10))
                 fig.suptitle(fltr, fontsize=70, y=1.05)
                 frack_masked_thresh = 0.15
             for i, det in enumerate(detectors_to_run):
@@ -156,20 +171,43 @@ class ClawMonitor():
                 df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det) &
                              (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh) &
                              (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
+                if len(df) > 0:
+                    df = df.sort_values(by=['expstart_mjd'])
 
-                # Plot the background levels over time
+                # Get relevant background stat for plot type
+                if plot_type == 'bkg':
+                    plot_data = df['median'].values
+                if plot_type == 'bkg_rms':
+                    df = df[df['stddev'] != 0]  # older data has no accurate stddev measures
+                    plot_data = df['stddev'].values
+                if plot_type == 'model':
+                    plot_data = df['median'].values / df['total_bkg'].values
+                plot_expstarts = df['expstart_mjd'].values
+
+                # Plot the background data over time
                 ax = fig.add_subplot(grid[i])
-                ax.scatter(df['expstart_mjd'], df['median'])
+                ax.scatter(plot_expstarts, plot_data, alpha=0.3)
 
-                # Match scaling in all plots to the first detector with data. Shade median+/-10% region.
+                # Match scaling in all plots to the first detector with data.
                 if len(df) > 0:
                     if found_limits is False:
-                        first_med = np.nanmedian(df['median'])
+                        first_mean, first_med, first_stddev = sigma_clipped_stats(plot_data)
+                        start_mjd = plot_expstarts.min()
+                        end_mjd = Time.now().mjd
+                        padding = 0.05 * (end_mjd - start_mjd)
+                        start_mjd = start_mjd - padding
+                        end_mjd = end_mjd + padding
+                        time_tick_vals = np.linspace(start_mjd, end_mjd, 5)
+                        time_tick_labels = [Time(m, format='mjd').isot.split('T')[0] for m in time_tick_vals]
                         found_limits = True
-                    ax.set_ylim(first_med - first_med * 0.5, first_med + first_med * 0.5)
-                    med = np.nanmedian(df['median'])
+                    ax.set_ylim(first_med - 8 * first_stddev, first_med + 8 * first_stddev)
+
+                    # Plot overall median line with shaded stddev
+                    mean, med, stddev = sigma_clipped_stats(plot_data)
                     ax.axhline(med, ls='-', color='black')
-                    ax.axhspan(med - med * 0.1, med + med * 0.1, color='gray', alpha=0.4, lw=0)
+                    ax.axhspan(med - stddev, med + stddev, color='gray', alpha=0.4, lw=0)
+                else:
+                    start_mjd, end_mjd, time_tick_vals, time_tick_labels = 0, 1, [0.5], ['N/A']
 
                 # Axis formatting
                 ax.set_title(det, fontsize=40)
@@ -177,10 +215,9 @@ class ClawMonitor():
                 ax.set_xticks(time_tick_vals)
                 ax.set_xticklabels(time_tick_labels, fontsize=20, rotation=45)
                 ax.yaxis.set_tick_params(labelsize=20)
-                ax.set_ylabel('Background [MJy/sr]', fontsize=30)
-                # ax.set_xlabel('Date [YYYY-MM-DD]')
+                ax.set_ylabel(plot_label, fontsize=30)
                 ax.grid(ls='--', color='gray')
-            fig.savefig(os.path.join(self.output_dir_bkg, '{}_backgrounds.png'.format(fltr)), dpi=180, bbox_inches='tight')
+            fig.savefig(os.path.join(self.output_dir_bkg, '{}_{}.png'.format(fltr, plot_title)), dpi=180, bbox_inches='tight')
             fig.clf()
             plt.close()
 
@@ -222,7 +259,7 @@ class ClawMonitor():
                     obs_start = '{}T{}'.format(hdu[0].header['DATE-OBS'], hdu[0].header['TIME-OBS'])
                     pa_v3 = hdu[1].header['PA_V3']
 
-                # Make source segmap, add the masked data to the stack, and get background stats
+                # Make source segmap and add the masked data to the stack
                 data = hdu['SCI'].data
                 dq = hdu['DQ'].data
                 threshold = detect_threshold(data, 1.0)
@@ -230,11 +267,38 @@ class ClawMonitor():
                 kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
                 kernel.normalize()
                 data_conv = convolve(data, kernel)
-                segmap = detect_sources(data_conv, threshold, npixels=6)
-                segmap = segmap.data
-                segmap[dq & 1 != 0] = 1  # flag DO_NOT_USE pixels
-                stack[n] = np.ma.masked_array(data, mask=segmap != 0)
-                mean, med, stddev = sigma_clipped_stats(data[segmap == 0])
+                segmap_orig = detect_sources(data_conv, threshold, npixels=6)
+                segmap_orig = segmap_orig.data
+                stack[n] = np.ma.masked_array(data, mask=(segmap_orig != 0) | (dq & 1 != 0))
+
+                # Calculate image stats. Before calculating, expand segmap of extended objects.
+                # This is only done after adding the data to the claw stack to avoid flagging the claws
+                # themselves from those stacks, but is needed here since extended wings can impact image
+                # stats, mainly the stddev.
+                objects, object_counts = np.unique(segmap_orig, return_counts=True)
+                large_objects = objects[(object_counts > 200) & (objects != 0)]
+                segmap_extended = np.zeros(segmap_orig.shape).astype(int)
+                for object in large_objects:
+                    segmap_extended[segmap_orig == object] = 1
+                image_edge_mask = np.zeros(segmap_orig.shape).astype(int)
+                image_edge_mask[10:2038, 10:2038] = 1
+                segmap_extended[(image_edge_mask == 0) | (dq & 1 != 0)] = 0  # omit edge and other bpix from dilation
+                segmap_extended = binary_dilation(segmap_extended, iterations=30).astype(int)
+                segmap = segmap_extended + segmap_orig
+                mean, med, stddev = sigma_clipped_stats(data[(segmap == 0) & (dq == 0)])
+
+                # Get predicted background level using JWST background tool
+                ra, dec = hdu[1].header['RA_V1'], hdu[1].header['DEC_V1']
+                wv = self.filter_wave[self.fltr.upper()]
+                date = hdu[0].header['DATE-BEG']
+                doy = int(Time(date).yday.split(':')[1])
+                try:
+                    jbt.get_background(ra, dec, wv, thisday=doy, plot_background=False, plot_bathtub=False,
+                                       write_bathtub=True, bathtub_file='background_versus_day.txt')
+                    bkg_table = Table.read('background_versus_day.txt', names=('day', 'total_bkg'), format='ascii')
+                    total_bkg = bkg_table['total_bkg'][bkg_table['day'] == doy][0]
+                except:
+                    total_bkg = np.nan
 
                 # Add this file's stats to the claw database table. Can't insert values with numpy.float32
                 # datatypes into database so need to change the datatypes of these values.
@@ -247,16 +311,19 @@ class ClawMonitor():
                                  'expstart': '{}T{}'.format(hdu[0].header['DATE-OBS'], hdu[0].header['TIME-OBS']),
                                  'expstart_mjd': hdu[0].header['EXPSTART'],
                                  'effexptm': hdu[0].header['EFFEXPTM'],
-                                 'ra': hdu[1].header['RA_V1'],
-                                 'dec': hdu[1].header['DEC_V1'],
+                                 'ra': ra,
+                                 'dec': dec,
                                  'pa_v3': hdu[1].header['PA_V3'],
                                  'mean': float(mean),
                                  'median': float(med),
                                  'stddev': float(stddev),
-                                 'frac_masked': len(segmap[segmap != 0]) / (segmap.shape[0] * segmap.shape[1]),
+                                 'frac_masked': len(segmap_orig[(segmap_orig != 0) | (dq & 1 != 0)]) / (segmap_orig.shape[0] * segmap_orig.shape[1]),
                                  'skyflat_filename': os.path.basename(self.outfile),
+                                 'doy': float(doy),
+                                 'total_bkg': float(total_bkg),
                                  'entry_date': datetime.datetime.now()
                                  }
+
                 with engine.begin() as connection:
                     connection.execute(self.stats_table.__table__.insert(), claw_db_entry)
                 hdu.close()
@@ -346,6 +413,12 @@ class ClawMonitor():
         mast_table = self.query_mast()
         logging.info('{} files found between {} and {}.'.format(len(mast_table), self.query_start_mjd, self.query_end_mjd))
 
+        # Define pivot wavelengths
+        self.filter_wave = {'F070W': 0.704, 'F090W': 0.902, 'F115W': 1.154, 'F150W': 1.501, 'F150W2': 1.659,
+                            'F200W': 1.989, 'F212N': 2.121, 'F250M': 2.503, 'F277W': 2.762, 'F300M': 2.989,
+                            'F322W2': 3.232, 'F356W': 3.568, 'F410M': 4.082, 'F430M': 4.281, 'F444W': 4.408,
+                            'F480M': 4.874}
+
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
         combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in mast_table])
         mast_table['combos'] = combos
@@ -377,7 +450,9 @@ class ClawMonitor():
         # Update the background trending plots, if any new data exists
         if len(mast_table) > 0:
             logging.info('Making background trending plots.')
-            self.make_background_plots()
+            self.make_background_plots(plot_type='bkg')
+            self.make_background_plots(plot_type='bkg_rms')
+            self.make_background_plots(plot_type='model')
 
         # Update the query history
         new_entry = {'instrument': 'nircam',
