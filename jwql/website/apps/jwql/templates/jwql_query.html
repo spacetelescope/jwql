@@ -211,6 +211,18 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span class="help-block">FGS Subarrays</span>
+                            <div class="form-control" id='fgs_subarray'>
+                                {% for field in form.fgs_subarray %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
                     </div>
 
                     <!-- MIRI Fields -->
@@ -546,6 +558,18 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span class="help-block">NIRSpec Subarrays</span>
+                            <div class="form-control" id='nirspec_subarray'>
+                                {% for field in form.nirspec_subarray %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
                     </div>
                     <hr class="col-md-12">
                     <div class='form-group'>
