@@ -108,7 +108,8 @@ WSGI_APPLICATION = 'jwql.website.jwql_proj.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 DATABASES = {
-    'default': get_config()['django_database']
+    'default': get_config()['django_databases']['default'],
+    'monitors': get_config()['django_databases']['monitors']
 }
 
 # Password validation

@@ -52,6 +52,7 @@ if __name__ == "__main__":
     for directory in ['filesystem', 'outputs', 'preview_image_filesystem', 'thumbnail_filesystem']:
         symlink_location = os.path.join(os.path.dirname(__file__), 'apps', 'jwql', 'static', directory_mapping[directory])
         if not os.path.exists(symlink_location):
+            print("{} does not exist".format(symlink_location))
             symlink_path = get_config()[directory]
             os.symlink(symlink_path, symlink_location)
 
