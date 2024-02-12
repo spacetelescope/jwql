@@ -99,26 +99,26 @@ def _validate_config(config_file_dict):
                     "default": {
                         "type": "object",
                         "properties": {
-                            "engine": {"type": "string"},
-                            "name": {"type": "string"},
-                            "user": {"type": "string"},
-                            "password": {"type": "string"},
-                            "host": {"type": "string"},
-                            "port": {"type": "string"}
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
                         },
-                        "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
                     },
                     "monitors": {
                         "type": "object",
                         "properties": {
-                            "engine": {"type": "string"},
-                            "name": {"type": "string"},
-                            "user": {"type": "string"},
-                            "password": {"type": "string"},
-                            "host": {"type": "string"},
-                            "port": {"type": "string"}
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
                         },
-                        "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
                     }
                 },
                 "required": ["default", "monitors"]
