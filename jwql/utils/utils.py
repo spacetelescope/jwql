@@ -127,7 +127,7 @@ def _validate_config(config_file_dict):
             "cores": {"type": "string"}
         },
         # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
+        "required": ["connection_string", "databases", "filesystem",
                      "preview_image_filesystem", "thumbnail_filesystem",
                      "outputs", "jwql_dir", "admin_account", "log_dir",
                      "test_dir", "test_data", "setup_file", "auth_mast",
