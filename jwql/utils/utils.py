@@ -81,7 +81,7 @@ def _validate_config(config_file_dict):
             "admin_account": {"type": "string"},
             "auth_mast": {"type": "string"},
             "connection_string": {"type": "string"},
-            "database": {
+            "databases": {
                 "type": "object",
                 "properties": {
                     "engine": {"type": "string"},
@@ -93,7 +93,36 @@ def _validate_config(config_file_dict):
                 },
                 "required": ['engine', 'name', 'user', 'password', 'host', 'port']
             },
-
+            "django_databases": {
+                "type": "object",
+                "properties": {
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    },
+                    "monitors": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    }
+                },
+                "required": ["default", "monitors"]
+            },
             "jwql_dir": {"type": "string"},
             "jwql_version": {"type": "string"},
             "server_type": {"type": "string"},
@@ -110,11 +139,11 @@ def _validate_config(config_file_dict):
             "cores": {"type": "string"}
         },
         # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
-                     "preview_image_filesystem", "thumbnail_filesystem",
-                     "outputs", "jwql_dir", "admin_account", "log_dir",
-                     "test_dir", "test_data", "setup_file", "auth_mast",
-                     "mast_token", "working"]
+        "required": ["connection_string", "databases", "django_databases",
+                     "filesystem", "preview_image_filesystem",
+                     "thumbnail_filesystem", "outputs", "jwql_dir",
+                     "admin_account", "log_dir", "test_dir", "test_data",
+                     "setup_file", "auth_mast", "mast_token", "working"]
     }
 
     # Test that the provided config file dict matches the schema

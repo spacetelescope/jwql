@@ -2,7 +2,7 @@
     "admin_account" : "",
     "auth_mast" : "",
     "connection_string" : "",
-    "database" : {
+    "databases" : {
         "engine" : "",
         "name" : "",
         "user" : "",
@@ -10,13 +10,23 @@
         "host" : "",
         "port" : ""
     },
-    "django_database" : {
-        "ENGINE" : "",
-        "NAME" : "",
-        "USER" : "",
-        "PASSWORD" : "",
-        "HOST" : "",
-        "PORT" : ""
+    "django_databases" : {
+        "default": {
+            "ENGINE" : "",
+            "NAME" : "",
+            "USER" : "",
+            "PASSWORD" : "",
+            "HOST" : "",
+            "PORT" : ""
+        },
+        "monitors": {
+            "ENGINE" : "",
+            "NAME" : "",
+            "USER" : "",
+            "PASSWORD" : "",
+            "HOST" : "",
+            "PORT" : ""
+        }
     },
     "jwql_dir" : "",
     "jwql_version": "",
