@@ -109,7 +109,7 @@ def _validate_config(config_file_dict):
                         "required": ['engine', 'name', 'user', 'password', 'host', 'port']
                     }
                 },
-                "required": ["default", "monitors"]                
+                "required": ["default", "monitors"]
             },
             "jwql_dir": {"type": "string"},
             "jwql_version": {"type": "string"},
