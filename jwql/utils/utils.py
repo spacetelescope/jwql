@@ -81,19 +81,36 @@ def _validate_config(config_file_dict):
             "admin_account": {"type": "string"},
             "auth_mast": {"type": "string"},
             "connection_string": {"type": "string"},
-            "database": {
+            "databases": {
                 "type": "object",
                 "properties": {
-                    "engine": {"type": "string"},
-                    "name": {"type": "string"},
-                    "user": {"type": "string"},
-                    "password": {"type": "string"},
-                    "host": {"type": "string"},
-                    "port": {"type": "string"}
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "engine": {"type": "string"},
+                            "name": {"type": "string"},
+                            "user": {"type": "string"},
+                            "password": {"type": "string"},
+                            "host": {"type": "string"},
+                            "port": {"type": "string"}
+                        },
+                        "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                    },
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "engine": {"type": "string"},
+                            "name": {"type": "string"},
+                            "user": {"type": "string"},
+                            "password": {"type": "string"},
+                            "host": {"type": "string"},
+                            "port": {"type": "string"}
+                        },
+                        "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                    }
                 },
-                "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                "required": ["default", "monitors"]                
             },
-
             "jwql_dir": {"type": "string"},
             "jwql_version": {"type": "string"},
             "server_type": {"type": "string"},
