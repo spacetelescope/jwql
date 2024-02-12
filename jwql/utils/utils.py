@@ -96,7 +96,7 @@ def _validate_config(config_file_dict):
                         },
                         "required": ['engine', 'name', 'user', 'password', 'host', 'port']
                     },
-                    "default": {
+                    "monitors": {
                         "type": "object",
                         "properties": {
                             "engine": {"type": "string"},
