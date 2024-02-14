@@ -136,7 +136,7 @@ There are (as usual) a few things to note above:
 * Django doesn't have a built-in array data type, so you need to import it from the
   database-compatibility layers. The ArrayField takes, as a required argument, the type
   of data that makes up the array.
-* In the Meta sub-class of the monitor class, the `all_label = 'monitors'` statement is
+* In the Meta sub-class of the monitor class, the `app_label = 'monitors'` statement is
   required so that django knows that the model should be stored in the monitors table.
 * The `float()` casts are required because the database interface doesn't understand
   numpy data types.
