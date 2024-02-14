@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class NircamClawQueryHistory(models.Model):
+class NIRCamClawQueryHistory(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
     instrument = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -43,7 +43,7 @@ class NircamClawQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamClawStats(models.Model):
+class NIRCamClawStats(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
     filename = models.CharField(blank=True, null=True)
     proposal = models.CharField(blank=True, null=True)

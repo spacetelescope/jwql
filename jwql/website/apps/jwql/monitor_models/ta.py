@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class MiriTaQueryHistory(models.Model):
+class MIRITaQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -46,7 +46,7 @@ class MiriTaQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriTaStats(models.Model):
+class MIRITaStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     cal_file_name = models.CharField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -65,7 +65,7 @@ class MiriTaStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecTaQueryHistory(models.Model):
+class NIRSpecTaQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -82,7 +82,7 @@ class NirspecTaQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecTaStats(models.Model):
+class NIRSpecTaStats(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)

@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class NirspecGratingQueryHistory(models.Model):
+class NIRSpecGratingQueryHistory(models.Model):
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     run_monitor = models.BooleanField(blank=True, null=True)
@@ -42,7 +42,7 @@ class NirspecGratingQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecGratingStats(models.Model):
+class NIRSpecGratingStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     time = models.CharField(blank=True, null=True)
     inrsh_gwa_adcmgain = models.FloatField(blank=True, null=True)

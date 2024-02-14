@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class FgsBadPixelQueryHistory(models.Model):
+class FGSBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -50,7 +50,7 @@ class FgsBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class FgsBadPixelStats(models.Model):
+class FGSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -69,7 +69,7 @@ class FgsBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriBadPixelQueryHistory(models.Model):
+class MIRIBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -90,7 +90,7 @@ class MiriBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriBadPixelStats(models.Model):
+class MIRIBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -109,7 +109,7 @@ class MiriBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamBadPixelQueryHistory(models.Model):
+class NIRCamBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -130,7 +130,7 @@ class NircamBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamBadPixelStats(models.Model):
+class NIRCamBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -149,7 +149,7 @@ class NircamBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissBadPixelQueryHistory(models.Model):
+class NIRISSBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -170,7 +170,7 @@ class NirissBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissBadPixelStats(models.Model):
+class NIRISSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -189,7 +189,7 @@ class NirissBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecBadPixelQueryHistory(models.Model):
+class NIRSpecBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -210,7 +210,7 @@ class NirspecBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecBadPixelStats(models.Model):
+class NIRSpecBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.

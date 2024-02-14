@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class NircamBiasQueryHistory(models.Model):
+class NIRCamBiasQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -46,7 +46,7 @@ class NircamBiasQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamBiasStats(models.Model):
+class NIRCamBiasStats(models.Model):
     aperture = models.CharField(blank=True, null=True)
     uncal_filename = models.CharField(blank=True, null=True)
     cal_filename = models.CharField(blank=True, null=True)
@@ -76,7 +76,7 @@ class NircamBiasStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissBiasQueryHistory(models.Model):
+class NIRISSBiasQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -93,7 +93,7 @@ class NirissBiasQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissBiasStats(models.Model):
+class NIRISSBiasStats(models.Model):
     aperture = models.CharField(blank=True, null=True)
     uncal_filename = models.CharField(blank=True, null=True)
     cal_filename = models.CharField(blank=True, null=True)
@@ -123,7 +123,7 @@ class NirissBiasStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecBiasQueryHistory(models.Model):
+class NIRSpecBiasQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -140,7 +140,7 @@ class NirspecBiasQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecBiasStats(models.Model):
+class NIRSpecBiasStats(models.Model):
     aperture = models.CharField(blank=True, null=True)
     uncal_filename = models.CharField(blank=True, null=True)
     cal_filename = models.CharField(blank=True, null=True)

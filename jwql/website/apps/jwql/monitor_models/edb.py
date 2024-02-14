@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class FgsEdbBlocksStats(models.Model):
+class FGSEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -47,7 +47,7 @@ class FgsEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbDailyStats(models.Model):
+class FGSEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -65,7 +65,7 @@ class FgsEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbEveryChangeStats(models.Model):
+class FGSEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -83,7 +83,7 @@ class FgsEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbTimeIntervalStats(models.Model):
+class FGSEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -101,7 +101,7 @@ class FgsEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbTimeStats(models.Model):
+class FGSEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -116,7 +116,7 @@ class FgsEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbBlocksStats(models.Model):
+class MIRIEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -134,7 +134,7 @@ class MiriEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbDailyStats(models.Model):
+class MIRIEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -152,7 +152,7 @@ class MiriEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbEveryChangeStats(models.Model):
+class MIRIEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -170,7 +170,7 @@ class MiriEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbTimeIntervalStats(models.Model):
+class MIRIEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -188,7 +188,7 @@ class MiriEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbTimeStats(models.Model):
+class MIRIEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -203,7 +203,7 @@ class MiriEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbBlocksStats(models.Model):
+class NIRCamEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -221,7 +221,7 @@ class NircamEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbDailyStats(models.Model):
+class NIRCamEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -239,7 +239,7 @@ class NircamEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbEveryChangeStats(models.Model):
+class NIRCamEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -257,7 +257,7 @@ class NircamEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbTimeIntervalStats(models.Model):
+class NIRCamEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -275,7 +275,7 @@ class NircamEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbTimeStats(models.Model):
+class NIRCamEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -290,7 +290,7 @@ class NircamEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbBlocksStats(models.Model):
+class NIRISSEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -308,7 +308,7 @@ class NirissEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbDailyStats(models.Model):
+class NIRISSEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -326,7 +326,7 @@ class NirissEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbEveryChangeStats(models.Model):
+class NIRISSEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -344,7 +344,7 @@ class NirissEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbTimeIntervalStats(models.Model):
+class NIRISSEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -362,7 +362,7 @@ class NirissEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbTimeStats(models.Model):
+class NIRISSEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -377,7 +377,7 @@ class NirissEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbBlocksStats(models.Model):
+class NIRSpecEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -395,7 +395,7 @@ class NirspecEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbDailyStats(models.Model):
+class NIRSpecEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -413,7 +413,7 @@ class NirspecEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbEveryChangeStats(models.Model):
+class NIRSpecEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -431,7 +431,7 @@ class NirspecEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbTimeIntervalStats(models.Model):
+class NIRSpecEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -449,7 +449,7 @@ class NirspecEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbTimeStats(models.Model):
+class NIRSpecEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = models.TextField(blank=True, null=True)  # This field type is a guess.

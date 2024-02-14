@@ -111,6 +111,7 @@ DATABASES = {
     'default': get_config()['django_databases']['default'],
     'monitors': get_config()['django_databases']['monitors']
 }
+DATABASE_ROUTERS = ["jwql.website.apps.jwql.monitor_models.common.MonitorRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators

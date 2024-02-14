@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class FgsDarkDarkCurrent(models.Model):
+class FGSDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -62,7 +62,7 @@ class FgsDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class FgsDarkPixelStats(models.Model):
+class FGSDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -82,7 +82,7 @@ class FgsDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsDarkQueryHistory(models.Model):
+class FGSDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -99,7 +99,7 @@ class FgsDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriDarkDarkCurrent(models.Model):
+class MIRIDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -132,7 +132,7 @@ class MiriDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class MiriDarkPixelStats(models.Model):
+class MIRIDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -152,7 +152,7 @@ class MiriDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriDarkQueryHistory(models.Model):
+class MIRIDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -169,7 +169,7 @@ class MiriDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamDarkDarkCurrent(models.Model):
+class NIRCamDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -202,7 +202,7 @@ class NircamDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class NircamDarkPixelStats(models.Model):
+class NIRCamDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -222,7 +222,7 @@ class NircamDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamDarkQueryHistory(models.Model):
+class NIRCamDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -239,7 +239,7 @@ class NircamDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissDarkDarkCurrent(models.Model):
+class NIRISSDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -272,7 +272,7 @@ class NirissDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class NirissDarkPixelStats(models.Model):
+class NIRISSDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -292,7 +292,7 @@ class NirissDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissDarkQueryHistory(models.Model):
+class NIRISSDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -309,7 +309,7 @@ class NirissDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecDarkDarkCurrent(models.Model):
+class NIRSpecDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -342,7 +342,7 @@ class NirspecDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class NirspecDarkPixelStats(models.Model):
+class NIRSpecDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
     x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -362,7 +362,7 @@ class NirspecDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecDarkQueryHistory(models.Model):
+class NIRSpecDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)

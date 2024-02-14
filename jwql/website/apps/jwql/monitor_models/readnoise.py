@@ -29,7 +29,7 @@ References
 from django.db import models
 
 
-class FgsReadnoiseQueryHistory(models.Model):
+class FGSReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -46,7 +46,7 @@ class FgsReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class FgsReadnoiseStats(models.Model):
+class FGSReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -90,7 +90,7 @@ class FgsReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriReadnoiseQueryHistory(models.Model):
+class MIRIReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -107,7 +107,7 @@ class MiriReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriReadnoiseStats(models.Model):
+class MIRIReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -151,7 +151,7 @@ class MiriReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamReadnoiseQueryHistory(models.Model):
+class NIRCamReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -168,7 +168,7 @@ class NircamReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamReadnoiseStats(models.Model):
+class NIRCamReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -212,7 +212,7 @@ class NircamReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissReadnoiseQueryHistory(models.Model):
+class NIRISSReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -229,7 +229,7 @@ class NirissReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissReadnoiseStats(models.Model):
+class NIRISSReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -273,7 +273,7 @@ class NirissReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecReadnoiseQueryHistory(models.Model):
+class NIRSpecReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -290,7 +290,7 @@ class NirspecReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecReadnoiseStats(models.Model):
+class NIRSpecReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)

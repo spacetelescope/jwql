@@ -47,14 +47,16 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
 import numpy as np  # noqa: E348 (comparison to true)
 from pysiaf import Siaf  # noqa: E348 (comparison to true)
-from sqlalchemy.sql.expression import and_  # noqa: E348 (comparison to true)
 
-from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import session, engine  # noqa: E348 (comparison to true)
+# Need to set up django apps before we can access the models
+from django import setup
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+setup()
+
+# PEP8 will undoubtedly complain, but the file is specifically designed so that everything
+# importable is a monitor class.
+from jwql.website.apps.jwql.monitor_models.readnoise import *
+
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
@@ -149,17 +151,9 @@ class Readnoise():
         file_exists : bool
             ``True`` if filename exists in the readnoise stats database.
         """
-
-        query = session.query(self.stats_table)
-        results = query.filter(self.stats_table.uncal_filename == filename).all()
-
-        if len(results) != 0:
-            file_exists = True
-        else:
-            file_exists = False
-
-        session.close()
-        return file_exists
+        
+        results = self.stats_table.objects.filter(uncal_filename__iexact=filename).values()
+        return (len(results) != 0)
 
     def get_amp_stats(self, image, amps):
         """Calculates the sigma-clipped mean and stddev, as well as the
@@ -385,17 +379,19 @@ class Readnoise():
             Date (in MJD) of the ending range of the previous MAST query
             where the readnoise monitor was run.
         """
-
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E712 (comparison to True)
+        
+        filter_kwargs = {
+            'aperture__iexact': self.aperture,
+            'run_monitor__exact': True
+        }
+        query = self.query_table.objects.filter(**filter_kwargs).order_by("-end_time_mjd").all()
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
-            query_result = query[-1].end_time_mjd
+            query_result = query[0].end_time_mjd
 
-        session.close()
         return query_result
 
     def process(self, file_list):
@@ -526,10 +522,10 @@ class Readnoise():
                     readnoise_db_entry[key] = float(amp_stats[key])
                 else:
                     readnoise_db_entry[key] = amp_stats[key].astype(float)
-
+            
             # Add this new entry to the readnoise database table
-            with engine.begin() as connection:
-                connection.execute(self.stats_table.__table__.insert(), readnoise_db_entry)
+            entry = self.stats_table(**readnoise_db_entry)
+            entry.save()
             logging.info('\tNew entry added to readnoise database table')
 
             # Remove the raw and calibrated files to save memory space
@@ -658,15 +654,15 @@ class Readnoise():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                with engine.begin() as connection:
-                    connection.execute(self.query_table.__table__.insert(), new_entry)
+                stats_entry = self.query_table(**new_entry)
+                stats_entry.save()
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
 
 
 if __name__ == '__main__':
-
+ 
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
