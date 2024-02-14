@@ -63,9 +63,9 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
 
-# Import * is okay here because this module specifically only contains database models for
-# this monitor
-from jwql.website.apps.jwql.monitor_models.readnoise import *  # noqa: E402 (module level import not at top of file)
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.readnoise import *  # noqa: E402 (module level import not at top of file)
 
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
