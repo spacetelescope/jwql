@@ -48,6 +48,15 @@ import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
 import numpy as np  # noqa: E348 (comparison to true)
 from pysiaf import Siaf  # noqa: E348 (comparison to true)
 
+# astroquery.mast import that depends on value of auth_mast
+# this import has to be made before any other import of astroquery.mast
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
     import django  # noqa: E402 (module level import not at top of file)
