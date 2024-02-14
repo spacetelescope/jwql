@@ -48,10 +48,11 @@ import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
 import numpy as np  # noqa: E348 (comparison to true)
 from pysiaf import Siaf  # noqa: E348 (comparison to true)
 
-# Need to set up django apps before we can access the models
-from django import setup  # noqa: E402 (module level import not at top of file)
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
-setup()
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
 
 # Import * is okay here because this module specifically only contains database models for
 # this monitor
