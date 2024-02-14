@@ -91,7 +91,7 @@ def test_get_metadata():
     assert monitor.time_obs == '04:35:14.523'
     assert monitor.expstart == '2016-01-18T04:35:14.523'
 
-
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_identify_tables():
     """Be sure the correct database tables are identified"""
 

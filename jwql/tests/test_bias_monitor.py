@@ -96,6 +96,7 @@ def test_get_amp_medians():
     assert amp_medians == amp_medians_truth
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_identify_tables():
     """Be sure the correct database tables are identified"""
 
