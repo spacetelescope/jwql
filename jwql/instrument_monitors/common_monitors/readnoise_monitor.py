@@ -508,20 +508,20 @@ class Readnoise():
                                   'readnoise_filename': os.path.basename(readnoise_outfile),
                                   'full_image_mean': float(full_image_mean),
                                   'full_image_stddev': float(full_image_stddev),
-                                  'full_image_n': full_image_n.astype(float),
-                                  'full_image_bin_centers': full_image_bin_centers.astype(float),
+                                  'full_image_n': list(full_image_n.astype(float)),
+                                  'full_image_bin_centers': list(full_image_bin_centers.astype(float)),
                                   'readnoise_diff_image': os.path.basename(readnoise_diff_png),
                                   'diff_image_mean': float(diff_image_mean),
                                   'diff_image_stddev': float(diff_image_stddev),
-                                  'diff_image_n': diff_image_n.astype(float),
-                                  'diff_image_bin_centers': diff_image_bin_centers.astype(float),
+                                  'diff_image_n': list(diff_image_n.astype(float)),
+                                  'diff_image_bin_centers': list(diff_image_bin_centers.astype(float)),
                                   'entry_date': datetime.datetime.now()
                                   }
             for key in amp_stats.keys():
                 if isinstance(amp_stats[key], (int, float)):
                     readnoise_db_entry[key] = float(amp_stats[key])
                 else:
-                    readnoise_db_entry[key] = amp_stats[key].astype(float)
+                    readnoise_db_entry[key] = list(amp_stats[key].astype(float))
             
             # Add this new entry to the readnoise database table
             entry = self.stats_table(**readnoise_db_entry)
