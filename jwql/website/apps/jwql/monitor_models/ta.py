@@ -27,6 +27,7 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
 class MIRITaQueryHistory(models.Model):
@@ -94,28 +95,28 @@ class NIRSpecTaStats(models.Model):
     expstart = models.CharField(blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
-    full_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    full_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    full_image_n = ArrayField(models.FloatField())
+    full_image_bin_centers = ArrayField(models.FloatField())
     diff_image_mean = models.FloatField(blank=True, null=True)
     diff_image_stddev = models.FloatField(blank=True, null=True)
-    diff_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    diff_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    diff_image_n = ArrayField(models.FloatField())
+    diff_image_bin_centers = ArrayField(models.FloatField())
     amp1_mean = models.FloatField(blank=True, null=True)
     amp1_stddev = models.FloatField(blank=True, null=True)
-    amp1_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp1_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp1_n = ArrayField(models.FloatField())
+    amp1_bin_centers = ArrayField(models.FloatField())
     amp2_mean = models.FloatField(blank=True, null=True)
     amp2_stddev = models.FloatField(blank=True, null=True)
-    amp2_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp2_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp2_n = ArrayField(models.FloatField())
+    amp2_bin_centers = ArrayField(models.FloatField())
     amp3_mean = models.FloatField(blank=True, null=True)
     amp3_stddev = models.FloatField(blank=True, null=True)
-    amp3_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp3_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp3_n = ArrayField(models.FloatField())
+    amp3_bin_centers = ArrayField(models.FloatField())
     amp4_mean = models.FloatField(blank=True, null=True)
     amp4_stddev = models.FloatField(blank=True, null=True)
-    amp4_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp4_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp4_n = ArrayField(models.FloatField())
+    amp4_bin_centers = ArrayField(models.FloatField())
 
     class Meta:
         managed = True

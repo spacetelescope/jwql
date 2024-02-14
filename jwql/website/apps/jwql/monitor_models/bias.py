@@ -27,6 +27,7 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
 class NIRCamBiasQueryHistory(models.Model):
@@ -55,10 +56,10 @@ class NIRCamBiasStats(models.Model):
     mean = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)
-    collapsed_rows = models.TextField(blank=True, null=True)  # This field type is a guess.
-    collapsed_columns = models.TextField(blank=True, null=True)  # This field type is a guess.
-    counts = models.TextField(blank=True, null=True)  # This field type is a guess.
-    bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    collapsed_rows = ArrayField(models.FloatField())
+    collapsed_columns = ArrayField(models.FloatField())
+    counts = ArrayField(models.FloatField())
+    bin_centers = ArrayField(models.FloatField())
     amp1_even_med = models.FloatField(blank=True, null=True)
     amp1_odd_med = models.FloatField(blank=True, null=True)
     amp2_even_med = models.FloatField(blank=True, null=True)
@@ -102,10 +103,10 @@ class NIRISSBiasStats(models.Model):
     mean = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)
-    collapsed_rows = models.TextField(blank=True, null=True)  # This field type is a guess.
-    collapsed_columns = models.TextField(blank=True, null=True)  # This field type is a guess.
-    counts = models.TextField(blank=True, null=True)  # This field type is a guess.
-    bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    collapsed_rows = ArrayField(models.FloatField())
+    collapsed_columns = ArrayField(models.FloatField())
+    counts = ArrayField(models.FloatField())
+    bin_centers = ArrayField(models.FloatField())
     amp1_even_med = models.FloatField(blank=True, null=True)
     amp1_odd_med = models.FloatField(blank=True, null=True)
     amp2_even_med = models.FloatField(blank=True, null=True)
@@ -149,10 +150,10 @@ class NIRSpecBiasStats(models.Model):
     mean = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)
-    collapsed_rows = models.TextField(blank=True, null=True)  # This field type is a guess.
-    collapsed_columns = models.TextField(blank=True, null=True)  # This field type is a guess.
-    counts = models.TextField(blank=True, null=True)  # This field type is a guess.
-    bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    collapsed_rows = ArrayField(models.FloatField())
+    collapsed_columns = ArrayField(models.FloatField())
+    counts = ArrayField(models.FloatField())
+    bin_centers = ArrayField(models.FloatField())
     amp1_even_med = models.FloatField(blank=True, null=True)
     amp1_odd_med = models.FloatField(blank=True, null=True)
     amp2_even_med = models.FloatField(blank=True, null=True)

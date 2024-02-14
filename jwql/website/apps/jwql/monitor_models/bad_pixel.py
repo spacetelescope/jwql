@@ -27,6 +27,7 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
 class FGSBadPixelQueryHistory(models.Model):
@@ -53,8 +54,8 @@ class FGSBadPixelQueryHistory(models.Model):
 class FGSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -93,8 +94,8 @@ class MIRIBadPixelQueryHistory(models.Model):
 class MIRIBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -133,8 +134,8 @@ class NIRCamBadPixelQueryHistory(models.Model):
 class NIRCamBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -173,8 +174,8 @@ class NIRISSBadPixelQueryHistory(models.Model):
 class NIRISSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -213,8 +214,8 @@ class NIRSpecBadPixelQueryHistory(models.Model):
 class NIRSpecBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
