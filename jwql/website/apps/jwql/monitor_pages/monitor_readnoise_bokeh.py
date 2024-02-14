@@ -80,7 +80,7 @@ class ReadnoiseMonitorData():
 
         # Determine which database tables are needed based on instrument
         self.identify_tables()
-        
+
         self.query_results = list(self.stats_table.objects.filter(aperture__iexact=self.aperture).order_by("expstart").all())
 
 
@@ -117,9 +117,9 @@ class ReadNoisePlotTab():
         self.plot_readnoise_histogram()
 
         self.tab = TabPanel(child=column(row(*self.amp_plots),
-                                      self.diff_image_plot,
-                                      self.readnoise_histogram),
-                         title=self.aperture)
+                                         self.diff_image_plot,
+                                         self.readnoise_histogram),
+                            title=self.aperture)
 
     def plot_readnoise_amplifers(self):
         """Class to create readnoise scatter plots per amplifier.

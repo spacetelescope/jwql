@@ -49,13 +49,13 @@ import numpy as np  # noqa: E348 (comparison to true)
 from pysiaf import Siaf  # noqa: E348 (comparison to true)
 
 # Need to set up django apps before we can access the models
-from django import setup
+from django import setup  # noqa: E402 (module level import not at top of file)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 setup()
 
-# PEP8 will undoubtedly complain, but the file is specifically designed so that everything
-# importable is a monitor class.
-from jwql.website.apps.jwql.monitor_models.readnoise import *
+# Import * is okay here because this module specifically only contains database models for
+# this monitor
+from jwql.website.apps.jwql.monitor_models.readnoise import *  # noqa: E402 (module level import not at top of file)
 
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
@@ -151,7 +151,6 @@ class Readnoise():
         file_exists : bool
             ``True`` if filename exists in the readnoise stats database.
         """
-        
         results = self.stats_table.objects.filter(uncal_filename__iexact=filename).values()
         return (len(results) != 0)
 
@@ -379,7 +378,6 @@ class Readnoise():
             Date (in MJD) of the ending range of the previous MAST query
             where the readnoise monitor was run.
         """
-        
         filter_kwargs = {
             'aperture__iexact': self.aperture,
             'run_monitor__exact': True
@@ -522,7 +520,7 @@ class Readnoise():
                     readnoise_db_entry[key] = float(amp_stats[key])
                 else:
                     readnoise_db_entry[key] = list(amp_stats[key].astype(float))
-            
+
             # Add this new entry to the readnoise database table
             entry = self.stats_table(**readnoise_db_entry)
             entry.save()
@@ -662,7 +660,7 @@ class Readnoise():
 
 
 if __name__ == '__main__':
- 
+
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
