@@ -44,6 +44,12 @@ monitor_views.py
     :members:
     :undoc-members:
 
+monitor_models
+--------------
+.. automodule:: jwql.website.apps.jwql.monitor_models.common
+    :members:
+    :undoc-members:
+
 settings.py
 -----------
 .. automodule:: jwql.website.jwql_proj.settings
