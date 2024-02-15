@@ -51,18 +51,21 @@ import os
 import operator
 import socket
 
+from astropy.time import Time
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+import numpy as np
 from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
-from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
+from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config
+from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import get_acknowledgements
@@ -1258,6 +1261,79 @@ def view_image(request, inst, file_root):
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
+    # Convert expstart from MJD to a date
+    expstart_str = Time(root_file_info.expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
+
+    # Reduce the precision of the MJD start time to make it easier to display
+    root_file_info.expstart = "%.5f" % round(root_file_info.expstart, 5)
+
+    # Get headers from the file so we can pass along info that is common to all
+    # suffixes. The order of possible_suffixes_to_use is itentional, because the
+    # uncal file will not have info on the pipeline version used.
+    possible_suffixes_to_use = np.array(['rate', 'rateints', 'cal', 'calints', 'uncal'])
+    existing_suffixes = np.array([suffix in image_info['suffixes'] for suffix in possible_suffixes_to_use])
+
+    # Initialize dictionary of file info
+    common_header_info = {'exp_type': root_file_info.exp_type,
+                          'expstart': root_file_info.expstart,
+                          'filter': root_file_info.filter,
+                          'pupil': root_file_info.pupil,
+                          'grating': root_file_info.grating,
+                          'subarray': root_file_info.subarray,
+                          'read_patt': root_file_info.read_patt,
+                          'ngroups': 'N/A',
+                          'nints': 'N/A',
+                          'exptime': 'N/A',
+                          'category': 'N/A',
+                          'title': 'N/A',
+                          'pi_name': 'N/A',
+                          'visit_status': 'N/A',
+                          'target_name': 'N/A',
+                          'RA': 'N/A',
+                          'Dec': 'N/A',
+                          'PA_V3': 'N/A',
+                          'cal_ver': 'N/A',
+                          'crds_context': 'N/A'}
+
+    # Deal with instrument-specific parameters
+    for key in ['grating', 'pupil']:
+        if common_header_info[key] == '':
+            common_header_info[key] = 'N/A'
+
+    # If any of the desired files are present, get the headers and populate the header
+    # info dictionary
+    if any(existing_suffixes):
+        suffix = possible_suffixes_to_use[existing_suffixes][0]
+        filename = f'{root_file_info.root_name}_{suffix}.fits'
+
+        # get_image_info() has already globbed over the directory with the files and
+        # returned the list of existing suffixes, so we shouldn't need to check for
+        # file existence here.
+        file_path = filesystem_path(filename, check_existence=True)
+
+        header = fits.getheader(file_path)
+        header_sci = fits.getheader(file_path, 1)
+
+        common_header_info['ngroups'] = header['NGROUPS']
+        common_header_info['nints'] = header['NINTS']
+        common_header_info['exptime'] = header['EFFEXPTM']
+        common_header_info['category'] = header['CATEGORY']
+        common_header_info['title'] = header['TITLE']
+        common_header_info['pi_name'] = header['PI_NAME']
+        common_header_info['visit_status'] = header['VISITSTA']
+        common_header_info['target_name'] = header['TARGPROP']
+        common_header_info['RA'] = header_sci['RA_REF']
+        common_header_info['Dec'] = header_sci['DEC_REF']
+        common_header_info['PA_V3'] = header_sci['ROLL_REF']
+        common_header_info['cal_ver'] = 'N/A'
+        common_header_info['crds_context'] = 'N/A'
+
+        # Pipeline version and CRDS context info are not in uncal files
+        if suffix != 'uncal':
+            common_header_info['cal_ver'] = header['CAL_VER']
+            common_header_info['crds_context'] = header['CRDS_CTX']
+
+
     # Build the context
     context = {'base_url': get_base_url(),
                'file_root_list': file_root_list,
@@ -1270,6 +1346,8 @@ def view_image(request, inst, file_root):
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
                'form': form,
-               'marked_viewed': root_file_info.viewed}
+               'marked_viewed': root_file_info.viewed,
+               'expstart_str': expstart_str,
+               'header_info': common_header_info}
 
     return render(request, template, context)

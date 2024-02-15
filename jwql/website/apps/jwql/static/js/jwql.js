@@ -1475,3 +1475,16 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 }
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    var collapsibleBtn = document.querySelector('.collapsible-btn');
+    var collapsibleContent = document.querySelector('.collapsible-content');
+
+    collapsibleBtn.addEventListener('click', function () {
+        collapsibleContent.classList.toggle('show');
+    });
+});
+

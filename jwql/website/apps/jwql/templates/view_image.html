@@ -13,15 +13,125 @@
     	<h3>{{ file_root }}</h3>
 
     	<!-- Specify the attributes of what is currently being shown -->
-    	<div class="d-flex flex-row">
+    	<!-- <div class="d-flex flex-row"> -->
+        <div class="d-flex flex-row">
     		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>
             <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{file_root}}", "{{base_url}}");'>
-    	</div>
-    	FITS Filename: <a id="fits_filename"></a><br>
-    	JPG Filename: <a id="jpg_filename"></a><br><br>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Visit Status: {{ header_info.visit_status }}</div>
+            <div class="APT_parameters">Category: {{ header_info.category }}</div>
+            <div class="APT_parameters">Exp Type: <a>{{ header_info.exp_type }}</a></div>
+            <div class="APT_parameters">Subarray: {{ header_info.subarray }}</div>
+            <div class="APT_parameters">Viewed: {{ marked_viewed }}</div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Filter: {{ header_info.filter }}</div>
+            <div class="APT_parameters">Pupil: {{ header_info.pupil }}</div>
+            <div class="APT_parameters">Grating: {{ header_info.grating }}</div>
+            <div class="APT_parameters">Exp Start: {{ expstart_str }}</div>
+        </div>
+
+    <!--    <div class="d-flex flex-row">
+            <div class="APT_parameters">Readpatt: {{ header_info.read_patt }}</div>
+            <div class="APT_parameters">Ngroups: {{ header_info.ngroups }}</div>
+            <div class="APT_parameters">Nints: {{ header_info.nints }}</div>
+            <div class="APT_parameters">Exposure Time: {{ header_info.exptime }}</div>
+            <div class="APT_parameters">Exp Start MJD: {{ header_info.expstart }}</div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Pipeline version: {{ header_info.cal_ver }}</div>
+            <div class="APT_parameters">CRDS Context: {{ header_info.crds_context }}</div>
+            <div class="APT_parameters">RA: {{ header_info.RA }}</div>
+            <div class="APT_parameters">Dec: {{ header_info.Dec }}</div>
+            <div class="APT_parameters">PA_V3: {{ header_info.PA_V3 }}</div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">PI Name: {{ header_info.pi_name }}</div>
+            <div class="APT_parameters_wide">Title: {{ header_info.title }}</div>
+            <div class="APT_parameters_wide">Target Name: {{ header_info.target_name }}</div>
+        </div>
+        -->
+        <!--
+        <p>A Collapsible:</p>
+        <button class="collapsible">Open Collapsible</button>
+        <div class="content">
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        -->
+
+    <div class="collapsible">
+        <button class="collapsible-btn btn-primary">Basic Exposure Info +</button>
+        <div class="collapsible-content">
+        <!--    <div class="d-flex flex-row">
+                <div class="APT_parameters">Visit Status: {{ header_info.visit_status }}</div>
+                <div class="APT_parameters">Category: {{ header_info.category }}</div>
+                <div class="APT_parameters">Exp Type: <a>{{ header_info.exp_type }}</a></div>
+                <div class="APT_parameters">Subarray: {{ header_info.subarray }}</div>
+                <div class="APT_parameters">Viewed: {{ marked_viewed }}</div>
+            </div>
+            <div class="d-flex flex-row">
+                <div class="APT_parameters">Filter: {{ header_info.filter }}</div>
+                <div class="APT_parameters">Pupil: {{ header_info.pupil }}</div>
+                <div class="APT_parameters">Grating: {{ header_info.grating }}</div>
+                <div class="APT_parameters">Exp Start: {{ expstart_str }}</div>
+            </div> -->
+            <div class="d-flex flex-row">
+                <div class="APT_parameters"><strong>Readpatt:</strong> {{ header_info.read_patt }}</div>
+                <div class="APT_parameters">Ngroups: {{ header_info.ngroups }}</div>
+                <div class="APT_parameters">Nints: {{ header_info.nints }}</div>
+                <div class="APT_parameters">Exposure Time: {{ header_info.exptime }}</div>
+                <div class="APT_parameters">Exp Start MJD: {{ header_info.expstart }}</div>
+            </div>
+            <div class="d-flex flex-row">
+                <div class="APT_parameters">Pipeline version: {{ header_info.cal_ver }}</div>
+                <div class="APT_parameters">CRDS Context: {{ header_info.crds_context }}</div>
+                <div class="APT_parameters">RA: {{ header_info.RA }}</div>
+                <div class="APT_parameters">Dec: {{ header_info.Dec }}</div>
+                <div class="APT_parameters">PA_V3: {{ header_info.PA_V3 }}</div>
+            </div>
+            <div class="d-flex flex-row">
+                <div class="APT_parameters">PI Name: {{ header_info.pi_name }}</div>
+                <div class="APT_parameters_wide">Title: {{ header_info.title }}</div>
+                <div class="APT_parameters_wide">Target Name: {{ header_info.target_name }}</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="collapsable_script.js"></script>
+
+
+
+        <!--
+            Exposure Type: {{ header_info.exp_type }}<br>
+            Viewed: {{ marked_viewed }}<br>
+            Exposure Start MJD: {{ header_info.expstart }}<br>
+            Exposure Start Time: {{ expstart_str }}<br>
+            Filter: {{ header_info.filter }}<br>
+            Pupil: {{ header_info.pupil }}<br>
+            Grating: {{ header_info.grating }}<br>
+            Subarray: {{ header_info.subarray }}<br>
+            Readpatt: {{ header_info.read_patt }}<br>
+            Ngroups: {{ header_info.ngroups }}<br>
+            Nints: {{ header_info.nints }}<br>
+            Exposure Time: {{ header_info.exptime }}<br>
+            calibration version: {{ header_info.cal_ver }}<br>
+            category: {{ header_info.category }}<br>
+            Title: {{ header_info.title }}<br>
+            PI Name: {{ header_info.pi_name }}<br>
+            Visit Status: {{ header_info.visit_status }}<br>
+            Target Name: {{ header_info.target_name }}<br>
+            RA: {{ header_info.RA }}<br>
+            Dec: {{ header_info.Dec }}<br>
+            PA_V3: {{ header_info.PA_V3 }}<br>
+        -->
+
+
+        <br>
+    	FITS Filename: <a id="fits_filename"></a>  JPG Filename: <a id="jpg_filename"></a><br><br>
 
     	<!-- Allow the user to change the file type that is being displayed -->
     	<a id="view_file_type" data-current-suffix="">View File Type:</a>
@@ -44,6 +154,37 @@
         </p>
 
         <div class="row">
+
+            <!-- Display image info -->
+            <!--
+            <div class="col-xl-3 text-left">
+
+            Exposure Type: {{ header_info.exp_type }}<br>
+            Viewed: {{ marked_viewed }}<br>
+            Exposure Start MJD: {{ header_info.expstart }}<br>
+            Exposure Start Time: {{ expstart_str }}<br>
+            Filter: {{ header_info.filter }}<br>
+            Pupil: {{ header_info.pupil }}<br>
+            Grating: {{ header_info.grating }}<br>
+            Subarray: {{ header_info.subarray }}<br>
+            Readpatt: {{ header_info.read_patt }}<br>
+            Ngroups: {{ header_info.ngroups }}<br>
+            Nints: {{ header_info.nints }}<br>
+            Exposure Time: {{ header_info.exptime }}<br>
+            calibration version: {{ header_info.cal_ver }}<br>
+            category: {{ header_info.category }}<br>
+            Title: {{ header_info.title }}<br>
+            PI Name: {{ header_info.pi_name }}<br>
+            Visit Status: {{ header_info.visit_status }}<br>
+            Target Name: {{ header_info.target_name }}<br>
+            RA: {{ header_info.RA }}<br>
+            Dec: {{ header_info.Dec }}<br>
+            PA_V3: {{ header_info.PA_V3 }}<br>
+
+
+            </div>
+            -->
+
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
