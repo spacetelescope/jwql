@@ -37,7 +37,7 @@ import os
 
 from bokeh.layouts import column
 from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, HoverTool, OpenURL, TapTool
-from bokeh.models import TabPanel, Tabs
+from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
 import numpy as np
@@ -217,7 +217,7 @@ class GeneralDashboard:
 
             # Initialize plot
             plots[data['shortname']] = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
-                                              plot_width=800,
+                                              width=800,
                                               x_axis_type='datetime',
                                               title=f"Available & Used Storage on {data['shortname']}",
                                               x_axis_label='Date',
@@ -242,7 +242,7 @@ class GeneralDashboard:
                                                                 ])
             hover_tool[data['shortname']].formatters = {'@date': 'datetime'}
             plots[data['shortname']].tools.append(hover_tool[data['shortname']])
-            tabs.append(Panel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
+            tabs.append(TabPanel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
 
         tabs = Tabs(tabs=tabs)
 
@@ -264,7 +264,7 @@ class GeneralDashboard:
         """
         # Initialize plot
         plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
-                      plot_width=800,
+                      width=800,
                       x_axis_type='datetime',
                       title='JWQL directory size',
                       x_axis_label='Date',
@@ -308,7 +308,7 @@ class GeneralDashboard:
         # Put the "all" plot in a separate figure because it will be larger than all the pieces, which would
         # throw off the y range if it were in a single plot
         cen_store_plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
-                                plot_width=800,
+                                width=800,
                                 x_axis_type='datetime',
                                 title='JWQL central store directory, total data volume',
                                 x_axis_label='Date',
@@ -447,22 +447,22 @@ class GeneralDashboard:
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        p1 = figure(title="Number of Files in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1 = figure(title="Number of Files in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         p1.scatter(x='date', y='total_file_count', source=source, color='#C85108', size=10)
         disable_scientific_notation(p1)
-        tab1 = Panel(child=p1, title='Files Per Day')
+        tab1 = TabPanel(child=p1, title='Files Per Day')
 
         # Create separate tooltip for storage plot.
         # Show date and used and available storage together
 
-        p2 = figure(title="Available & Used Storage in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Disk Space (TB)')
+        p2 = figure(title="Available & Used Storage in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", width=800, x_axis_label='Date', y_axis_label='Disk Space (TB)')
         p2.line(x='date', y='available', source=source, color='#C85108', line_dash='dashed', line_width=3, legend_label='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
         p2.scatter(x='date', y='used', source=source, color='#355C7D', size=10)
         disable_scientific_notation(p2)
-        tab2 = Panel(child=p2, title='Storage')
+        tab2 = TabPanel(child=p2, title='Storage')
 
         p1.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
                                                    days=["%d %B %Y"],
@@ -534,11 +534,11 @@ class GeneralDashboard:
 
         data = pd.Series(dict(zip(x_value, top))).reset_index(name='top').rename(columns={'index': 'x'})
         source = ColumnDataSource(data)
-        plot = figure(x_range=x_value, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
+        plot = figure(x_range=x_value, title=title, width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
         plot.xaxis.major_label_orientation = pi / 4
         disable_scientific_notation(plot)
-        tab = Panel(child=plot, title=instrument)
+        tab = TabPanel(child=plot, title=instrument)
 
         return tab
 
@@ -603,7 +603,7 @@ class GeneralDashboard:
 
                 # Place the pie charts in a column/Panel, and append to the figure
                 colplots = column(pie_fig, small_pie_fig)
-                tab = Panel(child=colplots, title=f'{instrument}')
+                tab = TabPanel(child=colplots, title=f'{instrument}')
                 figures.append(tab)
 
             else:
@@ -747,8 +747,8 @@ class GeneralDashboard:
                 sw_colplots = column(sw_pie_fig, sw_small_pie_fig)
                 lw_colplots = column(lw_pie_fig, lw_small_pie_fig)
 
-                tab_sw = Panel(child=sw_colplots, title=f'{instrument} SW')
-                tab_lw = Panel(child=lw_colplots, title=f'{instrument} LW')
+                tab_sw = TabPanel(child=sw_colplots, title=f'{instrument} SW')
+                tab_lw = TabPanel(child=lw_colplots, title=f'{instrument} LW')
                 figures.append(tab_sw)
                 figures.append(tab_lw)
 
@@ -765,7 +765,7 @@ class GeneralDashboard:
 
         # Place the pie charts in a column/Panel, and append to the figure
         colplots = column(pie_fig, small_pie_fig)
-        tab = Panel(child=colplots, title=f'{instrument}')
+        tab = TabPanel(child=colplots, title=f'{instrument}')
         figures.append(tab)
 
         tabs = Tabs(tabs=figures)
@@ -786,16 +786,47 @@ class GeneralDashboard:
         title = 'Anomaly Types per Instrument'
         figures = []
 
+        # make list of rootfile infos for each instrument
+
+
+        # for each instrument list, make table of all of the anomalies
+
         # For unique instrument values, loop through data
         # Find all entries for instrument/filetype combo
         # Make figure and append it to list.
         for instrument in ANOMALY_CHOICES_PER_INSTRUMENT.keys():
-            data = build_table('{}_anomaly'.format(instrument))
-            data = data.drop(columns=['id', 'rootname', 'user'])
-            if not pd.isnull(self.delta_t) and not data.empty:
-                data = data[(data['flag_date'] >= (self.date - self.delta_t)) & (data['flag_date'] <= self.date)]
+            data = build_table('jwql_anomalies')
             summed_anomaly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
             figures.append(self.make_panel(summed_anomaly_columns.index.values, summed_anomaly_columns['counts'], instrument, title, 'Anomaly Type'))
+
+        tabs = Tabs(tabs=figures)
+
+        return tabs
+
+
+        """Build bar chart of files based off of type
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each instrument.
+        """
+
+        # Make Pandas DF for filesystem_instrument
+        # If time delta exists, filter data based on that.
+        data = build_table('filesystem_instrument')
+
+        # Set title and figures list to make panels
+        figures = []
+
+        # For unique instrument values, loop through data
+        # Find all entries for instrument/filetype combo
+        # Make figure and append it to list.
+        for instrument in data.instrument.unique():
+            index = data["instrument"] == instrument
+            inst_only = data[index].sort_values('filetype')
+            title = f'{JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]} files per Filetype: {date_string}'
+            figures.append(self.make_panel(inst_only['filetype'], inst_only['count'], instrument, title, 'File Type'))
 
         tabs = Tabs(tabs=figures)
 
