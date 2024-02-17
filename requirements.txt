@@ -4,7 +4,7 @@ bandit==1.7.5
 beautifulsoup4==4.12.2
 bokeh==3.3.0
 celery==5.3.4
-cryptography==41.0.7
+cryptography==42.0.2
 django==4.2.5
 inflection==0.5.1
 ipython==8.16.1
