@@ -28,9 +28,7 @@ import numpy as np
 import pytest
 
 from jwql.edb import engineering_database as ed
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def test_add():
@@ -243,8 +241,8 @@ def test_multiplication():
     info['description'] = 'Voltage at some place'
     mnemonic1 = ed.EdbMnemonic('TEST_VOLTAGE', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, info, blocks=blocks1)
     mnemonic1.meta = {'Count': 1,
-                     'TlmMnemonics': [{'TlmMnemonic': 'TEST_VOLTAGE',
-                                       'AllPoints': 1}]}
+                      'TlmMnemonics': [{'TlmMnemonic': 'TEST_VOLTAGE',
+                                        'AllPoints': 1}]}
 
     dates2 = np.array([datetime(2021, 12, 18, 7, n, 10) for n in range(20, 30)])
     data2 = np.array([15, 15, 15, 19, 19, 19, 19, 19, 12, 12])
@@ -258,8 +256,8 @@ def test_multiplication():
     info['description'] = 'Current at some place'
     mnemonic2 = ed.EdbMnemonic('TEST_CURRENT', Time('2021-12-18T07:20:10'), Time('2021-12-18T07:30:10'), tab, {}, info, blocks=blocks2)
     mnemonic2.meta = {'Count': 1,
-                     'TlmMnemonics': [{'TlmMnemonic': 'TEST_CURRENT',
-                                       'AllPoints': 1}]}
+                      'TlmMnemonics': [{'TlmMnemonic': 'TEST_CURRENT',
+                                        'AllPoints': 1}]}
 
     prod = mnemonic1 * mnemonic2
     assert np.allclose(prod.data["euvalues"].data,
