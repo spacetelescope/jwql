@@ -667,12 +667,12 @@ class BadPixTrendPlot():
         self.plot.tools.append(hover_tool)
 
         # Make the x axis tick labels look nice
-        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                          seconds=["%d %b %H:%M:%S.%3N"],
-                                                          hours=["%d %b %H:%M"],
-                                                          days=["%d %b %H:%M"],
-                                                          months=["%d %b %Y %H:%M"],
-                                                          years=["%d %b %Y"]
+        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                          seconds="%d %b %H:%M:%S.%3N",
+                                                          hours="%d %b %H:%M",
+                                                          days="%d %b %H:%M",
+                                                          months="%d %b %Y %H:%M",
+                                                          years="%d %b %Y"
                                                           )
         self.plot.xaxis.major_label_orientation = np.pi / 4
 

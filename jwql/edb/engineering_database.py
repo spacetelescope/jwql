@@ -740,12 +740,12 @@ class EdbMnemonic:
             fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
         # Make the x axis tick labels look nice
-        fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                    seconds=["%d %b %H:%M:%S.%3N"],
-                                                    hours=["%d %b %H:%M"],
-                                                    days=["%d %b %H:%M"],
-                                                    months=["%d %b %Y %H:%M"],
-                                                    years=["%d %b %Y"]
+        fig.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                    seconds="%d %b %H:%M:%S.%3N",
+                                                    hours="%d %b %H:%M",
+                                                    days="%d %b %H:%M",
+                                                    months="%d %b %Y %H:%M",
+                                                    years="%d %b %Y"
                                                     )
         fig.xaxis.major_label_orientation = np.pi / 4
 
@@ -1206,12 +1206,12 @@ class EdbMnemonic:
         fig_dev.line(data_dates, dev, color='red')
 
         # Make the x axis tick labels look nice
-        fig_dev.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                        seconds=["%d %b %H:%M:%S.%3N"],
-                                                        hours=["%d %b %H:%M"],
-                                                        days=["%d %b %H:%M"],
-                                                        months=["%d %b %Y %H:%M"],
-                                                        years=["%d %b %Y"]
+        fig_dev.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                        seconds="%d %b %H:%M:%S.%3N",
+                                                        hours="%d %b %H:%M",
+                                                        days="%d %b %H:%M",
+                                                        months="%d %b %Y %H:%M",
+                                                        years="%d %b %Y"
                                                         )
         fig.xaxis.major_label_orientation = np.pi / 4
 

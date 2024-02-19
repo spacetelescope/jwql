@@ -229,10 +229,10 @@ class GeneralDashboard:
             plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
             plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
 
-            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                                             days=["%d %B %Y"],
-                                                                             months=["%d %B %Y"],
-                                                                             years=["%B %Y"],
+            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                                             days="%d %B %Y",
+                                                                             months="%d %B %Y",
+                                                                             years="%B %Y"
                                                                              )
             plots[data['shortname']].xaxis.major_label_orientation = pi / 4
             plots[data['shortname']].legend.location = 'top_left'
@@ -298,10 +298,10 @@ class GeneralDashboard:
                 hover_tool.formatters = {'@date': 'datetime'}
                 plot.tools.append(hover_tool)
 
-        plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                     days=["%d %B %Y"],
-                                                     months=["%d %B %Y"],
-                                                     years=["%B %Y"],
+        plot.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                     days="%d %B %Y",
+                                                     months="%d %B %Y",
+                                                     years="%B %Y"
                                                      )
         plot.xaxis.major_label_orientation = pi / 4
         plot.legend.location = 'top_left'
@@ -333,10 +333,10 @@ class GeneralDashboard:
             legend_str = 'File volume'
             cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_dash='dashed', line_color='#355C7D', line_width=3)
             cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', size=10)
-            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                                   days=["%d %B %Y"],
-                                                                   months=["%d %B %Y"],
-                                                                   years=["%B %Y"],
+            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                                   days="%d %B %Y",
+                                                                   months="%d %B %Y",
+                                                                   years="%B %Y"
                                                                    )
             cen_store_plot.xaxis.major_label_orientation = pi / 4
             cen_store_plot.legend.location = 'top_left'
@@ -465,17 +465,17 @@ class GeneralDashboard:
         disable_scientific_notation(p2)
         tab2 = TabPanel(child=p2, title='Storage')
 
-        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                   days=["%d %B %Y"],
-                                                   months=["%d %B %Y"],
-                                                   years=["%B %Y"],
+        p1.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                   days="%d %B %Y",
+                                                   months="%d %B %Y",
+                                                   years="%B %Y"
                                                    )
         p1.xaxis.major_label_orientation = pi / 4
 
-        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                   days=["%d %B %Y"],
-                                                   months=["%d %B %Y"],
-                                                   years=["%B %Y"],
+        p2.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                   days="%d %B %Y",
+                                                   months="%d %B %Y",
+                                                   years="%B %Y"
                                                    )
         p2.xaxis.major_label_orientation = pi / 4
         p2.legend.location = 'top_left'
@@ -801,7 +801,5 @@ class GeneralDashboard:
             # Sum columns to generate the bokeh panel
             summed_anomaly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
             figures.append(self.make_panel(summed_anomaly_columns.index.values, summed_anomaly_columns['counts'], instrument, title, 'Anomaly Type'))
-
         tabs = Tabs(tabs=figures)
-
         return tabs

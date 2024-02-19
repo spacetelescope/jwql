@@ -1138,7 +1138,7 @@ class EdbMnemonicMonitor():
                     devs = []
 
                 # Keep only data that fall at least partially within the plot range
-                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) 
+                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
                   | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     times.extend(row.time)
                     values.extend(row.mnemonic_value)
@@ -1146,7 +1146,7 @@ class EdbMnemonicMonitor():
                     devs.append(row.stdev)
                     hist[row.dependency_value] = (times, values, medians, devs)
             else:
-                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) 
+                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
                   | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     hist[row.dependency_value] = (row.time, row.mnemonic_value, row.median, row.stdev)
 
@@ -2143,12 +2143,12 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
     # Make the x axis tick labels look nice
-    fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                seconds=["%d %b %H:%M:%S.%3N"],
-                                                hours=["%d %b %H:%M"],
-                                                days=["%d %b %H:%M"],
-                                                months=["%d %b %Y %H:%M"],
-                                                years=["%d %b %Y"]
+    fig.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                seconds="%d %b %H:%M:%S.%3N",
+                                                hours="%d %b %H:%M",
+                                                days="%d %b %H:%M",
+                                                months="%d %b %Y %H:%M",
+                                                years="%d %b %Y"
                                                 )
     fig.xaxis.major_label_orientation = np.pi / 4
 

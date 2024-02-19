@@ -24,7 +24,7 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
-from bokeh.models import TabPanel, Tabs
+from bokeh.models import TabPanel, Tabs, DatetimeTickFormatter
 from bokeh.plotting import figure, output_file
 import numpy as np
 import pysiaf
@@ -282,10 +282,10 @@ def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limit
     if nominal_value is not None:
         fig.line(times, np.repeat(nominal_value, len(times)), line_dash='dashed')
 
-    fig.xaxis.formatter = DatetimeTickFormatter(hours=["%d %b %H:%M"],
-                                                days=["%d %b %H:%M"],
-                                                months=["%d %b %Y %H:%M"],
-                                                years=["%d %b %Y"],
+    fig.xaxis.formatter = DatetimeTickFormatter(hours="%d %b %H:%M",
+                                                days="%d %b %H:%M",
+                                                months="%d %b %Y %H:%M",
+                                                years="%d %b %Y"
                                                 )
     fig.xaxis.major_label_orientation = np.pi / 4
 
