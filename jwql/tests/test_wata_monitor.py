@@ -90,7 +90,7 @@ def define_testdata():
         'v3_offset': [-999.0],
         'sam_x': [-999.0],
         'sam_y': [-999.0],
-        }
+    }
     # create the additional arrays
     bool_status, status_colors = [], []
     for tas, do_str in zip(wata_dict['ta_status'], wata_dict['date_obs']):

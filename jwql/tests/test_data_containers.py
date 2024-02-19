@@ -36,13 +36,13 @@ from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 
 # Skip testing this module if on Github Actions
-from jwql.website.apps.jwql import data_containers # noqa: E402 (module level import not at top of file)
-from jwql.tests.resources import MockSessionFileAnomaly, MockSessionGroupAnomaly # noqa: E402 (module level import not at top of file)
-from jwql.tests.resources import MockGetRequest, MockPostRequest # noqa: E402 (module level import not at top of file)
-from jwql.utils import constants # noqa: E402 (module level import not at top of file)
+from jwql.website.apps.jwql import data_containers  # noqa: E402 (module level import not at top of file)
+from jwql.tests.resources import MockSessionFileAnomaly, MockSessionGroupAnomaly  # noqa: E402 (module level import not at top of file)
+from jwql.tests.resources import MockGetRequest, MockPostRequest  # noqa: E402 (module level import not at top of file)
+from jwql.utils import constants  # noqa: E402 (module level import not at top of file)
 
 if not ON_GITHUB_ACTIONS:
-    from jwql.utils.utils import get_config # noqa: E402 (module level import not at top of file)
+    from jwql.utils.utils import get_config  # noqa: E402 (module level import not at top of file)
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
@@ -142,17 +142,10 @@ def test_get_all_proposals():
                            (['uncal', 'rate', 'bad'], {'bad'})),
                           (False, ['rate', 'uncal', 'bad'],
                            ['uncal', 'rate', 'bad']),
-                          (True,
-                           ['rate', 'uncal', 'bad',
-                            'o006_crfints', 'o001_crf'],
-                            (['uncal', 'rate', 'o001_crf',
-                              'o006_crfints', 'bad'], {'bad'})),
-                          (False,
-                           ['rate', 'uncal', 'bad',
-                            'o006_crfints', 'o001_crf'],
-                           ['uncal', 'rate', 'o001_crf',
-                            'o006_crfints', 'bad']),
-                          ])
+                          (True, ['rate', 'uncal', 'bad', 'o006_crfints', 'o001_crf'],
+                           (['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'], {'bad'})),
+                          (False, ['rate', 'uncal', 'bad', 'o006_crfints', 'o001_crf'],
+                           ['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'])])
 def test_get_available_suffixes(untracked, input_suffixes, expected):
     result = data_containers.get_available_suffixes(
         input_suffixes, return_untracked=untracked)

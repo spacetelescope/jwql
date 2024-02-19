@@ -52,7 +52,7 @@ from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module level import not at top of file)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module level import not at top of file)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module level import not at top of file)
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS # noqa: E402 (module level import not at top of file)
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS  # noqa: E402 (module level import not at top of file)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module level import not at top of file)
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module level import not at top of file)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module level import not at top of file)

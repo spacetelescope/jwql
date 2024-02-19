@@ -689,20 +689,16 @@ class EdbMnemonic:
                 if plot_mean:
                     source_mean = ColumnDataSource(data={'mean_x': self.median_times, 'mean_y': self.mean})
                     mean_data = fig.scatter(x='mean_x', y='mean_y', line_width=1, line_color='orange', alpha=0.75, source=source_mean)
-                    mean_hover_tool = HoverTool(tooltips=[('Mean', '@mean_y'),
-                                                          ('Date', '@mean_x{%d %b %Y %H:%M:%S}')
-                                                         ], mode='mouse', renderers=[mean_data]
-                                               )
+                    mean_hover_tool = HoverTool(tooltips=[('Mean', '@mean_y'), ('Date', '@mean_x{%d %b %Y %H:%M:%S}')],
+                                                mode='mouse', renderers=[mean_data])
                     mean_hover_tool.formatters = {'@mean_x': 'datetime'}
                     fig.tools.append(mean_hover_tool)
 
                 if plot_median:
                     source_median = ColumnDataSource(data={'median_x': self.median_times, 'median_y': self.median})
                     median_data = fig.scatter(x='median_x', y='median_y', line_width=1, line_color='orangered', alpha=0.75, source=source_median)
-                    median_hover_tool = HoverTool(tooltips=[('Median', '@median_y'),
-                                                            ('Date', '@median_x{%d %b %Y %H:%M:%S}')
-                                                           ], mode='mouse', renderers=[median_data]
-                                                 )
+                    median_hover_tool = HoverTool(tooltips=[('Median', '@median_y'), ('Date', '@median_x{%d %b %Y %H:%M:%S}')],
+                                                  mode='mouse', renderers=[median_data])
                     median_hover_tool.formatters = {'@median_x': 'datetime'}
                     fig.tools.append(median_hover_tool)
 
@@ -710,20 +706,16 @@ class EdbMnemonic:
                 if plot_max:
                     source_max = ColumnDataSource(data={'max_x': self.median_times, 'max_y': self.max})
                     max_data = fig.scatter(x='max_x', y='max_y', line_width=1, color='black', line_color='black', source=source_max)
-                    max_hover_tool = HoverTool(tooltips=[('Max', '@max_y'),
-                                                         ('Date', '@max_x{%d %b %Y %H:%M:%S}')
-                                                        ], mode='mouse', renderers=[max_data]
-                                              )
+                    max_hover_tool = HoverTool(tooltips=[('Max', '@max_y'), ('Date', '@max_x{%d %b %Y %H:%M:%S}')],
+                                               mode='mouse', renderers=[max_data])
                     max_hover_tool.formatters = {'@max_x': 'datetime'}
                     fig.tools.append(max_hover_tool)
 
                 if plot_min:
                     source_min = ColumnDataSource(data={'min_x': self.median_times, 'min_y': self.min})
                     min_data = fig.scatter(x='min_x', y='min_y', line_width=1, color='black', line_color='black', source=source_min)
-                    minn_hover_tool = HoverTool(tooltips=[('Min', '@min_y'),
-                                                          ('Date', '@min_x{%d %b %Y %H:%M:%S}')
-                                                         ], mode='mouse', renderers=[min_data]
-                                               )
+                    minn_hover_tool = HoverTool(tooltips=[('Min', '@min_y'), ('Date', '@min_x{%d %b %Y %H:%M:%S}')],
+                                                mode='mouse', renderers=[min_data])
                     min_hover_tool.formatters = {'@min_x': 'datetime'}
                     fig.tools.append(min_hover_tool)
 

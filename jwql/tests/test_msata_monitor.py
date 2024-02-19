@@ -83,7 +83,7 @@ def define_testdata():
         'samy': [-999.0],
         'samroll': [-999.0],
         'stars_in_fit': [-999]
-        }
+    }
     # add info from ta_table
     num_refstars = msata_dict['num_refstars'][0]
     msata_dict['box_peak_value'] = [[8000 for _ in range(num_refstars)]]
