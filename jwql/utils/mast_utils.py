@@ -24,12 +24,12 @@ from bokeh.io import save, output_file
 import pandas as pd
 
 from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MAST_QUERY_LIMIT
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, get_config
 from jwql.utils.plotting import bar_chart
 
 
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 

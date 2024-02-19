@@ -28,8 +28,7 @@ from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasS
 from jwql.instrument_monitors.common_monitors import bias_monitor
 from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def test_collapse_image():

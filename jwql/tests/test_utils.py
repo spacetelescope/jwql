@@ -26,11 +26,8 @@ from bokeh.models import LinearColorMapper
 from bokeh.plotting import figure
 import numpy as np
 
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, save_png, _validate_config
-
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 FILENAME_PARSER_TEST_DATA = [

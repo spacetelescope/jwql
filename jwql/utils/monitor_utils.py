@@ -24,6 +24,7 @@ from django import setup
 
 from jwql.database.database_interface import Monitor, engine
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.logging_functions import configure_logging, get_log_status
 from jwql.utils import mast_utils
 from jwql.utils.utils import filename_parser
@@ -32,12 +33,6 @@ from jwql.utils.utils import filename_parser
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
-
-# Determine if the code is being run as part of a github action or Readthedocs build
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # These lines are needed in order to use the Django models in a standalone
