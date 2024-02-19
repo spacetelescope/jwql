@@ -800,6 +800,15 @@ class GeneralDashboard:
 
             # Sum columns to generate the bokeh panel
             summed_anomaly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
-            figures.append(self.make_panel(summed_anomaly_columns.index.values, summed_anomaly_columns['counts'], instrument, title, 'Anomaly Type'))
+
+            # Create plot of zeroes if empty (lookin at you FGS)
+            if len(summed_anomaly_columns.index.values):
+                plot_columns = summed_anomaly_columns.index.values
+                summed_values = summed_anomaly_columns['counts']
+            else:
+                plot_columns = list(summed_anomaly_columns.index.values.base)
+                summed_values = np.zeros(len(plot_columns))
+
+            figures.append(self.make_panel(plot_columns, summed_values, instrument, title, 'Anomaly Type'))
         tabs = Tabs(tabs=figures)
         return tabs
