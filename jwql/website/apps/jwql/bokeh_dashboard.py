@@ -227,7 +227,7 @@ class GeneralDashboard:
             plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_dash='dashed', line_color='#C85108', line_width=3)
             plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', size=10)
             plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
-            plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
+            plots[data['shortname']].circle(x='date', y='used', source=source, color='#355C7D', size=10)
 
             plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
                                                                              days="%d %B %Y",
@@ -250,9 +250,8 @@ class GeneralDashboard:
         di.session.close()
         return tabs
 
-
     def dashboard_central_store_data_volume(self):
-        """Create trending plot of data volume for various JWQL-related areas on disk.
+        """ Create trending plot of data volume for various JWQL-related areas on disk.
         These plots show data volumes calculated by walking over subdirectories/files in
         the JWQL-specific directories. So these plots may not include the total used
         disk volume, in the cases where JWQL is sharing a disk with other projects. These
@@ -272,7 +271,7 @@ class GeneralDashboard:
                       y_axis_label='Disk Space (TB)')
 
         # This part of the plot should cycle through areas and plot area used values vs. date
-        #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+        # arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
         arealist = ['logs', 'outputs', 'preview_images', 'thumbnails']
         colors = ['#F8B195', '#F67280', '#6C5B7B', '#355C7D']
         for area, color in zip(arealist, colors):
@@ -349,7 +348,6 @@ class GeneralDashboard:
 
         di.session.close()
         return plot, cen_store_plot
-
 
     def dashboard_filetype_bar_chart(self):
         """Build bar chart of files based off of type
@@ -645,8 +643,8 @@ class GeneralDashboard:
                 lw_data['angle'] = lw_data['value'] / lw_data['value'].sum() * 2 * np.pi
 
                 # Zoomed in version of the small contributors
-                sw_small = sw_data.loc[sw_data['value'] <0.5].copy()
-                lw_small = lw_data.loc[lw_data['value'] <0.5].copy()
+                sw_small = sw_data.loc[sw_data['value'] < 0.5].copy()
+                lw_small = lw_data.loc[lw_data['value'] < 0.5].copy()
                 sw_small['angle'] = sw_small['value'] / sw_small['value'].sum() * 2 * np.pi
                 lw_small['angle'] = lw_small['value'] / lw_small['value'].sum() * 2 * np.pi
                 sw_small['colors'] = ['#bec4d4'] * len(sw_small)
@@ -736,7 +734,6 @@ class GeneralDashboard:
                 show(p)
                 """
 
-
                 # Create pie charts for SW/LW, the main set of filters, and those that aren't used
                 # as much.
                 sw_pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", sw_data)
@@ -773,7 +770,6 @@ class GeneralDashboard:
 
         return tabs
 
-
     def dashboard_anomaly_per_instrument(self):
         """Create figure for number of anamolies for each JWST instrument.
 
@@ -786,7 +782,7 @@ class GeneralDashboard:
         # Set title and figures list to make panels
         title = 'Anomaly Types per Instrument'
         figures = []
-        filter_kwargs={}
+        filter_kwargs = {}
 
         # Make a tab for each instrument
         for instrument in ANOMALY_CHOICES_PER_INSTRUMENT.keys():

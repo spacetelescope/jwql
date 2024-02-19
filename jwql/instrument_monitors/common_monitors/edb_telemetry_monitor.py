@@ -991,14 +991,14 @@ class EdbMnemonicMonitor():
         if dependency["name"] in self.query_results:
 
             # We need the full time to be covered
-            if ((self.query_results[dependency["name"]].requested_start_time <= starttime) and
-              (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+            if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
+            and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
 
                 logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
 
                 # Extract data for the requested time range
-                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime) &
-                                          (self.query_results[dependency["name"]].data["dates"] <= endtime))
+                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime)
+                                        & (self.query_results[dependency["name"]].data["dates"] <= endtime))
                 dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
                                 "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
 
@@ -1139,7 +1139,7 @@ class EdbMnemonicMonitor():
 
                 # Keep only data that fall at least partially within the plot range
                 if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
-                  | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
+                | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     times.extend(row.time)
                     values.extend(row.mnemonic_value)
                     medians.append(row.median)
@@ -1147,7 +1147,7 @@ class EdbMnemonicMonitor():
                     hist[row.dependency_value] = (times, values, medians, devs)
             else:
                 if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
-                  | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
+                | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     hist[row.dependency_value] = (row.time, row.mnemonic_value, row.median, row.stdev)
 
         return hist

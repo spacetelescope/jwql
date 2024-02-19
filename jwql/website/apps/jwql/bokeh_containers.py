@@ -401,7 +401,7 @@ def standard_monitor_plot_layout(instrument, plots):
     elif instrument.lower() == 'niriss':
         full_frame_lists = [
             [plots['NIS_CEN']]
-            ]
+        ]
     elif instrument.lower() == 'miri':
         full_frame_lists = [
             [plots['MIRIM_FULL']]

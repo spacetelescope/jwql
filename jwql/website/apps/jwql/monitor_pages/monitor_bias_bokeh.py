@@ -132,10 +132,10 @@ class BiasMonitorData():
         aperture : str
             Aperture name (e.g. NRCA1_FULL)
         """
-        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created")) \
-        .group_by(self.stats_table.aperture)
-        .subquery()
-        )
+        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created"))
+                       .group_by(self.stats_table.aperture)
+                       .subquery()
+               )
 
         query = (session.query(self.stats_table.aperture,
                                self.stats_table.uncal_filename,
@@ -147,10 +147,10 @@ class BiasMonitorData():
                                self.stats_table.counts,
                                self.stats_table.bin_centers,
                                self.stats_table.entry_date)
-                     .filter(self.stats_table.aperture == aperture)
-                     .order_by(self.stats_table.entry_date) \
-                     .join(subq, self.stats_table.expstart == subq.c.max_created)
-                     )
+                        .filter(self.stats_table.aperture == aperture)
+                        .order_by(self.stats_table.entry_date) \
+                        .join(subq, self.stats_table.expstart == subq.c.max_created)
+                )
 
         latest_data = query.all()
         session.close()
@@ -166,7 +166,6 @@ class BiasMonitorData():
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
         datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart_str']]
         self.latest_data['expstart'] = datetimes
-
 
 
 class BiasMonitorPlots():
@@ -416,7 +415,6 @@ class HistogramPlot():
             self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
 
 
-
 class MedianRowColPlot():
     """Class to create a plot of the median signal across rows
     or columns
@@ -509,7 +507,6 @@ class MedianRowColPlot():
         return plot
 
 
-
 class TrendingPlot():
     """Class to create trending plots of bias level over time. There should be
     4 plots produced: 1 for each amplifier (with even and odd columns plotted in each).
@@ -586,7 +583,7 @@ class TrendingPlot():
                                              ('Date:', '@expstart_str')
                                              ]
                                    )
-            #hover_tool.formatters = {'@expstart': 'datetime'}
+            # hover_tool.formatters = {'@expstart': 'datetime'}
             plot.tools.append(hover_tool)
             plot.xaxis.axis_label = x_label
             plot.yaxis.axis_label = y_label
