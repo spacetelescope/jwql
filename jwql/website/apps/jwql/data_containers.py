@@ -376,8 +376,8 @@ def get_additional_exposure_info(root_file_infos, image_info):
 
     Parameters
     ----------
-    root_file_infos : jwql.models.RootFileInfo or django.db.models.query.QuerySet
-        RootFileInfo for a particular file base name, or a list of RootFileInfos for
+    root_file_infos : jwql.website.apps.jwql.models.RootFileInfo or django.db.models.query.QuerySet
+        RootFileInfo for a particular file base name, or a QuerySet of RootFileInfos for
         an exposure base name.
 
     image_info : : dict
@@ -404,12 +404,11 @@ def get_additional_exposure_info(root_file_infos, image_info):
         filter_value = '/'.join(set([e.filter for e in root_file_infos]))
         pupil_value = '/'.join(set([e.pupil for e in root_file_infos]))
         grating_value = '/'.join(set([e.grating for e in root_file_infos]))
-    else:
+    elif isinstance(root_file_infos, RootFileInfo):
         root_file_info = root_file_infos
         filter_value = root_file_info.filter
         pupil_value = root_file_info.pupil
         grating_value = root_file_info.grating
-
 
     # Initialize dictionary of file info to show at the top of the page, along
     # with another for info that will be in the collapsible text box.
@@ -437,8 +436,8 @@ def get_additional_exposure_info(root_file_infos, image_info):
                            'CRDS context': 'N/A',
                            'PA_V3': 'N/A',
                            'EXPSTART': root_file_info.expstart
-                            }
-    else:
+                           }
+    elif isinstance(root_file_infos, RootFileInfo):
         additional_info = {'READPATT': root_file_info.read_patt,
                            'TITLE': 'N/A',
                            'NGROUPS': 'N/A',
@@ -452,7 +451,7 @@ def get_additional_exposure_info(root_file_infos, image_info):
                            'CRDS context': 'N/A',
                            'ROLL_REF': 'N/A',
                            'EXPSTART': root_file_info.expstart
-                            }
+                           }
 
     # Deal with instrument-specific parameters
     if root_file_info.instrument == 'NIRSpec':
@@ -493,7 +492,7 @@ def get_additional_exposure_info(root_file_infos, image_info):
             additional_info['TARG_RA'] = header['TARG_RA']
             additional_info['TARG_DEC'] = header['TARG_DEC']
             additional_info['PA_V3'] = header_sci['PA_V3']
-        else:
+        elif isinstance(root_file_infos, RootFileInfo):
             additional_info['RA_REF'] = header_sci['RA_REF']
             additional_info['DEC_REF'] = header_sci['DEC_REF']
             additional_info['ROLL_REF'] = header_sci['ROLL_REF']
