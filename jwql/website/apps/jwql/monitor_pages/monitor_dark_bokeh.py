@@ -174,7 +174,7 @@ class DarkHistPlot():
                                        fill_color=color, line_color="white", alpha=0.25, legend_label=f'Amp {amp}')
 
             # Set ranges
-            self.plot.extra_y_ranges = {"cdf_line": Range1d(0,1)}
+            self.plot.extra_y_ranges = {"cdf_line": Range1d(0, 1)}
             self.plot.add_layout(LinearAxis(y_range_name='cdf_line', axis_label="Cumulative Distribution"), "right")
 
             # Add cumulative distribution function
@@ -193,7 +193,7 @@ class DarkHistPlot():
             self.plot.x_range.end = mainx[disp_index[-1]]
             self.plot.legend.location = "top_left"
             self.plot.legend.background_fill_color = "#fefefe"
-            self.plot.grid.grid_line_color="white"
+            self.plot.grid.grid_line_color = "white"
         else:
             # If self.data is empty, then make a placeholder plot
             title_str = f'{self.aperture}: Dark Rate Histogram'
@@ -541,8 +541,8 @@ class DarkMonitorPlots():
         self.hist_data = {}
         if len(self._entry_dates) > 0:
             # Find the index of the most recent entry
-            #self._aperture_entries = np.where((self._apertures == aperture))[0]
-            latest_date = np.max(self._entry_dates) #[self._aperture_entries])
+            # self._aperture_entries = np.where((self._apertures == aperture))[0]
+            latest_date = np.max(self._entry_dates)  # [self._aperture_entries])
 
             # Get indexes of entries for all amps that were added in the
             # most recent run of the monitor for the aperture. All entries
@@ -579,7 +579,7 @@ class DarkMonitorPlots():
         """Create arrays from some of the stats database columns that are
         used by multiple plot types
         """
-        #apertures = np.array([e.aperture for e in self.db.stats_data])
+        # apertures = np.array([e.aperture for e in self.db.stats_data])
         self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])
         self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])
         self._mean = np.array([e.mean for e in self.db.stats_data])
@@ -682,7 +682,7 @@ class DarkTrendPlot():
                                                 error_upper=error_upper,
                                                 time=self.obstime[use_amp]
                                                 )
-                                    )
+                                     )
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
 
@@ -710,12 +710,12 @@ class DarkTrendPlot():
                                           legend_label=f'Amp {amp}')
 
             # Make the x axis tick labels look nice
-            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                              seconds=["%d %b %H:%M:%S.%3N"],
-                                                              hours=["%d %b %H:%M"],
-                                                              days=["%d %b %H:%M"],
-                                                              months=["%d %b %Y %H:%M"],
-                                                              years=["%d %b %Y"]
+            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                              seconds="%d %b %H:%M:%S.%3N",
+                                                              hours="%d %b %H:%M",
+                                                              days="%d %b %H:%M",
+                                                              months="%d %b %Y %H:%M",
+                                                              years="%d %b %Y"
                                                               )
             self.plot.xaxis.major_label_orientation = np.pi / 4
 
@@ -740,7 +740,7 @@ class DarkTrendPlot():
             self.plot.y_range.end = max_val * 1.05
             self.plot.legend.location = "top_right"
             self.plot.legend.background_fill_color = "#fefefe"
-            self.plot.grid.grid_line_color="white"
+            self.plot.grid.grid_line_color = "white"
         else:
             # If there are no data, make a placeholder plot
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
@@ -751,7 +751,7 @@ class DarkTrendPlot():
             self.plot.y_range.end = 1
 
             source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value': '20px'})
             self.plot.add_glyph(source, glyph)
 
         self.plot.xaxis.axis_label = 'Date'

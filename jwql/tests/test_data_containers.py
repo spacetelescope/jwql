@@ -285,7 +285,7 @@ def test_get_anomaly_form_post_group(mocker):
     assert update_mock.call_count == 2
 """
 
-
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_dashboard_components():
     request = MockPostRequest()
 

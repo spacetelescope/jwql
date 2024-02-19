@@ -28,7 +28,7 @@ from astropy.stats import sigma_clip
 from bokeh.embed import components, file_html
 from bokeh.layouts import layout
 from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
-from bokeh.models import Tabs, TabPanel
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
 from datetime import datetime, timedelta
@@ -132,10 +132,10 @@ class BiasMonitorData():
         aperture : str
             Aperture name (e.g. NRCA1_FULL)
         """
-        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created")) \
-        .group_by(self.stats_table.aperture)
-        .subquery()
-        )
+        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created"))
+                       .group_by(self.stats_table.aperture)
+                       .subquery()
+               )
 
         query = (session.query(self.stats_table.aperture,
                                self.stats_table.uncal_filename,
@@ -147,10 +147,10 @@ class BiasMonitorData():
                                self.stats_table.counts,
                                self.stats_table.bin_centers,
                                self.stats_table.entry_date)
-                     .filter(self.stats_table.aperture == aperture)
-                     .order_by(self.stats_table.entry_date) \
-                     .join(subq, self.stats_table.expstart == subq.c.max_created)
-                     )
+                        .filter(self.stats_table.aperture == aperture)
+                        .order_by(self.stats_table.entry_date) \
+                        .join(subq, self.stats_table.expstart == subq.c.max_created)
+                )
 
         latest_data = query.all()
         session.close()
@@ -166,7 +166,6 @@ class BiasMonitorData():
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
         datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart_str']]
         self.latest_data['expstart'] = datetimes
-
 
 
 class BiasMonitorPlots():
@@ -416,7 +415,6 @@ class HistogramPlot():
             self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
 
 
-
 class MedianRowColPlot():
     """Class to create a plot of the median signal across rows
     or columns
@@ -509,7 +507,6 @@ class MedianRowColPlot():
         return plot
 
 
-
 class TrendingPlot():
     """Class to create trending plots of bias level over time. There should be
     4 plots produced: 1 for each amplifier (with even and odd columns plotted in each).
@@ -565,12 +562,12 @@ class TrendingPlot():
                          alpha=0.75, source=source, legend_label='Odd cols')
 
             # Make the x axis tick labels look nice
-            plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                         seconds=["%d %b %H:%M:%S.%3N"],
-                                                         hours=["%d %b %H:%M"],
-                                                         days=["%d %b %H:%M"],
-                                                         months=["%d %b %Y %H:%M"],
-                                                         years=["%d %b %Y"]
+            plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                         seconds="%d %b %H:%M:%S.%3N",
+                                                         hours="%d %b %H:%M",
+                                                         days="%d %b %H:%M",
+                                                         months="%d %b %Y %H:%M",
+                                                         years="%d %b %Y"
                                                          )
             plot.xaxis.major_label_orientation = np.pi / 4
 
@@ -586,7 +583,7 @@ class TrendingPlot():
                                              ('Date:', '@expstart_str')
                                              ]
                                    )
-            #hover_tool.formatters = {'@expstart': 'datetime'}
+            # hover_tool.formatters = {'@expstart': 'datetime'}
             plot.tools.append(hover_tool)
             plot.xaxis.axis_label = x_label
             plot.yaxis.axis_label = y_label
