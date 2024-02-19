@@ -433,13 +433,12 @@ def dashboard(request):
     filetype_bar = db.dashboard_filetype_bar_chart()
     table_columns, table_values = db.dashboard_monitor_tracking()
     grating_plot = db.dashboard_exposure_count_by_filter()
- #   anomaly_plot = db.dashboard_anomaly_per_instrument()  TODO - Redefine dashboard_anomaly_per_instrument to access new table format
+    anomaly_plot = db.dashboard_anomaly_per_instrument()
 
     plot = layout([[files_graph, useage_graph],
                    [directories_usage_graph, central_store_usage_graph],
                    [pie_graph, filetype_bar],
-                   # [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
-                   [grating_plot]], sizing_mode='stretch_width')
+                   [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
     script, div = components(plot)
 
     time_deltas = ['All Time', '1 Day', '1 Week', '1 Month', '1 Year']

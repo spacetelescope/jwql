@@ -49,6 +49,7 @@ from jwql.database.database_interface import CentralStore
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
+from jwql.website.apps.jwql.models import Anomalies
 
 
 def build_table_latest_entry(tablename):
@@ -785,48 +786,21 @@ class GeneralDashboard:
         # Set title and figures list to make panels
         title = 'Anomaly Types per Instrument'
         figures = []
+        filter_kwargs={}
 
-        # make list of rootfile infos for each instrument
-
-
-        # for each instrument list, make table of all of the anomalies
-
-        # For unique instrument values, loop through data
-        # Find all entries for instrument/filetype combo
-        # Make figure and append it to list.
+        # Make a tab for each instrument
         for instrument in ANOMALY_CHOICES_PER_INSTRUMENT.keys():
-            data = build_table('jwql_anomalies')
+            # only show data for currently marked anomalies and current instrument
+            filter_kwargs['root_file_info__instrument__iexact'] = instrument
+            queryset = Anomalies.objects.filter(**filter_kwargs)
+
+            # Convert the queryset to a Pandas DataFrame using only relevant columns
+            labels = [anomaly_keys for anomaly_keys, values in ANOMALY_CHOICES_PER_INSTRUMENT[instrument]]
+            data = pd.DataFrame.from_records(queryset.values(), columns=labels)
+
+            # Sum columns to generate the bokeh panel
             summed_anomaly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
             figures.append(self.make_panel(summed_anomaly_columns.index.values, summed_anomaly_columns['counts'], instrument, title, 'Anomaly Type'))
-
-        tabs = Tabs(tabs=figures)
-
-        return tabs
-
-
-        """Build bar chart of files based off of type
-
-        Returns
-        -------
-        tabs : bokeh.models.widgets.widget.Widget
-            A figure with tabs for each instrument.
-        """
-
-        # Make Pandas DF for filesystem_instrument
-        # If time delta exists, filter data based on that.
-        data = build_table('filesystem_instrument')
-
-        # Set title and figures list to make panels
-        figures = []
-
-        # For unique instrument values, loop through data
-        # Find all entries for instrument/filetype combo
-        # Make figure and append it to list.
-        for instrument in data.instrument.unique():
-            index = data["instrument"] == instrument
-            inst_only = data[index].sort_values('filetype')
-            title = f'{JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]} files per Filetype: {date_string}'
-            figures.append(self.make_panel(inst_only['filetype'], inst_only['count'], instrument, title, 'File Type'))
 
         tabs = Tabs(tabs=figures)
 
