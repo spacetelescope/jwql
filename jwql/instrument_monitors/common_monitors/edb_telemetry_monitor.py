@@ -381,7 +381,7 @@ import astropy.units as u
 from bokeh.embed import components, json_item
 from bokeh.layouts import gridplot
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
-from bokeh.models import Tabs, TabPanel
+from bokeh.models.layouts import Tabs
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
 from jwql.database import database_interface
@@ -991,14 +991,14 @@ class EdbMnemonicMonitor():
         if dependency["name"] in self.query_results:
 
             # We need the full time to be covered
-            if ((self.query_results[dependency["name"]].requested_start_time <= starttime) and
-              (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+            if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
+            and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
 
                 logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
 
                 # Extract data for the requested time range
-                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime) &
-                                          (self.query_results[dependency["name"]].data["dates"] <= endtime))
+                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime)
+                                        & (self.query_results[dependency["name"]].data["dates"] <= endtime))
                 dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
                                 "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
 
@@ -1138,16 +1138,16 @@ class EdbMnemonicMonitor():
                     devs = []
 
                 # Keep only data that fall at least partially within the plot range
-                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) 
-                  | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
+                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
+                | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     times.extend(row.time)
                     values.extend(row.mnemonic_value)
                     medians.append(row.median)
                     devs.append(row.stdev)
                     hist[row.dependency_value] = (times, values, medians, devs)
             else:
-                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end)) 
-                  | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
+                if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
+                | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
                     hist[row.dependency_value] = (row.time, row.mnemonic_value, row.median, row.stdev)
 
         return hist
@@ -2143,12 +2143,12 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
     # Make the x axis tick labels look nice
-    fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                seconds=["%d %b %H:%M:%S.%3N"],
-                                                hours=["%d %b %H:%M"],
-                                                days=["%d %b %H:%M"],
-                                                months=["%d %b %Y %H:%M"],
-                                                years=["%d %b %Y"]
+    fig.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                seconds="%d %b %H:%M:%S.%3N",
+                                                hours="%d %b %H:%M",
+                                                days="%d %b %H:%M",
+                                                months="%d %b %Y %H:%M",
+                                                years="%d %b %Y"
                                                 )
     fig.xaxis.major_label_orientation = np.pi / 4
 
