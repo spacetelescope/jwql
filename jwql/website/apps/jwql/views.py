@@ -69,6 +69,7 @@ from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unform
 
 from .data_containers import build_table
 from .data_containers import get_acknowledgements
+from .data_containers import get_additional_exposure_info
 from .data_containers import get_available_suffixes
 from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
@@ -1172,6 +1173,13 @@ def view_exposure(request, inst, group_root):
     root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
     viewed = all([rf.viewed for rf in root_file_info])
 
+    # Convert expstart from MJD to a date
+    expstart_str = Time(root_file_info[0].expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
+
+    # Create one dict of info to show at the top of the page, and another dict of info
+    # to show in the collapsible text box.
+    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+
     # Build the context
     context = {'base_url': get_base_url(),
                'group_root_list': group_root_list,
@@ -1185,7 +1193,10 @@ def view_exposure(request, inst, group_root):
                'total_ints': image_info['total_ints'],
                'detectors': sorted(image_info['detectors']),
                'form': form,
-               'marked_viewed': viewed}
+               'marked_viewed': viewed,
+               'expstart_str': expstart_str,
+               'basic_info': basic_info,
+               'additional_info': additional_info}
 
     return render(request, template, context)
 
@@ -1264,78 +1275,9 @@ def view_image(request, inst, file_root):
     # Convert expstart from MJD to a date
     expstart_str = Time(root_file_info.expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
 
-    # Reduce the precision of the MJD start time to make it easier to display
-    root_file_info.expstart = "%.5f" % round(root_file_info.expstart, 5)
-
-    # Get headers from the file so we can pass along info that is common to all
-    # suffixes. The order of possible_suffixes_to_use is itentional, because the
-    # uncal file will not have info on the pipeline version used.
-    possible_suffixes_to_use = np.array(['rate', 'rateints', 'cal', 'calints', 'uncal'])
-    existing_suffixes = np.array([suffix in image_info['suffixes'] for suffix in possible_suffixes_to_use])
-
-    # Initialize dictionary of file info to show at the top of the page, along
-    # with another for info that will be in the collapsible text box.
-    basic_info = {'exp_type': root_file_info.exp_type,
-                  'category': 'N/A',
-                  'visit_status': 'N/A',
-                  'subarray': root_file_info.subarray,
-                  'filter': root_file_info.filter,
-                  'pupil': root_file_info.pupil,
-                  'grating': root_file_info.grating
-                  }
-
-    additional_info = {'READPATT': root_file_info.read_patt,
-                       'TITLE': 'N/A',
-                       'NGROUPS': 'N/A',
-                       'PI_NAME': 'N/A',
-                       'NINTS': 'N/A',
-                       'TARGNAME': 'N/A',
-                       'EXPTIME': 'N/A',
-                       'RA': 'N/A',
-                       'CAL_VER': 'N/A',
-                       'DEC': 'N/A',
-                       'CRDS context': 'N/A',
-                       'PA_V3': 'N/A',
-                       'EXPSTART': root_file_info.expstart
-                        }
-
-    # Deal with instrument-specific parameters
-    for key in ['grating', 'pupil']:
-        if basic_info[key] == '':
-            basic_info[key] = 'N/A'
-
-    # If any of the desired files are present, get the headers and populate the header
-    # info dictionary
-    if any(existing_suffixes):
-        suffix = possible_suffixes_to_use[existing_suffixes][0]
-        filename = f'{root_file_info.root_name}_{suffix}.fits'
-
-        # get_image_info() has already globbed over the directory with the files and
-        # returned the list of existing suffixes, so we shouldn't need to check for
-        # file existence here.
-        file_path = filesystem_path(filename, check_existence=True)
-
-        header = fits.getheader(file_path)
-        header_sci = fits.getheader(file_path, 1)
-
-        basic_info['category'] = header['CATEGORY']
-        basic_info['visit_status'] = header['VISITSTA']
-        additional_info['NGROUPS'] = header['NGROUPS']
-        additional_info['NINTS'] = header['NINTS']
-        additional_info['EXPTIME'] = header['EFFEXPTM']
-        additional_info['TITLE'] = header['TITLE']
-        additional_info['PI_NAME'] = header['PI_NAME']
-        additional_info['TARGNAME'] = header['TARGPROP']
-        additional_info['RA'] = header_sci['RA_REF']
-        additional_info['DEC'] = header_sci['DEC_REF']
-        additional_info['PA_V3'] = header_sci['ROLL_REF']
-        additional_info['CAL_VER'] = 'N/A'
-        additional_info['CRDS context'] = 'N/A'
-
-        # Pipeline version and CRDS context info are not in uncal files
-        if suffix != 'uncal':
-            additional_info['CAL_VER'] = header['CAL_VER']
-            additional_info['CRDS context'] = header['CRDS_CTX']
+    # Create one dict of info to show at the top of the page, and another dict of info
+    # to show in the collapsible text box.
+    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
 
     # Build the context
     context = {'base_url': get_base_url(),
@@ -1352,7 +1294,6 @@ def view_image(request, inst, file_root):
                'marked_viewed': root_file_info.viewed,
                'expstart_str': expstart_str,
                'basic_info': basic_info,
-               'additional_info': additional_info}#,
-               #'header_info': []}#common_header_info}
+               'additional_info': additional_info}
 
     return render(request, template, context)
