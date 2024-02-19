@@ -58,7 +58,8 @@ import astropy.units as u
 from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.layouts import column
-from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
+from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool
+from bokeh.models import Range1d
 from bokeh.plotting import figure, output_file, show, save
 import numpy as np
 
