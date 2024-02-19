@@ -24,7 +24,7 @@ import pytest
 import numpy as np
 
 from jwql.instrument_monitors import pipeline_tools
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import get_config
 
 

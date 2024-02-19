@@ -22,7 +22,7 @@ import os
 from astroquery.mast import Mast
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils import mast_utils as mu
 from jwql.utils.utils import get_config
 

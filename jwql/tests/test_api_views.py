@@ -30,7 +30,6 @@ import pytest
 from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import ON_GITHUB_ACTIONS
-from jwql.utils.constants import ON_READTHEDOCS
 
 
 urls = []

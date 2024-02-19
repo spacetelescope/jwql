@@ -28,7 +28,7 @@ from bokeh.plotting import figure
 
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors.wata_monitor import WATA
 from jwql.database.database_interface import NIRSpecTAQueryHistory
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import get_config, ensure_dir_exists
 from jwql.utils import monitor_utils, permissions
 

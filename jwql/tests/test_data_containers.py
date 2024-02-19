@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 

@@ -23,7 +23,7 @@ import pytest
 import numpy as np
 
 from jwql.utils import instrument_properties
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config

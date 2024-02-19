@@ -25,7 +25,7 @@ import shutil
 
 from jwql.utils import logging_functions
 from jwql.utils.logging_functions import configure_logging, log_fail, log_info, make_log_file
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import get_config
 
 

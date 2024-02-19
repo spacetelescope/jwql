@@ -33,11 +33,6 @@ from jwql.utils.preview_image import PreviewImage, crop_to_subarray
 from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config, ensure_dir_exists
 
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
-
 
 def test_crop_to_subarray():
     """Test that the code correctly crops larger arrays down to

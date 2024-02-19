@@ -21,7 +21,7 @@ import os
 from jwql.utils import protect_module as pm
 
 from pytest import fixture, mark
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.protect_module import lock_module, _PID_LOCKFILE_KEY
 
 

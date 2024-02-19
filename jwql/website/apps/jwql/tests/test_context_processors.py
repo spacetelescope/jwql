@@ -24,7 +24,7 @@ from django.test.client import Client
 import os
 from unittest import skipIf
 
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 if not ON_GITHUB_ACTIONS:
     from jwql.website.apps.jwql import context_processors

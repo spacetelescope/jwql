@@ -32,7 +32,7 @@ from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpe
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 from jwql.tests.resources import has_test_db
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def test_bad_map_to_list():

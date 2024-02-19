@@ -28,7 +28,7 @@ import numpy as np
 import pytest
 
 from jwql.edb import engineering_database as ed
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def test_add():

@@ -37,7 +37,6 @@ from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils as etm_utils
 from jwql.tests.resources import has_test_db
 from jwql.utils.constants import MIRI_POS_RATIO_VALUES
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 
 def test_add_every_change_history():

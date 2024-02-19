@@ -29,7 +29,7 @@ from sqlalchemy import inspect
 from jwql.database import database_interface as di
 from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')

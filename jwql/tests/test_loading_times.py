@@ -25,7 +25,7 @@ import time
 import urllib.request
 
 from jwql.utils.constants import MONITORS
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import get_base_url
 
 TIME_CONSTRAINT = 30  # seconds

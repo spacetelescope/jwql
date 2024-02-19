@@ -722,6 +722,12 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = [
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg"]
 
+# Determine if the code is being run as part of CI checking on github
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = os.environ.get('READTHEDOCS', False)
+
 # Base name for the file listing the preview images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 PREVIEW_IMAGE_LISTFILE = "preview_image_inventory"
@@ -942,6 +948,15 @@ THUMBNAIL_LISTFILE = "thumbnail_inventory"
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ["phot", "whtlt"]
 
+# Instrument Documentation Links
+URL_DICT = {
+    "fgs": "https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor",
+    "miri": "https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument",
+    "niriss": "https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph",
+    "nirspec": "https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph",
+    "nircam": "https://jwst-docs.stsci.edu/jwst-near-infrared-camera",
+}
+
 # Possible suffix types for WFS&C files
 WFSC_SUFFIX_TYPES = ["wfscmb"]
 
@@ -955,20 +970,3 @@ FILE_SUFFIX_TYPES = (
     + WFSC_SUFFIX_TYPES
     + MSA_SUFFIX
 )
-
-# Instrument Documentation Links
-URL_DICT = {
-    "fgs": "https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor",
-    "miri": "https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument",
-    "niriss": "https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph",
-    "nirspec": "https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph",
-    "nircam": "https://jwst-docs.stsci.edu/jwst-near-infrared-camera",
-}
-
-# Determine if the code is being run as part of CI checking on github
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']

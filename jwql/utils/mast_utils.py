@@ -24,7 +24,7 @@ from bokeh.io import save, output_file
 import pandas as pd
 
 from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MAST_QUERY_LIMIT
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, get_config
 from jwql.utils.plotting import bar_chart

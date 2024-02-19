@@ -26,7 +26,7 @@ import pytest
 from jwql.instrument_monitors.common_monitors.cosmic_ray_monitor import CosmicRay
 from jwql.database.database_interface import MIRICosmicRayQueryHistory
 from jwql.utils.utils import get_config
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def define_test_data(nints):
