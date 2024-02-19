@@ -40,14 +40,11 @@ import pandas as pd
 from photutils.segmentation import detect_sources, detect_threshold
 from scipy.ndimage import binary_dilation
 
-# astroquery.mast import that depends on value of auth_mast
-# this import has to be made before any other import of astroquery.mast
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
+from jwql.utils import monitor_utils
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+from jwst_backgrounds import jbt
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
@@ -58,11 +55,6 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Import * is okay here because this module specifically only contains database models
     # for this monitor
     from jwql.website.apps.jwql.monitor_models.claw import *  # noqa: E402 (module level import not at top of file)
-
-from jwql.utils import monitor_utils
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
-from jwst_backgrounds import jbt
 
 matplotlib.use('Agg')
 warnings.filterwarnings('ignore', message="nan_treatment='interpolate', however, NaN values detected post convolution*")
