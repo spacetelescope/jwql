@@ -163,6 +163,7 @@ def test_get_possible_apertures(instrument, expected_list):
     assert ap_list == expected_list
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_identify_tables():
     """Be sure the correct database tables are identified
     """

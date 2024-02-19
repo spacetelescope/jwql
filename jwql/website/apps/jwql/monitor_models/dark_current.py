@@ -27,9 +27,10 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
-class FgsDarkDarkCurrent(models.Model):
+class FGSDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -40,20 +41,20 @@ class FgsDarkDarkCurrent(models.Model):
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    gauss_amplitude = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_peak = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_width = models.TextField(blank=True, null=True)  # This field type is a guess.
+    gauss_amplitude = ArrayField(models.FloatField())
+    gauss_peak = ArrayField(models.FloatField())
+    gauss_width = ArrayField(models.FloatField())
     gauss_chisq = models.FloatField(blank=True, null=True)
-    double_gauss_amplitude1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_amplitude2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width2 = models.TextField(blank=True, null=True)  # This field type is a guess.
+    double_gauss_amplitude1 = ArrayField(models.FloatField())
+    double_gauss_peak1 = ArrayField(models.FloatField())
+    double_gauss_width1 = ArrayField(models.FloatField())
+    double_gauss_amplitude2 = ArrayField(models.FloatField())
+    double_gauss_peak2 = ArrayField(models.FloatField())
+    double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
     mean_dark_image_file = models.CharField(blank=True, null=True)
-    hist_dark_values = models.TextField(blank=True, null=True)  # This field type is a guess.
-    hist_amplitudes = models.TextField(blank=True, null=True)  # This field type is a guess.
+    hist_dark_values = ArrayField(models.FloatField())
+    hist_amplitudes = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -62,11 +63,11 @@ class FgsDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class FgsDarkPixelStats(models.Model):
+class FGSDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -82,7 +83,7 @@ class FgsDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsDarkQueryHistory(models.Model):
+class FGSDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -99,7 +100,7 @@ class FgsDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriDarkDarkCurrent(models.Model):
+class MIRIDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -110,20 +111,20 @@ class MiriDarkDarkCurrent(models.Model):
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    gauss_amplitude = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_peak = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_width = models.TextField(blank=True, null=True)  # This field type is a guess.
+    gauss_amplitude = ArrayField(models.FloatField())
+    gauss_peak = ArrayField(models.FloatField())
+    gauss_width = ArrayField(models.FloatField())
     gauss_chisq = models.FloatField(blank=True, null=True)
-    double_gauss_amplitude1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_amplitude2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width2 = models.TextField(blank=True, null=True)  # This field type is a guess.
+    double_gauss_amplitude1 = ArrayField(models.FloatField())
+    double_gauss_peak1 = ArrayField(models.FloatField())
+    double_gauss_width1 = ArrayField(models.FloatField())
+    double_gauss_amplitude2 = ArrayField(models.FloatField())
+    double_gauss_peak2 = ArrayField(models.FloatField())
+    double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
     mean_dark_image_file = models.CharField(blank=True, null=True)
-    hist_dark_values = models.TextField(blank=True, null=True)  # This field type is a guess.
-    hist_amplitudes = models.TextField(blank=True, null=True)  # This field type is a guess.
+    hist_dark_values = ArrayField(models.FloatField())
+    hist_amplitudes = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -132,11 +133,11 @@ class MiriDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class MiriDarkPixelStats(models.Model):
+class MIRIDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -152,7 +153,7 @@ class MiriDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriDarkQueryHistory(models.Model):
+class MIRIDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -169,7 +170,7 @@ class MiriDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamDarkDarkCurrent(models.Model):
+class NIRCamDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -180,20 +181,20 @@ class NircamDarkDarkCurrent(models.Model):
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    gauss_amplitude = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_peak = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_width = models.TextField(blank=True, null=True)  # This field type is a guess.
+    gauss_amplitude = ArrayField(models.FloatField())
+    gauss_peak = ArrayField(models.FloatField())
+    gauss_width = ArrayField(models.FloatField())
     gauss_chisq = models.FloatField(blank=True, null=True)
-    double_gauss_amplitude1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_amplitude2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width2 = models.TextField(blank=True, null=True)  # This field type is a guess.
+    double_gauss_amplitude1 = ArrayField(models.FloatField())
+    double_gauss_peak1 = ArrayField(models.FloatField())
+    double_gauss_width1 = ArrayField(models.FloatField())
+    double_gauss_amplitude2 = ArrayField(models.FloatField())
+    double_gauss_peak2 = ArrayField(models.FloatField())
+    double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
     mean_dark_image_file = models.CharField(blank=True, null=True)
-    hist_dark_values = models.TextField(blank=True, null=True)  # This field type is a guess.
-    hist_amplitudes = models.TextField(blank=True, null=True)  # This field type is a guess.
+    hist_dark_values = ArrayField(models.FloatField())
+    hist_amplitudes = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -202,11 +203,11 @@ class NircamDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class NircamDarkPixelStats(models.Model):
+class NIRCamDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -222,7 +223,7 @@ class NircamDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamDarkQueryHistory(models.Model):
+class NIRCamDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -239,7 +240,7 @@ class NircamDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissDarkDarkCurrent(models.Model):
+class NIRISSDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -250,20 +251,20 @@ class NirissDarkDarkCurrent(models.Model):
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    gauss_amplitude = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_peak = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_width = models.TextField(blank=True, null=True)  # This field type is a guess.
+    gauss_amplitude = ArrayField(models.FloatField())
+    gauss_peak = ArrayField(models.FloatField())
+    gauss_width = ArrayField(models.FloatField())
     gauss_chisq = models.FloatField(blank=True, null=True)
-    double_gauss_amplitude1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_amplitude2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width2 = models.TextField(blank=True, null=True)  # This field type is a guess.
+    double_gauss_amplitude1 = ArrayField(models.FloatField())
+    double_gauss_peak1 = ArrayField(models.FloatField())
+    double_gauss_width1 = ArrayField(models.FloatField())
+    double_gauss_amplitude2 = ArrayField(models.FloatField())
+    double_gauss_peak2 = ArrayField(models.FloatField())
+    double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
     mean_dark_image_file = models.CharField(blank=True, null=True)
-    hist_dark_values = models.TextField(blank=True, null=True)  # This field type is a guess.
-    hist_amplitudes = models.TextField(blank=True, null=True)  # This field type is a guess.
+    hist_dark_values = ArrayField(models.FloatField())
+    hist_amplitudes = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -272,11 +273,11 @@ class NirissDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class NirissDarkPixelStats(models.Model):
+class NIRISSDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -292,7 +293,7 @@ class NirissDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissDarkQueryHistory(models.Model):
+class NIRISSDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -309,7 +310,7 @@ class NirissDarkQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecDarkDarkCurrent(models.Model):
+class NIRSpecDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     amplifier = models.CharField(blank=True, null=True)
@@ -320,20 +321,20 @@ class NirspecDarkDarkCurrent(models.Model):
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    gauss_amplitude = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_peak = models.TextField(blank=True, null=True)  # This field type is a guess.
-    gauss_width = models.TextField(blank=True, null=True)  # This field type is a guess.
+    gauss_amplitude = ArrayField(models.FloatField())
+    gauss_peak = ArrayField(models.FloatField())
+    gauss_width = ArrayField(models.FloatField())
     gauss_chisq = models.FloatField(blank=True, null=True)
-    double_gauss_amplitude1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width1 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_amplitude2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_peak2 = models.TextField(blank=True, null=True)  # This field type is a guess.
-    double_gauss_width2 = models.TextField(blank=True, null=True)  # This field type is a guess.
+    double_gauss_amplitude1 = ArrayField(models.FloatField())
+    double_gauss_peak1 = ArrayField(models.FloatField())
+    double_gauss_width1 = ArrayField(models.FloatField())
+    double_gauss_amplitude2 = ArrayField(models.FloatField())
+    double_gauss_peak2 = ArrayField(models.FloatField())
+    double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
     mean_dark_image_file = models.CharField(blank=True, null=True)
-    hist_dark_values = models.TextField(blank=True, null=True)  # This field type is a guess.
-    hist_amplitudes = models.TextField(blank=True, null=True)  # This field type is a guess.
+    hist_dark_values = ArrayField(models.FloatField())
+    hist_amplitudes = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -342,11 +343,11 @@ class NirspecDarkDarkCurrent(models.Model):
         app_label = 'monitors'
 
 
-class NirspecDarkPixelStats(models.Model):
+class NIRSpecDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -362,7 +363,7 @@ class NirspecDarkPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecDarkQueryHistory(models.Model):
+class NIRSpecDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)

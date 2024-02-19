@@ -27,9 +27,10 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
-class FgsBadPixelQueryHistory(models.Model):
+class FGSBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -50,11 +51,11 @@ class FgsBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class FgsBadPixelStats(models.Model):
+class FGSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -69,7 +70,7 @@ class FgsBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriBadPixelQueryHistory(models.Model):
+class MIRIBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -90,11 +91,11 @@ class MiriBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriBadPixelStats(models.Model):
+class MIRIBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -109,7 +110,7 @@ class MiriBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamBadPixelQueryHistory(models.Model):
+class NIRCamBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -130,11 +131,11 @@ class NircamBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamBadPixelStats(models.Model):
+class NIRCamBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -149,7 +150,7 @@ class NircamBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissBadPixelQueryHistory(models.Model):
+class NIRISSBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -170,11 +171,11 @@ class NirissBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissBadPixelStats(models.Model):
+class NIRISSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
@@ -189,7 +190,7 @@ class NirissBadPixelStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecBadPixelQueryHistory(models.Model):
+class NIRSpecBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -210,11 +211,11 @@ class NirspecBadPixelQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecBadPixelStats(models.Model):
+class NIRSpecBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     detector = models.CharField(blank=True, null=True)
-    x_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
-    y_coord = models.TextField(blank=True, null=True)  # This field type is a guess.
+    x_coord = ArrayField(models.IntegerField())
+    y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)

@@ -27,9 +27,10 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
-class FgsCosmicRayQueryHistory(models.Model):
+class FGSCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -45,7 +46,7 @@ class FgsCosmicRayQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class FgsCosmicRayStats(models.Model):
+class FGSCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     source_file = models.CharField(blank=True, null=True)
@@ -63,7 +64,7 @@ class FgsCosmicRayStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriCosmicRayQueryHistory(models.Model):
+class MIRICosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -79,7 +80,7 @@ class MiriCosmicRayQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriCosmicRayStats(models.Model):
+class MIRICosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     source_file = models.CharField(blank=True, null=True)
@@ -97,7 +98,7 @@ class MiriCosmicRayStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamCosmicRayQueryHistory(models.Model):
+class NIRCamCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -113,7 +114,7 @@ class NircamCosmicRayQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamCosmicRayStats(models.Model):
+class NIRCamCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     source_file = models.CharField(blank=True, null=True)
@@ -131,7 +132,7 @@ class NircamCosmicRayStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissCosmicRayQueryHistory(models.Model):
+class NIRISSCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -147,7 +148,7 @@ class NirissCosmicRayQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissCosmicRayStats(models.Model):
+class NIRISSCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     source_file = models.CharField(blank=True, null=True)
@@ -165,7 +166,7 @@ class NirissCosmicRayStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecCosmicRayQueryHistory(models.Model):
+class NIRSpecCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
@@ -181,7 +182,7 @@ class NirspecCosmicRayQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecCosmicRayStats(models.Model):
+class NIRSpecCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
     aperture = models.CharField(blank=True, null=True)
     source_file = models.CharField(blank=True, null=True)

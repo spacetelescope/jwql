@@ -27,9 +27,10 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
-class NircamClawQueryHistory(models.Model):
+class NIRCamClawQueryHistory(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
     instrument = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -43,7 +44,7 @@ class NircamClawQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamClawStats(models.Model):
+class NIRCamClawStats(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
     filename = models.CharField(blank=True, null=True)
     proposal = models.CharField(blank=True, null=True)

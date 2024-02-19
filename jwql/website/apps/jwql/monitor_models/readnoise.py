@@ -27,9 +27,10 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
-class FgsReadnoiseQueryHistory(models.Model):
+class FGSReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -46,7 +47,7 @@ class FgsReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class FgsReadnoiseStats(models.Model):
+class FGSReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -58,30 +59,30 @@ class FgsReadnoiseStats(models.Model):
     readnoise_filename = models.CharField(blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
-    full_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    full_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    full_image_n = ArrayField(models.FloatField())
+    full_image_bin_centers = ArrayField(models.FloatField())
     readnoise_diff_image = models.CharField(blank=True, null=True)
     diff_image_mean = models.FloatField(blank=True, null=True)
     diff_image_stddev = models.FloatField(blank=True, null=True)
-    diff_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    diff_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    diff_image_n = ArrayField(models.FloatField())
+    diff_image_bin_centers = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
     amp1_mean = models.FloatField(blank=True, null=True)
     amp1_stddev = models.FloatField(blank=True, null=True)
-    amp1_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp1_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp1_n = ArrayField(models.FloatField())
+    amp1_bin_centers = ArrayField(models.FloatField())
     amp2_mean = models.FloatField(blank=True, null=True)
     amp2_stddev = models.FloatField(blank=True, null=True)
-    amp2_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp2_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp2_n = ArrayField(models.FloatField())
+    amp2_bin_centers = ArrayField(models.FloatField())
     amp3_mean = models.FloatField(blank=True, null=True)
     amp3_stddev = models.FloatField(blank=True, null=True)
-    amp3_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp3_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp3_n = ArrayField(models.FloatField())
+    amp3_bin_centers = ArrayField(models.FloatField())
     amp4_mean = models.FloatField(blank=True, null=True)
     amp4_stddev = models.FloatField(blank=True, null=True)
-    amp4_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp4_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp4_n = ArrayField(models.FloatField())
+    amp4_bin_centers = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -90,7 +91,7 @@ class FgsReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriReadnoiseQueryHistory(models.Model):
+class MIRIReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -107,7 +108,7 @@ class MiriReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class MiriReadnoiseStats(models.Model):
+class MIRIReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -119,30 +120,30 @@ class MiriReadnoiseStats(models.Model):
     readnoise_filename = models.CharField(blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
-    full_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    full_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    full_image_n = ArrayField(models.FloatField())
+    full_image_bin_centers = ArrayField(models.FloatField())
     readnoise_diff_image = models.CharField(blank=True, null=True)
     diff_image_mean = models.FloatField(blank=True, null=True)
     diff_image_stddev = models.FloatField(blank=True, null=True)
-    diff_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    diff_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    diff_image_n = ArrayField(models.FloatField())
+    diff_image_bin_centers = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
     amp1_mean = models.FloatField(blank=True, null=True)
     amp1_stddev = models.FloatField(blank=True, null=True)
-    amp1_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp1_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp1_n = ArrayField(models.FloatField())
+    amp1_bin_centers = ArrayField(models.FloatField())
     amp2_mean = models.FloatField(blank=True, null=True)
     amp2_stddev = models.FloatField(blank=True, null=True)
-    amp2_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp2_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp2_n = ArrayField(models.FloatField())
+    amp2_bin_centers = ArrayField(models.FloatField())
     amp3_mean = models.FloatField(blank=True, null=True)
     amp3_stddev = models.FloatField(blank=True, null=True)
-    amp3_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp3_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp3_n = ArrayField(models.FloatField())
+    amp3_bin_centers = ArrayField(models.FloatField())
     amp4_mean = models.FloatField(blank=True, null=True)
     amp4_stddev = models.FloatField(blank=True, null=True)
-    amp4_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp4_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp4_n = ArrayField(models.FloatField())
+    amp4_bin_centers = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -151,7 +152,7 @@ class MiriReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamReadnoiseQueryHistory(models.Model):
+class NIRCamReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -168,7 +169,7 @@ class NircamReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NircamReadnoiseStats(models.Model):
+class NIRCamReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -180,30 +181,30 @@ class NircamReadnoiseStats(models.Model):
     readnoise_filename = models.CharField(blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
-    full_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    full_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    full_image_n = ArrayField(models.FloatField())
+    full_image_bin_centers = ArrayField(models.FloatField())
     readnoise_diff_image = models.CharField(blank=True, null=True)
     diff_image_mean = models.FloatField(blank=True, null=True)
     diff_image_stddev = models.FloatField(blank=True, null=True)
-    diff_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    diff_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    diff_image_n = ArrayField(models.FloatField())
+    diff_image_bin_centers = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
     amp1_mean = models.FloatField(blank=True, null=True)
     amp1_stddev = models.FloatField(blank=True, null=True)
-    amp1_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp1_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp1_n = ArrayField(models.FloatField())
+    amp1_bin_centers = ArrayField(models.FloatField())
     amp2_mean = models.FloatField(blank=True, null=True)
     amp2_stddev = models.FloatField(blank=True, null=True)
-    amp2_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp2_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp2_n = ArrayField(models.FloatField())
+    amp2_bin_centers = ArrayField(models.FloatField())
     amp3_mean = models.FloatField(blank=True, null=True)
     amp3_stddev = models.FloatField(blank=True, null=True)
-    amp3_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp3_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp3_n = ArrayField(models.FloatField())
+    amp3_bin_centers = ArrayField(models.FloatField())
     amp4_mean = models.FloatField(blank=True, null=True)
     amp4_stddev = models.FloatField(blank=True, null=True)
-    amp4_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp4_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp4_n = ArrayField(models.FloatField())
+    amp4_bin_centers = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -212,7 +213,7 @@ class NircamReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissReadnoiseQueryHistory(models.Model):
+class NIRISSReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -229,7 +230,7 @@ class NirissReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirissReadnoiseStats(models.Model):
+class NIRISSReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -241,30 +242,30 @@ class NirissReadnoiseStats(models.Model):
     readnoise_filename = models.CharField(blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
-    full_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    full_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    full_image_n = ArrayField(models.FloatField())
+    full_image_bin_centers = ArrayField(models.FloatField())
     readnoise_diff_image = models.CharField(blank=True, null=True)
     diff_image_mean = models.FloatField(blank=True, null=True)
     diff_image_stddev = models.FloatField(blank=True, null=True)
-    diff_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    diff_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    diff_image_n = ArrayField(models.FloatField())
+    diff_image_bin_centers = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
     amp1_mean = models.FloatField(blank=True, null=True)
     amp1_stddev = models.FloatField(blank=True, null=True)
-    amp1_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp1_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp1_n = ArrayField(models.FloatField())
+    amp1_bin_centers = ArrayField(models.FloatField())
     amp2_mean = models.FloatField(blank=True, null=True)
     amp2_stddev = models.FloatField(blank=True, null=True)
-    amp2_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp2_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp2_n = ArrayField(models.FloatField())
+    amp2_bin_centers = ArrayField(models.FloatField())
     amp3_mean = models.FloatField(blank=True, null=True)
     amp3_stddev = models.FloatField(blank=True, null=True)
-    amp3_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp3_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp3_n = ArrayField(models.FloatField())
+    amp3_bin_centers = ArrayField(models.FloatField())
     amp4_mean = models.FloatField(blank=True, null=True)
     amp4_stddev = models.FloatField(blank=True, null=True)
-    amp4_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp4_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp4_n = ArrayField(models.FloatField())
+    amp4_bin_centers = ArrayField(models.FloatField())
 
     class Meta:
         managed = True
@@ -273,7 +274,7 @@ class NirissReadnoiseStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecReadnoiseQueryHistory(models.Model):
+class NIRSpecReadnoiseQueryHistory(models.Model):
     instrument = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
@@ -290,7 +291,7 @@ class NirspecReadnoiseQueryHistory(models.Model):
         app_label = 'monitors'
 
 
-class NirspecReadnoiseStats(models.Model):
+class NIRSpecReadnoiseStats(models.Model):
     uncal_filename = models.CharField(blank=True, null=True)
     aperture = models.CharField(blank=True, null=True)
     detector = models.CharField(blank=True, null=True)
@@ -302,30 +303,30 @@ class NirspecReadnoiseStats(models.Model):
     readnoise_filename = models.CharField(blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
-    full_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    full_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    full_image_n = ArrayField(models.FloatField())
+    full_image_bin_centers = ArrayField(models.FloatField())
     readnoise_diff_image = models.CharField(blank=True, null=True)
     diff_image_mean = models.FloatField(blank=True, null=True)
     diff_image_stddev = models.FloatField(blank=True, null=True)
-    diff_image_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    diff_image_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    diff_image_n = ArrayField(models.FloatField())
+    diff_image_bin_centers = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
     amp1_mean = models.FloatField(blank=True, null=True)
     amp1_stddev = models.FloatField(blank=True, null=True)
-    amp1_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp1_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp1_n = ArrayField(models.FloatField())
+    amp1_bin_centers = ArrayField(models.FloatField())
     amp2_mean = models.FloatField(blank=True, null=True)
     amp2_stddev = models.FloatField(blank=True, null=True)
-    amp2_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp2_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp2_n = ArrayField(models.FloatField())
+    amp2_bin_centers = ArrayField(models.FloatField())
     amp3_mean = models.FloatField(blank=True, null=True)
     amp3_stddev = models.FloatField(blank=True, null=True)
-    amp3_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp3_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp3_n = ArrayField(models.FloatField())
+    amp3_bin_centers = ArrayField(models.FloatField())
     amp4_mean = models.FloatField(blank=True, null=True)
     amp4_stddev = models.FloatField(blank=True, null=True)
-    amp4_n = models.TextField(blank=True, null=True)  # This field type is a guess.
-    amp4_bin_centers = models.TextField(blank=True, null=True)  # This field type is a guess.
+    amp4_n = ArrayField(models.FloatField())
+    amp4_bin_centers = ArrayField(models.FloatField())
 
     class Meta:
         managed = True

@@ -27,17 +27,18 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
-class FgsEdbBlocksStats(models.Model):
+class FGSEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -47,15 +48,15 @@ class FgsEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbDailyStats(models.Model):
+class FGSEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -65,11 +66,11 @@ class FgsEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbEveryChangeStats(models.Model):
+class FGSEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    time = models.TextField(blank=True, null=True)  # This field type is a guess.
-    mnemonic_value = models.TextField(blank=True, null=True)  # This field type is a guess.
+    time = ArrayField(models.DateTimeField())
+    mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     dependency_mnemonic = models.CharField(blank=True, null=True)
@@ -83,15 +84,15 @@ class FgsEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbTimeIntervalStats(models.Model):
+class FGSEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -101,12 +102,12 @@ class FgsEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class FgsEdbTimeStats(models.Model):
+class FGSEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -116,15 +117,15 @@ class FgsEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbBlocksStats(models.Model):
+class MIRIEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -134,15 +135,15 @@ class MiriEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbDailyStats(models.Model):
+class MIRIEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -152,11 +153,11 @@ class MiriEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbEveryChangeStats(models.Model):
+class MIRIEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    time = models.TextField(blank=True, null=True)  # This field type is a guess.
-    mnemonic_value = models.TextField(blank=True, null=True)  # This field type is a guess.
+    time = ArrayField(models.DateTimeField())
+    mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     dependency_mnemonic = models.CharField(blank=True, null=True)
@@ -170,15 +171,15 @@ class MiriEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbTimeIntervalStats(models.Model):
+class MIRIEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -188,12 +189,12 @@ class MiriEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class MiriEdbTimeStats(models.Model):
+class MIRIEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -203,15 +204,15 @@ class MiriEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbBlocksStats(models.Model):
+class NIRCamEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -221,15 +222,15 @@ class NircamEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbDailyStats(models.Model):
+class NIRCamEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -239,11 +240,11 @@ class NircamEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbEveryChangeStats(models.Model):
+class NIRCamEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    time = models.TextField(blank=True, null=True)  # This field type is a guess.
-    mnemonic_value = models.TextField(blank=True, null=True)  # This field type is a guess.
+    time = ArrayField(models.DateTimeField())
+    mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     dependency_mnemonic = models.CharField(blank=True, null=True)
@@ -257,15 +258,15 @@ class NircamEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbTimeIntervalStats(models.Model):
+class NIRCamEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -275,12 +276,12 @@ class NircamEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class NircamEdbTimeStats(models.Model):
+class NIRCamEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -290,15 +291,15 @@ class NircamEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbBlocksStats(models.Model):
+class NIRISSEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -308,15 +309,15 @@ class NirissEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbDailyStats(models.Model):
+class NIRISSEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -326,11 +327,11 @@ class NirissEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbEveryChangeStats(models.Model):
+class NIRISSEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    time = models.TextField(blank=True, null=True)  # This field type is a guess.
-    mnemonic_value = models.TextField(blank=True, null=True)  # This field type is a guess.
+    time = ArrayField(models.DateTimeField())
+    mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     dependency_mnemonic = models.CharField(blank=True, null=True)
@@ -344,15 +345,15 @@ class NirissEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbTimeIntervalStats(models.Model):
+class NIRISSEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -362,12 +363,12 @@ class NirissEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class NirissEdbTimeStats(models.Model):
+class NIRISSEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -377,15 +378,15 @@ class NirissEdbTimeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbBlocksStats(models.Model):
+class NIRSpecEdbBlocksStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -395,15 +396,15 @@ class NirspecEdbBlocksStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbDailyStats(models.Model):
+class NIRSpecEdbDailyStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -413,11 +414,11 @@ class NirspecEdbDailyStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbEveryChangeStats(models.Model):
+class NIRSpecEdbEveryChangeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    time = models.TextField(blank=True, null=True)  # This field type is a guess.
-    mnemonic_value = models.TextField(blank=True, null=True)  # This field type is a guess.
+    time = ArrayField(models.DateTimeField())
+    mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     dependency_mnemonic = models.CharField(blank=True, null=True)
@@ -431,15 +432,15 @@ class NirspecEdbEveryChangeStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbTimeIntervalStats(models.Model):
+class NIRSpecEdbTimeIntervalStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
-    median = models.TextField(blank=True, null=True)  # This field type is a guess.
-    max = models.TextField(blank=True, null=True)  # This field type is a guess.
-    min = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
+    median = ArrayField(models.FloatField())
+    max = ArrayField(models.FloatField())
+    min = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -449,12 +450,12 @@ class NirspecEdbTimeIntervalStats(models.Model):
         app_label = 'monitors'
 
 
-class NirspecEdbTimeStats(models.Model):
+class NIRSpecEdbTimeStats(models.Model):
     mnemonic = models.CharField(blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
-    times = models.TextField(blank=True, null=True)  # This field type is a guess.
-    data = models.TextField(blank=True, null=True)  # This field type is a guess.
-    stdev = models.TextField(blank=True, null=True)  # This field type is a guess.
+    times = ArrayField(models.DateTimeField())
+    data = ArrayField(models.FloatField())
+    stdev = ArrayField(models.FloatField())
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
