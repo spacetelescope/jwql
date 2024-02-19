@@ -37,9 +37,7 @@ from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils as etm_utils
 from jwql.tests.resources import has_test_db
 from jwql.utils.constants import MIRI_POS_RATIO_VALUES
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 
 def test_add_every_change_history():

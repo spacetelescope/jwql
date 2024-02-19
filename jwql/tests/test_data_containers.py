@@ -31,10 +31,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 
 # Skip testing this module if on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.website.apps.jwql import data_containers
 from jwql.tests.resources import (
     MockSessionFileAnomaly, MockSessionGroupAnomaly,

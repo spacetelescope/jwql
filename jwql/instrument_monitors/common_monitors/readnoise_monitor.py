@@ -48,14 +48,15 @@ import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
 import numpy as np  # noqa: E348 (comparison to true)
 from pysiaf import Siaf  # noqa: E348 (comparison to true)
 
-# astroquery.mast import that depends on value of auth_mast
-# this import has to be made before any other import of astroquery.mast
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
+from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
+from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
+from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
+from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E348 (comparison to true)
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
@@ -66,15 +67,6 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Import * is okay here because this module specifically only contains database models
     # for this monitor
     from jwql.website.apps.jwql.monitor_models.readnoise import *  # noqa: E402 (module level import not at top of file)
-
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
-from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
-from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
-from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
-from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
-from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E348 (comparison to true)
 
 
 class Readnoise():

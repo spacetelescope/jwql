@@ -28,9 +28,7 @@ import numpy as np
 import pytest
 
 from jwql.edb import engineering_database as ed
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 
 def test_add():

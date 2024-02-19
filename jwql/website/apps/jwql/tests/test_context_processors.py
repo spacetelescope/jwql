@@ -24,7 +24,7 @@ from django.test.client import Client
 import os
 from unittest import skipIf
 
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 if not ON_GITHUB_ACTIONS:
     from jwql.website.apps.jwql import context_processors

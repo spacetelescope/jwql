@@ -25,12 +25,10 @@ import time
 import urllib.request
 
 from jwql.utils.constants import MONITORS
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_base_url
 
 TIME_CONSTRAINT = 30  # seconds
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 urls = []
 

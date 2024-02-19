@@ -23,14 +23,12 @@ import grp
 import os
 import pytest
 
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions, has_permissions, \
     get_owner_string, get_group_string
 
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 @pytest.fixture(scope="module")

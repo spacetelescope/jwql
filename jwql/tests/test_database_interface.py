@@ -29,9 +29,7 @@ from sqlalchemy import inspect
 from jwql.database import database_interface as di
 from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')

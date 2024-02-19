@@ -43,6 +43,7 @@ from astropy.io import fits
 import numpy as np
 
 from jwql.utils import permissions
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config
 
 # Use the 'Agg' backend to avoid invoking $DISPLAY
@@ -52,16 +53,8 @@ import matplotlib.pyplot as plt  # noqa
 import matplotlib.colors as colors  # noqa
 from matplotlib.ticker import AutoMinorLocator  # noqa
 
-# Only import jwst if not running from readthedocs
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
-
 if not ON_READTHEDOCS:
     from jwst.datamodels import dqflags
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     CONFIGS = get_config()

@@ -30,6 +30,7 @@ References
 
 import asdf
 import inflection
+import os
 
 # Each amplifier is represented by 2 tuples, the first for x coordinates
 # and the second for y coordinates. Within each tuple are value for
@@ -963,3 +964,11 @@ URL_DICT = {
     "nirspec": "https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph",
     "nircam": "https://jwst-docs.stsci.edu/jwst-near-infrared-camera",
 }
+
+# Determine if the code is being run as part of CI checking on github
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
+    ON_READTHEDOCS = os.environ['READTHEDOCS']

@@ -29,8 +29,7 @@ from jwql.instrument_monitors.common_monitors import dark_monitor
 from jwql.tests.resources import has_test_db
 from jwql.utils.monitor_utils import mast_query_darks
 from jwql.utils.utils import get_config
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 
 def test_find_hot_dead_pixels():

@@ -31,10 +31,9 @@ from bokeh.plotting import figure
 
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors.msata_monitor import MSATA
 from jwql.database.database_interface import NIRSpecTAQueryHistory
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config, ensure_dir_exists
 from jwql.utils import monitor_utils, permissions
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 # define the type of a Bokeh plot type
 bokeh_plot_type = type(figure())

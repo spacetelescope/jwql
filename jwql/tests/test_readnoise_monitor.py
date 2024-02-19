@@ -27,9 +27,8 @@ import pytest
 from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, session
 from jwql.instrument_monitors.common_monitors import readnoise_monitor
 from jwql.tests.resources import has_test_db
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def test_determine_pipeline_steps():

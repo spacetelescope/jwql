@@ -23,8 +23,7 @@ import pytest
 import numpy as np
 
 from jwql.utils import instrument_properties
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config

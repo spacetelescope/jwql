@@ -53,11 +53,8 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
     FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
     FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
     FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
-    JWST_INSTRUMENT_NAMES_SHORTHAND
-
+    JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS, ON_READTHEDOCS
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def _validate_config(config_file_dict):

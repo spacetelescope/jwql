@@ -59,6 +59,7 @@ from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, I
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QueryConfigKeys
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
@@ -67,15 +68,6 @@ from astroquery.mast import Mast
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
-
-# astroquery.mast import that depends on value of auth_mast
-# this import has to be made before any other import of astroquery.mast
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:

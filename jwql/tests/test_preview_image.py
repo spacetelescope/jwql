@@ -30,10 +30,8 @@ from astropy.io import fits
 from jwst.datamodels import dqflags
 
 from jwql.utils.preview_image import PreviewImage, crop_to_subarray
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config, ensure_dir_exists
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 # Determine if the code is being run as part of a Readthedocs build
 ON_READTHEDOCS = False
