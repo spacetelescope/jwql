@@ -24,7 +24,8 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
-from bokeh.models import TabPanel, Tabs, DatetimeTickFormatter
+from bokeh.models import DatetimeTickFormatter
+from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.plotting import figure, output_file
 import numpy as np
 import pysiaf

@@ -28,7 +28,7 @@ from astropy.stats import sigma_clip
 from bokeh.embed import components, file_html
 from bokeh.layouts import layout
 from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
-from bokeh.models import Tabs, TabPanel
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
 from datetime import datetime, timedelta

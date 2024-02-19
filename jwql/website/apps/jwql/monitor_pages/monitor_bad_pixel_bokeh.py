@@ -24,7 +24,8 @@ from astropy.time import Time
 from bokeh.embed import components, file_html
 from bokeh.io import show
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, TabPanel, Tabs, Text, Title
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Text, Title
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
