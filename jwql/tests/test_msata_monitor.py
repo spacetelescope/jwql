@@ -52,38 +52,38 @@ def define_testdata():
     msata_data : pandas dataframe
     """
     msata_dict = {
-                    # info taken from main_hdr dict
-                    'filename': ['jw09999001001_02101_00001_nrs1_uncal.fits'],
-                    'date_obs': ['2022-06-22'],
-                    'visit_id': ['V09999001001P0000000002101'],
-                    'tafilter': ['F110W'],
-                    'detector': ['NRS1'],
-                    'readout': ['NRSRAPID'],
-                    'subarray': ['FULL'],
-                    # info taken from ta_hdr dict
-                    'num_refstars': [12],
-                    'ta_status': ['SUCCESSFUL'],
-                    'status_rsn': ['-999'],
-                    'v2halffacet': [-0.27568],
-                    'v3halffacet': [0.10975],
-                    'v2msactr': [378.523987],
-                    'v3msactr': [-428.374481],
-                    'lsv2offset': [-999.0],
-                    'lsv3offset': [-999.0],
-                    'lsoffsetmag': [-999.0],
-                    'lsrolloffset': [-999.0],
-                    'lsv2sigma': [-999.0],
-                    'lsv3sigma': [-999.0],
-                    'lsiterations': [-999],
-                    'guidestarid': ['-999'],
-                    'guidestarx': [-999.0],
-                    'guidestary': [-999.0],
-                    'guidestarroll': [-999.0],
-                    'samx': [-999.0],
-                    'samy': [-999.0],
-                    'samroll': [-999.0],
-                    'stars_in_fit': [-999]
-                }
+        # info taken from main_hdr dict
+        'filename': ['jw09999001001_02101_00001_nrs1_uncal.fits'],
+        'date_obs': ['2022-06-22'],
+        'visit_id': ['V09999001001P0000000002101'],
+        'tafilter': ['F110W'],
+        'detector': ['NRS1'],
+        'readout': ['NRSRAPID'],
+        'subarray': ['FULL'],
+        # info taken from ta_hdr dict
+        'num_refstars': [12],
+        'ta_status': ['SUCCESSFUL'],
+        'status_rsn': ['-999'],
+        'v2halffacet': [-0.27568],
+        'v3halffacet': [0.10975],
+        'v2msactr': [378.523987],
+        'v3msactr': [-428.374481],
+        'lsv2offset': [-999.0],
+        'lsv3offset': [-999.0],
+        'lsoffsetmag': [-999.0],
+        'lsrolloffset': [-999.0],
+        'lsv2sigma': [-999.0],
+        'lsv3sigma': [-999.0],
+        'lsiterations': [-999],
+        'guidestarid': ['-999'],
+        'guidestarx': [-999.0],
+        'guidestary': [-999.0],
+        'guidestarroll': [-999.0],
+        'samx': [-999.0],
+        'samy': [-999.0],
+        'samroll': [-999.0],
+        'stars_in_fit': [-999]
+        }
     # add info from ta_table
     num_refstars = msata_dict['num_refstars'][0]
     msata_dict['box_peak_value'] = [[8000 for _ in range(num_refstars)]]

@@ -105,13 +105,13 @@ def test_conditions():
     """Test the extraction of data using the ```equal``` class.
     """
     # Create data for mnemonic of interest
-    #start_time = Time('2022-02-02')
-    #end_time = Time('2022-02-03')
+    # start_time = Time('2022-02-02')
+    # end_time = Time('2022-02-03')
     start_time = datetime.datetime(2022, 2, 2)
     end_time = datetime.datetime(2022, 2, 3)
     temp_data = Table()
     temp_data["euvalues"] = np.array([35., 35.1, 35.2, 36., 36.1, 36.2, 37.1, 37., 36., 36.])
-    #temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
+    # temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
     temp_data["dates"] = np.array([start_time + datetime.timedelta(days=0.1 * i) for i in range(10)])
     meta = {}
     info = {}
@@ -265,7 +265,7 @@ def test_organize_every_change():
     """
     basetime = datetime.datetime(2021, 4, 6, 14, 0, 0)
     dates = np.array([basetime + datetime.timedelta(seconds=600 * i) for i in range(20)])
-    #dates = np.array([basetime + TimeDelta(600 * i, format='sec') for i in range(20)])
+    # dates = np.array([basetime + TimeDelta(600 * i, format='sec') for i in range(20)])
     vals = np.array([300.5, 310.3, -250.5, -500.9, 32.2,
                      300.1, 310.8, -250.2, -500.2, 32.7,
                      300.2, 310.4, -250.6, -500.8, 32.3,

@@ -44,19 +44,19 @@ from astropy.visualization import ZScaleInterval
 import crds
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
-import numpy as np  # noqa: E348 (comparison to true)
-from pysiaf import Siaf  # noqa: E348 (comparison to true)
+import matplotlib.pyplot as plt  # noqa: E402 (module level import not at top of file)
+import numpy as np  # noqa: E402 (module level import not at top of file)
+from pysiaf import Siaf  # noqa: E402 (module level import not at top of file)
 
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
-from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
-from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
-from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
-from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
-from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E348 (comparison to true)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E402 (module level import not at top of file)
+from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module level import not at top of file)
+from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module level import not at top of file)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module level import not at top of file)
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS # noqa: E402 (module level import not at top of file)
+from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module level import not at top of file)
+from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module level import not at top of file)
+from jwql.utils.permissions import set_permissions  # noqa: E402 (module level import not at top of file)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E402 (module level import not at top of file)
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models

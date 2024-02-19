@@ -756,6 +756,7 @@ def expand_for_i2d(array, xdim, ydim):
     else:
         return array
 
+
 def nan_to_zero(image):
     """Set any pixels with a value of NaN to zero
 
