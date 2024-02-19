@@ -40,8 +40,25 @@ import pandas as pd
 from photutils.segmentation import detect_sources, detect_threshold
 from scipy.ndimage import binary_dilation
 
-from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRCamClawQueryHistory, NIRCamClawStats
+# astroquery.mast import that depends on value of auth_mast
+# this import has to be made before any other import of astroquery.mast
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:  # pragma: no cover
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.claw import *  # noqa: E402 (module level import not at top of file)
+
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
@@ -114,8 +131,8 @@ class ClawMonitor():
         ensure_dir_exists(self.output_dir_bkg)
 
         # Get the claw monitor database tables
-        self.query_table = eval('NIRCamClawQueryHistory')
-        self.stats_table = eval('NIRCamClawStats')
+        self.query_table = NIRCamClawQueryHistory
+        self.stats_table = NIRCamClawStats
 
     def make_background_plots(self, plot_type='bkg'):
         """Makes plots of the background levels over time in NIRCam data.
@@ -128,13 +145,14 @@ class ClawMonitor():
             measured vs model trending.
         """
 
+        columns = ['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 'entry_date', 'mean', 'median', 
+                   'stddev', 'frac_masked', 'total_bkg']
+
         # Get all of the background data.
-        query = session.query(NIRCamClawStats.filename, NIRCamClawStats.filter, NIRCamClawStats.pupil, NIRCamClawStats.detector,
-                              NIRCamClawStats.effexptm, NIRCamClawStats.expstart_mjd, NIRCamClawStats.entry_date, NIRCamClawStats.mean,
-                              NIRCamClawStats.median, NIRCamClawStats.stddev, NIRCamClawStats.frac_masked, NIRCamClawStats.total_bkg).all()
-        df_orig = pd.DataFrame(query, columns=['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd',
-                                               'entry_date', 'mean', 'median', 'stddev', 'frac_masked', 'total_bkg'])
-        df_orig = df_orig.drop_duplicates(subset='filename', keep="last")  # remove any duplicate filename entries, keep the most recent
+        background_data = NIRCamClawStats.objects.only(*columns)
+        df_orig = pd.DataFrame(background_data, columns=columns)
+        # remove any duplicate filename entries, keep the most recent
+        df_orig = df_orig.drop_duplicates(subset='filename', keep="last")
 
         # Get label info based on plot type
         if plot_type == 'bkg':
@@ -152,7 +170,8 @@ class ClawMonitor():
             logging.info('Working on {} trending plots for {}'.format(plot_title, fltr))
             found_limits = False
             if int(fltr[1:4]) < 250:  # i.e. SW
-                detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']   # in on-sky order, don't change order
+                # in on-sky order, don't change order
+                detectors_to_run = ['NRCA2', 'NRCA4', 'NRCB3', 'NRCB1', 'NRCA1', 'NRCA3', 'NRCB4', 'NRCB2']
                 grid = plt.GridSpec(2, 4, hspace=.4, wspace=.4, width_ratios=[1, 1, 1, 1])
                 fig = plt.figure(figsize=(45, 20))
                 fig.suptitle(fltr, fontsize=70)
@@ -323,9 +342,8 @@ class ClawMonitor():
                                  'total_bkg': float(total_bkg),
                                  'entry_date': datetime.datetime.now()
                                  }
-
-                with engine.begin() as connection:
-                    connection.execute(self.stats_table.__table__.insert(), claw_db_entry)
+                entry = self.stats_table(**claw_db_entry)
+                entry.save()
                 hdu.close()
 
             # Make the normalized skyflat for this detector
@@ -460,8 +478,8 @@ class ClawMonitor():
                      'end_time_mjd': self.query_end_mjd,
                      'run_monitor': monitor_run,
                      'entry_date': datetime.datetime.now()}
-        with engine.begin() as connection:
-            connection.execute(self.query_table.__table__.insert(), new_entry)
+        entry = self.query_table(**new_entry)
+        entry.save()
 
         logging.info('Claw Monitor completed successfully.')
 

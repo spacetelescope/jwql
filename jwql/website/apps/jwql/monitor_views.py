@@ -39,9 +39,8 @@ import json
 import pandas as pd
 
 from . import bokeh_containers
-from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamClawStats
 from jwql.website.apps.jwql import bokeh_containers
+from jwql.website.apps.jwql.monitor_models.claw import NIRCamClawStats
 from jwql.website.apps.jwql.monitor_pages.monitor_readnoise_bokeh import ReadNoiseFigure
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, get_base_url
@@ -158,9 +157,9 @@ def claw_monitor(request):
     template = "claw_monitor.html"
 
     # Get all recent claw stack images from the last 10 days
-    query = session.query(NIRCamClawStats.expstart_mjd, NIRCamClawStats.skyflat_filename).order_by(NIRCamClawStats.expstart_mjd.desc()).all()
+    mjd = Time.now().mjd - 10
+    query = NIRCamClawStats.filter(expstart_mjd__gte=mjd).order_by('-expstart_mjd').only('expstart_mjd', 'skyflat_filename')
     df = pd.DataFrame(query, columns=['expstart_mjd', 'skyflat_filename'])
-    recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 10]))
     output_dir_claws = static(os.path.join("outputs", "claw_monitor", "claw_stacks"))
     claw_stacks = [os.path.join(output_dir_claws, filename) for filename in recent_files]
 
