@@ -1,3 +1,24 @@
+.alternate-rows {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.alternate-rows th, .alternate-rows td {
+    padding: 1px 10px;
+    border: 1px solid #ddd;
+}
+
+.alternate-rows tr:nth-child(odd) {
+    background-color:#eee;
+}
+.alternate-rows tr:nth-child(even) {
+    background-color:#fff;
+}
+
+.alternate-rows tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
 .anomaly_choice {
     list-style: none;
   }

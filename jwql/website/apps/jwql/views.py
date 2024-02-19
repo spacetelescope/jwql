@@ -1273,32 +1273,36 @@ def view_image(request, inst, file_root):
     possible_suffixes_to_use = np.array(['rate', 'rateints', 'cal', 'calints', 'uncal'])
     existing_suffixes = np.array([suffix in image_info['suffixes'] for suffix in possible_suffixes_to_use])
 
-    # Initialize dictionary of file info
-    common_header_info = {'exp_type': root_file_info.exp_type,
-                          'expstart': root_file_info.expstart,
-                          'filter': root_file_info.filter,
-                          'pupil': root_file_info.pupil,
-                          'grating': root_file_info.grating,
-                          'subarray': root_file_info.subarray,
-                          'read_patt': root_file_info.read_patt,
-                          'ngroups': 'N/A',
-                          'nints': 'N/A',
-                          'exptime': 'N/A',
-                          'category': 'N/A',
-                          'title': 'N/A',
-                          'pi_name': 'N/A',
-                          'visit_status': 'N/A',
-                          'target_name': 'N/A',
-                          'RA': 'N/A',
-                          'Dec': 'N/A',
-                          'PA_V3': 'N/A',
-                          'cal_ver': 'N/A',
-                          'crds_context': 'N/A'}
+    # Initialize dictionary of file info to show at the top of the page, along
+    # with another for info that will be in the collapsible text box.
+    basic_info = {'exp_type': root_file_info.exp_type,
+                  'category': 'N/A',
+                  'visit_status': 'N/A',
+                  'subarray': root_file_info.subarray,
+                  'filter': root_file_info.filter,
+                  'pupil': root_file_info.pupil,
+                  'grating': root_file_info.grating
+                  }
+
+    additional_info = {'READPATT': root_file_info.read_patt,
+                       'TITLE': 'N/A',
+                       'NGROUPS': 'N/A',
+                       'PI_NAME': 'N/A',
+                       'NINTS': 'N/A',
+                       'TARGNAME': 'N/A',
+                       'EXPTIME': 'N/A',
+                       'RA': 'N/A',
+                       'CAL_VER': 'N/A',
+                       'DEC': 'N/A',
+                       'CRDS context': 'N/A',
+                       'PA_V3': 'N/A',
+                       'EXPSTART': root_file_info.expstart
+                        }
 
     # Deal with instrument-specific parameters
     for key in ['grating', 'pupil']:
-        if common_header_info[key] == '':
-            common_header_info[key] = 'N/A'
+        if basic_info[key] == '':
+            basic_info[key] = 'N/A'
 
     # If any of the desired files are present, get the headers and populate the header
     # info dictionary
@@ -1314,25 +1318,24 @@ def view_image(request, inst, file_root):
         header = fits.getheader(file_path)
         header_sci = fits.getheader(file_path, 1)
 
-        common_header_info['ngroups'] = header['NGROUPS']
-        common_header_info['nints'] = header['NINTS']
-        common_header_info['exptime'] = header['EFFEXPTM']
-        common_header_info['category'] = header['CATEGORY']
-        common_header_info['title'] = header['TITLE']
-        common_header_info['pi_name'] = header['PI_NAME']
-        common_header_info['visit_status'] = header['VISITSTA']
-        common_header_info['target_name'] = header['TARGPROP']
-        common_header_info['RA'] = header_sci['RA_REF']
-        common_header_info['Dec'] = header_sci['DEC_REF']
-        common_header_info['PA_V3'] = header_sci['ROLL_REF']
-        common_header_info['cal_ver'] = 'N/A'
-        common_header_info['crds_context'] = 'N/A'
+        basic_info['category'] = header['CATEGORY']
+        basic_info['visit_status'] = header['VISITSTA']
+        additional_info['NGROUPS'] = header['NGROUPS']
+        additional_info['NINTS'] = header['NINTS']
+        additional_info['EXPTIME'] = header['EFFEXPTM']
+        additional_info['TITLE'] = header['TITLE']
+        additional_info['PI_NAME'] = header['PI_NAME']
+        additional_info['TARGNAME'] = header['TARGPROP']
+        additional_info['RA'] = header_sci['RA_REF']
+        additional_info['DEC'] = header_sci['DEC_REF']
+        additional_info['PA_V3'] = header_sci['ROLL_REF']
+        additional_info['CAL_VER'] = 'N/A'
+        additional_info['CRDS context'] = 'N/A'
 
         # Pipeline version and CRDS context info are not in uncal files
         if suffix != 'uncal':
-            common_header_info['cal_ver'] = header['CAL_VER']
-            common_header_info['crds_context'] = header['CRDS_CTX']
-
+            additional_info['CAL_VER'] = header['CAL_VER']
+            additional_info['CRDS context'] = header['CRDS_CTX']
 
     # Build the context
     context = {'base_url': get_base_url(),
@@ -1348,6 +1351,8 @@ def view_image(request, inst, file_root):
                'form': form,
                'marked_viewed': root_file_info.viewed,
                'expstart_str': expstart_str,
-               'header_info': common_header_info}
+               'basic_info': basic_info,
+               'additional_info': additional_info}#,
+               #'header_info': []}#common_header_info}
 
     return render(request, template, context)

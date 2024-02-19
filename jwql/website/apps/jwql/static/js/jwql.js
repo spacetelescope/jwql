@@ -311,6 +311,40 @@ function determine_page_title_obs(instrument, proposal, observation) {
 }
 
 /**
+ * Construct a 4-column table from an input dictionary. The 4 columns
+ * correspond to:  key, value, key, value.
+ * @dictionary {dict} jsonified dictionary
+ */
+function make_table_from_dict(dictionary) {
+    var tableBody = document.getElementById("table-body");
+    // Extract keys and values from the dictionary
+    var keys = Object.keys(dictionary);
+    var values = Object.values(dictionary);
+
+    // Determine the maximum length of keys and values
+    //var maxLength = Math.max(keys.length, values.length);
+    var maxLength = keys.length
+
+    // Populate the table dynamically
+    for (var i = 0; i < maxLength; i+=2) {
+        var row = document.createElement("tr");
+        var row = tableBody.insertRow(i/2)
+        var cell1 = row.insertCell(0)
+        var cell2 = row.insertCell(1)
+        var cell3 = row.insertCell(2)
+        var cell4 = row.insertCell(3)
+
+        cell1.textContent = i < keys.length ? keys[i]+':' : "";
+        cell2.textContent = i < keys.length ? values[i] : "";
+        cell3.textContent = (i+1) < keys.length ? keys[i+1]+':' : "";
+        cell4.textContent = (i+1) < keys.length ? values[i+1] : "";
+
+        tableBody.appendChild(row);
+    }
+    return tableBody;
+}
+
+/**
  * adds/removes disabled_section class and clears value
  * @param {string} element_id
  * @param {boolean} set_disable
@@ -1476,9 +1510,9 @@ function version_url(version_string) {
     return a_line;
 }
 
-
-
-
+/**
+ * Create a collapsible table
+ */
 document.addEventListener('DOMContentLoaded', function () {
     var collapsibleBtn = document.querySelector('.collapsible-btn');
     var collapsibleContent = document.querySelector('.collapsible-content');
@@ -1487,4 +1521,3 @@ document.addEventListener('DOMContentLoaded', function () {
         collapsibleContent.classList.toggle('show');
     });
 });
-
