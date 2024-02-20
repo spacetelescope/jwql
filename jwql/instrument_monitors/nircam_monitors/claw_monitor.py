@@ -138,7 +138,7 @@ class ClawMonitor():
         """
 
         columns = ['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 'entry_date', 'mean', 'median',
-                   'stddev', 'frac_masked']  # , 'total_bkg']
+                   'stddev', 'frac_masked', 'total_bkg']
 
         # Get all of the background data.
         background_data = NIRCamClawStats.objects.all().values(*columns)
@@ -331,8 +331,8 @@ class ClawMonitor():
                                  'stddev': float(stddev),
                                  'frac_masked': len(segmap_orig[(segmap_orig != 0) | (dq & 1 != 0)]) / (segmap_orig.shape[0] * segmap_orig.shape[1]),
                                  'skyflat_filename': os.path.basename(self.outfile),
-                                 # 'doy': float(doy),
-                                 # 'total_bkg': float(total_bkg),
+                                 'doy': float(doy),
+                                 'total_bkg': float(total_bkg),
                                  'entry_date': datetime.datetime.now()
                                  }
                 entry = self.stats_table(**claw_db_entry)
