@@ -54,7 +54,7 @@ git fetch origin $branch_name
 git pull origin $branch_name
 git fetch origin --tags
 
-# 2. Bring the server down and back up
+# 2. Bring the server down
 if [ "$reset" = true ]; then
     sudo /bin/systemctl stop jwql.service
 fi
