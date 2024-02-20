@@ -138,13 +138,20 @@ class ClawMonitor():
         """
 
         columns = ['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 'entry_date', 'mean', 'median', 
-                   'stddev', 'frac_masked', 'total_bkg']
+                   'stddev', 'frac_masked']  # , 'total_bkg']
 
         # Get all of the background data.
-        background_data = NIRCamClawStats.objects.only(*columns)
-        df_orig = pd.DataFrame(background_data, columns=columns)
+        background_data = NIRCamClawStats.objects.all().values(*columns)
+        df_orig = pd.DataFrame.from_records(background_data)
         # remove any duplicate filename entries, keep the most recent
         df_orig = df_orig.drop_duplicates(subset='filename', keep="last")
+
+        try:
+            jbt.get_background(ra, dec, wv, thisday=doy, plot_background=False, plot_bathtub=False,
+                               write_bathtub=True, bathtub_file='background_versus_day.txt')
+            bkg_table = Table.read('background_versus_day.txt', names=('day', 'total_bkg'), format='ascii')
+        except:
+            bkg_table = None
 
         # Get label info based on plot type
         if plot_type == 'bkg':
@@ -192,7 +199,8 @@ class ClawMonitor():
                     df = df[df['stddev'] != 0]  # older data has no accurate stddev measures
                     plot_data = df['stddev'].values
                 if plot_type == 'model':
-                    plot_data = df['median'].values / df['total_bkg'].values
+                    total_bkg = [1. for x in df['median'].values]
+                    plot_data = df['median'].values  # / df['total_bkg'].values
                 plot_expstarts = df['expstart_mjd'].values
 
                 # Plot the background data over time
@@ -330,8 +338,8 @@ class ClawMonitor():
                                  'stddev': float(stddev),
                                  'frac_masked': len(segmap_orig[(segmap_orig != 0) | (dq & 1 != 0)]) / (segmap_orig.shape[0] * segmap_orig.shape[1]),
                                  'skyflat_filename': os.path.basename(self.outfile),
-                                 'doy': float(doy),
-                                 'total_bkg': float(total_bkg),
+#                                  'doy': float(doy),
+#                                  'total_bkg': float(total_bkg),
                                  'entry_date': datetime.datetime.now()
                                  }
                 entry = self.stats_table(**claw_db_entry)
