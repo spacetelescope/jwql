@@ -137,7 +137,7 @@ class ClawMonitor():
             measured vs model trending.
         """
 
-        columns = ['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 'entry_date', 'mean', 'median', 
+        columns = ['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 'entry_date', 'mean', 'median',
                    'stddev', 'frac_masked']  # , 'total_bkg']
 
         # Get all of the background data.
@@ -145,13 +145,6 @@ class ClawMonitor():
         df_orig = pd.DataFrame.from_records(background_data)
         # remove any duplicate filename entries, keep the most recent
         df_orig = df_orig.drop_duplicates(subset='filename', keep="last")
-
-        try:
-            jbt.get_background(ra, dec, wv, thisday=doy, plot_background=False, plot_bathtub=False,
-                               write_bathtub=True, bathtub_file='background_versus_day.txt')
-            bkg_table = Table.read('background_versus_day.txt', names=('day', 'total_bkg'), format='ascii')
-        except:
-            bkg_table = None
 
         # Get label info based on plot type
         if plot_type == 'bkg':
@@ -186,9 +179,9 @@ class ClawMonitor():
 
                 # Get relevant data for this filter/detector and remove bad datasets, e.g. crowded fields,
                 # extended objects, nebulas, short exposures.
-                df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det) &
-                             (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh) &
-                             (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
+                df = df_orig[(df_orig['filter'] == fltr) & (df_orig['pupil'] == 'CLEAR') & (df_orig['detector'] == det)
+                             & (df_orig['effexptm'] > 300) & (df_orig['frac_masked'] < frack_masked_thresh)
+                             & (abs(1 - (df_orig['mean'] / df_orig['median'])) < 0.05)]
                 if len(df) > 0:
                     df = df.sort_values(by=['expstart_mjd'])
 
@@ -316,7 +309,7 @@ class ClawMonitor():
                                        write_bathtub=True, bathtub_file='background_versus_day.txt')
                     bkg_table = Table.read('background_versus_day.txt', names=('day', 'total_bkg'), format='ascii')
                     total_bkg = bkg_table['total_bkg'][bkg_table['day'] == doy][0]
-                except:
+                except Exception as e:
                     total_bkg = np.nan
 
                 # Add this file's stats to the claw database table. Can't insert values with numpy.float32
@@ -338,8 +331,8 @@ class ClawMonitor():
                                  'stddev': float(stddev),
                                  'frac_masked': len(segmap_orig[(segmap_orig != 0) | (dq & 1 != 0)]) / (segmap_orig.shape[0] * segmap_orig.shape[1]),
                                  'skyflat_filename': os.path.basename(self.outfile),
-#                                  'doy': float(doy),
-#                                  'total_bkg': float(total_bkg),
+                                 # 'doy': float(doy),
+                                 # 'total_bkg': float(total_bkg),
                                  'entry_date': datetime.datetime.now()
                                  }
                 entry = self.stats_table(**claw_db_entry)
@@ -454,7 +447,7 @@ class ClawMonitor():
             for row in mast_table_combo:
                 try:
                     existing_files.append(filesystem_path(row['filename']))
-                except:
+                except Exception as e:
                     pass
             self.files = np.array(existing_files)
             self.detectors = np.array(mast_table_combo['detector'])

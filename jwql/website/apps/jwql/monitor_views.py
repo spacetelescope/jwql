@@ -157,12 +157,10 @@ def claw_monitor(request):
     template = "claw_monitor.html"
 
     # Get all recent claw stack images from the last 10 days
-    query = NIRCamClawStats.objects  #.filter(expstart_mjd__gte=mjd)
+    query = NIRCamClawStats.objects  # .filter(expstart_mjd__gte=(Time.now().mjd - 10))
     query = query.order_by('-expstart_mjd').all().values('expstart_mjd', 'skyflat_filename')
     df = pd.DataFrame.from_records(query)
-    print(df)
     recent_files = list(pd.unique(df['skyflat_filename'][df['expstart_mjd'] > Time.now().mjd - 10]))
-    print(recent_files)
     output_dir_claws = static(os.path.join("outputs", "claw_monitor", "claw_stacks"))
     claw_stacks = [os.path.join(output_dir_claws, filename) for filename in recent_files]
 
