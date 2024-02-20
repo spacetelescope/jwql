@@ -76,8 +76,7 @@ python ./database/database_interface.py
 # 7. Send out notification email
 if [ "$notify" = true ] && [ -n "$recipient" ]; then
     subject="JWQL $branch_name Released"
-    message_content="Hello, A new version of JWQL ($branch_name) has just been deployed to jwql.stsci.edu.  Visit https://github.com/spacetelescope/jwql/releases for more information."
+    message_content="Hello, A new version of JWQL ($branch_name) has just been released.  Visit https://github.com/spacetelescope/jwql/releases for more information."
     echo "$message_content" | mail -s "$subject" "$recipient"
     echo "Notification Email Sent"
-    echo "Deployment Complete!"
 fi
