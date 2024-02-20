@@ -83,6 +83,20 @@ run the query. Instead, it will be run when you operate on it, such as
 * Printing out any of the results
 * Asking for the value of one of the fields (e.g. `records[3].aperture`)
 
+Retrieving Specific Columns
+===========================
+
+Django offers two ways of doing this. The first one is to use the `only()` function, which
+immediately loads only the relevant columns. For example,
+
+.. code-block:: python
+
+    records = MIRIMyMonitorStats.objects.only("aperture", "mjd_start", "relevant_item")
+
+will immediately load only the three columns selected (although the rest will be retrieved
+from the database, and can still be accessed, for no immediately understandable reason).
+The other method is the `defer()` method, which loads every column *except* the ones listed.
+
 Q Objects
 =========
 
