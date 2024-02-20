@@ -62,6 +62,8 @@ class NIRCamClawStats(models.Model):
     stddev = models.FloatField(blank=True, null=True)
     frac_masked = models.FloatField(blank=True, null=True)
     skyflat_filename = models.CharField(blank=True, null=True)
+    doy = models.FloatField(blank=True, null=True)
+    total_bkg = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = True
