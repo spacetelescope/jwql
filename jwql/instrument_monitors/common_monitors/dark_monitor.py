@@ -514,7 +514,7 @@ class Dark():
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
         self.query_table = eval(f'{mixed_case_name}DarkQueryHistory')
-        self.pixel_table = eval(f'{mixed_case_name}DarkPixelStats'.)
+        self.pixel_table = eval(f'{mixed_case_name}DarkPixelStats')
         self.stats_table = eval(f'{mixed_case_name}DarkDarkCurrent')
 
     def most_recent_search(self):
