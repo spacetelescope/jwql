@@ -127,7 +127,7 @@ if you have a monitor table defined as below:
             managed = True
             db_table = 'niriss_my_monitor_stats'
             unique_together = (('id', 'entry_date'),)
-            db_table_comments = 'monitors'
+            db_table_comment = 'monitors'
 
 then you would create a new entry as follows:
 
@@ -150,7 +150,7 @@ There are (as usual) a few things to note above:
 * Django doesn't have a built-in array data type, so you need to import it from the
   database-compatibility layers. The ArrayField takes, as a required argument, the type
   of data that makes up the array.
-* In the Meta sub-class of the monitor class, the `db_table_comments = 'monitors'` statement is
+* In the Meta sub-class of the monitor class, the `db_table_comment = 'monitors'` statement is
   required so that django knows that the model should be stored in the monitors table.
 * The `float()` casts are required because the database interface doesn't understand
   numpy data types.
@@ -233,7 +233,7 @@ class Monitor(models.Model):
     class Meta:
         managed = True
         db_table = 'monitor'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class CentralStorage(models.Model):
@@ -246,7 +246,7 @@ class CentralStorage(models.Model):
     class Meta:
         managed = True
         db_table = 'central_storage'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class FilesystemCharacteristics(models.Model):
@@ -258,7 +258,7 @@ class FilesystemCharacteristics(models.Model):
     class Meta:
         managed = True
         db_table = 'filesystem_characteristics'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class FilesystemGeneral(models.Model):
@@ -273,7 +273,7 @@ class FilesystemGeneral(models.Model):
     class Meta:
         managed = True
         db_table = 'filesystem_general'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class FilesystemInstrument(models.Model):
@@ -287,7 +287,7 @@ class FilesystemInstrument(models.Model):
         managed = True
         db_table = 'filesystem_instrument'
         unique_together = (('date', 'instrument', 'filetype'),)
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class FgsAnomaly(models.Model):
@@ -308,7 +308,7 @@ class FgsAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'fgs_anomaly'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class MiriAnomaly(models.Model):
@@ -334,7 +334,7 @@ class MiriAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'miri_anomaly'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class NircamAnomaly(models.Model):
@@ -360,7 +360,7 @@ class NircamAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'nircam_anomaly'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class NirissAnomaly(models.Model):
@@ -383,7 +383,7 @@ class NirissAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'niriss_anomaly'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class NirspecAnomaly(models.Model):
@@ -406,4 +406,4 @@ class NirspecAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'nirspec_anomaly'
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'

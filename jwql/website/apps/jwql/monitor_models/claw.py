@@ -40,7 +40,7 @@ class NIRCamClawQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_claw_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
 
 
 class NIRCamClawStats(models.Model):
@@ -67,4 +67,4 @@ class NIRCamClawStats(models.Model):
         managed = True
         db_table = 'nircam_claw_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comments = 'monitors'
+        db_table_comment = 'monitors'
