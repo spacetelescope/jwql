@@ -127,7 +127,7 @@ if you have a monitor table defined as below:
             managed = True
             db_table = 'niriss_my_monitor_stats'
             unique_together = (('id', 'entry_date'),)
-            app_label = 'monitors'
+            db_table_comments = 'monitors'
 
 then you would create a new entry as follows:
 
@@ -150,7 +150,7 @@ There are (as usual) a few things to note above:
 * Django doesn't have a built-in array data type, so you need to import it from the
   database-compatibility layers. The ArrayField takes, as a required argument, the type
   of data that makes up the array.
-* In the Meta sub-class of the monitor class, the `app_label = 'monitors'` statement is
+* In the Meta sub-class of the monitor class, the `db_table_comments = 'monitors'` statement is
   required so that django knows that the model should be stored in the monitors table.
 * The `float()` casts are required because the database interface doesn't understand
   numpy data types.
@@ -191,7 +191,7 @@ class MonitorRouter:
         """
         Attempts to read monitor models go to monitors db.
         """
-        if model._meta.app_label in self.route_app_labels:
+        if model._meta.db_table_comment in self.route_app_labels:
             return "monitors"
         return None
 
@@ -199,7 +199,7 @@ class MonitorRouter:
         """
         Attempts to write  monitor models go to monitors db.
         """
-        if model._meta.app_label in self.route_app_labels:
+        if model._meta.db_table_comment in self.route_app_labels:
             return "monitors"
         return None
 
@@ -208,8 +208,8 @@ class MonitorRouter:
         Allow relations between tables in the monitors DB.
         """
         if (
-            obj1._meta.app_label in self.route_app_labels
-            or obj2._meta.app_label in self.route_app_labels
+            obj1._meta.db_table_comment in self.route_app_labels
+            or obj2._meta.db_table_comment in self.route_app_labels
         ):
             return True
         return None
@@ -218,7 +218,7 @@ class MonitorRouter:
         """
         Make sure the monitors apps only appear in the 'monitors' database.
         """
-        if app_label in self.route_app_labels:
+        if app_label in self.route_app_labels or app_label == 'jwql':
             return db == "monitors"
         return None
 
@@ -233,7 +233,7 @@ class Monitor(models.Model):
     class Meta:
         managed = True
         db_table = 'monitor'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class CentralStorage(models.Model):
@@ -246,7 +246,7 @@ class CentralStorage(models.Model):
     class Meta:
         managed = True
         db_table = 'central_storage'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class FilesystemCharacteristics(models.Model):
@@ -258,7 +258,7 @@ class FilesystemCharacteristics(models.Model):
     class Meta:
         managed = True
         db_table = 'filesystem_characteristics'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class FilesystemGeneral(models.Model):
@@ -273,7 +273,7 @@ class FilesystemGeneral(models.Model):
     class Meta:
         managed = True
         db_table = 'filesystem_general'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class FilesystemInstrument(models.Model):
@@ -287,7 +287,7 @@ class FilesystemInstrument(models.Model):
         managed = True
         db_table = 'filesystem_instrument'
         unique_together = (('date', 'instrument', 'filetype'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class FgsAnomaly(models.Model):
@@ -308,7 +308,7 @@ class FgsAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'fgs_anomaly'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class MiriAnomaly(models.Model):
@@ -334,7 +334,7 @@ class MiriAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'miri_anomaly'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NircamAnomaly(models.Model):
@@ -360,7 +360,7 @@ class NircamAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'nircam_anomaly'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NirissAnomaly(models.Model):
@@ -383,7 +383,7 @@ class NirissAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'niriss_anomaly'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NirspecAnomaly(models.Model):
@@ -406,4 +406,4 @@ class NirspecAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'nirspec_anomaly'
-        app_label = 'monitors'
+        db_table_comments = 'monitors'

@@ -60,7 +60,7 @@ class FGSDarkDarkCurrent(models.Model):
         managed = True
         db_table = 'fgs_dark_dark_current'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class FGSDarkPixelStats(models.Model):
@@ -80,7 +80,7 @@ class FGSDarkPixelStats(models.Model):
         managed = True
         db_table = 'fgs_dark_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class FGSDarkQueryHistory(models.Model):
@@ -97,7 +97,7 @@ class FGSDarkQueryHistory(models.Model):
         managed = True
         db_table = 'fgs_dark_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class MIRIDarkDarkCurrent(models.Model):
@@ -130,7 +130,7 @@ class MIRIDarkDarkCurrent(models.Model):
         managed = True
         db_table = 'miri_dark_dark_current'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class MIRIDarkPixelStats(models.Model):
@@ -150,7 +150,7 @@ class MIRIDarkPixelStats(models.Model):
         managed = True
         db_table = 'miri_dark_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class MIRIDarkQueryHistory(models.Model):
@@ -167,7 +167,7 @@ class MIRIDarkQueryHistory(models.Model):
         managed = True
         db_table = 'miri_dark_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRCamDarkDarkCurrent(models.Model):
@@ -200,7 +200,7 @@ class NIRCamDarkDarkCurrent(models.Model):
         managed = True
         db_table = 'nircam_dark_dark_current'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRCamDarkPixelStats(models.Model):
@@ -220,7 +220,7 @@ class NIRCamDarkPixelStats(models.Model):
         managed = True
         db_table = 'nircam_dark_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRCamDarkQueryHistory(models.Model):
@@ -237,7 +237,7 @@ class NIRCamDarkQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_dark_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRISSDarkDarkCurrent(models.Model):
@@ -270,7 +270,7 @@ class NIRISSDarkDarkCurrent(models.Model):
         managed = True
         db_table = 'niriss_dark_dark_current'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRISSDarkPixelStats(models.Model):
@@ -290,7 +290,7 @@ class NIRISSDarkPixelStats(models.Model):
         managed = True
         db_table = 'niriss_dark_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRISSDarkQueryHistory(models.Model):
@@ -307,7 +307,7 @@ class NIRISSDarkQueryHistory(models.Model):
         managed = True
         db_table = 'niriss_dark_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRSpecDarkDarkCurrent(models.Model):
@@ -340,7 +340,7 @@ class NIRSpecDarkDarkCurrent(models.Model):
         managed = True
         db_table = 'nirspec_dark_dark_current'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRSpecDarkPixelStats(models.Model):
@@ -360,7 +360,7 @@ class NIRSpecDarkPixelStats(models.Model):
         managed = True
         db_table = 'nirspec_dark_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
 
 
 class NIRSpecDarkQueryHistory(models.Model):
@@ -377,4 +377,4 @@ class NIRSpecDarkQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_dark_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
+        db_table_comments = 'monitors'
