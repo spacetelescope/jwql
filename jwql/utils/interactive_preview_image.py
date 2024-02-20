@@ -168,7 +168,7 @@ class InteractivePreviewImg:
                 plot_width = min_dim
 
         fig = figure(tools='pan,reset,save', match_aspect=True,
-                     plot_width=plot_width, plot_height=plot_height)
+                     width=plot_width, height=plot_height)
         fig.add_tools(BoxZoomTool(match_aspect=True))
         fig.add_tools(WheelZoomTool(zoom_on_axis=False))
 
@@ -256,7 +256,7 @@ class InteractivePreviewImg:
         for index_direction in directions:
             if index_direction == 'x':
                 # column plots
-                fig = figure(plot_width=200, plot_height=main_figure.height, tools='',
+                fig = figure(width=200, height=main_figure.height, tools='',
                              y_axis_location='right', margin=(0, 0, 0, 30))
                 fig.toolbar.logo = None
 
@@ -280,7 +280,7 @@ class InteractivePreviewImg:
 
             else:
                 # row plots
-                fig = figure(plot_height=200, plot_width=main_figure.width, tools='')
+                fig = figure(height=200, width=main_figure.width, tools='')
                 fig.toolbar.logo = None
 
                 fig.y_range = Range1d()
@@ -387,7 +387,7 @@ class InteractivePreviewImg:
                                 idx = line[i].data_source.data['x'];
                             }
                             for (let j=0; j < data.length; j++) {
-                                if (idx[j] >= match_range.start 
+                                if (idx[j] >= match_range.start
                                         && idx[j] <= match_range.end) {
                                     if (Number.isFinite(data[j])) {
                                         min_val = Math.min(data[j], min_val);
@@ -444,7 +444,7 @@ class InteractivePreviewImg:
         hover_callback = CustomJS(args={'s': source, 'd': hover_div,
                                         'u': self.signal_units, 'dq': is_dq}, code="""
             const idx = cb_data.index.image_indices;
-            if (idx.length > 0) { 
+            if (idx.length > 0) {
                 var x = idx[0].dim1;
                 var y = idx[0].dim2;
                 var flat = idx[0].flat_index;
@@ -471,25 +471,25 @@ class InteractivePreviewImg:
                     }
                     label = "Value (" + u + ")";
                 }
-                d.text = "<div style='margin:20px'><h5>Pixel Value</h5>" + 
-                         "<div style='display:table; border-spacing: 2px'>" + 
-                         "<div style='display:table-row'>" + 
+                d.text = "<div style='margin:20px'><h5>Pixel Value</h5>" +
+                         "<div style='display:table; border-spacing: 2px'>" +
+                         "<div style='display:table-row'>" +
                          "<div style='display:table-cell; text-align:right'>(x, y) =</div>" +
                          "<div style='display:table-cell'>(" + x + ", " + y + ")</div>" +
                          "</div>"
                 if ('ra' in s.data && 'dec' in s.data) {
                     var ra = s.data['ra'][0][flat].toPrecision(8);
                     var dec = s.data['dec'][0][flat].toPrecision(8);
-                    d.text += "<div style='display:table-row'>" + 
+                    d.text += "<div style='display:table-row'>" +
                               "<div style='display:table-cell; text-align:right'>RA (deg)=</div>" +
                               "<div style='display:table-cell'>" + ra + "</div>" +
                               "</div>" +
-                              "<div style='display:table-row'>" + 
+                              "<div style='display:table-row'>" +
                               "<div style='display:table-cell; text-align:right'>Dec (deg)=</div>" +
                               "<div style='display:table-cell'>" + dec + "</div>" +
                               "</div>"
                 }
-                d.text += "<div style='display:table-row'>" + 
+                d.text += "<div style='display:table-row'>" +
                           "<div style='display:table-cell; text-align:right'>" + label + "=</div>" +
                           "<div style='display:table-cell'>" + val + "</div></div></div></div>";
             } else {

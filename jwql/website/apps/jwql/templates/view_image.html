@@ -13,15 +13,50 @@
     	<h3>{{ file_root }}</h3>
 
     	<!-- Specify the attributes of what is currently being shown -->
-    	<div class="d-flex flex-row">
+        <div class="d-flex flex-row">
     		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>
             <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{file_root}}", "{{base_url}}");'>
-    	</div>
-    	FITS Filename: <a id="fits_filename"></a><br>
-    	JPG Filename: <a id="jpg_filename"></a><br><br>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Visit Status: {{ basic_info.visit_status }}</div>
+            <div class="APT_parameters">Category: {{ basic_info.category }}</div>
+            <div class="APT_parameters">Exp Type: <a>{{ basic_info.exp_type }}</a></div>
+            <div class="APT_parameters">Subarray: {{ basic_info.subarray }}</div>
+            <div class="APT_parameters">Viewed: {{ marked_viewed }}</div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Filter: {{ basic_info.filter }}</div>
+            {% if 'pupil' in basic_info %}
+            <div class="APT_parameters">Pupil: {{ basic_info.pupil }}</div>
+            {% endif %}
+            {% if 'grating' in basic_info %}
+                <div class="APT_parameters">Grating: {{ basic_info.grating }}</div>
+            {% endif %}
+            <div class="APT_parameters">Exp Start: {{ expstart_str }}</div>
+        </div>
+
+        <div class="collapsible">
+            <button class="collapsible-btn btn-primary">More Exposure Info +</button>
+            <div class="collapsible-content">
+
+                <table id="dynamic-table" class="split-dictionary">
+                    <tbody id="table-body" class="alternate-rows">
+                        <!-- Table body will be populated dynamically with JavaScript -->
+                        <script>
+                        // Line below needed to put dictionary into the proper format
+                        py_dict = {{ additional_info | safe }};
+                        make_table_from_dict(py_dict)
+                        </script>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <br>
+    	FITS Filename: <a id="fits_filename"></a> &emsp; JPG Filename: <a id="jpg_filename"></a><br><br>
 
     	<!-- Allow the user to change the file type that is being displayed -->
     	<a id="view_file_type" data-current-suffix="">View File Type:</a>
@@ -44,6 +79,7 @@
         </p>
 
         <div class="row">
+
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">

@@ -147,12 +147,12 @@ class CosmicRayMonitor():
         data = fig.scatter(x='x', y='y', line_width=5, line_color='blue', source=source)
 
         # Make the x axis tick labels look nice
-        fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                    seconds=["%d %b %H:%M:%S.%3N"],
-                                                    hours=["%d %b %H:%M"],
-                                                    days=["%d %b %H:%M"],
-                                                    months=["%d %b %Y %H:%M"],
-                                                    years=["%d %b %Y"]
+        fig.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                    seconds="%d %b %H:%M:%S.%3N",
+                                                    hours="%d %b %H:%M",
+                                                    days="%d %b %H:%M",
+                                                    months="%d %b %Y %H:%M",
+                                                    years="%d %b %Y"
                                                     )
         fig.xaxis.major_label_orientation = np.pi / 4
         fig.yaxis[0].formatter = BasicTickFormatter(use_scientific=True, precision=2)

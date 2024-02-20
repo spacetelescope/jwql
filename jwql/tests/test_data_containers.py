@@ -43,8 +43,9 @@ from jwql.utils import constants  # noqa: E402 (module level import not at top o
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config  # noqa: E402 (module level import not at top of file)
+    from jwql.website.apps.jwql.models import RootFileInfo
 
-
+    
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_build_table():
     tab = data_containers.build_table('filesystem_general')
@@ -127,6 +128,58 @@ def test_get_acknowledgements():
     assert len(acknowledgements) > 0
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
+def test_get_additional_exposure_info():
+    """Tests ``get_additional_exposure_info`` function."""
+    # Test an exposure-level case
+    group_root = 'jw01068002001_02102_00008'
+    image_info = data_containers.get_image_info(group_root)
+    root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
+    basic, additional = data_containers.get_additional_exposure_info(root_file_info, image_info)
+    expected_basic = {'exp_type': 'NRC_IMAGE',
+                      'category': 'COM',
+                      'visit_status': 'SUCCESSFUL',
+                      'subarray': 'SUB320',
+                      'pupil': 'CLEAR'}
+    # We can only test a subset of the keys in additional, since things like the pipeline version,
+    # crds context, etc can change over time.
+    expected_additional = {'READPATT': 'RAPID',
+                           'TITLE': 'NIRCam Subarray-Mode Commissioning, CAR NIRCam-019',
+                           'NGROUPS': 10,
+                           'PI_NAME': 'Hilbert, Bryan',
+                           'NINTS': 10,
+                           'TARGNAME': 'GP2-JMAG14-STAR-OFFSET',
+                           'EXPTIME': 106.904,
+                           'EXPSTART': 59714.6163261875}
+    for key in expected_basic:
+        assert basic[key] == expected_basic[key]
+    for key in expected_additional:
+        assert additional[key] == expected_additional[key]
+
+    # Test an image-level case
+    file_root = 'jw01022016001_03101_00001_nrs1'
+    image_info = data_containers.get_image_info(file_root)
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+    basic, additional = data_containers.get_additional_exposure_info(root_file_info, image_info)
+    expected_basic = {'exp_type': 'NRS_IFU',
+                      'category': 'COM',
+                      'visit_status': 'SUCCESSFUL',
+                      'subarray': 'FULL',
+                      'filter': 'F100LP',
+                      'grating': 'G140H'}
+    expected_additional = {'READPATT': 'NRSRAPID',
+                           'TITLE': 'CAR FGS-017 Straylight for Moving Targets (All SIs)',
+                           'NGROUPS': 13,
+                           'PI_NAME': 'Stansberry, John A.',
+                           'NINTS': 2,
+                           'TARGNAME': 'JUPITER',
+                           'EXPTIME': 279.156,
+                           'EXPSTART': 59764.77659749352}
+    assert basic == expected_basic
+    for key in expected_additional:
+        assert additional[key] == expected_additional[key]
+
+
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_all_proposals():
     """Tests the ``get_all_proposals`` function."""
@@ -146,6 +199,7 @@ def test_get_all_proposals():
                            (['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'], {'bad'})),
                           (False, ['rate', 'uncal', 'bad', 'o006_crfints', 'o001_crf'],
                            ['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'])])
+
 def test_get_available_suffixes(untracked, input_suffixes, expected):
     result = data_containers.get_available_suffixes(
         input_suffixes, return_untracked=untracked)
@@ -285,7 +339,7 @@ def test_get_anomaly_form_post_group(mocker):
     assert update_mock.call_count == 2
 """
 
-
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_dashboard_components():
     request = MockPostRequest()
 
