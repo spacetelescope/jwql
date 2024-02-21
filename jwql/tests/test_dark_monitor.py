@@ -30,8 +30,7 @@ from jwql.tests.resources import has_test_db
 from jwql.utils.monitor_utils import mast_query_darks
 from jwql.utils.constants import DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME
 from jwql.utils.utils import get_config
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def generate_data_for_file_splitting_test():

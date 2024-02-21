@@ -37,7 +37,7 @@ import os
 
 from bokeh.layouts import column
 from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, HoverTool, OpenURL, TapTool
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
 import numpy as np
@@ -49,6 +49,7 @@ from jwql.database.database_interface import CentralStore
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
+from jwql.website.apps.jwql.models import Anomalies
 
 
 def build_table_latest_entry(tablename):
@@ -217,7 +218,7 @@ class GeneralDashboard:
 
             # Initialize plot
             plots[data['shortname']] = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
-                                              plot_width=800,
+                                              width=800,
                                               x_axis_type='datetime',
                                               title=f"Available & Used Storage on {data['shortname']}",
                                               x_axis_label='Date',
@@ -226,12 +227,12 @@ class GeneralDashboard:
             plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_dash='dashed', line_color='#C85108', line_width=3)
             plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', size=10)
             plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
-            plots[data['shortname']].circle(x='date', y='used', source=source,color='#355C7D', size=10)
+            plots[data['shortname']].circle(x='date', y='used', source=source, color='#355C7D', size=10)
 
-            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                                             days=["%d %B %Y"],
-                                                                             months=["%d %B %Y"],
-                                                                             years=["%B %Y"],
+            plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                                             days="%d %B %Y",
+                                                                             months="%d %B %Y",
+                                                                             years="%B %Y"
                                                                              )
             plots[data['shortname']].xaxis.major_label_orientation = pi / 4
             plots[data['shortname']].legend.location = 'top_left'
@@ -242,16 +243,15 @@ class GeneralDashboard:
                                                                 ])
             hover_tool[data['shortname']].formatters = {'@date': 'datetime'}
             plots[data['shortname']].tools.append(hover_tool[data['shortname']])
-            tabs.append(Panel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
+            tabs.append(TabPanel(child=plots[data['shortname']], title=f"{data['shortname']} Storage"))
 
         tabs = Tabs(tabs=tabs)
 
         di.session.close()
         return tabs
 
-
     def dashboard_central_store_data_volume(self):
-        """Create trending plot of data volume for various JWQL-related areas on disk.
+        """ Create trending plot of data volume for various JWQL-related areas on disk.
         These plots show data volumes calculated by walking over subdirectories/files in
         the JWQL-specific directories. So these plots may not include the total used
         disk volume, in the cases where JWQL is sharing a disk with other projects. These
@@ -264,14 +264,14 @@ class GeneralDashboard:
         """
         # Initialize plot
         plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
-                      plot_width=800,
+                      width=800,
                       x_axis_type='datetime',
                       title='JWQL directory size',
                       x_axis_label='Date',
                       y_axis_label='Disk Space (TB)')
 
         # This part of the plot should cycle through areas and plot area used values vs. date
-        #arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
+        # arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
         arealist = ['logs', 'outputs', 'preview_images', 'thumbnails']
         colors = ['#F8B195', '#F67280', '#6C5B7B', '#355C7D']
         for area, color in zip(arealist, colors):
@@ -297,10 +297,10 @@ class GeneralDashboard:
                 hover_tool.formatters = {'@date': 'datetime'}
                 plot.tools.append(hover_tool)
 
-        plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                     days=["%d %B %Y"],
-                                                     months=["%d %B %Y"],
-                                                     years=["%B %Y"],
+        plot.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                     days="%d %B %Y",
+                                                     months="%d %B %Y",
+                                                     years="%B %Y"
                                                      )
         plot.xaxis.major_label_orientation = pi / 4
         plot.legend.location = 'top_left'
@@ -308,7 +308,7 @@ class GeneralDashboard:
         # Put the "all" plot in a separate figure because it will be larger than all the pieces, which would
         # throw off the y range if it were in a single plot
         cen_store_plot = figure(tools='pan,box_zoom,wheel_zoom,reset,save',
-                                plot_width=800,
+                                width=800,
                                 x_axis_type='datetime',
                                 title='JWQL central store directory, total data volume',
                                 x_axis_label='Date',
@@ -332,10 +332,10 @@ class GeneralDashboard:
             legend_str = 'File volume'
             cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_dash='dashed', line_color='#355C7D', line_width=3)
             cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', size=10)
-            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                                   days=["%d %B %Y"],
-                                                                   months=["%d %B %Y"],
-                                                                   years=["%B %Y"],
+            cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                                   days="%d %B %Y",
+                                                                   months="%d %B %Y",
+                                                                   years="%B %Y"
                                                                    )
             cen_store_plot.xaxis.major_label_orientation = pi / 4
             cen_store_plot.legend.location = 'top_left'
@@ -348,7 +348,6 @@ class GeneralDashboard:
 
         di.session.close()
         return plot, cen_store_plot
-
 
     def dashboard_filetype_bar_chart(self):
         """Build bar chart of files based off of type
@@ -447,34 +446,34 @@ class GeneralDashboard:
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        p1 = figure(title="Number of Files in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1 = figure(title="Number of Files in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", width=800, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         p1.scatter(x='date', y='total_file_count', source=source, color='#C85108', size=10)
         disable_scientific_notation(p1)
-        tab1 = Panel(child=p1, title='Files Per Day')
+        tab1 = TabPanel(child=p1, title='Files Per Day')
 
         # Create separate tooltip for storage plot.
         # Show date and used and available storage together
 
-        p2 = figure(title="Available & Used Storage in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=800, x_axis_label='Date', y_axis_label='Disk Space (TB)')
+        p2 = figure(title="Available & Used Storage in Filesystem (MAST)", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", width=800, x_axis_label='Date', y_axis_label='Disk Space (TB)')
         p2.line(x='date', y='available', source=source, color='#C85108', line_dash='dashed', line_width=3, legend_label='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend_label='Used Storage')
         p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
         p2.scatter(x='date', y='used', source=source, color='#355C7D', size=10)
         disable_scientific_notation(p2)
-        tab2 = Panel(child=p2, title='Storage')
+        tab2 = TabPanel(child=p2, title='Storage')
 
-        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                   days=["%d %B %Y"],
-                                                   months=["%d %B %Y"],
-                                                   years=["%B %Y"],
+        p1.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                   days="%d %B %Y",
+                                                   months="%d %B %Y",
+                                                   years="%B %Y"
                                                    )
         p1.xaxis.major_label_orientation = pi / 4
 
-        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%H:%M %d %B %Y"],
-                                                   days=["%d %B %Y"],
-                                                   months=["%d %B %Y"],
-                                                   years=["%B %Y"],
+        p2.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
+                                                   days="%d %B %Y",
+                                                   months="%d %B %Y",
+                                                   years="%B %Y"
                                                    )
         p2.xaxis.major_label_orientation = pi / 4
         p2.legend.location = 'top_left'
@@ -534,11 +533,11 @@ class GeneralDashboard:
 
         data = pd.Series(dict(zip(x_value, top))).reset_index(name='top').rename(columns={'index': 'x'})
         source = ColumnDataSource(data)
-        plot = figure(x_range=x_value, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
+        plot = figure(x_range=x_value, title=title, width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
         plot.xaxis.major_label_orientation = pi / 4
         disable_scientific_notation(plot)
-        tab = Panel(child=plot, title=instrument)
+        tab = TabPanel(child=plot, title=instrument)
 
         return tab
 
@@ -603,7 +602,7 @@ class GeneralDashboard:
 
                 # Place the pie charts in a column/Panel, and append to the figure
                 colplots = column(pie_fig, small_pie_fig)
-                tab = Panel(child=colplots, title=f'{instrument}')
+                tab = TabPanel(child=colplots, title=f'{instrument}')
                 figures.append(tab)
 
             else:
@@ -644,8 +643,8 @@ class GeneralDashboard:
                 lw_data['angle'] = lw_data['value'] / lw_data['value'].sum() * 2 * np.pi
 
                 # Zoomed in version of the small contributors
-                sw_small = sw_data.loc[sw_data['value'] <0.5].copy()
-                lw_small = lw_data.loc[lw_data['value'] <0.5].copy()
+                sw_small = sw_data.loc[sw_data['value'] < 0.5].copy()
+                lw_small = lw_data.loc[lw_data['value'] < 0.5].copy()
                 sw_small['angle'] = sw_small['value'] / sw_small['value'].sum() * 2 * np.pi
                 lw_small['angle'] = lw_small['value'] / lw_small['value'].sum() * 2 * np.pi
                 sw_small['colors'] = ['#bec4d4'] * len(sw_small)
@@ -735,7 +734,6 @@ class GeneralDashboard:
                 show(p)
                 """
 
-
                 # Create pie charts for SW/LW, the main set of filters, and those that aren't used
                 # as much.
                 sw_pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", sw_data)
@@ -747,8 +745,8 @@ class GeneralDashboard:
                 sw_colplots = column(sw_pie_fig, sw_small_pie_fig)
                 lw_colplots = column(lw_pie_fig, lw_small_pie_fig)
 
-                tab_sw = Panel(child=sw_colplots, title=f'{instrument} SW')
-                tab_lw = Panel(child=lw_colplots, title=f'{instrument} LW')
+                tab_sw = TabPanel(child=sw_colplots, title=f'{instrument} SW')
+                tab_lw = TabPanel(child=lw_colplots, title=f'{instrument} LW')
                 figures.append(tab_sw)
                 figures.append(tab_lw)
 
@@ -765,13 +763,12 @@ class GeneralDashboard:
 
         # Place the pie charts in a column/Panel, and append to the figure
         colplots = column(pie_fig, small_pie_fig)
-        tab = Panel(child=colplots, title=f'{instrument}')
+        tab = TabPanel(child=colplots, title=f'{instrument}')
         figures.append(tab)
 
         tabs = Tabs(tabs=figures)
 
         return tabs
-
 
     def dashboard_anomaly_per_instrument(self):
         """Create figure for number of anamolies for each JWST instrument.
@@ -785,18 +782,29 @@ class GeneralDashboard:
         # Set title and figures list to make panels
         title = 'Anomaly Types per Instrument'
         figures = []
+        filter_kwargs = {}
 
-        # For unique instrument values, loop through data
-        # Find all entries for instrument/filetype combo
-        # Make figure and append it to list.
+        # Make a tab for each instrument
         for instrument in ANOMALY_CHOICES_PER_INSTRUMENT.keys():
-            data = build_table('{}_anomaly'.format(instrument))
-            data = data.drop(columns=['id', 'rootname', 'user'])
-            if not pd.isnull(self.delta_t) and not data.empty:
-                data = data[(data['flag_date'] >= (self.date - self.delta_t)) & (data['flag_date'] <= self.date)]
+            # only show data for currently marked anomalies and current instrument
+            filter_kwargs['root_file_info__instrument__iexact'] = instrument
+            queryset = Anomalies.objects.filter(**filter_kwargs)
+
+            # Convert the queryset to a Pandas DataFrame using only relevant columns
+            labels = [anomaly_keys for anomaly_keys, values in ANOMALY_CHOICES_PER_INSTRUMENT[instrument]]
+            data = pd.DataFrame.from_records(queryset.values(), columns=labels)
+
+            # Sum columns to generate the bokeh panel
             summed_anomaly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
-            figures.append(self.make_panel(summed_anomaly_columns.index.values, summed_anomaly_columns['counts'], instrument, title, 'Anomaly Type'))
 
+            # Create plot of zeroes if empty (lookin at you FGS)
+            if len(summed_anomaly_columns.index.values):
+                plot_columns = summed_anomaly_columns.index.values
+                summed_values = summed_anomaly_columns['counts']
+            else:
+                plot_columns = list(summed_anomaly_columns.index.values.base)
+                summed_values = np.zeros(len(plot_columns))
+
+            figures.append(self.make_panel(plot_columns, summed_values, instrument, title, 'Anomaly Type'))
         tabs = Tabs(tabs=figures)
-
         return tabs

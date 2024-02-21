@@ -53,11 +53,8 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
     FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
     FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
     FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
-    JWST_INSTRUMENT_NAMES_SHORTHAND
-
+    JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def _validate_config(config_file_dict):
@@ -81,7 +78,7 @@ def _validate_config(config_file_dict):
             "admin_account": {"type": "string"},
             "auth_mast": {"type": "string"},
             "connection_string": {"type": "string"},
-            "database": {
+            "databases": {
                 "type": "object",
                 "properties": {
                     "engine": {"type": "string"},
@@ -93,7 +90,36 @@ def _validate_config(config_file_dict):
                 },
                 "required": ['engine', 'name', 'user', 'password', 'host', 'port']
             },
-
+            "django_databases": {
+                "type": "object",
+                "properties": {
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    },
+                    "monitors": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    }
+                },
+                "required": ["default", "monitors"]
+            },
             "jwql_dir": {"type": "string"},
             "jwql_version": {"type": "string"},
             "server_type": {"type": "string"},
@@ -110,11 +136,11 @@ def _validate_config(config_file_dict):
             "cores": {"type": "string"}
         },
         # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
-                     "preview_image_filesystem", "thumbnail_filesystem",
-                     "outputs", "jwql_dir", "admin_account", "log_dir",
-                     "test_dir", "test_data", "setup_file", "auth_mast",
-                     "mast_token", "working"]
+        "required": ["connection_string", "databases", "django_databases",
+                     "filesystem", "preview_image_filesystem",
+                     "thumbnail_filesystem", "outputs", "jwql_dir",
+                     "admin_account", "log_dir", "test_dir", "test_data",
+                     "setup_file", "auth_mast", "mast_token", "working"]
     }
 
     # Test that the provided config file dict matches the schema

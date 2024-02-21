@@ -84,9 +84,8 @@ from sqlalchemy.types import ARRAY
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
 from jwql.utils.constants import FILE_SUFFIX_TYPES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import get_config
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 # Monkey patch Query with data_frame method

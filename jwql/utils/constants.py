@@ -28,7 +28,9 @@ References
     ``utils.py``
 """
 
+import asdf
 import inflection
+import os
 
 # Each amplifier is represented by 2 tuples, the first for x coordinates
 # and the second for y coordinates. Within each tuple are value for
@@ -736,6 +738,12 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = [
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg"]
 
+# Determine if the code is being run as part of CI checking on github
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = os.environ.get('READTHEDOCS', False)
+
 # Base name for the file listing the preview images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 PREVIEW_IMAGE_LISTFILE = "preview_image_inventory"
@@ -929,57 +937,13 @@ SUBARRAYS_ONE_OR_FOUR_AMPS = [
     "SUBGRISMSTRIPE256",
 ]
 
+schema = asdf.schema.load_schema("http://stsci.edu/schemas/jwst_datamodel/subarray.schema")
 SUBARRAYS_PER_INSTRUMENT = {
-    "nircam": [
-        "FULL",
-        "FULLP",
-        "SUB640",
-        "SUB320",
-        "SUB160",
-        "SUB400P",
-        "SUB160P",
-        "SUB64P",
-        "SUB32TATS",
-        "SUB640A210R",
-        "SUB640ASWB",
-        "SUB320A335R",
-        "SUB320A430R",
-        "SUB320ALWB",
-        "SUBGRISM256",
-        "SUBGRISM128",
-        "SUBGRISM64",
-        "SUB32TATSGRISM",
-    ],
-    "niriss": [
-        "FULL",
-        "SUBSTRIP96",
-        "SUBSTRIP256",
-        "SUB80",
-        "SUB64",
-        "SUB128",
-        "SUB256",
-        "WFSS64R",
-        "WFSS128R",
-        "WFSS64C",
-        "WFSS128C",
-        "SUBAMPCAL",
-        "SUBTAAMI",
-        "SUBTASOSS",
-    ],
-    "nirspec": [],
-    "miri": [
-        "BRIGHTSKY",
-        "FULL",
-        "MASK1065",
-        "MASK1140",
-        "MASK1550",
-        "MASKLYOT",
-        "SLITLESSPRISM",
-        "SUB64",
-        "SUB128",
-        "SUB256",
-    ],
-    "fgs": [],
+    "nircam": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][2]['enum']),
+    "niriss": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][4]['enum']),
+    "nirspec": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][6]['enum']),
+    "miri": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][1]['enum']),
+    "fgs": ['FULL'] + sorted(schema["properties"]["meta"]["properties"]["subarray"]["properties"]["name"]["anyOf"][0]['enum'])
 }
 
 # Filename suffixes that need to include the association value in the suffix in
@@ -1000,6 +964,15 @@ THUMBNAIL_LISTFILE = "thumbnail_inventory"
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ["phot", "whtlt"]
 
+# Instrument Documentation Links
+URL_DICT = {
+    "fgs": "https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor",
+    "miri": "https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument",
+    "niriss": "https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph",
+    "nirspec": "https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph",
+    "nircam": "https://jwst-docs.stsci.edu/jwst-near-infrared-camera",
+}
+
 # Possible suffix types for WFS&C files
 WFSC_SUFFIX_TYPES = ["wfscmb"]
 
@@ -1013,12 +986,3 @@ FILE_SUFFIX_TYPES = (
     + WFSC_SUFFIX_TYPES
     + MSA_SUFFIX
 )
-
-# Instrument Documentation Links
-URL_DICT = {
-    "fgs": "https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor",
-    "miri": "https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument",
-    "niriss": "https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph",
-    "nirspec": "https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph",
-    "nircam": "https://jwst-docs.stsci.edu/jwst-near-infrared-camera",
-}

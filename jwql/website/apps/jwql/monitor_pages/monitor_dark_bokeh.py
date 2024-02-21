@@ -196,7 +196,10 @@ class DarkHistPlot():
             self.plot.grid.grid_line_color = "white"
         else:
             # If self.data is empty, then make a placeholder plot
-            self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
+            title_str = f'{self.aperture}: Dark Rate Histogram'
+            x_label = 'Dark Rate (DN/sec)'
+            y_label = 'Number of Pixels'
+            self.plot = PlaceholderPlot(title_str, x_label, y_label).create()
 
 
 class DarkImagePlot():
@@ -682,6 +685,7 @@ class DarkTrendPlot():
                                                 time=self.obstime[use_amp]
                                                 )
                                       )
+
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
 
@@ -709,12 +713,12 @@ class DarkTrendPlot():
                                           legend_label=f'Amp {amp}')
 
             # Make the x axis tick labels look nice
-            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                              seconds=["%d %b %H:%M:%S.%3N"],
-                                                              hours=["%d %b %H:%M"],
-                                                              days=["%d %b %H:%M"],
-                                                              months=["%d %b %Y %H:%M"],
-                                                              years=["%d %b %Y"]
+            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                              seconds="%d %b %H:%M:%S.%3N",
+                                                              hours="%d %b %H:%M",
+                                                              days="%d %b %H:%M",
+                                                              months="%d %b %Y %H:%M",
+                                                              years="%d %b %Y"
                                                               )
             self.plot.xaxis.major_label_orientation = np.pi / 4
 

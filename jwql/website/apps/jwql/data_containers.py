@@ -43,6 +43,7 @@ from django import setup
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.query import QuerySet
 import numpy as np
 from operator import itemgetter
 import pandas as pd
@@ -59,6 +60,7 @@ from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, I
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QueryConfigKeys
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
@@ -67,15 +69,6 @@ from astroquery.mast import Mast
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
-
-# astroquery.mast import that depends on value of auth_mast
-# this import has to be made before any other import of astroquery.mast
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
@@ -368,6 +361,145 @@ def get_acknowledgements():
     return acknowledgements
 
 
+def get_additional_exposure_info(root_file_infos, image_info):
+    """Create dictionaries of basic exposure information from an exposure's
+    RootFileInfo entry, as well as header information. Originally designed to
+    be used in jwql.website.apps.jwql.views.view_image()
+
+    Parameters
+    ----------
+    root_file_infos : jwql.website.apps.jwql.models.RootFileInfo or django.db.models.query.QuerySet
+        RootFileInfo for a particular file base name, or a QuerySet of RootFileInfos for
+        an exposure base name.
+
+    image_info : : dict
+        A dictionary containing various information for the given
+        ``file_root``.
+
+    Returns
+    -------
+    basic_info : dict
+        Dictionary of information about the file/exposure
+
+    additional_info : dict
+        Dictionary of extra information about the file/exposure
+    """
+    # Get headers from the file so we can pass along info that is common to all
+    # suffixes. The order of possible_suffixes_to_use is itentional, because the
+    # uncal file will not have info on the pipeline version used, and so we would
+    # rather grab information from the rate or cal files.
+    possible_suffixes_to_use = np.array(['rate', 'rateints', 'cal', 'calints', 'uncal'])
+    existing_suffixes = np.array([suffix in image_info['suffixes'] for suffix in possible_suffixes_to_use])
+
+    if isinstance(root_file_infos, QuerySet):
+        root_file_info = root_file_infos[0]
+        filter_value = '/'.join(set([e.filter for e in root_file_infos]))
+        pupil_value = '/'.join(set([e.pupil for e in root_file_infos]))
+        grating_value = '/'.join(set([e.grating for e in root_file_infos]))
+    elif isinstance(root_file_infos, RootFileInfo):
+        root_file_info = root_file_infos
+        filter_value = root_file_info.filter
+        pupil_value = root_file_info.pupil
+        grating_value = root_file_info.grating
+
+    # Initialize dictionary of file info to show at the top of the page, along
+    # with another for info that will be in the collapsible text box.
+    basic_info = {'exp_type': root_file_info.exp_type,
+                  'category': 'N/A',
+                  'visit_status': 'N/A',
+                  'subarray': root_file_info.subarray,
+                  'filter': filter_value
+                  }
+
+    # The order of the elements is important here, in that the webpage displays
+    # them in the order they are here, and we've set this order to try and group
+    # together related keywords.
+    if isinstance(root_file_infos, QuerySet):
+        additional_info = {'READPATT': root_file_info.read_patt,
+                           'TITLE': 'N/A',
+                           'NGROUPS': 'N/A',
+                           'PI_NAME': 'N/A',
+                           'NINTS': 'N/A',
+                           'TARGNAME': 'N/A',
+                           'EXPTIME': 'N/A',
+                           'TARG_RA': 'N/A',
+                           'CAL_VER': 'N/A',
+                           'TARG_DEC': 'N/A',
+                           'CRDS context': 'N/A',
+                           'PA_V3': 'N/A',
+                           'EXPSTART': root_file_info.expstart
+                           }
+    elif isinstance(root_file_infos, RootFileInfo):
+        additional_info = {'READPATT': root_file_info.read_patt,
+                           'TITLE': 'N/A',
+                           'NGROUPS': 'N/A',
+                           'PI_NAME': 'N/A',
+                           'NINTS': 'N/A',
+                           'TARGNAME': 'N/A',
+                           'EXPTIME': 'N/A',
+                           'RA_REF': 'N/A',
+                           'CAL_VER': 'N/A',
+                           'DEC_REF': 'N/A',
+                           'CRDS context': 'N/A',
+                           'ROLL_REF': 'N/A',
+                           'EXPSTART': root_file_info.expstart
+                           }
+
+    # Deal with instrument-specific parameters
+    if root_file_info.instrument == 'NIRSpec':
+        basic_info['grating'] = grating_value
+
+    if root_file_info.instrument in ['NIRCam', 'NIRISS']:
+        basic_info['pupil'] = pupil_value
+
+    # If any of the desired files are present, get the headers and populate the header
+    # info dictionary
+    if any(existing_suffixes):
+        suffix = possible_suffixes_to_use[existing_suffixes][0]
+        filename = f'{root_file_info.root_name}_{suffix}.fits'
+
+        # get_image_info() has already globbed over the directory with the files and
+        # returned the list of existing suffixes, so we shouldn't need to check for
+        # file existence here.
+        file_path = filesystem_path(filename, check_existence=True)
+
+        header = fits.getheader(file_path)
+        header_sci = fits.getheader(file_path, 1)
+
+        basic_info['category'] = header['CATEGORY']
+        basic_info['visit_status'] = header['VISITSTA']
+        additional_info['NGROUPS'] = header['NGROUPS']
+        additional_info['NINTS'] = header['NINTS']
+        additional_info['EXPTIME'] = header['EFFEXPTM']
+        additional_info['TITLE'] = header['TITLE']
+        additional_info['PI_NAME'] = header['PI_NAME']
+        additional_info['TARGNAME'] = header['TARGPROP']
+
+        # For the exposure level (i.e. multiple files) present the target
+        # RA and Dec. For the image level, give RA_REF, DEC_REF, since those
+        # are specific to the detector. Similarly, for the exposure level, show
+        # PA_V3, which applies to all detectors. At the image level, show
+        # ROLL_REF, which is detector-specific.
+        if isinstance(root_file_infos, QuerySet):
+            additional_info['TARG_RA'] = header['TARG_RA']
+            additional_info['TARG_DEC'] = header['TARG_DEC']
+            additional_info['PA_V3'] = header_sci['PA_V3']
+        elif isinstance(root_file_infos, RootFileInfo):
+            additional_info['RA_REF'] = header_sci['RA_REF']
+            additional_info['DEC_REF'] = header_sci['DEC_REF']
+            additional_info['ROLL_REF'] = header_sci['ROLL_REF']
+
+        additional_info['CAL_VER'] = 'N/A'
+        additional_info['CRDS context'] = 'N/A'
+
+        # Pipeline version and CRDS context info are not in uncal files
+        if suffix != 'uncal':
+            additional_info['CAL_VER'] = header['CAL_VER']
+            additional_info['CRDS context'] = header['CRDS_CTX']
+
+    return basic_info, additional_info
+
+
 def get_all_proposals():
     """Return a list of all proposals that exist in the filesystem.
 
@@ -412,8 +544,7 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
     untracked_suffixes = set(all_suffixes)
     for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
         if 'crf' not in poss_suffix:
-            if (poss_suffix in all_suffixes
-            and poss_suffix not in suffixes):
+            if (poss_suffix in all_suffixes and poss_suffix not in suffixes):
                 suffixes.append(poss_suffix)
                 untracked_suffixes.remove(poss_suffix)
         else:
@@ -423,8 +554,7 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
             # So in this case, we strip the e.g. o001 from the
             # suffixes and check which list elements match.
             for image_suffix in all_suffixes:
-                if (image_suffix.endswith(poss_suffix)
-                and image_suffix not in suffixes):
+                if (image_suffix.endswith(poss_suffix) and image_suffix not in suffixes):
                     suffixes.append(image_suffix)
                     untracked_suffixes.remove(image_suffix)
 

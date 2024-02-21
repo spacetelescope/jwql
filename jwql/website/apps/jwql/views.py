@@ -51,21 +51,25 @@ import os
 import operator
 import socket
 
+from astropy.time import Time
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+import numpy as np
 from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
-from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
+from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config
+from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import get_acknowledgements
+from .data_containers import get_additional_exposure_info
 from .data_containers import get_available_suffixes
 from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
@@ -1169,6 +1173,13 @@ def view_exposure(request, inst, group_root):
     root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
     viewed = all([rf.viewed for rf in root_file_info])
 
+    # Convert expstart from MJD to a date
+    expstart_str = Time(root_file_info[0].expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
+
+    # Create one dict of info to show at the top of the page, and another dict of info
+    # to show in the collapsible text box.
+    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+
     # Build the context
     context = {'base_url': get_base_url(),
                'group_root_list': group_root_list,
@@ -1182,7 +1193,10 @@ def view_exposure(request, inst, group_root):
                'total_ints': image_info['total_ints'],
                'detectors': sorted(image_info['detectors']),
                'form': form,
-               'marked_viewed': viewed}
+               'marked_viewed': viewed,
+               'expstart_str': expstart_str,
+               'basic_info': basic_info,
+               'additional_info': additional_info}
 
     return render(request, template, context)
 
@@ -1258,6 +1272,13 @@ def view_image(request, inst, file_root):
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
+    # Convert expstart from MJD to a date
+    expstart_str = Time(root_file_info.expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
+
+    # Create one dict of info to show at the top of the page, and another dict of info
+    # to show in the collapsible text box.
+    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+
     # Build the context
     context = {'base_url': get_base_url(),
                'file_root_list': file_root_list,
@@ -1270,6 +1291,9 @@ def view_image(request, inst, file_root):
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
                'form': form,
-               'marked_viewed': root_file_info.viewed}
+               'marked_viewed': root_file_info.viewed,
+               'expstart_str': expstart_str,
+               'basic_info': basic_info,
+               'additional_info': additional_info}
 
     return render(request, template, context)
