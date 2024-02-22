@@ -95,18 +95,12 @@ from jwst.datamodels import dqflags
 from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
 
-from jwql.database.database_interface import engine, session
-from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
-from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
-from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
-from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
-from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, ON_GITHUB_ACTIONS
-from jwql.utils.constants import ON_READTHEDOCS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.permissions import set_permissions
@@ -114,6 +108,11 @@ from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists
 
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
     from jwql.website.apps.jwql.monitor_pages.monitor_bad_pixel_bokeh import BadPixelPlots
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
@@ -435,8 +434,8 @@ class BadPixels():
                  'obs_end_time': obs_end_time,
                  'baseline_file': baseline_file,
                  'entry_date': datetime.datetime.now()}
-        with engine.begin() as connection:
-            connection.execute(self.pixel_table.__table__.insert(), entry)
+        entry = self.pixel_table(**entry)
+        entry.save()
 
     def filter_query_results(self, results, datatype):
         """Filter MAST query results. For input flats, keep only those
@@ -583,14 +582,15 @@ class BadPixels():
         if pixel_type not in ['hot', 'dead', 'noisy']:
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
-        db_entries = session.query(self.pixel_table) \
-            .filter(self.pixel_table.type == pixel_type) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
+        filters = {"type__iexact": pixel_type,
+                   "detector__iexact": self.detector
+                   }
 
+        records = self.pixel_table.objects.filter(**filters).all()
         already_found = []
-        if len(db_entries) != 0:
-            for _row in db_entries:
+
+        if len(records) != 0:
+            for _row in records:
                 x_coords = _row.x_coord
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
@@ -606,8 +606,6 @@ class BadPixels():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
-        session.close()
-
         return (new_pixels_x, new_pixels_y)
 
     def identify_tables(self):
@@ -615,8 +613,8 @@ class BadPixels():
         monitor
         """
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}BadPixelQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}BadPixelStats'.format(mixed_case_name))
+        self.query_table = eval(f'{mixed_case_name}BadPixelQueryHistory')
+        self.pixel_table = eval(f'{mixed_case_name}BadPixelStats')
 
     def map_uncal_and_rate_file_lists(self, uncal_files, rate_files, rate_files_to_copy, obs_type):
         """Copy uncal and rate files from the filesystem to the working
@@ -705,26 +703,26 @@ class BadPixels():
         elif file_type.lower() == 'flat':
             run_field = self.query_table.run_bpix_from_flats
 
-        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
-            filter(run_field == True)  # noqa: E712 (comparison to true)
+        filters = {"aperture__iexact": self.aperture,
+                   "run_monitor": run_field}
+
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
-            for instance in query:
+            for instance in record:
                 dates = np.append(dates, instance.dark_end_time_mjd)
         elif file_type.lower() == 'flat':
-            for instance in query:
+            for instance in record:
                 dates = np.append(dates, instance.flat_end_time_mjd)
 
-        query_count = len(dates)
-        if query_count == 0:
+        if record is None:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
-            query_result = np.max(dates)
+            query_result = record.end_time_mjd
 
-        session.close()
         return query_result
 
     def make_crds_parameter_dict(self):
@@ -1287,8 +1285,8 @@ class BadPixels():
                              'run_bpix_from_flats': run_flats,
                              'run_monitor': run_flats or run_darks,
                              'entry_date': datetime.datetime.now()}
-                with engine.begin() as connection:
-                    connection.execute(self.query_table.__table__.insert(), new_entry)
+                entry = self.query_table(**new_entry)
+                entry.save()
                 logging.info('\tUpdated the query history table')
 
         # Update the figures to be shown in the web app. Only update figures
