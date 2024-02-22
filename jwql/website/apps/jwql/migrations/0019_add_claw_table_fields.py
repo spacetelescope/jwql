@@ -22,6 +22,21 @@ def db_select(apps, schema_editor):
         )
 
 
+def reverse_migration(apps, schema_editor):
+    if schema_editor.connection.alias == "default":
+        # Anything that's not for the monitors tables
+        return
+    else:
+        migrations.RemoveField(
+            model_name='nircam_claw_stats',
+            name='doy',
+        )
+        migrations.RemoveField(
+            model_name='nircam_claw_stats',
+            name='total_bkg',
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -29,5 +44,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(db_select),
+        migrations.RunPython(db_select, reverse_migration),
     ]

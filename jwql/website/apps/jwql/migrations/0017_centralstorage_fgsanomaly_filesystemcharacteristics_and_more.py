@@ -610,6 +610,9 @@ def db_select(apps, schema_editor):
             },
         )
 
+def reverse_migration(apps, schema_editor):
+    return
+
 
 class Migration(migrations.Migration):
 
@@ -618,5 +621,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(db_select),
+        migrations.RunPython(db_select, reverse_migration),
     ]
