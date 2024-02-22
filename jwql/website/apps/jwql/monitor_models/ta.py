@@ -44,7 +44,6 @@ class MIRITaQueryHistory(models.Model):
         managed = True
         db_table = 'miri_ta_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRITaStats(models.Model):
@@ -63,7 +62,6 @@ class MIRITaStats(models.Model):
         managed = True
         db_table = 'miri_ta_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecTaQueryHistory(models.Model):
@@ -80,7 +78,6 @@ class NIRSpecTaQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_ta_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecTaStats(models.Model):
@@ -122,4 +119,3 @@ class NIRSpecTaStats(models.Model):
         managed = True
         db_table = 'nirspec_ta_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'

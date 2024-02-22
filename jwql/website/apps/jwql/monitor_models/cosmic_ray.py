@@ -43,7 +43,6 @@ class FGSCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'fgs_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class FGSCosmicRayStats(models.Model):
@@ -61,7 +60,6 @@ class FGSCosmicRayStats(models.Model):
         managed = True
         db_table = 'fgs_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRICosmicRayQueryHistory(models.Model):
@@ -77,7 +75,6 @@ class MIRICosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'miri_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRICosmicRayStats(models.Model):
@@ -95,7 +92,6 @@ class MIRICosmicRayStats(models.Model):
         managed = True
         db_table = 'miri_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamCosmicRayQueryHistory(models.Model):
@@ -111,7 +107,6 @@ class NIRCamCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamCosmicRayStats(models.Model):
@@ -129,7 +124,6 @@ class NIRCamCosmicRayStats(models.Model):
         managed = True
         db_table = 'nircam_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSCosmicRayQueryHistory(models.Model):
@@ -145,7 +139,6 @@ class NIRISSCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'niriss_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSCosmicRayStats(models.Model):
@@ -163,7 +156,6 @@ class NIRISSCosmicRayStats(models.Model):
         managed = True
         db_table = 'niriss_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecCosmicRayQueryHistory(models.Model):
@@ -179,7 +171,6 @@ class NIRSpecCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecCosmicRayStats(models.Model):
@@ -197,4 +188,3 @@ class NIRSpecCosmicRayStats(models.Model):
         managed = True
         db_table = 'nirspec_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'

@@ -44,7 +44,6 @@ class NIRCamBiasQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_bias_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamBiasStats(models.Model):
@@ -74,7 +73,6 @@ class NIRCamBiasStats(models.Model):
         managed = True
         db_table = 'nircam_bias_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSBiasQueryHistory(models.Model):
@@ -91,7 +89,6 @@ class NIRISSBiasQueryHistory(models.Model):
         managed = True
         db_table = 'niriss_bias_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSBiasStats(models.Model):
@@ -121,7 +118,6 @@ class NIRISSBiasStats(models.Model):
         managed = True
         db_table = 'niriss_bias_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecBiasQueryHistory(models.Model):
@@ -138,7 +134,6 @@ class NIRSpecBiasQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_bias_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecBiasStats(models.Model):
@@ -168,4 +163,3 @@ class NIRSpecBiasStats(models.Model):
         managed = True
         db_table = 'nirspec_bias_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'

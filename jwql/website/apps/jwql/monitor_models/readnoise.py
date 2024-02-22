@@ -44,7 +44,6 @@ class FGSReadnoiseQueryHistory(models.Model):
         managed = True
         db_table = 'fgs_readnoise_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class FGSReadnoiseStats(models.Model):
@@ -88,7 +87,6 @@ class FGSReadnoiseStats(models.Model):
         managed = True
         db_table = 'fgs_readnoise_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRIReadnoiseQueryHistory(models.Model):
@@ -105,7 +103,6 @@ class MIRIReadnoiseQueryHistory(models.Model):
         managed = True
         db_table = 'miri_readnoise_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRIReadnoiseStats(models.Model):
@@ -149,7 +146,6 @@ class MIRIReadnoiseStats(models.Model):
         managed = True
         db_table = 'miri_readnoise_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamReadnoiseQueryHistory(models.Model):
@@ -166,7 +162,6 @@ class NIRCamReadnoiseQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_readnoise_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamReadnoiseStats(models.Model):
@@ -210,7 +205,6 @@ class NIRCamReadnoiseStats(models.Model):
         managed = True
         db_table = 'nircam_readnoise_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSReadnoiseQueryHistory(models.Model):
@@ -227,7 +221,6 @@ class NIRISSReadnoiseQueryHistory(models.Model):
         managed = True
         db_table = 'niriss_readnoise_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSReadnoiseStats(models.Model):
@@ -271,7 +264,6 @@ class NIRISSReadnoiseStats(models.Model):
         managed = True
         db_table = 'niriss_readnoise_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecReadnoiseQueryHistory(models.Model):
@@ -288,7 +280,6 @@ class NIRSpecReadnoiseQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_readnoise_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecReadnoiseStats(models.Model):
@@ -332,4 +323,3 @@ class NIRSpecReadnoiseStats(models.Model):
         managed = True
         db_table = 'nirspec_readnoise_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'

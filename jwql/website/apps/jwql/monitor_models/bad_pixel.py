@@ -48,7 +48,6 @@ class FGSBadPixelQueryHistory(models.Model):
         managed = True
         db_table = 'fgs_bad_pixel_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class FGSBadPixelStats(models.Model):
@@ -67,7 +66,6 @@ class FGSBadPixelStats(models.Model):
         managed = True
         db_table = 'fgs_bad_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRIBadPixelQueryHistory(models.Model):
@@ -88,7 +86,6 @@ class MIRIBadPixelQueryHistory(models.Model):
         managed = True
         db_table = 'miri_bad_pixel_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class MIRIBadPixelStats(models.Model):
@@ -107,7 +104,6 @@ class MIRIBadPixelStats(models.Model):
         managed = True
         db_table = 'miri_bad_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamBadPixelQueryHistory(models.Model):
@@ -128,7 +124,6 @@ class NIRCamBadPixelQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_bad_pixel_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRCamBadPixelStats(models.Model):
@@ -147,7 +142,6 @@ class NIRCamBadPixelStats(models.Model):
         managed = True
         db_table = 'nircam_bad_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSBadPixelQueryHistory(models.Model):
@@ -168,7 +162,6 @@ class NIRISSBadPixelQueryHistory(models.Model):
         managed = True
         db_table = 'niriss_bad_pixel_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRISSBadPixelStats(models.Model):
@@ -187,7 +180,6 @@ class NIRISSBadPixelStats(models.Model):
         managed = True
         db_table = 'niriss_bad_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecBadPixelQueryHistory(models.Model):
@@ -208,7 +200,6 @@ class NIRSpecBadPixelQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_bad_pixel_query_history'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'
 
 
 class NIRSpecBadPixelStats(models.Model):
@@ -227,4 +218,3 @@ class NIRSpecBadPixelStats(models.Model):
         managed = True
         db_table = 'nirspec_bad_pixel_stats'
         unique_together = (('id', 'entry_date'),)
-        db_table_comment = 'monitors'

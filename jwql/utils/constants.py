@@ -653,6 +653,52 @@ MIRI_POS_RATIO_VALUES = {
     },
 }
 
+# Names of all of the monitor database tables
+MONITOR_TABLE_NAMES = [
+    "FGSBadPixelQueryHistory", "FGSBadPixelStats",
+    "MIRIBadPixelQueryHistory", "MIRIBadPixelStats",
+    "NIRCamBadPixelQueryHistory", "NIRCamBadPixelStats",
+    "NIRISSBadPixelQueryHistory", "NIRISSBadPixelStats",
+    "NIRSpecBadPixelQueryHistory", "NIRSpecBadPixelStats",
+    "NIRCamBiasQueryHistory", "NIRCamBiasStats",
+    "NIRISSBiasQueryHistory", "NIRISSBiasStats",
+    "NIRSpecBiasQueryHistory", "NIRSpecBiasStats",
+    "NIRCamClawQueryHistory", "NIRCamClawStats",
+    "Monitor",
+    "CentralStorage",
+    "FilesystemCharacteristics",
+    "FilesystemGeneral",
+    "FilesystemInstrument",
+    "FgsAnomaly",
+    "MiriAnomaly",
+    "NircamAnomaly",
+    "NirissAnomaly",
+    "NirspecAnomaly",
+    "FGSCosmicRayQueryHistory", "FGSCosmicRayStats",
+    "MIRICosmicRayQueryHistory", "MIRICosmicRayStats",
+    "NIRCamCosmicRayQueryHistory", "NIRCamCosmicRayStats",
+    "NIRISSCosmicRayQueryHistory", "NIRISSCosmicRayStats",
+    "NIRSpecCosmicRayQueryHistory", "NIRSpecCosmicRayStats",
+    "FGSDarkDarkCurrent", "FGSDarkPixelStats", "FGSDarkQueryHistory",
+    "MIRIDarkDarkCurrent", "MIRIDarkPixelStats", "MIRIDarkQueryHistory",
+    "NIRCamDarkDarkCurrent", "NIRCamDarkPixelStats", "NIRCamDarkQueryHistory",
+    "NIRISSDarkDarkCurrent", "NIRISSDarkPixelStats", "NIRISSDarkQueryHistory",
+    "NIRSpecDarkDarkCurrent", "NIRSpecDarkPixelStats", "NIRSpecDarkQueryHistory",
+    "FGSEdbBlocksStats", "FGSEdbDailyStats", "FGSEdbEveryChangeStats", "FGSEdbTimeIntervalStats", "FGSEdbTimeStats",
+    "MIRIEdbBlocksStats", "MIRIEdbDailyStats", "MIRIEdbEveryChangeStats", "MIRIEdbTimeIntervalStats", "MIRIEdbTimeStats",
+    "NIRCamEdbBlocksStats", "NIRCamEdbDailyStats", "NIRCamEdbEveryChangeStats", "NIRCamEdbTimeIntervalStats", "NIRCamEdbTimeStats",
+    "NIRISSEdbBlocksStats", "NIRISSEdbDailyStats", "NIRISSEdbEveryChangeStats", "NIRISSEdbTimeIntervalStats", "NIRISSEdbTimeStats",
+    "NIRSpecEdbBlocksStats", "NIRSpecEdbDailyStats", "NIRSpecEdbEveryChangeStats", "NIRSpecEdbTimeIntervalStats", "NIRSpecEdbTimeStats",
+    "NIRSpecGratingStats",
+    "FGSReadnoiseQueryHistory", "FGSReadnoiseStats",
+    "MIRIReadnoiseQueryHistory", "MIRIReadnoiseStats",
+    "NIRCamReadnoiseQueryHistory", "NIRCamReadnoiseStats",
+    "NIRISSReadnoiseQueryHistory", "NIRISSReadnoiseStats",
+    "NIRSpecReadnoiseQueryHistory", "NIRSpecReadnoiseStats",
+    "MIRITaQueryHistory", "MIRITaStats",
+    "NIRSpecTaQueryHistory", "NIRSpecTaStats"
+]
+
 # Suffix for msa files
 MSA_SUFFIX = ["msa"]
 

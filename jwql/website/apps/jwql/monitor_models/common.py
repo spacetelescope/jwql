@@ -127,8 +127,7 @@ if you have a monitor table defined as below:
             managed = True
             db_table = 'niriss_my_monitor_stats'
             unique_together = (('id', 'entry_date'),)
-            db_table_comment = 'monitors'
-
+    
 then you would create a new entry as follows:
 
 .. code-block:: python
@@ -179,50 +178,6 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 
-class MonitorRouter:
-    """
-    A router to control all database operations on models in the
-    JWQLDB (monitors) database.
-    """
-
-    route_app_labels = {"monitors"}
-
-    def db_for_read(self, model, **hints):
-        """
-        Attempts to read monitor models go to monitors db.
-        """
-        if model._meta.db_table_comment in self.route_app_labels:
-            return "monitors"
-        return None
-
-    def db_for_write(self, model, **hints):
-        """
-        Attempts to write  monitor models go to monitors db.
-        """
-        if model._meta.db_table_comment in self.route_app_labels:
-            return "monitors"
-        return None
-
-    def allow_relation(self, obj1, obj2, **hints):
-        """
-        Allow relations between tables in the monitors DB.
-        """
-        if (
-            obj1._meta.db_table_comment in self.route_app_labels
-            or obj2._meta.db_table_comment in self.route_app_labels
-        ):
-            return True
-        return None
-
-    def allow_migrate(self, db, app_label, model_name=None, **hints):
-        """
-        Make sure the monitors apps only appear in the 'monitors' database.
-        """
-        if app_label in self.route_app_labels or app_label == 'jwql':
-            return db == "monitors"
-        return None
-
-
 class Monitor(models.Model):
     monitor_name = models.CharField()
     start_time = models.DateTimeField()
@@ -233,7 +188,6 @@ class Monitor(models.Model):
     class Meta:
         managed = True
         db_table = 'monitor'
-        db_table_comment = 'monitors'
 
 
 class CentralStorage(models.Model):
@@ -246,7 +200,6 @@ class CentralStorage(models.Model):
     class Meta:
         managed = True
         db_table = 'central_storage'
-        db_table_comment = 'monitors'
 
 
 class FilesystemCharacteristics(models.Model):
@@ -258,7 +211,6 @@ class FilesystemCharacteristics(models.Model):
     class Meta:
         managed = True
         db_table = 'filesystem_characteristics'
-        db_table_comment = 'monitors'
 
 
 class FilesystemGeneral(models.Model):
@@ -273,7 +225,6 @@ class FilesystemGeneral(models.Model):
     class Meta:
         managed = True
         db_table = 'filesystem_general'
-        db_table_comment = 'monitors'
 
 
 class FilesystemInstrument(models.Model):
@@ -287,7 +238,6 @@ class FilesystemInstrument(models.Model):
         managed = True
         db_table = 'filesystem_instrument'
         unique_together = (('date', 'instrument', 'filetype'),)
-        db_table_comment = 'monitors'
 
 
 class FgsAnomaly(models.Model):
@@ -308,7 +258,6 @@ class FgsAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'fgs_anomaly'
-        db_table_comment = 'monitors'
 
 
 class MiriAnomaly(models.Model):
@@ -334,7 +283,6 @@ class MiriAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'miri_anomaly'
-        db_table_comment = 'monitors'
 
 
 class NircamAnomaly(models.Model):
@@ -360,7 +308,6 @@ class NircamAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'nircam_anomaly'
-        db_table_comment = 'monitors'
 
 
 class NirissAnomaly(models.Model):
@@ -383,7 +330,6 @@ class NirissAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'niriss_anomaly'
-        db_table_comment = 'monitors'
 
 
 class NirspecAnomaly(models.Model):
@@ -406,4 +352,3 @@ class NirspecAnomaly(models.Model):
     class Meta:
         managed = True
         db_table = 'nirspec_anomaly'
-        db_table_comment = 'monitors'
