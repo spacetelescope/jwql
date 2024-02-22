@@ -27,8 +27,6 @@ class MonitorRouter:
     JWQLDB (monitors) database.
     """
 
-    route_app_labels = {"monitors"}
-
     def db_for_read(self, model, **hints):
         """
         Attempts to read monitor models go to monitors db.
@@ -60,6 +58,6 @@ class MonitorRouter:
         """
         Make sure the monitors apps only appear in the 'monitors' database.
         """
-        if app_label in self.route_app_labels or app_label == 'jwql':
+        if app_label == 'jwql' and model_name in MONITOR_TABLE_NAMES:
             return db == "monitors"
         return None
