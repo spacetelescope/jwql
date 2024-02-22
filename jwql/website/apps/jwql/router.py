@@ -51,7 +51,7 @@ class MonitorRouter:
         """
         if (
             obj1.__class__.__name__ in MONITOR_TABLE_NAMES
-            or obj2.__class__.__name__ in MONITOR_TABLE_NAMES
+            and obj2.__class__.__name__ in MONITOR_TABLE_NAMES
         ):
             return True
         return None
