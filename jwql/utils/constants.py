@@ -207,6 +207,18 @@ DARK_EXP_TYPES = {
 # Types of potential bad pixels identified by the dark current monitor
 DARK_MONITOR_BADPIX_TYPES = ["hot", "dead", "noisy"]
 
+# Minimum amount of time, in days, between epochs of dark current observations. If the
+# dark monitor sees this much time, or longer, between two dark current files, it assumes
+# that the two files are part of separate epochs. This means the monitor will run separately
+# on these files, rather than bundling them together into a batch, where they would have
+# been combined into a mean dark rate
+DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME = {'nircam': 10.,
+                                             'niriss': 10.,
+                                             'miri': 0.00001,  # Treat each MIRI exposure separately
+                                             'nirspec': 10.,
+                                             'fgs': 10.
+                                             }
+
 # Maximum number of potential new bad pixels to overplot on the dark monitor
 # mean dark image plot. Too many overplotted points starts to obscure the image
 # itself, and are most likely not really new bad pixels
@@ -615,6 +627,10 @@ LOOK_OPTIONS = ["New", "Viewed"]
 
 # Maximum number of records returned by MAST for a single query
 MAST_QUERY_LIMIT = 550000
+
+# Minimum number of groups per integration required to include data
+# in the dark current monitor
+MINIMUM_DARK_CURRENT_GROUPS = 10
 
 # Expected position sensor values for MIRI. Used by the EDB monitor
 # to filter out bad values. Tuple values are the expected value and
