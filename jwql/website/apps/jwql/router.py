@@ -31,7 +31,7 @@ class MonitorRouter:
         """
         Attempts to read monitor models go to monitors db.
         """
-        if model.__name__ in MONITOR_TABLE_NAMES:
+        if model._meta.db_table in MONITOR_TABLE_NAMES:
             return "monitors"
         return None
 
@@ -39,7 +39,7 @@ class MonitorRouter:
         """
         Attempts to write  monitor models go to monitors db.
         """
-        if model.__name__ in MONITOR_TABLE_NAMES:
+        if model._meta.db_table in MONITOR_TABLE_NAMES:
             return "monitors"
         return None
 
@@ -48,8 +48,8 @@ class MonitorRouter:
         Allow relations between tables in the monitors DB.
         """
         if (
-            obj1.__class__.__name__ in MONITOR_TABLE_NAMES
-            and obj2.__class__.__name__ in MONITOR_TABLE_NAMES
+            obj1._meta.db_table in MONITOR_TABLE_NAMES
+            and obj2._meta.db_table in MONITOR_TABLE_NAMES
         ):
             return True
         return None
@@ -58,6 +58,7 @@ class MonitorRouter:
         """
         Make sure the monitors apps only appear in the 'monitors' database.
         """
-        if app_label == 'jwql' and model_name in MONITOR_TABLE_NAMES:
+        model_names = [name.replace("_", "") for name in MONITOR_TABLE_NAMES]
+        if app_label == 'jwql' and model_name in model_names:
             return db == "monitors"
         return None

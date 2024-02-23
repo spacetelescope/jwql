@@ -192,7 +192,6 @@ class ClawMonitor():
                     df = df[df['stddev'] != 0]  # older data has no accurate stddev measures
                     plot_data = df['stddev'].values
                 if plot_type == 'model':
-                    total_bkg = [1. for x in df['median'].values]
                     plot_data = df['median'].values / df['total_bkg'].values
                 plot_expstarts = df['expstart_mjd'].values
 
