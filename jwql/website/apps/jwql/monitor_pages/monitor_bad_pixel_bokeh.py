@@ -22,9 +22,10 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.embed import components, file_html
-from bokeh.io import export_png, show
+from bokeh.io import show
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Text, Title
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
@@ -40,7 +41,7 @@ from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixe
 from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
 from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import filesystem_path, get_config, read_png
+from jwql.utils.utils import filesystem_path, get_config, read_png, save_png
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = get_config()['outputs']
@@ -73,8 +74,6 @@ class BadPixelPlots():
 
         # Get the relevant database tables
         self.identify_tables()
-
-        #self.detectors = get_unique_values_per_column(self.pixel_table, 'detector')
 
         self.detectors = sorted(DETECTOR_PER_INSTRUMENT[self.instrument])
         if self.instrument == 'miri':
@@ -128,7 +127,6 @@ class BadPixelPlots():
 
         self._html = "".join(newlines)
 
-
     def run(self):
 
         # Right now, the aperture name in the query history table is used as the title of the
@@ -152,7 +150,7 @@ class BadPixelPlots():
             plot_layout = badpix_monitor_plot_layout(all_plots)
 
             # Create a tab for each type of plot
-            detector_panels.append(Panel(child=plot_layout, title=detector))
+            detector_panels.append(TabPanel(child=plot_layout, title=detector))
 
         # Build tabs
         tabs = Tabs(tabs=detector_panels)
@@ -163,7 +161,7 @@ class BadPixelPlots():
         # Insert into our html template and save
         template_dir = os.path.join(os.path.dirname(__file__), '../templates')
         template_file = os.path.join(template_dir, 'bad_pixel_monitor_savefile_basic.html')
-        temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div':div}
+        temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div': div}
         self._html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
 
         # Modify the html such that our Django-related lines are kept in place,
@@ -264,7 +262,6 @@ class BadPixelData():
         for badtype in self.badtypes:
             self.get_trending_data(badtype)
 
-
     def get_most_recent_entry(self):
         """Get all nedded data from the database tables.
         """
@@ -312,8 +309,8 @@ class BadPixelData():
         # Query database for all data in the table with a matching detector and bad pixel type
         all_entries_by_type = session.query(self.pixel_table.type, self.pixel_table.detector, func.array_length(self.pixel_table.x_coord, 1),
                                             self.pixel_table.obs_mid_time) \
-                              .filter(and_(self.pixel_table.detector == self.detector,  self.pixel_table.type == badpix_type)) \
-                              .all()
+            .filter(and_(self.pixel_table.detector == self.detector, self.pixel_table.type == badpix_type)) \
+            .all()
 
         # Organize the results
         num_pix = []
@@ -463,7 +460,7 @@ class NewBadPixPlot():
             self.plot = figure(title=title_text, tools=tools,
                                x_axis_label="Pixel Number", y_axis_label="Pixel Number")
         else:
-            self.plot = figure(tools='') #, x_axis_label="Pixel Number", y_axis_label="Pixel Number")
+            self.plot = figure(tools='')
             self.plot.toolbar.logo = None
             self.plot.toolbar_location = None
             self.plot.min_border = 0
@@ -475,18 +472,9 @@ class NewBadPixPlot():
         # Plot image
         if image is not None:
             ny, nx = image.shape
-            #imgplot = self.plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
-
-
-
             # Shift the figure title slightly right in this case to get it
             # to align with the axes
-            #self.plot = figure(title=title, x_range=(0, self._detlen), y_range=(0, self._detlen), width=xdim, height=ydim*,
-            #                   tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_label="Pixel Number", y_axis_label="Pixel Number")
             self.plot.image_rgba(image=[image], x=0, y=0, dw=self._detlen, dh=self._detlen, alpha=0.5)
-
-
-
         else:
             # If the background image is not present, manually set the x and y range
             self.plot.x_range.start = 0
@@ -511,10 +499,9 @@ class NewBadPixPlot():
         legend = Legend(items=[plot_legend],
                         location="center",
                         orientation='vertical',
-                        title = legend_title)
+                        title=legend_title)
 
         self.plot.add_layout(legend, 'below')
-
 
     def overplot_bad_pix(self):
         """Add a scatter plot of potential new bad pixels to the plot
@@ -537,7 +524,7 @@ class NewBadPixPlot():
             # If there are no new bad pixels, write text within the figure mentioning that
             txt_source = ColumnDataSource(data=dict(x=[self._detlen / 10], y=[self._detlen / 2],
                                           text=[f'No new {self.badpix_type} pixels found']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value': '20px'})
             self.plot.add_glyph(txt_source, glyph)
 
             # Insert a fake one, in order to get the plot to be made
@@ -593,7 +580,7 @@ class NewBadPixPlot():
             Title to add to the Figure
         """
         # Save the figure as a png
-        export_png(self.plot, filename=filename)
+        save_png(self.plot, filename=filename)
         set_permissions(filename)
 
         # Read in the png and insert into a replacement figure
@@ -668,7 +655,7 @@ class BadPixTrendPlot():
                                             string_time=string_times,
                                             value=[self.badpix_type] * len(self.num_pix)
                                             )
-                                    )
+                                  )
 
         self.plot = figure(title=f'{self.detector}: New {self.badpix_type} Pixels', tools='pan,box_zoom,reset,wheel_zoom,save',
                            background_fill_color="#fafafa")
@@ -681,12 +668,12 @@ class BadPixTrendPlot():
         self.plot.tools.append(hover_tool)
 
         # Make the x axis tick labels look nice
-        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                          seconds=["%d %b %H:%M:%S.%3N"],
-                                                          hours=["%d %b %H:%M"],
-                                                          days=["%d %b %H:%M"],
-                                                          months=["%d %b %Y %H:%M"],
-                                                          years=["%d %b %Y"]
+        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                          seconds="%d %b %H:%M:%S.%3N",
+                                                          hours="%d %b %H:%M",
+                                                          days="%d %b %H:%M",
+                                                          months="%d %b %Y %H:%M",
+                                                          years="%d %b %Y"
                                                           )
         self.plot.xaxis.major_label_orientation = np.pi / 4
 
@@ -696,7 +683,7 @@ class BadPixTrendPlot():
             time_pad = datetime.timedelta(days=1)
         self.plot.x_range.start = min(self.time) - time_pad
         self.plot.x_range.end = max(self.time) + time_pad
-        self.plot.grid.grid_line_color="white"
+        self.plot.grid.grid_line_color = "white"
         self.plot.xaxis.axis_label = 'Date'
         self.plot.yaxis.axis_label = f'Number of {self.badpix_type} pixels'
 

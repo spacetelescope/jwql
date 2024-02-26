@@ -45,18 +45,16 @@ from bokeh.models import LinearColorMapper, LogColorMapper
 from bokeh.plotting import figure
 import numpy as np
 from PIL import Image
+from selenium import webdriver
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
-                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
-                                 FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
-                                 FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
-                                 FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND
-
+    FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
+    FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
+    FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
+    FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
+    JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def _validate_config(config_file_dict):
@@ -80,7 +78,7 @@ def _validate_config(config_file_dict):
             "admin_account": {"type": "string"},
             "auth_mast": {"type": "string"},
             "connection_string": {"type": "string"},
-            "database": {
+            "databases": {
                 "type": "object",
                 "properties": {
                     "engine": {"type": "string"},
@@ -92,12 +90,42 @@ def _validate_config(config_file_dict):
                 },
                 "required": ['engine', 'name', 'user', 'password', 'host', 'port']
             },
-
+            "django_databases": {
+                "type": "object",
+                "properties": {
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    },
+                    "monitors": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    }
+                },
+                "required": ["default", "monitors"]
+            },
             "jwql_dir": {"type": "string"},
             "jwql_version": {"type": "string"},
             "server_type": {"type": "string"},
             "log_dir": {"type": "string"},
             "mast_token": {"type": "string"},
+            "working": {"type": "string"},
             "outputs": {"type": "string"},
             "preview_image_filesystem": {"type": "string"},
             "filesystem": {"type": "string"},
@@ -108,11 +136,11 @@ def _validate_config(config_file_dict):
             "cores": {"type": "string"}
         },
         # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
-                     "preview_image_filesystem", "thumbnail_filesystem",
-                     "outputs", "jwql_dir", "admin_account", "log_dir",
-                     "test_dir", "test_data", "setup_file", "auth_mast",
-                     "mast_token"]
+        "required": ["connection_string", "databases", "django_databases",
+                     "filesystem", "preview_image_filesystem",
+                     "thumbnail_filesystem", "outputs", "jwql_dir",
+                     "admin_account", "log_dir", "test_dir", "test_data",
+                     "setup_file", "auth_mast", "mast_token", "working"]
     }
 
     # Test that the provided config file dict matches the schema
@@ -157,8 +185,7 @@ def create_png_from_fits(filename, outdir):
         plot.ygrid.visible = False
 
         # Create the color mapper that will be used to scale the image
-        #mapper = LogColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
-        mapper = LogColorMapper(palette='Greys256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        mapper = LogColorMapper(palette='Greys256', low=(img_med - (5 * img_dev)), high=(img_med + (5 * img_dev)))
 
         # Plot image
         imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
@@ -169,8 +196,8 @@ def create_png_from_fits(filename, outdir):
         plot.yaxis.visible = False
 
         # Save the plot in a png
-        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits','png'))
-        export_png(plot, filename=output_filename)
+        output_filename = os.path.join(outdir, os.path.basename(filename).replace('fits', 'png'))
+        save_png(plot, filename=output_filename)
         permissions.set_permissions(output_filename)
         return output_filename
     else:
@@ -749,11 +776,32 @@ def read_png(filename):
 
         # Copy the RGBA image into view, flipping it so it comes right-side up
         # with a lower-left origin
-        view[:,:,:] = np.flipud(np.asarray(rgba_img))
+        view[:, :, :] = np.flipud(np.asarray(rgba_img))
     else:
         view = None
     # Return the 2D version
     return img
+
+
+def save_png(fig, filename=''):
+    """Starting with selenium version 4.10.0, our testing has shown that on the JWQL
+    servers, we need to specify an instance of a web driver when exporting a Bokeh
+    figure as a png. This is a wrapper function that creates the web driver instance
+    and calls Bokeh's export_png function.
+
+    Parameters
+    ----------
+    fig : bokeh.plotting.figure
+        Bokeh figure to be saved as a png
+
+    filename : str
+        Filename to use for the png file
+    """
+    options = webdriver.FirefoxOptions()
+    options.add_argument('-headless')
+    driver = webdriver.Firefox(options=options)
+    export_png(fig, filename=filename, webdriver=driver)
+    driver.quit()
 
 
 def grouper(iterable, chunksize):

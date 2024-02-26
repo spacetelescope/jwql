@@ -105,19 +105,13 @@ from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import DARKS_BAD_PIXEL_TYPES, DARK_EXP_TYPES, FLATS_BAD_PIXEL_TYPES, FLAT_EXP_TYPES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, ON_GITHUB_ACTIONS
+from jwql.utils.constants import ON_READTHEDOCS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists, get_config, filesystem_path
 
-# Determine if the code is being run by Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from jwql.website.apps.jwql.monitor_pages.monitor_bad_pixel_bokeh import BadPixelPlots
@@ -659,8 +653,8 @@ class BadPixels():
             the rate file failed)
         """
         # Copy files from filesystem
-        uncal_copied_files, uncal_not_copied = copy_files(uncal_files, self.data_dir)
-        rate_copied_files, rate_not_copied = copy_files(rate_files_to_copy, self.data_dir)
+        uncal_copied_files, uncal_not_copied = copy_files(uncal_files, self.working_data_dir)
+        rate_copied_files, rate_not_copied = copy_files(rate_files_to_copy, self.working_data_dir)
 
         # Set any rate files that failed to copy to None so
         # that we can regenerate them
@@ -677,7 +671,7 @@ class BadPixels():
                 del rate_files[bad_index]
 
         logging.info('\tNew {} observations: '.format(obs_type))
-        logging.info('\tData dir: {}'.format(self.data_dir))
+        logging.info('\tData dir: {}'.format(self.working_data_dir))
         logging.info('\tCopied to data dir: {}'.format(uncal_copied_files))
         logging.info('\tNot copied (failed, or missing from filesystem): {}'.format(uncal_not_copied))
 
@@ -800,10 +794,10 @@ class BadPixels():
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
-                    local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                    local_uncal_file = os.path.join(self.working_data_dir, os.path.basename(uncal_file))
                     logging.info('Calling pipeline for {}'.format(uncal_file))
-                    logging.info("Copying raw file to {}".format(self.data_dir))
-                    copy_files([uncal_file], self.data_dir)
+                    logging.info("Copying raw file to {}".format(self.working_data_dir))
+                    copy_files([uncal_file], self.working_data_dir)
                     if hasattr(self, 'nints') and self.nints > 1:
                         out_exts[short_name] = ['jump', '1_ramp_fit']
                     needs_calibration = False
@@ -817,14 +811,14 @@ class BadPixels():
                 else:
                     logging.info("\tRate file found for {}".format(uncal_file))
                     if os.path.isfile(rate_file):
-                        copy_files([rate_file], self.data_dir)
+                        copy_files([rate_file], self.working_data_dir)
                     else:
                         logging.warning("\tRate file {} doesn't actually exist".format(rate_file))
                         short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
-                        local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                        local_uncal_file = os.path.join(self.working_data_dir, os.path.basename(uncal_file))
                         logging.info('Calling pipeline for {}'.format(uncal_file))
-                        logging.info("Copying raw file to {}".format(self.data_dir))
-                        copy_files([uncal_file], self.data_dir)
+                        logging.info("Copying raw file to {}".format(self.working_data_dir))
+                        copy_files([uncal_file], self.working_data_dir)
                         if hasattr(self, 'nints') and self.nints > 1:
                             out_exts[short_name] = ['jump', '1_ramp_fit']
                         needs_calibration = False
@@ -845,7 +839,7 @@ class BadPixels():
             logging.info("Checking files post-calibration")
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 logging.info("\tChecking files {}, {}".format(os.path.basename(uncal_file), os.path.basename(rate_file)))
-                local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                local_uncal_file = os.path.join(self.working_data_dir, os.path.basename(uncal_file))
                 if local_uncal_file in outputs:
                     logging.info("\t\tAdding calibrated file.")
                     illuminated_slope_files[index] = deepcopy(outputs[local_uncal_file][1])
@@ -907,10 +901,10 @@ class BadPixels():
                 logging.info("Checking dark file {} with rate file {}".format(uncal_file, rate_file))
                 self.get_metadata(uncal_file)
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
-                local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                local_uncal_file = os.path.join(self.working_data_dir, os.path.basename(uncal_file))
                 if not os.path.isfile(local_uncal_file):
-                    logging.info("\tCopying raw file to {}".format(self.data_dir))
-                    copy_files([uncal_file], self.data_dir)
+                    logging.info("\tCopying raw file to {}".format(self.working_data_dir))
+                    copy_files([uncal_file], self.working_data_dir)
                 if hasattr(self, 'nints') and self.nints > 1:
                     out_exts[short_name] = ['jump', 'fitopt', '1_ramp_fit']
                 local_processed_files = [local_uncal_file.replace("uncal", x) for x in out_exts[short_name]]
@@ -938,7 +932,7 @@ class BadPixels():
             logging.info("Checking files post-calibration")
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 logging.info("\tChecking files {}, {}".format(uncal_file, rate_file))
-                local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                local_uncal_file = os.path.join(self.working_data_dir, os.path.basename(uncal_file))
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                 if local_uncal_file in outputs:
                     logging.info("\t\tAdding calibrated files")
@@ -984,9 +978,10 @@ class BadPixels():
                 else:
                     index += 1
 
-            min_dark_time = min(dark_obstimes)
-            max_dark_time = max(dark_obstimes)
-            mid_dark_time = instrument_properties.mean_time(dark_obstimes)
+            if len(dark_slope_files) > 0:
+                min_dark_time = min(dark_obstimes)
+                max_dark_time = max(dark_obstimes)
+                mid_dark_time = instrument_properties.mean_time(dark_obstimes)
 
         # Check whether there are still enough files left to meet the threshold
         if illuminated_slope_files is None:
@@ -1089,7 +1084,7 @@ class BadPixels():
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 
         # Remove raw files, rate files, and pipeline products in order to save disk space
-        files_to_remove = glob(f'{self.data_dir}/*.fits')
+        files_to_remove = glob(f'{self.working_data_dir}/*.fits')
         for filename in files_to_remove:
             os.remove(filename)
 
@@ -1109,6 +1104,7 @@ class BadPixels():
         logging.info('Begin logging for bad_pixel_monitor')
 
         # Get the output directory
+        self.working_dir = os.path.join(get_config()['working'], 'bad_pixel_monitor')
         self.output_dir = os.path.join(get_config()['outputs'], 'bad_pixel_monitor')
 
         # Read in config file that defines the thresholds for the number
@@ -1250,9 +1246,12 @@ class BadPixels():
                     dark_uncal_files, dark_rate_files, dark_rate_files_to_copy = None, None, None
 
                 # Set up directories for the copied data
+                ensure_dir_exists(os.path.join(self.working_dir, 'data'))
                 ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
-                ensure_dir_exists(self.data_dir)
+                self.working_data_dir = os.path.join(self.working_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                self.output_data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                ensure_dir_exists(self.working_data_dir)
+                ensure_dir_exists(self.output_data_dir)
 
                 # Copy files from filesystem
                 if run_flats:

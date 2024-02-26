@@ -1,4 +1,4 @@
- #! /usr/bin/env python
+#! /usr/bin/env python
 
 """This module contains code for the celery application, which is used for any demanding
 work which should be restricted in terms of how many iterations are run simultaneously, or
@@ -75,6 +75,7 @@ from collections import OrderedDict
 from copy import deepcopy
 import gc
 from glob import glob
+import json
 import logging
 from logging import FileHandler, StreamHandler
 import os
@@ -184,15 +185,15 @@ def only_one(function=None, key="", timeout=None):
 
 def create_task_log_handler(logger, propagate):
     log_file_name = configure_logging('shared_tasks')
-    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
-    ensure_dir_exists(output_dir)
+    working_dir = os.path.join(get_config()['working'], 'calibrated_data')
+    ensure_dir_exists(working_dir)
     celery_log_file_handler = FileHandler(log_file_name)
     logger.addHandler(celery_log_file_handler)
     for handler in logger.handlers:
         handler.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
     logger.propagate = propagate
-    if not os.path.exists(os.path.join(output_dir, "celery_pipeline_log.cfg")):
-        with open(os.path.join(output_dir, "celery_pipeline_log.cfg"), "w") as cfg_file:
+    if not os.path.exists(os.path.join(working_dir, "celery_pipeline_log.cfg")):
+        with open(os.path.join(working_dir, "celery_pipeline_log.cfg"), "w") as cfg_file:
             cfg_file.write("[*]\n")
             cfg_file.write("level = WARNING\n")
             cfg_file.write("handler = append:{}\n".format(log_file_name))
@@ -203,7 +204,7 @@ def log_subprocess_output(pipe):
     If a subprocess STDOUT has been set to subprocess.PIPE, this function will log each
     line to the logging output.
     """
-    for line in iter(pipe.readline, b''): # b'\n'-separated lines
+    for line in iter(pipe.readline, b''):  # b'\n'-separated lines
         logging.info("\t{}".format(line.decode('UTF-8').strip()))
 
 
@@ -224,14 +225,49 @@ def collect_after_task(**kwargs):
     gc.collect()
 
 
-def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores):
-    command = "{} {} {} '{}' {} {} {} {}"
-    command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores)
+def convert_step_args_to_string(args_dict):
+    """Convert the nested dictionary containing pipeline step parameter keyword/value pairs
+    to a string so that it can be passed via command line
+
+    Parameters
+    ----------
+    args_dict : dict
+        Nested dictionary. Top level keys are pipeline step names. Values are dictionaries containing
+        keyword value pairs for that step.
+
+    Returns
+    -------
+    args_str : str
+        String representation of ``args_dict``
+    """
+    args_str = "'{"
+
+    for i, step in enumerate(args_dict):
+        args_str += f'"{step}":'
+        args_str += '{'
+        for j, (param, val) in enumerate(args_dict[step].items()):
+            args_str += f'"{param}":"{val}"'
+            if j < len(args_dict[step]) - 1:
+                args_str += ', '
+        args_str += "}"
+        if i < len(args_dict) - 1:
+            args_str += ','
+    args_str += "}'"
+    return args_str
+
+
+def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_file, cores, step_args):
+    # Convert step_args dictionary to a string so that it can be passed via command line.
+    # For some reason, json.dumps() doesn't seem to work correctly, so we use a custom function.
+    step_args_str = convert_step_args_to_string(step_args)
+
+    command = "{} {} {} '{}' {} {} {} {} --step_args {}"
+    command = command.format(name, cmd, outputs, cal_dir, ins, in_file, short_name, cores, step_args_str)
     logging.info("Running {}".format(command))
     process = Popen(command, shell=True, executable="/bin/bash", stderr=PIPE)
     with process.stderr:
         log_subprocess_output(process.stderr)
-    result = process.wait()    
+    result = process.wait()
     logging.info("Subprocess result was {}".format(result))
 
     if not os.path.isfile(res_file):
@@ -241,7 +277,7 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
             for line in status:
                 logging.error(line.strip())
             return status
-        
+
     with open(res_file, 'r') as inf:
         status = inf.readlines()
     return status
@@ -251,17 +287,17 @@ def run_subprocess(name, cmd, outputs, cal_dir, ins, in_file, short_name, res_fi
 def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
-    in the reduction directory. Once all requested extensions have been produced, the 
+    in the reduction directory. Once all requested extensions have been produced, the
     pipeline will return.
 
     Parameters
     ----------
     input_file_name : str
         File on which to run the pipeline steps
-    
+
     short_name : str
         Name of the file to be calibrated after any extensions have been stripped off.
-    
+
     ext_or_exts : list
         List of extensions to be retrieved.
 
@@ -287,20 +323,25 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         ext_or_exts = [ext_or_exts]
 
     input_dir = os.path.join(config['transfer_dir'], "incoming")
-    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    cal_dir = os.path.join(config['working'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
     msg = "Input from {}, calibrate in {}, output to {}"
     logging.info(msg.format(input_dir, cal_dir, output_dir))
-    
+
     input_file = os.path.join(input_dir, input_file_name)
     current_dir = os.path.dirname(__file__)
     cmd_name = os.path.join(current_dir, "run_pipeline.py")
     outputs = ",".join(ext_or_exts)
-    result_file = os.path.join(cal_dir, short_name+"_status.txt")
+    result_file = os.path.join(cal_dir, short_name + "_status.txt")
     if "all" in ext_or_exts:
         logging.info("All outputs requested")
-        out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
-                    "persistence", "dark_current", "jump", "rate"]
+        if instrument.lower() != 'miri':
+            out_exts = ["dq_init", "saturation", "superbias", "refpix", "linearity",
+                        "persistence", "dark_current", "jump", "rate"]
+        else:
+            out_exts = ["group_scale", "dq_init", "saturation", "firstframe", "lastframe", "reset",
+                        "linearity", "rscd", "dark_current", "refpix", "jump", "rate", "gain_scale"]
+
         calibrated_files = ["{}_{}.fits".format(short_name, ext) for ext in out_exts]
         logging.info("Requesting {}".format(calibrated_files))
     else:
@@ -308,9 +349,9 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         logging.info("Requesting {}".format(calibrated_files))
 
     cores = 'all'
-    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file, 
-                            short_name, result_file, cores)
-    
+    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, input_file,
+                            short_name, result_file, cores, step_args)
+
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
@@ -323,8 +364,9 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
             logging.error("\t{}".format(line.strip()))
         if core_fail:
             cores = "half"
-            status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
-                                    input_file, short_name, result_file, cores)
+            status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
+                                    input_file, short_name, result_file, cores, step_args)
+
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
                 managed = True
@@ -337,8 +379,9 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                     logging.error("\t{}".format(line.strip()))
                 if core_fail:
                     cores = "none"
-                    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument, 
-                                            input_file, short_name, result_file, cores)
+                    status = run_subprocess(cmd_name, "cal", outputs, cal_dir, instrument,
+                                            input_file, short_name, result_file, cores, step_args)
+
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                         managed = True
@@ -346,7 +389,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
                         logging.error("Pipeline subprocess failed.")
         if not managed:
             raise ValueError("Pipeline Failed")
-    
+
     for file in calibrated_files:
         logging.info("Checking for output {}".format(file))
         if not os.path.isfile(os.path.join(cal_dir, file)):
@@ -357,7 +400,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         set_permissions(os.path.join(output_dir, file))
 
     logging.info("Removing local files.")
-    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    files_to_remove = glob(os.path.join(cal_dir, short_name + "*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
@@ -366,7 +409,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
-def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True):
+def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save_fitopt=True, step_args={}):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -388,6 +431,13 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         If ``True``, the file of optional outputs from the ramp fitting
         step of the pipeline is saved.
 
+    step_args : dict
+        A dictionary containing custom arguments to supply to individual pipeline steps.
+        When a step is run, the dictionary will be checked for a key matching the step
+        name (as defined in jwql.utils.utils.get_pipeline_steps() for the provided
+        instrument). The value matching the step key should, itself, be a dictionary that
+        can be spliced in to step.call() via dereferencing (**dict)
+
     Returns
     -------
     jump_output : str
@@ -407,7 +457,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
     config = get_config()
 
     input_dir = os.path.join(config["transfer_dir"], "incoming")
-    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    cal_dir = os.path.join(config['working'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
     msg = "Input from {}, calibrate in {}, output to {}"
     logging.info(msg.format(input_dir, cal_dir, output_dir))
@@ -417,17 +467,18 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
         logging.error("File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
 
-    short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "").replace(".fits", "")
+    parts = input_file_name.split('_')
+    short_name = f'{parts[0]}_{parts[1]}_{parts[2]}_{parts[3]}'
     ensure_dir_exists(cal_dir)
     output_dir = os.path.join(config["transfer_dir"], "outgoing")
-    
+
     cmd_name = os.path.join(os.path.dirname(__file__), "run_pipeline.py")
-    result_file = os.path.join(cal_dir, short_name+"_status.txt")
+    result_file = os.path.join(cal_dir, short_name + "_status.txt")
 
     cores = 'all'
-    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file, 
-                            short_name, result_file, cores)
-    
+    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, input_file,
+                            short_name, result_file, cores, step_args)
+
     if status[-1].strip() == "SUCCEEDED":
         logging.info("Subprocess reports successful finish.")
     else:
@@ -440,8 +491,8 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
             logging.error("\t{}".format(line.strip()))
         if core_fail:
             cores = "half"
-            status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
-                                    input_file, short_name, result_file, cores)
+            status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
+                                    input_file, short_name, result_file, cores, step_args)
             if status[-1].strip() == "SUCCEEDED":
                 logging.info("Subprocess reports successful finish.")
                 managed = True
@@ -454,8 +505,8 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                     logging.error("\t{}".format(line.strip()))
                 if core_fail:
                     cores = "none"
-                    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument, 
-                                            input_file, short_name, result_file, cores)
+                    status = run_subprocess(cmd_name, "jump", "all", cal_dir, instrument,
+                                            input_file, short_name, result_file, cores, step_args)
                     if status[-1].strip() == "SUCCEEDED":
                         logging.info("Subprocess reports successful finish.")
                         managed = True
@@ -481,7 +532,7 @@ def calwebb_detector1_save_jump(input_file_name, instrument, ramp_fit=True, save
                 files["fitopt_output"] = os.path.join(output_dir, file)
 
     logging.info("Removing local files.")
-    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    files_to_remove = glob(os.path.join(cal_dir, short_name + "*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
@@ -516,7 +567,7 @@ def prep_file(input_file, in_ext):
     short_name : str
         The exposure ID with the calibration tag and the fits extension chopped off.
 
-    uncal_file : str
+    input_name : str
         The raw file to be calibrated
     """
     config = get_config()
@@ -528,16 +579,8 @@ def prep_file(input_file, in_ext):
     input_path, input_name = os.path.split(input_file)
     logging.info("\tPath is {}, file is {}".format(input_path, input_name))
 
-    if "uncal" not in in_ext:
-        logging.info("\tSwitching from {} to uncal".format(in_ext))
-        uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
-        uncal_file = filesystem_path(uncal_name, check_existence=True)
-    else:
-        uncal_file = input_file
-        uncal_name = input_name
-
-    if not os.path.isfile(uncal_file):
-        raise FileNotFoundError("Input File {} does not exist.".format(uncal_file))
+    if not os.path.isfile(input_file):
+        raise FileNotFoundError("Input File {} does not exist.".format(input_file))
 
     output_file_or_files = []
     short_name = input_name.replace("_" + in_ext, "").replace(".fits", "")
@@ -550,11 +593,11 @@ def prep_file(input_file, in_ext):
         raise ValueError("Redis lock for {} is in an unknown state".format(short_name))
     logging.info("\t\tAcquired Lock.")
     logging.info("\t\tCopying {} to {}".format(input_file, send_path))
-    copy_files([uncal_file], send_path)
-    return short_name, cal_lock, os.path.join(send_path, uncal_name)
+    copy_files([input_file], send_path)
+    return short_name, cal_lock, os.path.join(send_path, input_name)
 
 
-def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False):
+def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False, step_args={}):
     """Starts the standard or save_jump pipeline for the provided file.
 
     .. warning::
@@ -591,6 +634,11 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
+    step_args : dict
+        Pipeline step arguments to be passed to the pipeline call. Nested dictionary with keys that
+        are the step names (as seen in pipeline_tools.PIPELINE_STEP_MAPPING). Each value is a
+        dictionary of keyword value pairs that are relevant for that step.
+
     Returns
     -------
     result : celery.result.AsyncResult
@@ -606,9 +654,9 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
                 ramp_fit = True
             elif "fitopt" in ext:
                 save_fitopt = True
-        result = calwebb_detector1_save_jump.delay(input_file, instrument, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
+        result = calwebb_detector1_save_jump.delay(input_file, instrument, ramp_fit=ramp_fit, save_fitopt=save_fitopt, step_args=step_args)
     else:
-        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument)
+        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument, step_args=step_args)
     return result
 
 
@@ -716,7 +764,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     return output
 
 
-def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False):
+def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False, step_args={}):
     """Convenience function for using the ``run_calwebb_detector1`` function on a list of
     data files, breaking them into parallel celery calls, collecting the results together,
     and returning the results as another list. In particular, this function will do the
@@ -757,12 +805,17 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
+    step_args : dict
+        Pipeline step arguments to be passed to the pipeline call. Nested dictionary with keys that
+        are the step names (as seen in pipeline_tools.PIPELINE_STEP_MAPPING). Each value is a
+        dictionary of keyword value pairs that are relevant for that step.
+
     Returns
     -------
     file_or_files : str or list-of-str
         Name (or names) of the result file(s), including path(s)
     """
-    logging.info("Pipeline call requestion calibrated extensions {}".format(ext_or_exts))
+    logging.info("Pipeline call requested calibrated extensions {}".format(ext_or_exts))
     for input_file in input_files:
         logging.info("\tCalibrating {}".format(input_file))
 
@@ -782,7 +835,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
             locks[short_name] = cal_lock
-            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
+            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe, step_args=step_args)
             logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
         logging.info("Celery tasks submitted.")
         logging.info("Waiting for task results")

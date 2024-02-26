@@ -28,7 +28,7 @@ from astropy.stats import sigma_clip
 from bokeh.embed import components, file_html
 from bokeh.layouts import layout
 from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
 from datetime import datetime, timedelta
@@ -132,10 +132,10 @@ class BiasMonitorData():
         aperture : str
             Aperture name (e.g. NRCA1_FULL)
         """
-        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created")) \
-        .group_by(self.stats_table.aperture)
-        .subquery()
-        )
+        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created"))
+                       .group_by(self.stats_table.aperture)
+                       .subquery()
+               )
 
         query = (session.query(self.stats_table.aperture,
                                self.stats_table.uncal_filename,
@@ -147,10 +147,10 @@ class BiasMonitorData():
                                self.stats_table.counts,
                                self.stats_table.bin_centers,
                                self.stats_table.entry_date)
-                     .filter(self.stats_table.aperture == aperture)
-                     .order_by(self.stats_table.entry_date) \
-                     .join(subq, self.stats_table.expstart == subq.c.max_created)
-                     )
+                        .filter(self.stats_table.aperture == aperture)
+                        .order_by(self.stats_table.entry_date) \
+                        .join(subq, self.stats_table.expstart == subq.c.max_created)
+                )
 
         latest_data = query.all()
         session.close()
@@ -166,7 +166,6 @@ class BiasMonitorData():
         format_data = "%Y-%m-%dT%H:%M:%S.%f"
         datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart_str']]
         self.latest_data['expstart'] = datetimes
-
 
 
 class BiasMonitorPlots():
@@ -281,7 +280,7 @@ class BiasMonitorPlots():
                                   ]
                                  )
             bias_layout.sizing_mode = 'scale_width'
-            bias_tab = Panel(child=bias_layout, title=aperture)
+            bias_tab = TabPanel(child=bias_layout, title=aperture)
             tabs.append(bias_tab)
 
         # Build tabs
@@ -382,34 +381,38 @@ class HistogramPlot():
         """
         x_label = 'Signal (DN)'
         y_label = '# Pixels'
-        if len(self.data['counts'].iloc[0]) > 0:
+        # Be sure data is not empty
+        if len(self.data) > 0:
+            # Be sure the array of histogram information is not empty
+            if len(self.data['counts'].iloc[0]) > 0:
 
-            # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
-            bin_centers = np.array(self.data['bin_centers'][0])
-            half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
-            half_widths = np.insert(half_widths, 0, half_widths[0])
-            self.data['bin_left'] = [bin_centers - half_widths]
-            self.data['bin_right'] = [bin_centers + half_widths]
+                # In order to use Bokeh's quad, we need left and right bin edges, rather than bin centers
+                bin_centers = np.array(self.data['bin_centers'][0])
+                half_widths = (bin_centers[1:] - bin_centers[0:-1]) / 2
+                half_widths = np.insert(half_widths, 0, half_widths[0])
+                self.data['bin_left'] = [bin_centers - half_widths]
+                self.data['bin_right'] = [bin_centers + half_widths]
 
-            datestr = self.data['expstart_str'].iloc[0]
-            self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
-                               background_fill_color="#fafafa")
+                datestr = self.data['expstart_str'].iloc[0]
+                self.plot = figure(title=f'Calibrated data: Histogram, {datestr}', tools='pan,box_zoom,reset,wheel_zoom,save',
+                                   background_fill_color="#fafafa")
 
-            # Keep only the columns where the data are a list
-            series = self.data.iloc[0]
-            series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
-            source = ColumnDataSource(dict(series))
-            self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
-                           fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
+                # Keep only the columns where the data are a list
+                series = self.data.iloc[0]
+                series = series[['counts', 'bin_left', 'bin_right', 'bin_centers']]
+                source = ColumnDataSource(dict(series))
+                self.plot.quad(top='counts', bottom=0, left='bin_left', right='bin_right',
+                               fill_color="#C85108", line_color="#C85108", alpha=0.75, source=source)
 
-            hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
-            self.plot.tools.append(hover_tool)
-            self.plot.xaxis.axis_label = x_label
-            self.plot.yaxis.axis_label = y_label
+                hover_tool = HoverTool(tooltips=f'@bin_centers DN: @counts')
+                self.plot.tools.append(hover_tool)
+                self.plot.xaxis.axis_label = x_label
+                self.plot.yaxis.axis_label = y_label
 
+            else:
+                self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
         else:
             self.plot = PlaceholderPlot('Calibrated data: Histogram', x_label, y_label).plot
-
 
 
 class MedianRowColPlot():
@@ -466,35 +469,42 @@ class MedianRowColPlot():
             title_text = 'Column'
             axis_text = 'Row Number'
 
-        #datestr = self.data['expstart'][0].strftime("%m/%d/%Y")
-        datestr = self.data['expstart_str'].iloc[0]
-        title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
+        # Make sure there is data present
+        if len(self.data) > 0:
+            # Make sure that the colname column is not empty
+            if len(self.data[colname].iloc[0]) > 0:
+                datestr = self.data['expstart_str'].iloc[0]
+                title_str = f'Calibrated data: Collapsed {title_text}, {datestr}'
 
-        if len(self.data[colname].iloc[0]) > 0:
-            plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
-                          background_fill_color="#fafafa")
+                plot = figure(title=title_str, tools='pan,box_zoom,reset,wheel_zoom,save',
+                              background_fill_color="#fafafa")
 
-            # Add a column containing pixel numbers to plot against
-            pix_num = np.arange(len(self.data[colname].iloc[0]))
-            self.data['pixel'] = [pix_num]
+                # Add a column containing pixel numbers to plot against
+                pix_num = np.arange(len(self.data[colname].iloc[0]))
+                self.data['pixel'] = [pix_num]
 
-            series = self.data.iloc[0]
-            series = series[['pixel', colname]]
-            source = ColumnDataSource(dict(series))
-            plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
-                         alpha=0.75, source=source)
+                series = self.data.iloc[0]
+                series = series[['pixel', colname]]
+                source = ColumnDataSource(dict(series))
+                plot.scatter(x='pixel', y=colname, fill_color="#C85108", line_color="#C85108",
+                             alpha=0.75, source=source)
 
-            hover_text = axis_text.split(' ')[0]
-            hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
-            plot.tools.append(hover_tool)
-            plot.xaxis.axis_label = axis_text
-            plot.yaxis.axis_label = 'Median Signal (DN)'
+                hover_text = axis_text.split(' ')[0]
+                hover_tool = HoverTool(tooltips=f'{hover_text} @pixel: @{colname}')
+                plot.tools.append(hover_tool)
+                plot.xaxis.axis_label = axis_text
+                plot.yaxis.axis_label = 'Median Signal (DN)'
+            else:
+                # If there is a latest_data entry, but the collapsed_row or collapsed_col
+                # columns are empty, then make a placeholder plot.
+                title_str = f'Calibrated data: Collapsed {title_text}'
+                plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
         else:
             # If there are no data, then create an empty placeholder plot
+            title_str = f'Calibrated data: Collapsed {title_text}'
             plot = PlaceholderPlot(title_str, axis_text, 'Median Signal (DN)').plot
 
         return plot
-
 
 
 class TrendingPlot():
@@ -552,12 +562,12 @@ class TrendingPlot():
                          alpha=0.75, source=source, legend_label='Odd cols')
 
             # Make the x axis tick labels look nice
-            plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                         seconds=["%d %b %H:%M:%S.%3N"],
-                                                         hours=["%d %b %H:%M"],
-                                                         days=["%d %b %H:%M"],
-                                                         months=["%d %b %Y %H:%M"],
-                                                         years=["%d %b %Y"]
+            plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                         seconds="%d %b %H:%M:%S.%3N",
+                                                         hours="%d %b %H:%M",
+                                                         days="%d %b %H:%M",
+                                                         months="%d %b %Y %H:%M",
+                                                         years="%d %b %Y"
                                                          )
             plot.xaxis.major_label_orientation = np.pi / 4
 
@@ -573,7 +583,7 @@ class TrendingPlot():
                                              ('Date:', '@expstart_str')
                                              ]
                                    )
-            #hover_tool.formatters = {'@expstart': 'datetime'}
+            # hover_tool.formatters = {'@expstart': 'datetime'}
             plot.tools.append(hover_tool)
             plot.xaxis.axis_label = x_label
             plot.yaxis.axis_label = y_label

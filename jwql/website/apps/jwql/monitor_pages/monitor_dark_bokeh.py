@@ -60,7 +60,7 @@ class DarkHistPlot():
     plot : bokeh.figure
         Figure containing the histogram plot
     """
-    def __init__(self, aperture, data):
+    def __init__(self, aperture, data, obsdate):
         """Create the plot
 
         Parameters
@@ -74,6 +74,7 @@ class DarkHistPlot():
         """
         self.data = data
         self.aperture = aperture
+        self.obsdate = obsdate
         self.create_plot()
 
     def calc_bin_edges(self, centers):
@@ -95,6 +96,9 @@ class DarkHistPlot():
     def create_plot(self):
         """Place the data in a CoumnDataSource and create the plot
         """
+        title_str = f'{self.aperture}: Dark Rate Histogram. {self.obsdate.strftime("%d %b %Y")}'
+        x_label = 'Dark Rate (DN/sec)'
+        y_label = 'Number of Pixels'
         if len(self.data) > 0:
             # Specify which key ("amplifier") to show. If there is data for amp='5',
             # show that, as it will be the data for the entire detector. If not then
@@ -108,10 +112,6 @@ class DarkHistPlot():
                 use_amp = '5'
             else:
                 use_amp = '1'
-
-            title_str = f'{self.aperture}: Dark Rate Histogram'
-            x_label = 'Dark Rate (DN/sec)'
-            y_label = 'Number of Pixels'
 
             # If there are histogram data for multiple amps, then we can plot each histogram.
             if len(self.data) > 1:
@@ -174,7 +174,7 @@ class DarkHistPlot():
                                        fill_color=color, line_color="white", alpha=0.25, legend_label=f'Amp {amp}')
 
             # Set ranges
-            self.plot.extra_y_ranges = {"cdf_line": Range1d(0,1)}
+            self.plot.extra_y_ranges = {"cdf_line": Range1d(0, 1)}
             self.plot.add_layout(LinearAxis(y_range_name='cdf_line', axis_label="Cumulative Distribution"), "right")
 
             # Add cumulative distribution function
@@ -193,10 +193,13 @@ class DarkHistPlot():
             self.plot.x_range.end = mainx[disp_index[-1]]
             self.plot.legend.location = "top_left"
             self.plot.legend.background_fill_color = "#fefefe"
-            self.plot.grid.grid_line_color="white"
+            self.plot.grid.grid_line_color = "white"
         else:
             # If self.data is empty, then make a placeholder plot
-            self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
+            title_str = f'{self.aperture}: Dark Rate Histogram'
+            x_label = 'Dark Rate (DN/sec)'
+            y_label = 'Number of Pixels'
+            self.plot = PlaceholderPlot(title_str, x_label, y_label).create()
 
 
 class DarkImagePlot():
@@ -253,7 +256,7 @@ class DarkImagePlot():
 
 
 class DarkMonitorData():
-    """Retrive dark monitor data from the database tables
+    """Retrieve dark monitor data from the database tables
 
     Attributes
     ----------
@@ -447,7 +450,7 @@ class DarkMonitorPlots():
         self.db = DarkMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        self.available_apertures = get_unique_values_per_column(self.db, 'aperture')
+        self.available_apertures = get_unique_values_per_column(self.db.stats_table, 'aperture')
 
         # Require entries for all full frame apertures. If there are no data for a
         # particular full frame entry, then produce an empty plot, in order to
@@ -462,7 +465,7 @@ class DarkMonitorPlots():
 
             # Retrieve data from database. Since the mean dark image plots are
             # produced by the dark monitor itself, all we need for that is the
-            # name of the file. then we need the histogram and trending data. All
+            # name of the file. Then we need the histogram and trending data. All
             # of this is in the dark monitor stats table. No need to query the
             # dark monitor pixel table.
             self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
@@ -479,7 +482,7 @@ class DarkMonitorPlots():
             self.get_trending_data()
 
             # Now that we have all the data, create the acutal plots
-            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data).plot
+            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data, self.hist_date).plot
             self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime).plot
 
     def ensure_all_full_frame_apertures(self):
@@ -538,8 +541,7 @@ class DarkMonitorPlots():
         self.hist_data = {}
         if len(self._entry_dates) > 0:
             # Find the index of the most recent entry
-            #self._aperture_entries = np.where((self._apertures == aperture))[0]
-            latest_date = np.max(self._entry_dates) #[self._aperture_entries])
+            latest_date = np.max(self._entry_dates)
 
             # Get indexes of entries for all amps that were added in the
             # most recent run of the monitor for the aperture. All entries
@@ -549,11 +551,14 @@ class DarkMonitorPlots():
             most_recent_idx = np.where(self._entry_dates > (latest_date - delta_time))[0]
 
             # Store the histogram data in a dictionary where the keys are the
-            # amplifier values (note that these are strings e.g. '1''), and the
+            # amplifier values (note that these are strings e.g. '1'), and the
             # values are tuples of (x, y) lists
             for idx in most_recent_idx:
                 self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
                                                                      self.db.stats_data[idx].hist_amplitudes)
+
+            # Keep track of the observation date of the most recent entry
+            self.hist_date = self.db.stats_data[most_recent_idx[0]].obs_mid_time
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
@@ -576,10 +581,10 @@ class DarkMonitorPlots():
         """Create arrays from some of the stats database columns that are
         used by multiple plot types
         """
-        #apertures = np.array([e.aperture for e in self.db.stats_data])
         self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])
         self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])
         self._mean = np.array([e.mean for e in self.db.stats_data])
+        self._readpatt = np.array([e.readpattern for e in self.db.stats_data])
         self._stdev = np.array([e.stdev for e in self.db.stats_data])
         self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data])
         self._stats_mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.stats_data])
@@ -651,8 +656,10 @@ class DarkTrendPlot():
             # for each amp, we can get away with using use_amp=1 at the moment.
             if '5' in self.mean_dark:
                 use_amp = '5'
+                legend_label = 'Full aperture'
             else:
                 use_amp = '1'
+                legend_label = 'Amp 1'
 
             # If there are trending data for multiple amps, then we can plot each
             if len(self.mean_dark) > 1:
@@ -677,12 +684,13 @@ class DarkTrendPlot():
                                                 error_upper=error_upper,
                                                 time=self.obstime[use_amp]
                                                 )
-                                    )
+                                      )
+
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
 
             # Plot the "main" amp data along with error bars
-            self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source)
+            self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label=legend_label)
             self.plot.add_layout(Whisker(source=source, base="time", upper="error_upper", lower="error_lower", line_color='navy'))
             hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
                                              ('Date:', '@time{%d %b %Y}')
@@ -705,12 +713,12 @@ class DarkTrendPlot():
                                           legend_label=f'Amp {amp}')
 
             # Make the x axis tick labels look nice
-            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                              seconds=["%d %b %H:%M:%S.%3N"],
-                                                              hours=["%d %b %H:%M"],
-                                                              days=["%d %b %H:%M"],
-                                                              months=["%d %b %Y %H:%M"],
-                                                              years=["%d %b %Y"]
+            self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                              seconds="%d %b %H:%M:%S.%3N",
+                                                              hours="%d %b %H:%M",
+                                                              days="%d %b %H:%M",
+                                                              months="%d %b %Y %H:%M",
+                                                              years="%d %b %Y"
                                                               )
             self.plot.xaxis.major_label_orientation = np.pi / 4
 
@@ -735,7 +743,7 @@ class DarkTrendPlot():
             self.plot.y_range.end = max_val * 1.05
             self.plot.legend.location = "top_right"
             self.plot.legend.background_fill_color = "#fefefe"
-            self.plot.grid.grid_line_color="white"
+            self.plot.grid.grid_line_color = "white"
         else:
             # If there are no data, make a placeholder plot
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
@@ -746,7 +754,7 @@ class DarkTrendPlot():
             self.plot.y_range.end = 1
 
             source = ColumnDataSource(data=dict(x=[0.5], y=[0.5], text=['No data']))
-            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value':'20px'})
+            glyph = Text(x="x", y="y", text="text", angle=0., text_color="navy", text_font_size={'value': '20px'})
             self.plot.add_glyph(source, glyph)
 
         self.plot.xaxis.axis_label = 'Date'

@@ -36,8 +36,7 @@ from .keyword_map import bokeh_mappings as mappings, bokeh_sequences as sequence
 
 # Figures get their own constructor so we remove references to Figures from
 # the keyword maps.
-Figure = mappings.pop("Figure")
-del sequences["figure"]
+Figure = mappings.pop("figure")
 
 
 def mapping_factory(tool, element_type):

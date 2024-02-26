@@ -143,15 +143,15 @@ class Anomalies(models.Model):
     crosstalk = models.BooleanField(default=False)
     data_transfer_error = models.BooleanField(default=False)
     ghost = models.BooleanField(default=False)
-    snowball = models.BooleanField(default=False)
+    unusual_snowballs = models.BooleanField(default=False)
     column_pull_up = models.BooleanField(default=False)
     column_pull_down = models.BooleanField(default=False)
-    dominant_msa_leakage = models.BooleanField(default=False)
+    noticeable_msa_leakage = models.BooleanField(default=False)
     dragons_breath = models.BooleanField(default=False)
     mrs_glow = models.BooleanField(default=False)
     mrs_zipper = models.BooleanField(default=False)
     internal_reflection = models.BooleanField(default=False)
-    optical_short = models.BooleanField(default=False)
+    new_short = models.BooleanField(default=False)
     row_pull_up = models.BooleanField(default=False)
     row_pull_down = models.BooleanField(default=False)
     lrs_contamination = models.BooleanField(default=False)
@@ -162,6 +162,12 @@ class Anomalies(models.Model):
     tilt_event = models.BooleanField(default=False)
     light_saber = models.BooleanField(default=False)
     other = models.BooleanField(default=False)
+    unusual_cosmic_rays = models.BooleanField(default=False)
+    needs_discussion = models.BooleanField(default=False)
+    transient_short = models.BooleanField(default=False)
+    subsequently_masked_short = models.BooleanField(default=False)
+    monitored_short = models.BooleanField(default=False)
+    bright_object_not_a_short = models.BooleanField(default=False)
 
     def get_marked_anomalies(self):
         """Return all boolean field names (anomalies) currently set"""
@@ -170,7 +176,7 @@ class Anomalies(models.Model):
             if isinstance(value, bool) and value:
                 true_anomalies.append(field)
         return true_anomalies
-    
+
     @classmethod
     def get_all_anomalies(cls):
         """Return list of all anomalies (assumed as any field with default of False)"""

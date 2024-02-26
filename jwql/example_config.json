@@ -2,13 +2,31 @@
     "admin_account" : "",
     "auth_mast" : "",
     "connection_string" : "",
-    "database" : {
+    "databases" : {
         "engine" : "",
         "name" : "",
         "user" : "",
         "password" : "",
         "host" : "",
         "port" : ""
+    },
+    "django_databases" : {
+        "default": {
+            "ENGINE" : "",
+            "NAME" : "",
+            "USER" : "",
+            "PASSWORD" : "",
+            "HOST" : "",
+            "PORT" : ""
+        },
+        "monitors": {
+            "ENGINE" : "",
+            "NAME" : "",
+            "USER" : "",
+            "PASSWORD" : "",
+            "HOST" : "",
+            "PORT" : ""
+        }
     },
     "jwql_dir" : "",
     "jwql_version": "",
@@ -18,6 +36,7 @@
     "mast_base_url" : "",
     "mast_request_url": "",
     "outputs" : "",
+    "working": "",
     "preview_image_filesystem" : "",
     "filesystem" : "",
     "setup_file" : "",

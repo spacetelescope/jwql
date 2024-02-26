@@ -32,9 +32,7 @@ from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpe
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 from jwql.tests.resources import has_test_db
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def test_bad_map_to_list():
@@ -163,6 +161,7 @@ def test_get_possible_apertures(instrument, expected_list):
     assert ap_list == expected_list
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_identify_tables():
     """Be sure the correct database tables are identified
     """

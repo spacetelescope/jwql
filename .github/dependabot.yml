@@ -7,7 +7,6 @@ updates:
     target-branch: "main"
     schedule:
       interval: monthly
-      time: "03:00"
 
   # Maintain dependencies for pip
   - package-ecosystem: "pip"
@@ -15,5 +14,4 @@ updates:
     target-branch: "main"
     schedule:
       interval: monthly
-      time: "03:00"
     open-pull-requests-limit: 10

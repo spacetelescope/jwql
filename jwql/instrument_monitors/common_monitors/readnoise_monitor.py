@@ -44,25 +44,29 @@ from astropy.visualization import ZScaleInterval
 import crds
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
-import numpy as np  # noqa: E348 (comparison to true)
-from pysiaf import Siaf  # noqa: E348 (comparison to true)
-from sqlalchemy.sql.expression import and_  # noqa: E348 (comparison to true)
+import matplotlib.pyplot as plt  # noqa: E402 (module level import not at top of file)
+import numpy as np  # noqa: E402 (module level import not at top of file)
+from pysiaf import Siaf  # noqa: E402 (module level import not at top of file)
 
-from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
-from jwql.database.database_interface import session, engine  # noqa: E348 (comparison to true)
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
-from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
-from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
-from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
-from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
-from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E348 (comparison to true)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E402 (module level import not at top of file)
+from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module level import not at top of file)
+from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module level import not at top of file)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module level import not at top of file)
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS  # noqa: E402 (module level import not at top of file)
+from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module level import not at top of file)
+from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module level import not at top of file)
+from jwql.utils.permissions import set_permissions  # noqa: E402 (module level import not at top of file)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E402 (module level import not at top of file)
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.readnoise import *  # noqa: E402 (module level import not at top of file)
 
 
 class Readnoise():
@@ -83,7 +87,7 @@ class Readnoise():
     output_dir : str
         Path into which outputs will be placed.
 
-    data_dir : str
+    working_dir : str
         Path into which new dark files will be copied to be worked on.
 
     query_start : float
@@ -149,17 +153,8 @@ class Readnoise():
         file_exists : bool
             ``True`` if filename exists in the readnoise stats database.
         """
-
-        query = session.query(self.stats_table)
-        results = query.filter(self.stats_table.uncal_filename == filename).all()
-
-        if len(results) != 0:
-            file_exists = True
-        else:
-            file_exists = False
-
-        session.close()
-        return file_exists
+        results = self.stats_table.objects.filter(uncal_filename__iexact=filename).values()
+        return (len(results) != 0)
 
     def get_amp_stats(self, image, amps):
         """Calculates the sigma-clipped mean and stddev, as well as the
@@ -253,7 +248,7 @@ class Readnoise():
             The full path to the output png file.
         """
 
-        output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
+        output_filename = os.path.join(self.output_data_dir, '{}.png'.format(outname))
 
         # Get image scale limits
         zscale = ZScaleInterval()
@@ -385,17 +380,18 @@ class Readnoise():
             Date (in MJD) of the ending range of the previous MAST query
             where the readnoise monitor was run.
         """
-
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E712 (comparison to True)
+        filter_kwargs = {
+            'aperture__iexact': self.aperture,
+            'run_monitor__exact': True
+        }
+        query = self.query_table.objects.filter(**filter_kwargs).order_by("-end_time_mjd").all()
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
-            query_result = query[-1].end_time_mjd
+            query_result = query[0].end_time_mjd
 
-        session.close()
         return query_result
 
     def process(self, file_list):
@@ -413,7 +409,7 @@ class Readnoise():
             processed_file = file.replace("uncal", "refpix")
             if not os.path.isfile(processed_file):
                 files_to_calibrate.append(file)
-        
+
         # Run the files through the necessary pipeline steps
         outputs = run_parallel_pipeline(files_to_calibrate, "uncal", "refpix", self.instrument)
 
@@ -422,7 +418,7 @@ class Readnoise():
 
             # Get relevant header information for this file
             self.get_metadata(filename)
-            
+
             if filename in outputs:
                 processed_file = outputs[filename]
             else:
@@ -445,7 +441,7 @@ class Readnoise():
                 cal_data = cal_data[:, 5:-1, :, :]
 
             # Make the readnoise image
-            readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
+            readnoise_outfile = os.path.join(self.output_data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
             readnoise = self.make_readnoise_image(cal_data)
             # fits.writeto(readnoise_outfile, readnoise, overwrite=True)
             # logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
@@ -498,7 +494,10 @@ class Readnoise():
             # Construct new entry for this file for the readnoise database table.
             # Can't insert values with numpy.float32 datatypes into database
             # so need to change the datatypes of these values.
-            readnoise_db_entry = {'uncal_filename': filename,
+            #
+            # Store files as file name only (file path will be built at retrieval based
+            # on runtime configuration)
+            readnoise_db_entry = {'uncal_filename': os.path.basename(filename),
                                   'aperture': self.aperture,
                                   'detector': self.detector,
                                   'subarray': self.subarray,
@@ -506,27 +505,27 @@ class Readnoise():
                                   'nints': self.nints,
                                   'ngroups': self.ngroups,
                                   'expstart': self.expstart,
-                                  'readnoise_filename': readnoise_outfile,
+                                  'readnoise_filename': os.path.basename(readnoise_outfile),
                                   'full_image_mean': float(full_image_mean),
                                   'full_image_stddev': float(full_image_stddev),
-                                  'full_image_n': full_image_n.astype(float),
-                                  'full_image_bin_centers': full_image_bin_centers.astype(float),
-                                  'readnoise_diff_image': readnoise_diff_png,
+                                  'full_image_n': list(full_image_n.astype(float)),
+                                  'full_image_bin_centers': list(full_image_bin_centers.astype(float)),
+                                  'readnoise_diff_image': os.path.basename(readnoise_diff_png),
                                   'diff_image_mean': float(diff_image_mean),
                                   'diff_image_stddev': float(diff_image_stddev),
-                                  'diff_image_n': diff_image_n.astype(float),
-                                  'diff_image_bin_centers': diff_image_bin_centers.astype(float),
+                                  'diff_image_n': list(diff_image_n.astype(float)),
+                                  'diff_image_bin_centers': list(diff_image_bin_centers.astype(float)),
                                   'entry_date': datetime.datetime.now()
                                   }
             for key in amp_stats.keys():
                 if isinstance(amp_stats[key], (int, float)):
                     readnoise_db_entry[key] = float(amp_stats[key])
                 else:
-                    readnoise_db_entry[key] = amp_stats[key].astype(float)
+                    readnoise_db_entry[key] = list(amp_stats[key].astype(float))
 
             # Add this new entry to the readnoise database table
-            with engine.begin() as connection:
-                connection.execute(self.stats_table.__table__.insert(), readnoise_db_entry)
+            entry = self.stats_table(**readnoise_db_entry)
+            entry.save()
             logging.info('\tNew entry added to readnoise database table')
 
             # Remove the raw and calibrated files to save memory space
@@ -546,6 +545,8 @@ class Readnoise():
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'readnoise_monitor')
         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+        self.working_dir = os.path.join(get_config()['working'], 'readnoise_monitor')
+        ensure_dir_exists(os.path.join(self.working_dir, 'data'))
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -586,15 +587,18 @@ class Readnoise():
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                self.output_data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
                 if len(new_entries) > 0:
-                    ensure_dir_exists(self.data_dir)
+                    ensure_dir_exists(self.output_data_dir)
+                self.working_data_dir = os.path.join(self.working_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                if len(new_entries) > 0:
+                    ensure_dir_exists(self.working_data_dir)
 
                 # Get any new files to process
                 new_files = []
                 checked_files = []
                 for file_entry in new_entries:
-                    output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
+                    output_filename = os.path.join(self.working_data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
                     if output_filename in checked_files:
@@ -624,7 +628,7 @@ class Readnoise():
                             # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
                             # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
                             if total_cds_frames >= 10:
-                                shutil.copy(uncal_filename, self.data_dir)
+                                shutil.copy(uncal_filename, self.working_data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
                                 new_files.append(output_filename)
@@ -650,8 +654,8 @@ class Readnoise():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                with engine.begin() as connection:
-                    connection.execute(self.query_table.__table__.insert(), new_entry)
+                stats_entry = self.query_table(**new_entry)
+                stats_entry.save()
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')

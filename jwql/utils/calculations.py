@@ -17,6 +17,7 @@ Use
  """
 
 import numpy as np
+import warnings
 
 from astropy.modeling import fitting, models
 from astropy.stats import sigma_clip
@@ -169,8 +170,9 @@ def mean_stdev(image, sigma_threshold=3):
     stdev_value : float
         Sigma-clipped standard deviation of image
     """
-
-    clipped, lower, upper = sigmaclip(image, low=sigma_threshold, high=sigma_threshold)
+    # Ignore the warning about NaNs being clipped.
+    warnings.filterwarnings('ignore', message='Input data contains invalid values (NaNs or infs), which were automatically clipped.*')
+    clipped = sigma_clip(image, sigma=sigma_threshold, masked=False)
     mean_value = np.mean(clipped)
     stdev_value = np.std(clipped)
 

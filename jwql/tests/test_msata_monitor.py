@@ -18,6 +18,8 @@
     """
 
 import os
+import warnings
+
 import pandas as pd
 import numpy as np
 import pytest
@@ -29,10 +31,9 @@ from bokeh.plotting import figure
 
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors.msata_monitor import MSATA
 from jwql.database.database_interface import NIRSpecTAQueryHistory
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import get_config, ensure_dir_exists
 from jwql.utils import monitor_utils, permissions
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 # define the type of a Bokeh plot type
 bokeh_plot_type = type(figure())
@@ -51,41 +52,41 @@ def define_testdata():
     msata_data : pandas dataframe
     """
     msata_dict = {
-                    # info taken from main_hdr dict
-                    'filename': ['jw09999001001_02101_00001_nrs1_uncal.fits'],
-                    'date_obs': ['2022-06-22'],
-                    'visit_id': ['V09999001001P0000000002101'],
-                    'tafilter': ['F110W'],
-                    'detector': ['NRS1'],
-                    'readout': ['NRSRAPID'],
-                    'subarray': ['FULL'],
-                    # info taken from ta_hdr dict
-                    'num_refstars': [12],
-                    'ta_status': ['SUCCESSFUL'],
-                    'status_rsn': ['-999'],
-                    'v2halffacet': [-0.27568],
-                    'v3halffacet': [0.10975],
-                    'v2msactr': [378.523987],
-                    'v3msactr': [-428.374481],
-                    'lsv2offset': [-999.0],
-                    'lsv3offset': [-999.0],
-                    'lsoffsetmag': [-999.0],
-                    'lsrolloffset': [-999.0],
-                    'lsv2sigma': [-999.0],
-                    'lsv3sigma': [-999.0],
-                    'lsiterations': [-999],
-                    'guidestarid': ['-999'],
-                    'guidestarx': [-999.0],
-                    'guidestary': [-999.0],
-                    'guidestarroll': [-999.0],
-                    'samx': [-999.0],
-                    'samy': [-999.0],
-                    'samroll': [-999.0],
-                    'stars_in_fit': [-999]
-                }
+        # info taken from main_hdr dict
+        'filename': ['jw09999001001_02101_00001_nrs1_uncal.fits'],
+        'date_obs': ['2022-06-22'],
+        'visit_id': ['V09999001001P0000000002101'],
+        'tafilter': ['F110W'],
+        'detector': ['NRS1'],
+        'readout': ['NRSRAPID'],
+        'subarray': ['FULL'],
+        # info taken from ta_hdr dict
+        'num_refstars': [12],
+        'ta_status': ['SUCCESSFUL'],
+        'status_rsn': ['-999'],
+        'v2halffacet': [-0.27568],
+        'v3halffacet': [0.10975],
+        'v2msactr': [378.523987],
+        'v3msactr': [-428.374481],
+        'lsv2offset': [-999.0],
+        'lsv3offset': [-999.0],
+        'lsoffsetmag': [-999.0],
+        'lsrolloffset': [-999.0],
+        'lsv2sigma': [-999.0],
+        'lsv3sigma': [-999.0],
+        'lsiterations': [-999],
+        'guidestarid': ['-999'],
+        'guidestarx': [-999.0],
+        'guidestary': [-999.0],
+        'guidestarroll': [-999.0],
+        'samx': [-999.0],
+        'samy': [-999.0],
+        'samroll': [-999.0],
+        'stars_in_fit': [-999]
+    }
     # add info from ta_table
     num_refstars = msata_dict['num_refstars'][0]
-    msata_dict['box_peak_value'] =  [[8000 for _ in range(num_refstars)]]
+    msata_dict['box_peak_value'] = [[8000 for _ in range(num_refstars)]]
     msata_dict['reference_star_mag'] = [[-999 for _ in range(num_refstars)]]
     msata_dict['convergence_status'] = [['SUCCESS' for _ in range(num_refstars)]]
     msata_dict['reference_star_number'] = [[i for i in range(num_refstars)]]
@@ -95,8 +96,9 @@ def define_testdata():
     msata_dict['lsf_removed_y'] = [[-999.0 for _ in range(num_refstars)]]
     msata_dict['planned_v2'] = [[-999.0 for _ in range(num_refstars)]]
     msata_dict['planned_v3'] = [[-999.0 for _ in range(num_refstars)]]
+
     # create the additional arrays
-    number_status, time_arr, status_colors = [], [], []
+    number_status, status_colors = [], []
     for tas, do_str in zip(msata_dict['ta_status'], msata_dict['date_obs']):
         if tas.lower() == 'unsuccessful':
             number_status.append(0.0)
@@ -107,14 +109,12 @@ def define_testdata():
         else:
             number_status.append(1.0)
             status_colors.append('blue')
-        # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-        t = datetime.fromisoformat(do_str)
-        time_arr.append(t)
+
     # add these to the bokeh data structure
-    msata_dict['time_arr'] = time_arr
     msata_dict['number_status'] = number_status
     msata_dict['status_colors'] = status_colors
-    # crate the dataframe
+
+    # create the dataframe
     msata_data = pd.DataFrame(msata_dict)
     return msata_data
 
@@ -126,9 +126,22 @@ def test_mast_query_ta():
     query_start = 59833.0
     query_end = 59844.6
 
+    # query mast
     result = monitor_utils.mast_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
 
+    # eliminate duplicates (sometimes rate files are returned with cal files)
+    result = [r for r in result if r['productLevel'] == '2b']
     assert len(result) == 4
+
+    # query local model
+    alternate = monitor_utils.model_query_ta('nirspec', 'NRS_FULL_MSA', query_start, query_end)
+    assert len(alternate) == len(result)
+
+    # check that filenames match up - model returns rootfiles, mast returns filenames
+    result = sorted(result, key=lambda x: x['filename'])
+    alternate = sorted(alternate, key=lambda x: x['root_name'])
+    for i, rootfile in enumerate(alternate):
+        assert rootfile['root_name'] in result[i]['filename']
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -151,6 +164,8 @@ def test_plt_status():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_status()
 
     assert bokeh_plot_type == type(result)
@@ -163,6 +178,8 @@ def test_plt_residual_offsets():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_residual_offsets()
 
     assert bokeh_plot_type == type(result)
@@ -175,6 +192,8 @@ def test_plt_v2offset_time():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_v2offset_time()
 
     assert bokeh_plot_type == type(result)
@@ -187,6 +206,8 @@ def test_plt_v3offset_time():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_v3offset_time()
 
     assert bokeh_plot_type == type(result)
@@ -199,6 +220,8 @@ def test_plt_lsv2v3offsetsigma():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_lsv2v3offsetsigma()
 
     assert bokeh_plot_type == type(result)
@@ -211,6 +234,8 @@ def test_plt_res_offsets_corrected():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_res_offsets_corrected()
 
     assert bokeh_plot_type == type(result)
@@ -223,6 +248,8 @@ def test_plt_v2offsigma_time():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_v2offsigma_time()
 
     assert bokeh_plot_type == type(result)
@@ -235,6 +262,8 @@ def test_plt_v3offsigma_time():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_v3offsigma_time()
 
     assert bokeh_plot_type == type(result)
@@ -247,6 +276,8 @@ def test_plt_roll_offset():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_roll_offset()
 
     assert bokeh_plot_type == type(result)
@@ -259,6 +290,8 @@ def test_plt_lsoffsetmag():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_lsoffsetmag()
 
     assert bokeh_plot_type == type(result)
@@ -271,6 +304,8 @@ def test_plt_tot_number_of_stars():
     ta = MSATA()
     msata_data = define_testdata()
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_tot_number_of_stars()
 
     assert bokeh_plot_type == type(result)
@@ -296,6 +331,8 @@ def test_plt_mags_time():
     msata_data['tot_number_of_stars'] = tot_number_of_stars
     msata_data['colors_list'] = colors_list
     ta.source = ColumnDataSource(data=msata_data)
+    ta.add_time_column()
+    ta.setup_date_range()
     result = ta.plt_mags_time()
 
     assert bokeh_plot_type == type(result)
@@ -313,7 +350,9 @@ def test_mk_plt_layout():
 
     ta.output_file_name = os.path.join(ta.output_dir, "msata_layout.html")
     ta.msata_data = define_testdata()
-    script, div = ta.mk_plt_layout()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        script, div = ta.mk_plt_layout()
 
     # set group write permission for the test file
     # to make sure others can overwrite it

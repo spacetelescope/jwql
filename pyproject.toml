@@ -1,6 +1,75 @@
-# pyproject.toml
+[project]
+name = "jwql"
+description = "The James Webb Space Telescope Quicklook Project"
+readme = "README.md"
+authors = [
+  { name = "Matthew Bourque" },
+  { name = "Lauren Chambers" },
+  { name = "Misty Cracraft" },
+  { name = "Mike Engesser" },
+  { name = "Mees Fix" },
+  { name = "Joe Filippazzo" },
+  { name = "Bryan Hilbert" },
+]
+keywords = ["astronomy", "python"]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+  "asdf",
+  "astropy",
+  "astroquery",
+  "bokeh>=3",
+  "crds",
+  "cryptography",
+  "django",
+  "inflection",
+  "jinja2",
+  "jsonschema",
+  "jwst",
+  "jwst_reffiles",
+  "matplotlib",
+  "numpy",
+  "numpydoc",
+  "pandas",
+  "psycopg2-binary",
+  "pysiaf",
+  "pyvo",
+  "scipy",
+  "sqlalchemy",
+  "stdatamodels",
+  "wtforms",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-cov",
+  "pytest-mock",
+]
+docs = [
+  "sphinx",
+  "sphinx_rtd_theme",
+  "stsci_rtd_theme",
+]
+
+[project.license]
+file = "LICENSE"
+content-type = "text/plain"
+
 [build-system]
-requires = ["setuptools<=65.5.0",
-			"numpy",
-			"wheel",
-			"setuptools_scm"]
+requires = ["setuptools>=68.0.0", "numpy", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+namespaces = false
+
+[tool.setuptools_scm]
+
+[tool.pytest]
+junit_family = "xunit2"
+
+[tool.pytest.ini_options]
+norecursedirs = ["jwql/website/apps/jwql/static"]

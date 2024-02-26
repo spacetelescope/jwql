@@ -170,7 +170,7 @@ class Bias():
             The full path to the output file.
         """
 
-        output_filename = os.path.join(self.data_dir, os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
+        output_filename = os.path.join(self.working_data_dir, os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
 
         # Write a new fits file containing the primary and science
         # headers from the input file, as well as the 0th group
@@ -279,7 +279,7 @@ class Bias():
             The full path to the output png file.
         """
 
-        output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
+        output_filename = os.path.join(self.output_data_dir, '{}.png'.format(outname))
 
         # Get image scale limits
         z = ZScaleInterval()
@@ -432,7 +432,13 @@ class Bias():
             # Add this new entry to the bias database table
             with engine.begin() as connection:
                 connection.execute(self.stats_table.__table__.insert(), bias_db_entry)
-            logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
+
+            # Don't print long arrays of numbers to the log file
+            log_dict = {}
+            for key in bias_db_entry:
+                if key not in ['collapsed_rows', 'collapsed_columns', 'counts', 'bin_centers']:
+                    log_dict[key] = bias_db_entry[key]
+            logging.info('\tNew entry added to bias database table: {}'.format(log_dict))
 
             # Remove the raw and calibrated files to save memory space
             os.remove(filename)
@@ -449,6 +455,8 @@ class Bias():
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'bias_monitor')
         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+        self.working_dir = os.path.join(get_config()['working'], 'bias_monitor')
+        ensure_dir_exists(os.path.join(self.working_dir, 'data'))
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -489,14 +497,17 @@ class Bias():
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                self.working_data_dir = os.path.join(self.working_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
                 if len(new_entries) > 0:
-                    ensure_dir_exists(self.data_dir)
+                    ensure_dir_exists(self.working_data_dir)
+                self.output_data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                if len(new_entries) > 0:
+                    ensure_dir_exists(self.output_data_dir)
 
                 # Get any new files to process
                 new_files = []
                 for file_entry in new_entries:
-                    output_filename = os.path.join(self.data_dir, file_entry['filename'])
+                    output_filename = os.path.join(self.working_data_dir, file_entry['filename'])
                     output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
 
                     # Dont process files that already exist in the bias stats database

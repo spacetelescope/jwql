@@ -58,20 +58,20 @@ import astropy.units as u
 from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.layouts import column
-from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
+from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool
+from bokeh.models import Range1d
 from bokeh.plotting import figure, output_file, show, save
 import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
 from jwql.utils.constants import MIRI_POS_RATIO_VALUES
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
 from jwql.utils.utils import get_config
 
 MAST_EDB_MNEMONIC_SERVICE = 'Mast.JwstEdb.Mnemonics'
 MAST_EDB_DICTIONARY_SERVICE = 'Mast.JwstEdb.Dictionary'
 
-# Temporary until JWST operations: switch to test string for MAST request URL
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
@@ -283,7 +283,7 @@ class EdbMnemonic:
                 before = np.where(common_dates == self.data['dates'][block])[0]
 
                 if len(before) > 0:
-                    new_blocks.append(before[0]) # + 1)
+                    new_blocks.append(before[0])  # + 1)
             except IndexError:
                 # The final block value is usually equal to the length of the array, and will
                 # therefore cause an Index Error in the lines above. Ignore that error here.
@@ -421,7 +421,7 @@ class EdbMnemonic:
             # calculated, remove those every change values and block values from the EdbMnemonic
             # instance.
             if every_change:
-                if len(remove_change_indexes)  > 0:
+                if len(remove_change_indexes) > 0:
                     self.every_change_values = np.delete(self.every_change_values, remove_change_indexes)
                     self.blocks = np.delete(self.blocks, remove_change_indexes)
 
@@ -439,7 +439,7 @@ class EdbMnemonic:
                     stdevs.append(stdevval)
                     maxs.append(meanval)
                     mins.append(meanval)
-                    #if hasattr(self, 'every_change_values'):
+                    # if hasattr(self, 'every_change_values'):
                     #        updated_every_change_vals.append(self.every_change_values[i + 1])
         self.mean = means
         self.median = medians
@@ -510,9 +510,9 @@ class EdbMnemonic:
                                                                                          self.data["euvalues"].data[index:self.blocks[i + 1]],
                                                                                          sigma=sigma)
                     if np.isfinite(meanval):
-                        #this is preventing the nans above from being added. not sure what to do here.
-                        #bokeh cannot deal with nans. but we need entries in order to have the blocks indexes
-                        #remain correct. but maybe we dont care about the block indexes after averaging
+                        # this is preventing the nans above from being added. not sure what to do here.
+                        # bokeh cannot deal with nans. but we need entries in order to have the blocks indexes
+                        # remain correct. but maybe we dont care about the block indexes after averaging
                         medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]][good]))
                         means.append(meanval)
                         medians.append(medianval)
@@ -523,7 +523,7 @@ class EdbMnemonic:
             # If there were blocks composed entirely of bad data, meaning no mean values were
             # calculated, remove those every change values and block values from the EdbMnemonic
             # instance.
-            if len(remove_change_indexes)  > 0:
+            if len(remove_change_indexes) > 0:
                 self.every_change_values = np.delete(self.every_change_values, remove_change_indexes)
                 self.blocks = np.delete(self.blocks, remove_change_indexes)
 
@@ -690,37 +690,33 @@ class EdbMnemonic:
                 if plot_mean:
                     source_mean = ColumnDataSource(data={'mean_x': self.median_times, 'mean_y': self.mean})
                     mean_data = fig.scatter(x='mean_x', y='mean_y', line_width=1, line_color='orange', alpha=0.75, source=source_mean)
-                    mean_hover_tool = HoverTool(tooltips=[('Mean', '@mean_y'),
-                                                          ('Date', '@mean_x{%d %b %Y %H:%M:%S}')
-                                                         ], mode='mouse', renderers=[mean_data])
+                    mean_hover_tool = HoverTool(tooltips=[('Mean', '@mean_y'), ('Date', '@mean_x{%d %b %Y %H:%M:%S}')],
+                                                mode='mouse', renderers=[mean_data])
                     mean_hover_tool.formatters = {'@mean_x': 'datetime'}
                     fig.tools.append(mean_hover_tool)
 
                 if plot_median:
                     source_median = ColumnDataSource(data={'median_x': self.median_times, 'median_y': self.median})
                     median_data = fig.scatter(x='median_x', y='median_y', line_width=1, line_color='orangered', alpha=0.75, source=source_median)
-                    median_hover_tool = HoverTool(tooltips=[('Median', '@median_y'),
-                                                            ('Date', '@median_x{%d %b %Y %H:%M:%S}')
-                                                           ], mode='mouse', renderers=[median_data])
+                    median_hover_tool = HoverTool(tooltips=[('Median', '@median_y'), ('Date', '@median_x{%d %b %Y %H:%M:%S}')],
+                                                  mode='mouse', renderers=[median_data])
                     median_hover_tool.formatters = {'@median_x': 'datetime'}
                     fig.tools.append(median_hover_tool)
 
-                 # If the max and min arrays are to be plotted, create columndata sources for them as well
+                # If the max and min arrays are to be plotted, create columndata sources for them as well
                 if plot_max:
                     source_max = ColumnDataSource(data={'max_x': self.median_times, 'max_y': self.max})
                     max_data = fig.scatter(x='max_x', y='max_y', line_width=1, color='black', line_color='black', source=source_max)
-                    max_hover_tool = HoverTool(tooltips=[('Max', '@max_y'),
-                                                         ('Date', '@max_x{%d %b %Y %H:%M:%S}')
-                                                        ], mode='mouse', renderers=[max_data])
+                    max_hover_tool = HoverTool(tooltips=[('Max', '@max_y'), ('Date', '@max_x{%d %b %Y %H:%M:%S}')],
+                                               mode='mouse', renderers=[max_data])
                     max_hover_tool.formatters = {'@max_x': 'datetime'}
                     fig.tools.append(max_hover_tool)
 
                 if plot_min:
                     source_min = ColumnDataSource(data={'min_x': self.median_times, 'min_y': self.min})
                     min_data = fig.scatter(x='min_x', y='min_y', line_width=1, color='black', line_color='black', source=source_min)
-                    minn_hover_tool = HoverTool(tooltips=[('Min', '@min_y'),
-                                                          ('Date', '@min_x{%d %b %Y %H:%M:%S}')
-                                                         ], mode='mouse', renderers=[min_data])
+                    minn_hover_tool = HoverTool(tooltips=[('Min', '@min_y'), ('Date', '@min_x{%d %b %Y %H:%M:%S}')],
+                                                mode='mouse', renderers=[min_data])
                     min_hover_tool.formatters = {'@min_x': 'datetime'}
                     fig.tools.append(min_hover_tool)
 
@@ -740,12 +736,12 @@ class EdbMnemonic:
             fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
         # Make the x axis tick labels look nice
-        fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                    seconds=["%d %b %H:%M:%S.%3N"],
-                                                    hours=["%d %b %H:%M"],
-                                                    days=["%d %b %H:%M"],
-                                                    months=["%d %b %Y %H:%M"],
-                                                    years=["%d %b %Y"]
+        fig.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                    seconds="%d %b %H:%M:%S.%3N",
+                                                    hours="%d %b %H:%M",
+                                                    days="%d %b %H:%M",
+                                                    months="%d %b %Y %H:%M",
+                                                    years="%d %b %Y"
                                                     )
         fig.xaxis.major_label_orientation = np.pi / 4
 
@@ -1206,12 +1202,12 @@ class EdbMnemonic:
         fig_dev.line(data_dates, dev, color='red')
 
         # Make the x axis tick labels look nice
-        fig_dev.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                        seconds=["%d %b %H:%M:%S.%3N"],
-                                                        hours=["%d %b %H:%M"],
-                                                        days=["%d %b %H:%M"],
-                                                        months=["%d %b %Y %H:%M"],
-                                                        years=["%d %b %Y"]
+        fig_dev.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                        seconds="%d %b %H:%M:%S.%3N",
+                                                        hours="%d %b %H:%M",
+                                                        days="%d %b %H:%M",
+                                                        months="%d %b %Y %H:%M",
+                                                        years="%d %b %Y"
                                                         )
         fig.xaxis.major_label_orientation = np.pi / 4
 

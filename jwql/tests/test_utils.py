@@ -22,11 +22,12 @@ import os
 from pathlib import Path
 import pytest
 
-from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, _validate_config
+from bokeh.models import LinearColorMapper
+from bokeh.plotting import figure
+import numpy as np
 
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS
+from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, save_png, _validate_config
 
 
 FILENAME_PARSER_TEST_DATA = [
@@ -477,6 +478,17 @@ def test_filesystem_path():
                             'jw02733001001', filename)
 
     assert check == location
+
+
+def test_save_png():
+    """Test that we can create a png file"""
+    plot = figure(title='test', tools='')
+    image = np.zeros((200, 200))
+    image[100:105, 100:105] = 1
+    ny, nx = image.shape
+    mapper = LinearColorMapper(palette='Viridis256', low=0, high=1.1)
+    imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny, color_mapper=mapper, level="image")
+    save_png(plot, filename='test.png')
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
