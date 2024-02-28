@@ -20,7 +20,7 @@ Use
         monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL')
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 from bokeh.embed import components, file_html
@@ -29,13 +29,10 @@ from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool
 from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
 import pandas as pd
-from PIL import Image
-from sqlalchemy import func
 
-from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE, ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import read_png
@@ -277,7 +274,7 @@ class BiasMonitorPlots():
                 self.available_apertures.append(ap)
 
     def modify_bokeh_saved_html(self):
-        """Given an html string produced by Bokeh when saving bad pixel monitor plots,
+        """Given an html string produced by Bokeh when saving bias monitor plots,
         make tweaks such that the page follows the general JWQL page formatting.
         """
         # Insert into our html template and save
