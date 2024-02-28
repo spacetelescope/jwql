@@ -35,7 +35,6 @@ from collections import OrderedDict
 import datetime
 import logging
 import os
-from time import sleep
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
@@ -47,20 +46,25 @@ import matplotlib.pyplot as plt  # noqa: E402 (module import not at top)
 from mpl_toolkits.axes_grid1 import make_axes_locatable  # noqa: E402 (module import not at top)
 import numpy as np  # noqa: E402 (module import not at top)
 from pysiaf import Siaf  # noqa: E402 (module import not at top)
-from sqlalchemy.sql.expression import and_  # noqa: E402 (module import not at top)
 
-from jwql.database.database_interface import session, engine  # noqa: E402 (module import not at top)
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
-from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline  # noqa: E402 (module import not at top)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, ON_GITHUB_ACTIONS, ON_READTHEDOCS  # noqa: E402 (module import not at top)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
-from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
-from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
 from jwql.website.apps.jwql.monitor_pages.monitor_bias_bokeh import BiasMonitorPlots  # noqa: E402 (module import not at top)
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.bias import *  # noqa: E402 (module level import not at top of file)
 
 
 class Bias():
@@ -201,15 +205,13 @@ class Bias():
             ``True`` if filename exists in the bias stats database.
         """
 
-        query = session.query(self.stats_table)
-        results = query.filter(self.stats_table.uncal_filename == filename).all()
+        records = self.stats_table.objects.filter(uncal_filename__iexact=filename).all()
 
-        if len(results) != 0:
+        if len(records) != 0:
             file_exists = True
         else:
             file_exists = False
 
-        session.close()
         return file_exists
 
     def get_amp_medians(self, image, amps):
@@ -346,16 +348,16 @@ class Bias():
             where the bias monitor was run.
         """
 
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E348 (comparison to true)
+        filters = {'aperture__iexact': self.aperture, 
+                   'run_monitor': True}
+        record = self.query_table.objects.filter(**filters).order_by('-end_time_mjd').first()
 
-        if len(query) == 0:
+        if record is None:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
-            query_result = query[-1].end_time_mjd
+            query_result = record.end_time_mjd
 
-        session.close()
         return query_result
 
     def process(self, file_list):
@@ -420,18 +422,18 @@ class Bias():
                              'mean': float(mean),
                              'median': float(median),
                              'stddev': float(stddev),
-                             'collapsed_rows': collapsed_rows.astype(float),
-                             'collapsed_columns': collapsed_columns.astype(float),
-                             'counts': counts.astype(float),
-                             'bin_centers': bin_centers.astype(float),
+                             'collapsed_rows': list(collapsed_rows.astype(float)),
+                             'collapsed_columns': list(collapsed_columns.astype(float)),
+                             'counts': list(counts.astype(float)),
+                             'bin_centers': list(bin_centers.astype(float)),
                              'entry_date': datetime.datetime.now()
                              }
             for key in amp_medians.keys():
                 bias_db_entry[key] = float(amp_medians[key])
 
             # Add this new entry to the bias database table
-            with engine.begin() as connection:
-                connection.execute(self.stats_table.__table__.insert(), bias_db_entry)
+            entry = self.stats_table(**bias_db_entry)
+            entry.save()
 
             # Don't print long arrays of numbers to the log file
             log_dict = {}
@@ -545,8 +547,8 @@ class Bias():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-                with engine.begin() as connection:
-                    connection.execute(self.query_table.__table__.insert(), new_entry)
+                entry = self.query_table(**new_entry)
+                entry.save()
                 logging.info('\tUpdated the query history table')
 
             # Update the bias monitor plots
