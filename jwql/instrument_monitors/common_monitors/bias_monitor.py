@@ -348,7 +348,7 @@ class Bias():
             where the bias monitor was run.
         """
 
-        filters = {'aperture__iexact': self.aperture, 
+        filters = {'aperture__iexact': self.aperture,
                    'run_monitor': True}
         record = self.query_table.objects.filter(**filters).order_by('-end_time_mjd').first()
 

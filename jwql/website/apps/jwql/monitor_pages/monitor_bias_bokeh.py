@@ -23,11 +23,9 @@ Use
 from datetime import datetime, timedelta
 import os
 
-from astropy.stats import sigma_clip
-
 from bokeh.embed import components, file_html
 from bokeh.layouts import layout
-from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearAxis
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool
 from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure, output_file, save
 from bokeh.resources import CDN
@@ -37,12 +35,21 @@ import pandas as pd
 from PIL import Image
 from sqlalchemy import func
 
-from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
-from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE, ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import read_png
 from jwql.website.apps.jwql.bokeh_utils import PlaceholderPlot
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.bias import *  # noqa: E402 (module level import not at top of file)
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -67,8 +74,8 @@ class BiasMonitorData():
         Latest bias data for a particular aperture, from the
         stats_table
 
-    stats_table : sqlalchemy.orm.decl_api.DeclarativeMeta
-        Bias stats sqlalchemy table
+    stats_table : jwql.website.apps.jwql.monitor_models.bias.NIRCamBiasStats
+        Bias stats django database
 
     trending_data : pandas.DataFrame
         Data from the stats table to be used for the trending plot
@@ -93,35 +100,24 @@ class BiasMonitorData():
         """
         # Query database for all data in bias stats with a matching aperture,
         # and sort the data by exposure start time.
-        tmp_trending_data = session.query(self.stats_table.amp1_even_med,
-                                          self.stats_table.amp1_odd_med,
-                                          self.stats_table.amp2_even_med,
-                                          self.stats_table.amp2_odd_med,
-                                          self.stats_table.amp3_even_med,
-                                          self.stats_table.amp3_odd_med,
-                                          self.stats_table.amp4_even_med,
-                                          self.stats_table.amp4_odd_med,
-                                          self.stats_table.expstart,
-                                          self.stats_table.uncal_filename) \
-            .filter(self.stats_table.aperture == aperture) \
-            .order_by(self.stats_table.expstart) \
-            .all()
-
-        session.close()
+        columns = ['amp1_even_med', 'amp1_odd_med', 'amp2_even_med', 'amp2_odd_med',
+                   'amp3_even_med', 'amp3_odd_med', 'amp4_even_med', 'amp4_odd_med',
+                   'expstart', 'uncal_filename']
+        tmp_trending_data = self.stats_table.objects.filter(aperture__iexact=aperture).order_by('expstart').all().values(*columns)
 
         # Convert the query results to a pandas dataframe
-        self.trending_data = pd.DataFrame(tmp_trending_data, columns=['amp1_even_med', 'amp1_odd_med',
-                                                                      'amp2_even_med', 'amp2_odd_med',
-                                                                      'amp3_even_med', 'amp3_odd_med',
-                                                                      'amp4_even_med', 'amp4_odd_med',
-                                                                      'expstart_str', 'uncal_filename'])
-        uncal_basename = [os.path.basename(e) for e in self.trending_data['uncal_filename']]
-        self.trending_data['uncal_filename'] = uncal_basename
+        if len(tmp_trending_data) != 0:
+            self.trending_data = pd.DataFrame.from_records(tmp_trending_data)
+            uncal_basename = [os.path.basename(e) for e in self.trending_data['uncal_filename']]
+            self.trending_data['uncal_filename'] = uncal_basename
 
-        # Add a column of expstart values that are datetime objects
-        format_data = "%Y-%m-%dT%H:%M:%S.%f"
-        datetimes = [datetime.strptime(entry, format_data) for entry in self.trending_data['expstart_str']]
-        self.trending_data['expstart'] = datetimes
+            # Add a column of expstart values that are datetime objects
+            format_data = "%Y-%m-%dT%H:%M:%S.%f"
+            datetimes = [datetime.strptime(entry, format_data) for entry in self.trending_data['expstart']]
+            self.trending_data['expstart_str'] = self.trending_data['expstart']
+            self.trending_data['expstart'] = datetimes
+        else:
+            self.trending_data = pd.DataFrame(None, columns=columns + ['uncal_filename', 'expstart_str'])
 
     def retrieve_latest_data(self, aperture):
         """Query the database table to get the data needed for the non-trending
@@ -132,40 +128,23 @@ class BiasMonitorData():
         aperture : str
             Aperture name (e.g. NRCA1_FULL)
         """
-        subq = (session.query(self.stats_table.aperture, func.max(self.stats_table.expstart).label("max_created"))
-                       .group_by(self.stats_table.aperture)
-                       .subquery()
-               )
+        # Query database for the most recent bias stats entry with a matching aperture
+        columns = ['aperture', 'uncal_filename', 'cal_filename', 'cal_image', 'expstart',
+                   'collapsed_rows', 'collapsed_columns', 'counts', 'bin_centers', 'entry_date']
+        tmp_data = self.stats_table.objects.filter(aperture__iexact=aperture).order_by('-expstart').all().values(*columns).first()
 
-        query = (session.query(self.stats_table.aperture,
-                               self.stats_table.uncal_filename,
-                               self.stats_table.cal_filename,
-                               self.stats_table.cal_image,
-                               self.stats_table.expstart,
-                               self.stats_table.collapsed_rows,
-                               self.stats_table.collapsed_columns,
-                               self.stats_table.counts,
-                               self.stats_table.bin_centers,
-                               self.stats_table.entry_date)
-                        .filter(self.stats_table.aperture == aperture)
-                        .order_by(self.stats_table.entry_date) \
-                        .join(subq, self.stats_table.expstart == subq.c.max_created)
-                )
+        # Put the returned data in a dataframe
+        if tmp_data is not None:
+            # Orient and transpose needed due to list column entries e.g. counts
+            self.latest_data = pd.DataFrame.from_dict(tmp_data, orient='index').transpose()
 
-        latest_data = query.all()
-        session.close()
-
-        # Put the returned data in a dataframe. Include only the most recent entry.
-        # The query has already filtered to include only entries using the latest
-        # expstart value.
-        self.latest_data = pd.DataFrame(latest_data[-1:], columns=['aperture', 'uncal_filename', 'cal_filename',
-                                                                   'cal_image', 'expstart_str', 'collapsed_rows',
-                                                                   'collapsed_columns', 'counts', 'bin_centers',
-                                                                   'entry_date'])
-        # Add a column of expstart values that are datetime objects
-        format_data = "%Y-%m-%dT%H:%M:%S.%f"
-        datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart_str']]
-        self.latest_data['expstart'] = datetimes
+            # Add a column of expstart values that are datetime objects
+            format_data = "%Y-%m-%dT%H:%M:%S.%f"
+            datetimes = [datetime.strptime(entry, format_data) for entry in self.latest_data['expstart']]
+            self.latest_data['expstart_str'] = self.latest_data['expstart']
+            self.latest_data['expstart'] = datetimes
+        else:
+            self.latest_data = pd.DataFrame(None, columns=columns + ['expstart_str'])
 
 
 class BiasMonitorPlots():
@@ -232,7 +211,7 @@ class BiasMonitorPlots():
         self.db = BiasMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        self.available_apertures = get_unique_values_per_column(self.db.stats_table, 'aperture')
+        self.available_apertures = sorted(self.db.stats_table.objects.values_list('aperture', flat=True).distinct())
 
         # Make sure all full frame apertures are present. If there are no data for a
         # particular full frame entry, then produce an empty plot, in order to
