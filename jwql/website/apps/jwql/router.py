@@ -59,6 +59,11 @@ class MonitorRouter:
         Make sure the monitors apps only appear in the 'monitors' database.
         """
         model_names = [name.replace("_", "") for name in MONITOR_TABLE_NAMES]
-        if app_label == 'jwql' and model_name in model_names:
-            return db == "monitors"
+        if app_label == 'jwql':
+            if model_name in model_names:
+                if db == "monitors":
+                    return True
+                return False
+            elif db == "monitors":
+                return False
         return None
