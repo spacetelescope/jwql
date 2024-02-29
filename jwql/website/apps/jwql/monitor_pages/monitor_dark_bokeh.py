@@ -202,7 +202,7 @@ class DarkHistPlot():
             title_str = f'{self.aperture}: Dark Rate Histogram'
             x_label = 'Dark Rate (DN/sec)'
             y_label = 'Number of Pixels'
-            self.plot = PlaceholderPlot(title_str, x_label, y_label).create()
+            self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
 
 
 class DarkImagePlot():
@@ -339,10 +339,7 @@ class DarkMonitorData():
                 #                                            'detector': 'NRCA1',
                 #                                            'mean_dark_image_file': 'nircam_nrca1_full_59607.0_to_59865.91846797105_mean_slope_image.fits',
                 #                                            'obs_end_time': datetime.datetime(2022, 8, 3, 1, 33)}
-                record = self.pixel_table.objects.values('type', 'detector', 'mean_dark_image_file', 'obs_end_time')
-                                                 .filter(**bad_filters)
-                                                 .order_by("-obs_end_time")
-                                                 .first()
+                record = self.pixel_table.objects.values('type', 'detector', 'mean_dark_image_file', 'obs_end_time').filter(**bad_filters).order_by("-obs_end_time").first()
                 self.pixel_data.append(record)
                 ###### IS SELF.PIXEL_DATA USED ANYWHERE????
 
@@ -557,8 +554,25 @@ class DarkMonitorPlots():
             # amplifier values (note that these are strings e.g. '1''), and the
             # values are tuples of (x, y) lists
             for idx in most_recent_idx:
-                self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
-                                                                     self.db.stats_data[idx].hist_amplitudes)
+                idx_int = int(idx)  # np.where returns a 64-bit int, but QuerySets must be indexed using an int()
+                self.hist_data[self.db.stats_data[idx_int].amplifier] = (self.db.stats_data[idx_int].hist_dark_values,
+                                                                         self.db.stats_data[idx_int].hist_amplitudes)
+
+
+
+
+
+        else:
+            pass
+            delme_entry_dates = self._entry_dates
+            #raise ValueError
+
+
+
+
+
+
+
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
