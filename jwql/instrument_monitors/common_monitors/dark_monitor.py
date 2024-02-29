@@ -1021,18 +1021,18 @@ class Dark():
                                      .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
                         monitor_run = False
 
-                    # Update the query history
-                    new_entry = {'instrument': instrument,
-                                 'aperture': aperture,
-                                 'readpattern': self.readpatt,
-                                 'start_time_mjd': self.query_start,
-                                 'end_time_mjd': self.query_end,
-                                 'files_found': len(new_entries),
-                                 'run_monitor': monitor_run,
-                                 'entry_date': datetime.datetime.now()}
-                    entry = self.query_table(**new_entry)
-                    entry.save()
-                    logging.info('\tUpdated the query history table')
+                        # Update the query history
+                        new_entry = {'instrument': instrument,
+                                     'aperture': aperture,
+                                     'readpattern': self.readpatt,
+                                     'start_time_mjd': self.query_start,
+                                     'end_time_mjd': self.query_end,
+                                     'files_found': len(new_entries),
+                                     'run_monitor': monitor_run,
+                                     'entry_date': datetime.datetime.now()}
+                        entry = self.query_table(**new_entry)
+                        entry.save()
+                        logging.info('\tUpdated the query history table')
 
         logging.info('Dark Monitor completed successfully.')
 
