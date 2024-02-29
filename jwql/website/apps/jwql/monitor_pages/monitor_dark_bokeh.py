@@ -335,13 +335,13 @@ class DarkMonitorData():
             for bad_type in bad_pixel_types:
                 bad_filters = {'detector__iexact': self.detector, 'type': bad_type}
 
-                # In this case, record is a dictionary. e.g {'type': 'dead',
-                #                                            'detector': 'NRCA1',
-                #                                            'mean_dark_image_file': 'nircam_nrca1_full_59607.0_to_59865.91846797105_mean_slope_image.fits',
-                #                                            'obs_end_time': datetime.datetime(2022, 8, 3, 1, 33)}
+                # Note that this function is currently never called with get_pixtable_for_detector = True
+                # 'record' below is a dictionary. e.g {'type': 'dead',
+                #                                      'detector': 'NRCA1',
+                #                                      'mean_dark_image_file': 'nircam_nrca1_full_59607.0_to_59865.91846797105_mean_slope_image.fits',
+                #                                      'obs_end_time': datetime.datetime(2022, 8, 3, 1, 33)}
                 record = self.pixel_table.objects.values('type', 'detector', 'mean_dark_image_file', 'obs_end_time').filter(**bad_filters).order_by("-obs_end_time").first()
                 self.pixel_data.append(record)
-                ###### IS SELF.PIXEL_DATA USED ANYWHERE????
 
 
 class DarkMonitorPlots():
@@ -558,22 +558,6 @@ class DarkMonitorPlots():
                 self.hist_data[self.db.stats_data[idx_int].amplifier] = (self.db.stats_data[idx_int].hist_dark_values,
                                                                          self.db.stats_data[idx_int].hist_amplitudes)
 
-
-
-
-
-        else:
-            pass
-            delme_entry_dates = self._entry_dates
-            #raise ValueError
-
-
-
-
-
-
-
-
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
         the aperture. Keep amplifier-specific data separated.
@@ -698,7 +682,7 @@ class DarkTrendPlot():
                                                 error_upper=error_upper,
                                                 time=self.obstime[use_amp]
                                                 )
-                                     )
+                                      )
             self.plot = figure(title=f'{self.aperture}: Mean +/- 1-sigma Dark Rate', tools='pan,box_zoom,reset,wheel_zoom,save',
                                background_fill_color="#fafafa")
 

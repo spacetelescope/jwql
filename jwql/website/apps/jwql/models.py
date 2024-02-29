@@ -229,4 +229,3 @@ def get_unique_values_per_column(model_name, column_name):
     for row in query_set:
         values.append(row[column_name])
     return values
-
