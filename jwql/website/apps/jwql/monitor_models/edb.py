@@ -45,7 +45,6 @@ class FGSEdbBlocksStats(models.Model):
         managed = True
         db_table = 'fgs_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class FGSEdbDailyStats(models.Model):
@@ -63,7 +62,6 @@ class FGSEdbDailyStats(models.Model):
         managed = True
         db_table = 'fgs_edb_daily_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class FGSEdbEveryChangeStats(models.Model):
@@ -81,7 +79,6 @@ class FGSEdbEveryChangeStats(models.Model):
         managed = True
         db_table = 'fgs_edb_every_change_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class FGSEdbTimeIntervalStats(models.Model):
@@ -99,7 +96,6 @@ class FGSEdbTimeIntervalStats(models.Model):
         managed = True
         db_table = 'fgs_edb_time_interval_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class FGSEdbTimeStats(models.Model):
@@ -114,7 +110,6 @@ class FGSEdbTimeStats(models.Model):
         managed = True
         db_table = 'fgs_edb_time_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRIEdbBlocksStats(models.Model):
@@ -132,7 +127,6 @@ class MIRIEdbBlocksStats(models.Model):
         managed = True
         db_table = 'miri_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRIEdbDailyStats(models.Model):
@@ -150,7 +144,6 @@ class MIRIEdbDailyStats(models.Model):
         managed = True
         db_table = 'miri_edb_daily_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRIEdbEveryChangeStats(models.Model):
@@ -168,7 +161,6 @@ class MIRIEdbEveryChangeStats(models.Model):
         managed = True
         db_table = 'miri_edb_every_change_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRIEdbTimeIntervalStats(models.Model):
@@ -186,7 +178,6 @@ class MIRIEdbTimeIntervalStats(models.Model):
         managed = True
         db_table = 'miri_edb_time_interval_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRIEdbTimeStats(models.Model):
@@ -201,7 +192,6 @@ class MIRIEdbTimeStats(models.Model):
         managed = True
         db_table = 'miri_edb_time_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamEdbBlocksStats(models.Model):
@@ -219,7 +209,6 @@ class NIRCamEdbBlocksStats(models.Model):
         managed = True
         db_table = 'nircam_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamEdbDailyStats(models.Model):
@@ -237,7 +226,6 @@ class NIRCamEdbDailyStats(models.Model):
         managed = True
         db_table = 'nircam_edb_daily_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamEdbEveryChangeStats(models.Model):
@@ -255,7 +243,6 @@ class NIRCamEdbEveryChangeStats(models.Model):
         managed = True
         db_table = 'nircam_edb_every_change_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamEdbTimeIntervalStats(models.Model):
@@ -273,7 +260,6 @@ class NIRCamEdbTimeIntervalStats(models.Model):
         managed = True
         db_table = 'nircam_edb_time_interval_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamEdbTimeStats(models.Model):
@@ -288,7 +274,6 @@ class NIRCamEdbTimeStats(models.Model):
         managed = True
         db_table = 'nircam_edb_time_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSEdbBlocksStats(models.Model):
@@ -306,7 +291,6 @@ class NIRISSEdbBlocksStats(models.Model):
         managed = True
         db_table = 'niriss_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSEdbDailyStats(models.Model):
@@ -324,7 +308,6 @@ class NIRISSEdbDailyStats(models.Model):
         managed = True
         db_table = 'niriss_edb_daily_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSEdbEveryChangeStats(models.Model):
@@ -342,7 +325,6 @@ class NIRISSEdbEveryChangeStats(models.Model):
         managed = True
         db_table = 'niriss_edb_every_change_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSEdbTimeIntervalStats(models.Model):
@@ -360,7 +342,6 @@ class NIRISSEdbTimeIntervalStats(models.Model):
         managed = True
         db_table = 'niriss_edb_time_interval_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSEdbTimeStats(models.Model):
@@ -375,7 +356,6 @@ class NIRISSEdbTimeStats(models.Model):
         managed = True
         db_table = 'niriss_edb_time_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecEdbBlocksStats(models.Model):
@@ -393,7 +373,6 @@ class NIRSpecEdbBlocksStats(models.Model):
         managed = True
         db_table = 'nirspec_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecEdbDailyStats(models.Model):
@@ -411,7 +390,6 @@ class NIRSpecEdbDailyStats(models.Model):
         managed = True
         db_table = 'nirspec_edb_daily_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecEdbEveryChangeStats(models.Model):
@@ -429,7 +407,6 @@ class NIRSpecEdbEveryChangeStats(models.Model):
         managed = True
         db_table = 'nirspec_edb_every_change_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecEdbTimeIntervalStats(models.Model):
@@ -447,7 +424,6 @@ class NIRSpecEdbTimeIntervalStats(models.Model):
         managed = True
         db_table = 'nirspec_edb_time_interval_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecEdbTimeStats(models.Model):
@@ -462,4 +438,3 @@ class NIRSpecEdbTimeStats(models.Model):
         managed = True
         db_table = 'nirspec_edb_time_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'

@@ -27,7 +27,6 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
 
 
 class NIRCamClawQueryHistory(models.Model):
@@ -41,7 +40,6 @@ class NIRCamClawQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_claw_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamClawStats(models.Model):
@@ -63,9 +61,10 @@ class NIRCamClawStats(models.Model):
     stddev = models.FloatField(blank=True, null=True)
     frac_masked = models.FloatField(blank=True, null=True)
     skyflat_filename = models.CharField(blank=True, null=True)
+    doy = models.FloatField(blank=True, null=True)
+    total_bkg = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = True
         db_table = 'nircam_claw_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
