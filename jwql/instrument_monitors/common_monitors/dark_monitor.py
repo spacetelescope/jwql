@@ -712,7 +712,7 @@ class Dark():
         step_args = {'dark_current': {'skip': True}}
 
         # Call the pipeline
-        outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
+        #outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
 
         for filename in file_list:
             processed_file = filename.replace("_dark", f"_{output_suffix}")
@@ -864,7 +864,7 @@ class Dark():
                              'readpattern': self.readpatt,
                              'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
-                             'source_files': source_files,
+                             'source_files': json.dumps(source_files),
                              'obs_start_time': min_time,
                              'obs_mid_time': mid_time,
                              'obs_end_time': max_time,
@@ -936,7 +936,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['miri', 'nircam']:  # JWST_INSTRUMENT_NAMES:
+        for instrument in ['nircam']:  # JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
             logging.info(f'\n\nWorking on {instrument}')
 
@@ -950,7 +950,7 @@ class Dark():
             # Get a list of all possible readout patterns associated with the aperture
             possible_readpatts = RAPID_READPATTERNS[instrument]
 
-            for aperture in possible_apertures:
+            for aperture in ['NRCB1_FULL']:  #possible_apertures:
                 logging.info('')
                 logging.info(f'Working on aperture {aperture} in {instrument}')
 
@@ -960,12 +960,25 @@ class Dark():
                 self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
                 self.aperture = aperture
 
-                for readpatt in possible_readpatts:
+                for readpatt in ['RAPID']:  #possible_readpatts:
                     self.readpatt = readpatt
                     logging.info(f'\tWorking on readout pattern: {self.readpatt}')
 
                     # Locate the record of the most recent MAST search
                     self.query_start = self.most_recent_search()
+
+
+
+
+                    self.query_start = 59697.    # apr 28, 2022
+                    self.query_end = 59697.26
+
+
+
+
+
+
+
                     logging.info(f'\tQuery times: {self.query_start} {self.query_end}')
 
                     # Query MAST using the aperture and the time of the

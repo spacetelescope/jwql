@@ -37,7 +37,7 @@ class FGSDarkDarkCurrent(models.Model):
     readpattern = models.CharField(blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -68,7 +68,7 @@ class FGSDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -104,7 +104,7 @@ class MIRIDarkDarkCurrent(models.Model):
     readpattern = models.CharField(blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -135,7 +135,7 @@ class MIRIDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -171,7 +171,7 @@ class NIRCamDarkDarkCurrent(models.Model):
     readpattern = models.CharField(blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -202,7 +202,7 @@ class NIRCamDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -238,7 +238,7 @@ class NIRISSDarkDarkCurrent(models.Model):
     readpattern = models.CharField(blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -269,7 +269,7 @@ class NIRISSDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -305,7 +305,7 @@ class NIRSpecDarkDarkCurrent(models.Model):
     readpattern = models.CharField(blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -336,7 +336,7 @@ class NIRSpecDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(blank=True, null=True)
-    source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
+    source_files = ArrayField(models.CharField(blank=True, null=True))
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
