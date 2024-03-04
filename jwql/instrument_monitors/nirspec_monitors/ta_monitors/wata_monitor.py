@@ -66,6 +66,9 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
 
+    from jwql.website.apps.jwql.monitor_models.ta import NIRSpecTaQueryHistory, NIRSpecTaStats # noqa: E402 (module level import not at top of file)
+
+
 
 class WATA():
     """ Class for executing the NIRSpec WATA monitor.
@@ -668,8 +671,8 @@ class WATA():
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}TAQueryHistory'.format(mixed_case_name))
-        self.stats_table = eval('{}TAStats'.format(mixed_case_name))
+        self.query_table = eval('{}TaQueryHistory'.format(mixed_case_name))
+        self.stats_table = eval('{}TaStats'.format(mixed_case_name))
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -683,9 +686,9 @@ class WATA():
             where the wata monitor was run.
         """
         filters = {"aperture__iexact": self.aperture,
-                   "run_monitor": self.query_table.run_monitor}
+                   "run_monitor": True}
 
-        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd")
 
         dates = np.zeros(0)
         for instance in record:
