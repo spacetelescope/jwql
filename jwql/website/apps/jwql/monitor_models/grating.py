@@ -40,7 +40,6 @@ class NIRSpecGratingQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_grating_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecGratingStats(models.Model):
@@ -70,4 +69,3 @@ class NIRSpecGratingStats(models.Model):
         managed = True
         db_table = 'nirspec_grating_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
