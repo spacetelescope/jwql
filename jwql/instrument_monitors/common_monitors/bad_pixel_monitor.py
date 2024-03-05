@@ -113,6 +113,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
 
+    from jwql.website.apps.jwql.monitor_models.bad_pixel import *
     from jwql.website.apps.jwql.monitor_pages.monitor_bad_pixel_bokeh import BadPixelPlots
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
@@ -706,7 +707,7 @@ class BadPixels():
         filters = {"aperture__iexact": self.aperture,
                    "run_monitor": run_field}
 
-        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd")
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
@@ -721,7 +722,7 @@ class BadPixels():
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
-            query_result = record.end_time_mjd
+            query_result = np.max(dates)
 
         return query_result
 
