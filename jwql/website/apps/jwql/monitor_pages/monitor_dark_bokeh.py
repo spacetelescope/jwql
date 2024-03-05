@@ -558,7 +558,7 @@ class DarkMonitorPlots():
                                                                          self.db.stats_data[idx_int].hist_amplitudes)
 
             # Keep track of the observation date of the most recent entry
-            self.hist_date = self.db.stats_data[most_recent_idx[0]].obs_mid_time
+            self.hist_date = self.db.stats_data[int(most_recent_idx[0])].obs_mid_time
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for

@@ -81,7 +81,7 @@ import logging
 import os
 
 from astropy.io import ascii, fits
-from astropy.modeling import models
+from astropy.modeling.models import Gaussian1D
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
@@ -234,7 +234,7 @@ class Dark():
                  'obs_end_time': observation_end_time,
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
-                 'entry_date': datetime.datetime.now()}
+                 'entry_date': datetime.datetime.now(datetime.timezone.utc)}
         entry = self.pixel_table(**entry)
         entry.save()
 
@@ -712,7 +712,7 @@ class Dark():
         step_args = {'dark_current': {'skip': True}}
 
         # Call the pipeline
-        #outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
+        outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
 
         for filename in file_list:
             processed_file = filename.replace("_dark", f"_{output_suffix}")
@@ -725,7 +725,7 @@ class Dark():
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
             # Get the observation time for each file
-            obstime = instrument_properties.get_obstime(item)
+            obstime = instrument_properties.get_obstime(item)  # .replace(tzinfo=datetime.timezone.utc) - if get_obstime can't be changed
             obs_times.append(obstime)
 
         # Find the earliest and latest observation time, and calculate
@@ -864,7 +864,7 @@ class Dark():
                              'readpattern': self.readpatt,
                              'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
-                             'source_files': json.dumps(source_files),
+                             'source_files': source_files,
                              'obs_start_time': min_time,
                              'obs_mid_time': mid_time,
                              'obs_end_time': max_time,
@@ -880,9 +880,9 @@ class Dark():
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
                              'mean_dark_image_file': os.path.basename(mean_slope_file),
-                             'hist_dark_values': bins[key],
-                             'hist_amplitudes': histogram[key],
-                             'entry_date': datetime.datetime.now()
+                             'hist_dark_values': list(bins[key]),
+                             'hist_amplitudes': list(histogram[key]),
+                             'entry_date': datetime.datetime.now(datetime.timezone.utc)
                              }
             entry = self.stats_table(**dark_db_entry)
             entry.save()
@@ -936,7 +936,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:  # JWST_INSTRUMENT_NAMES:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
             logging.info(f'\n\nWorking on {instrument}')
 
@@ -950,7 +950,7 @@ class Dark():
             # Get a list of all possible readout patterns associated with the aperture
             possible_readpatts = RAPID_READPATTERNS[instrument]
 
-            for aperture in ['NRCB1_FULL']:  #possible_apertures:
+            for aperture in possible_apertures:
                 logging.info('')
                 logging.info(f'Working on aperture {aperture} in {instrument}')
 
@@ -966,18 +966,6 @@ class Dark():
 
                     # Locate the record of the most recent MAST search
                     self.query_start = self.most_recent_search()
-
-
-
-
-                    self.query_start = 59697.    # apr 28, 2022
-                    self.query_end = 59697.26
-
-
-
-
-
-
 
                     logging.info(f'\tQuery times: {self.query_start} {self.query_end}')
 
@@ -1122,7 +1110,7 @@ class Dark():
                                          'end_time_mjd': batch_end_time,
                                          'files_found': len(dark_files),
                                          'run_monitor': monitor_run,
-                                         'entry_date': datetime.datetime.now()}
+                                         'entry_date': datetime.datetime.now(datetime.timezone.utc)}
 
                             entry = self.query_table(**new_entry)
                             entry.save()
@@ -1143,7 +1131,7 @@ class Dark():
                                      'end_time_mjd': self.query_end,
                                      'files_found': len(new_entries),
                                      'run_monitor': monitor_run,
-                                     'entry_date': datetime.datetime.now()}
+                                     'entry_date': datetime.datetime.now(datetime.timezone.utc)}
 
                         entry = self.query_table(**new_entry)
                         entry.save()
@@ -1542,7 +1530,7 @@ class Dark():
             amplitude, peak, width = calculations.gaussian1d_fit(bin_centers, hist, initial_params)
             gaussian_params[key] = [amplitude, peak, width]
 
-            gauss_fit_model = models.Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
+            gauss_fit_model = Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
             gauss_fit = gauss_fit_model(bin_centers)
 
             positive = hist > 0
