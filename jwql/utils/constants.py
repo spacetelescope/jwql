@@ -207,6 +207,18 @@ DARK_EXP_TYPES = {
 # Types of potential bad pixels identified by the dark current monitor
 DARK_MONITOR_BADPIX_TYPES = ["hot", "dead", "noisy"]
 
+# Minimum amount of time, in days, between epochs of dark current observations. If the
+# dark monitor sees this much time, or longer, between two dark current files, it assumes
+# that the two files are part of separate epochs. This means the monitor will run separately
+# on these files, rather than bundling them together into a batch, where they would have
+# been combined into a mean dark rate
+DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME = {'nircam': 10.,
+                                             'niriss': 10.,
+                                             'miri': 0.00001,  # Treat each MIRI exposure separately
+                                             'nirspec': 10.,
+                                             'fgs': 10.
+                                             }
+
 # Maximum number of potential new bad pixels to overplot on the dark monitor
 # mean dark image plot. Too many overplotted points starts to obscure the image
 # itself, and are most likely not really new bad pixels
@@ -616,6 +628,10 @@ LOOK_OPTIONS = ["New", "Viewed"]
 # Maximum number of records returned by MAST for a single query
 MAST_QUERY_LIMIT = 550000
 
+# Minimum number of groups per integration required to include data
+# in the dark current monitor
+MINIMUM_DARK_CURRENT_GROUPS = 10
+
 # Expected position sensor values for MIRI. Used by the EDB monitor
 # to filter out bad values. Tuple values are the expected value and
 # the standard deviation associated with the value
@@ -652,6 +668,52 @@ MIRI_POS_RATIO_VALUES = {
         "LONG": (441.6632325, 0.349161169),
     },
 }
+
+# Names of all of the monitor database tables
+MONITOR_TABLE_NAMES = [
+    "fgs_bad_pixel_query_history", "fgs_bad_pixel_stats",
+    "miri_bad_pixel_query_history", "miri_bad_pixel_stats",
+    "nircam_bad_pixel_query_history", "nircam_bad_pixel_stats",
+    "niriss_bad_pixel_query_history", "niriss_bad_pixel_stats",
+    "nirspec_bad_pixel_query_history", "nirspec_bad_pixel_stats",
+    "nircam_bias_query_history", "nircam_bias_stats",
+    "niriss_bias_query_history", "niriss_bias_stats",
+    "nirspec_bias_query_history", "nirspec_bias_stats",
+    "nircam_claw_query_history", "nircam_claw_stats",
+    "monitor",
+    "central_storage",
+    "filesystem_characteristics",
+    "filesystem_general",
+    "filesystem_instrument",
+    "fgs_anomaly",
+    "miri_anomaly",
+    "nircam_anomaly",
+    "niriss_anomaly",
+    "nirspec_anomaly",
+    "fgs_cosmic_ray_query_history", "fgs_cosmic_ray_stats",
+    "miri_cosmic_ray_query_history", "miri_cosmic_ray_stats",
+    "nircam_cosmic_ray_query_history", "nircam_cosmic_ray_stats",
+    "niriss_cosmic_ray_query_history", "niriss_cosmic_ray_stats",
+    "nirspec_cosmic_ray_query_history", "nirspec_cosmic_ray_stats",
+    "fgs_dark_dark_current", "fgs_dark_pixel_stats", "fgs_dark_query_history",
+    "miri_dark_dark_current", "miri_dark_pixel_stats", "miri_dark_query_history",
+    "nircam_dark_dark_current", "nircam_dark_pixel_stats", "nircam_dark_query_history",
+    "niriss_dark_dark_current", "niriss_dark_pixel_stats", "niriss_dark_query_history",
+    "nirspec_dark_dark_current", "nirspec_dark_pixel_stats", "nirspec_dark_query_history",
+    "fgs_edb_blocks_stats", "fgs_edb_daily_stats", "fgs_edb_every_change_stats", "fgs_edb_time_interval_stats", "fgs_edb_time_stats",
+    "miri_edb_blocks_stats", "miri_edb_daily_stats", "miri_edb_every_change_stats", "miri_edb_time_interval_stats", "miri_edb_time_stats",
+    "nircam_edb_blocks_stats", "nircam_edb_daily_stats", "nircam_edb_every_change_stats", "nircam_edb_time_interval_stats", "nircam_edb_time_stats",
+    "niriss_edb_blocks_stats", "niriss_edb_daily_stats", "niriss_edb_every_change_stats", "niriss_edb_time_interval_stats", "niriss_edb_time_stats",
+    "nirspec_edb_blocks_stats", "nirspec_edb_daily_stats", "nirspec_edb_every_change_stats", "nirspec_edb_time_interval_stats", "nirspec_edb_time_stats",
+    "nirspec_grating_stats",
+    "fgs_readnoise_query_history", "fgs_readnoise_stats",
+    "miri_readnoise_query_history", "miri_readnoise_stats",
+    "nircam_readnoise_query_history", "nircam_readnoise_stats",
+    "niriss_readnoise_query_history", "niriss_readnoise_stats",
+    "nirspec_readnoise_query_history", "nirspec_readnoise_stats",
+    "miri_ta_query_history", "miri_ta_stats",
+    "nirspec_ta_query_history", "nirspec_ta_stats"
+]
 
 # Suffix for msa files
 MSA_SUFFIX = ["msa"]

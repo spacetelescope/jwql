@@ -138,7 +138,7 @@ class ClawMonitor():
         """
 
         columns = ['filename', 'filter', 'pupil', 'detector', 'effexptm', 'expstart_mjd', 'entry_date', 'mean', 'median',
-                   'stddev', 'frac_masked']  # , 'total_bkg']
+                   'stddev', 'frac_masked', 'total_bkg']
 
         # Get all of the background data.
         background_data = NIRCamClawStats.objects.all().values(*columns)
@@ -192,8 +192,7 @@ class ClawMonitor():
                     df = df[df['stddev'] != 0]  # older data has no accurate stddev measures
                     plot_data = df['stddev'].values
                 if plot_type == 'model':
-                    total_bkg = [1. for x in df['median'].values]
-                    plot_data = df['median'].values  # / df['total_bkg'].values
+                    plot_data = df['median'].values / df['total_bkg'].values
                 plot_expstarts = df['expstart_mjd'].values
 
                 # Plot the background data over time
@@ -331,8 +330,8 @@ class ClawMonitor():
                                  'stddev': float(stddev),
                                  'frac_masked': len(segmap_orig[(segmap_orig != 0) | (dq & 1 != 0)]) / (segmap_orig.shape[0] * segmap_orig.shape[1]),
                                  'skyflat_filename': os.path.basename(self.outfile),
-                                 # 'doy': float(doy),
-                                 # 'total_bkg': float(total_bkg),
+                                 'doy': float(doy),
+                                 'total_bkg': float(total_bkg),
                                  'entry_date': datetime.datetime.now()
                                  }
                 entry = self.stats_table(**claw_db_entry)

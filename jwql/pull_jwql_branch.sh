@@ -1,8 +1,22 @@
 #!/bin/bash
 
 function echo_format {
-    echo "WARNING! the optional parameters should only be used during a JWQL release in production"
+    echo ""
     echo "Usage: $0 <branch> [-r|--reset_service] [-n|--notify <email@stsci.edu>]"
+    echo ""
+    echo "WARNING! the optional parameters should only be used during a JWQL release in production"
+    echo "branch: the git branch to pull from"
+    echo "[-r|--reset_service]: Reset the jwql service"
+    echo "[-n|--notify <email@stsci.edu>]: Notify via provided email"
+    echo ""
+    echo "Local:"
+    echo "$ bash pull_jwql_branch.sh develop"
+    echo ""
+    echo "Test:"
+    echo "$ bash pull_jwql_branch.sh v1.2 -r"
+    echo ""
+    echo "Production:"
+    echo "$ bash pull_jwql_branch.sh v1.2 -r -n group_email_address@stsci.edu"
 }
 
 # Check if the required number of arguments are provided
@@ -54,7 +68,7 @@ git fetch origin $branch_name
 git pull origin $branch_name
 git fetch origin --tags
 
-# 2. Bring the server down and back up
+# 2. Bring the service down
 if [ "$reset" = true ]; then
     sudo /bin/systemctl stop jwql.service
 fi
@@ -65,7 +79,7 @@ pip install -e ..
 # 4. Merge Any Migrations
 python ./website/manage.py migrate
 
-# 5. Bring the server back up
+# 5. Bring the service back up
 if [ "$reset" = true ]; then
     sudo /bin/systemctl start jwql.service
 fi
@@ -76,8 +90,7 @@ python ./database/database_interface.py
 # 7. Send out notification email
 if [ "$notify" = true ] && [ -n "$recipient" ]; then
     subject="JWQL $branch_name Released"
-    message_content="Hello, A new version of JWQL ($branch_name) has just been deployed to jwql.stsci.edu.  Visit https://github.com/spacetelescope/jwql/releases for more information."
+    message_content="Hello, A new version of JWQL ($branch_name) has just been released.  Visit https://github.com/spacetelescope/jwql/releases for more information."
     echo "$message_content" | mail -s "$subject" "$recipient"
     echo "Notification Email Sent"
-    echo "Deployment Complete!"
 fi
