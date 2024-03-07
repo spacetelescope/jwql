@@ -63,6 +63,7 @@ class NIRCamClawStats(models.Model):
     skyflat_filename = models.CharField(blank=True, null=True)
     doy = models.FloatField(blank=True, null=True)
     total_bkg = models.FloatField(blank=True, null=True)
+    brad_delete_monitor = models.BooleanField(default=False)
 
     class Meta:
         managed = True

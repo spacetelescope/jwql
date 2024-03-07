@@ -168,6 +168,7 @@ class Anomalies(models.Model):
     subsequently_masked_short = models.BooleanField(default=False)
     monitored_short = models.BooleanField(default=False)
     bright_object_not_a_short = models.BooleanField(default=False)
+    brad_delete_me = models.BooleanField(default=False)
 
     def get_marked_anomalies(self):
         """Return all boolean field names (anomalies) currently set"""
