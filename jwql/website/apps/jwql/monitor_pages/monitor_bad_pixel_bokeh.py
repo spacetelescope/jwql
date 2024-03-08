@@ -24,7 +24,8 @@ from astropy.time import Time
 from bokeh.embed import components, file_html
 from bokeh.io import show
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Text, Title
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
@@ -149,7 +150,7 @@ class BadPixelPlots():
             plot_layout = badpix_monitor_plot_layout(all_plots)
 
             # Create a tab for each type of plot
-            detector_panels.append(Panel(child=plot_layout, title=detector))
+            detector_panels.append(TabPanel(child=plot_layout, title=detector))
 
         # Build tabs
         tabs = Tabs(tabs=detector_panels)
@@ -667,12 +668,12 @@ class BadPixTrendPlot():
         self.plot.tools.append(hover_tool)
 
         # Make the x axis tick labels look nice
-        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                          seconds=["%d %b %H:%M:%S.%3N"],
-                                                          hours=["%d %b %H:%M"],
-                                                          days=["%d %b %H:%M"],
-                                                          months=["%d %b %Y %H:%M"],
-                                                          years=["%d %b %Y"]
+        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                          seconds="%d %b %H:%M:%S.%3N",
+                                                          hours="%d %b %H:%M",
+                                                          days="%d %b %H:%M",
+                                                          months="%d %b %Y %H:%M",
+                                                          years="%d %b %Y"
                                                           )
         self.plot.xaxis.major_label_orientation = np.pi / 4
 

@@ -28,8 +28,7 @@ from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasS
 from jwql.instrument_monitors.common_monitors import bias_monitor
 from jwql.tests.resources import has_test_db
 from jwql.utils.utils import get_config
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 
 
 def test_collapse_image():
@@ -65,7 +64,7 @@ def test_extract_zeroth_group():
     # Extract the zeroth group using the bias monitor
     # nosec comment added to ignore bandit security check
     output_filename = monitor.extract_zeroth_group(filename)
-    os.chmod(output_filename, 508) # nosec
+    os.chmod(output_filename, 508)  # nosec
     data = fits.getdata(output_filename, 'SCI')[0, 0, :, :]
 
     # Remove the copied test file and its zeroth group file so this test can be properly repeated
@@ -96,6 +95,7 @@ def test_get_amp_medians():
     assert amp_medians == amp_medians_truth
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_identify_tables():
     """Be sure the correct database tables are identified"""
 

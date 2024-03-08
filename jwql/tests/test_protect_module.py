@@ -21,10 +21,8 @@ import os
 from jwql.utils import protect_module as pm
 
 from pytest import fixture, mark
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.protect_module import lock_module, _PID_LOCKFILE_KEY
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 @fixture

@@ -43,7 +43,7 @@ def test_bar_chart():
     # And generate a figure
     plt = bar_chart(data, 'index')
 
-    assert str(type(plt)) == "<class 'bokeh.plotting.figure.Figure'>"
+    assert str(type(plt)) == "<class 'bokeh.plotting._figure.figure'>"
 
 
 def test_bokeh_version():

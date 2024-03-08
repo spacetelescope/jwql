@@ -19,11 +19,12 @@ Use
 import datetime
 import os
 from astroquery.mast import Mast, Observations
+import numpy as np
 from django import setup
-
 
 from jwql.database.database_interface import Monitor, engine
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.logging_functions import configure_logging, get_log_status
 from jwql.utils import mast_utils
 from jwql.utils.utils import filename_parser
@@ -32,12 +33,6 @@ from jwql.utils.utils import filename_parser
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
-
-# Determine if the code is being run as part of a github action or Readthedocs build
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:  # pragma: no cover
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # These lines are needed in order to use the Django models in a standalone
@@ -158,6 +153,11 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
         if 'data' in query.keys():
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
+
+    # Put the file entries in chronological order
+    expstarts = [e['expstart'] for e in query_results]
+    idx = np.argsort(expstarts)
+    query_results = list(np.array(query_results)[idx])
 
     return query_results
 

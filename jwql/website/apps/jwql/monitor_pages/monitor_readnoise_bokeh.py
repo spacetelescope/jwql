@@ -22,15 +22,16 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import column, row
-from bokeh.models import Panel, Tabs  # bokeh <= 3.0
 from bokeh.models import ColumnDataSource, HoverTool
-# from bokeh.models import TabPanel, Tabs  # bokeh >= 3.0
+from bokeh.models import TabPanel, Tabs
 from bokeh.plotting import figure
 from django.templatetags.static import static
 import numpy as np
 
-from jwql.database.database_interface import session
-from jwql.database.database_interface import FGSReadnoiseStats, MIRIReadnoiseStats, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
+# PEP8 will undoubtedly complain, but the file is specifically designed so that everything
+# importable is a monitor class.
+from jwql.website.apps.jwql.monitor_models.readnoise import *
+
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
@@ -80,14 +81,7 @@ class ReadnoiseMonitorData():
         # Determine which database tables are needed based on instrument
         self.identify_tables()
 
-        # Query database for all data in readnoise stats with a matching aperture,
-        # and sort the data by exposure start time.
-        self.query_results = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self.aperture) \
-            .order_by(self.stats_table.expstart) \
-            .all()
-
-        session.close()
+        self.query_results = list(self.stats_table.objects.filter(aperture__iexact=self.aperture).order_by("expstart").all())
 
 
 class ReadNoiseFigure():
@@ -122,10 +116,10 @@ class ReadNoisePlotTab():
         self.plot_readnoise_difference_image()
         self.plot_readnoise_histogram()
 
-        self.tab = Panel(child=column(row(*self.amp_plots),
-                                      self.diff_image_plot,
-                                      self.readnoise_histogram),
-                         title=self.aperture)
+        self.tab = TabPanel(child=column(row(*self.amp_plots),
+                                         self.diff_image_plot,
+                                         self.readnoise_histogram),
+                            title=self.aperture)
 
     def plot_readnoise_amplifers(self):
         """Class to create readnoise scatter plots per amplifier.
