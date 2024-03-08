@@ -424,11 +424,13 @@ class ClawMonitor():
         mast_table = self.query_mast()
         logging.info('{} files found between {} and {}.'.format(len(mast_table), self.query_start_mjd, self.query_end_mjd))
 
-        # Define pivot wavelengths
-        self.filter_wave = {'F070W': 0.704, 'F090W': 0.902, 'F115W': 1.154, 'F150W': 1.501, 'F150W2': 1.659,
-                            'F200W': 1.989, 'F212N': 2.121, 'F250M': 2.503, 'F277W': 2.762, 'F300M': 2.989,
-                            'F322W2': 3.232, 'F356W': 3.568, 'F410M': 4.082, 'F430M': 4.281, 'F444W': 4.408,
-                            'F480M': 4.874}
+        # Define pivot wavelengths - last downloaded March 8 2024 from:
+        # https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-instrumentation/nircam-filters
+        self.filter_wave = {'F070W': 0.704, 'F090W': 0.901, 'F115W': 1.154, 'F140M': 1.404, 'F150W': 1.501, 'F162M': 1.626, 'F164N': 1.644,
+                            'F150W2': 1.671, 'F182M': 1.845, 'F187N': 1.874, 'F200W': 1.99, 'F210M': 2.093, 'F212N': 2.12, 'F250M': 2.503,
+                            'F277W': 2.786, 'F300M': 2.996, 'F322W2': 3.247, 'F323N': 3.237, 'F335M': 3.365, 'F356W': 3.563, 'F360M': 3.621,
+                            'F405N': 4.055, 'F410M': 4.092, 'F430M': 4.28, 'F444W': 4.421, 'F460M': 4.624, 'F466N': 4.654, 'F470N': 4.707,
+                            'F480M': 4.834}
 
         # Create observation-level median stacks for each filter/pupil combo, in pixel-space
         combos = np.array(['{}_{}_{}_{}'.format(str(row['program']), row['observtn'], row['filter'], row['pupil']).lower() for row in mast_table])
