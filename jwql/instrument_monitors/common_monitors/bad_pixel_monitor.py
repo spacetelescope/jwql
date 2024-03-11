@@ -110,7 +110,7 @@ from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
     import django  # noqa: E402 (module level import not at top of file)
-    from django.db.models import Max # noqa: E402 (module level import not at top of file)
+    from django.db.models import  Max # noqa: E402 (module level import not at top of file)
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
 
