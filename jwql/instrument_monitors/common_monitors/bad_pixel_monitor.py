@@ -110,6 +110,7 @@ from jwql.utils.utils import copy_files, create_png_from_fits, ensure_dir_exists
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
     import django  # noqa: E402 (module level import not at top of file)
+    from django.db.models import Max # noqa: E402 (module level import not at top of file)
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
 
@@ -700,29 +701,28 @@ class BadPixels():
             where the dark monitor was run.
         """
         if file_type.lower() == 'dark':
-            run_field = self.query_table.run_bpix_from_darks
+            run_field = "run_bpix_from_darks"
+            sort_field = "-dark_end_time_mjd"
         elif file_type.lower() == 'flat':
-            run_field = self.query_table.run_bpix_from_flats
+            run_field = "run_bpix_from_flats"
+            sort_field = "-flat_end_time_mjd"
 
         filters = {"aperture__iexact": self.aperture,
-                   "run_monitor": run_field}
+                   run_field: True}
 
-        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd")
+        record = self.query_table.objects.filter(**filters).order_by(sort_field).first()
 
-        dates = np.zeros(0)
-        if file_type.lower() == 'dark':
-            for instance in record:
-                dates = np.append(dates, instance.dark_end_time_mjd)
-        elif file_type.lower() == 'flat':
-            for instance in record:
-                dates = np.append(dates, instance.flat_end_time_mjd)
-
+        # Record is django QuerySet object, when empty QuerySet object is returned (<QuerySet []>)
+        # the result of record.first() is None
         if record is None:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
-            query_result = np.max(dates)
+            if file_type.lower() == 'dark':
+                query_result = record.dark_end_time_mjd
+            elif file_type.lower() == 'flat':
+                query_result = record.flat_end_time_mjd
 
         return query_result
 
