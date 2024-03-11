@@ -688,18 +688,13 @@ class WATA():
         filters = {"aperture__iexact": self.aperture,
                    "run_monitor": True}
 
-        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd")
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
 
-        dates = np.zeros(0)
-        for instance in record:
-            dates = np.append(dates, instance.end_time_mjd)
-
-        query_count = len(dates)
-        if query_count == 0:
+        if record is None:
             query_result = self.query_very_beginning
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, self.query_very_beginning)))
         else:
-            query_result = np.max(dates)
+            query_result = record.end_time_mjd
 
         return query_result
 
