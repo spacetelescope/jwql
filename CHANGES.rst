@@ -1,5 +1,23 @@
 ## What's Changed
 
+1.2.4 (2024-03-11)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Fix Broken Dashboard - ReImplement Anomaly Dash @BradleySappington
+- Add more info to image- and exposure-level pages @bhilbert4
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- create pull_jwql_branch.sh by @BradleySappington
+- Claw monitor migrate by @york-stsci
+- Update readnoise monitor to use django database models by @york-stsci
+- Migration to django management by @york-stsci
+- Get subarray lists from datamodels schema by @bhilbert4
+- Retrieve program number and category efficiently by @bhilbert4
+
+
 1.2.3 (2024-01-26)
 ==================
 
