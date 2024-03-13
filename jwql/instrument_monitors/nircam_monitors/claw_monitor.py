@@ -301,7 +301,11 @@ class ClawMonitor():
 
                 # Get predicted background level using JWST background tool
                 ra, dec = hdu[1].header['RA_V1'], hdu[1].header['DEC_V1']
-                wv = self.filter_wave[self.fltr.upper()]
+                if ('N' in self.pupil.upper()) | ('M' in self.pupil.upper()):
+                    fltr_wv = self.pupil.upper()
+                else:
+                    fltr_wv = self.fltr.upper()
+                wv = self.filter_wave[fltr_wv]
                 date = hdu[0].header['DATE-BEG']
                 doy = int(Time(date).yday.split(':')[1])
                 try:
