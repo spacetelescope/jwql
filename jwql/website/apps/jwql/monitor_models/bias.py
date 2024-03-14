@@ -26,13 +26,15 @@ References
 """
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
+from jwql.utils.constants import MAX_LEN_APERTURE, MAX_LEN_TIME, MAX_LEN_FILENAME, MAX_LEN_INSTRUMENT, MAX_LEN_PATH
 
 
 class NIRCamBiasQueryHistory(models.Model):
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     entries_found = models.IntegerField(blank=True, null=True)
@@ -47,11 +49,11 @@ class NIRCamBiasQueryHistory(models.Model):
 
 
 class NIRCamBiasStats(models.Model):
-    aperture = models.CharField(blank=True, null=True)
-    uncal_filename = models.CharField(blank=True, null=True)
-    cal_filename = models.CharField(blank=True, null=True)
-    cal_image = models.CharField(blank=True, null=True)
-    expstart = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    uncal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    cal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    cal_image = models.CharField(max_length=MAX_LEN_PATH, blank=True, null=True)
+    expstart = models.CharField(max_length=MAX_LEN_TIME, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)
@@ -76,8 +78,8 @@ class NIRCamBiasStats(models.Model):
 
 
 class NIRISSBiasQueryHistory(models.Model):
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     entries_found = models.IntegerField(blank=True, null=True)
@@ -92,11 +94,11 @@ class NIRISSBiasQueryHistory(models.Model):
 
 
 class NIRISSBiasStats(models.Model):
-    aperture = models.CharField(blank=True, null=True)
-    uncal_filename = models.CharField(blank=True, null=True)
-    cal_filename = models.CharField(blank=True, null=True)
-    cal_image = models.CharField(blank=True, null=True)
-    expstart = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    uncal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    cal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    cal_image = models.CharField(max_length=MAX_LEN_PATH, blank=True, null=True)
+    expstart = models.CharField(max_length=MAX_LEN_TIME, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)
@@ -121,8 +123,8 @@ class NIRISSBiasStats(models.Model):
 
 
 class NIRSpecBiasQueryHistory(models.Model):
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     entries_found = models.IntegerField(blank=True, null=True)
@@ -137,11 +139,11 @@ class NIRSpecBiasQueryHistory(models.Model):
 
 
 class NIRSpecBiasStats(models.Model):
-    aperture = models.CharField(blank=True, null=True)
-    uncal_filename = models.CharField(blank=True, null=True)
-    cal_filename = models.CharField(blank=True, null=True)
-    cal_image = models.CharField(blank=True, null=True)
-    expstart = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    uncal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    cal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    cal_image = models.CharField(max_length=MAX_LEN_PATH, blank=True, null=True)
+    expstart = models.CharField(max_length=MAX_LEN_TIME, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)

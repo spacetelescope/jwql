@@ -26,15 +26,25 @@ References
 """
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
+from jwql.utils.constants import (
+    MAX_LEN_AMPLIFIER,
+    MAX_LEN_APERTURE,
+    MAX_LEN_DETECTOR,
+    MAX_LEN_FILENAME,
+    MAX_LEN_INSTRUMENT,
+    MAX_LEN_READPATTERN,
+    MAX_LEN_TYPE,
+)
 
 
 class FGSDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    amplifier = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    amplifier = models.CharField(max_length=MAX_LEN_AMPLIFIER, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -52,7 +62,7 @@ class FGSDarkDarkCurrent(models.Model):
     double_gauss_peak2 = ArrayField(models.FloatField())
     double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     hist_dark_values = ArrayField(models.FloatField())
     hist_amplitudes = ArrayField(models.FloatField())
 
@@ -64,16 +74,16 @@ class FGSDarkDarkCurrent(models.Model):
 
 class FGSDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -83,9 +93,9 @@ class FGSDarkPixelStats(models.Model):
 
 class FGSDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -99,9 +109,9 @@ class FGSDarkQueryHistory(models.Model):
 
 class MIRIDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    amplifier = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    amplifier = models.CharField(max_length=MAX_LEN_AMPLIFIER, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -119,7 +129,7 @@ class MIRIDarkDarkCurrent(models.Model):
     double_gauss_peak2 = ArrayField(models.FloatField())
     double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     hist_dark_values = ArrayField(models.FloatField())
     hist_amplitudes = ArrayField(models.FloatField())
 
@@ -131,16 +141,16 @@ class MIRIDarkDarkCurrent(models.Model):
 
 class MIRIDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -150,9 +160,9 @@ class MIRIDarkPixelStats(models.Model):
 
 class MIRIDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -166,9 +176,9 @@ class MIRIDarkQueryHistory(models.Model):
 
 class NIRCamDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    amplifier = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    amplifier = models.CharField(max_length=MAX_LEN_AMPLIFIER, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -186,7 +196,7 @@ class NIRCamDarkDarkCurrent(models.Model):
     double_gauss_peak2 = ArrayField(models.FloatField())
     double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     hist_dark_values = ArrayField(models.FloatField())
     hist_amplitudes = ArrayField(models.FloatField())
 
@@ -198,16 +208,16 @@ class NIRCamDarkDarkCurrent(models.Model):
 
 class NIRCamDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -217,9 +227,9 @@ class NIRCamDarkPixelStats(models.Model):
 
 class NIRCamDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -233,9 +243,9 @@ class NIRCamDarkQueryHistory(models.Model):
 
 class NIRISSDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    amplifier = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    amplifier = models.CharField(max_length=MAX_LEN_AMPLIFIER, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -253,7 +263,7 @@ class NIRISSDarkDarkCurrent(models.Model):
     double_gauss_peak2 = ArrayField(models.FloatField())
     double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     hist_dark_values = ArrayField(models.FloatField())
     hist_amplitudes = ArrayField(models.FloatField())
 
@@ -265,16 +275,16 @@ class NIRISSDarkDarkCurrent(models.Model):
 
 class NIRISSDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -284,9 +294,9 @@ class NIRISSDarkPixelStats(models.Model):
 
 class NIRISSDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -300,9 +310,9 @@ class NIRISSDarkQueryHistory(models.Model):
 
 class NIRSpecDarkDarkCurrent(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    amplifier = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    amplifier = models.CharField(max_length=MAX_LEN_AMPLIFIER, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     mean = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
@@ -320,7 +330,7 @@ class NIRSpecDarkDarkCurrent(models.Model):
     double_gauss_peak2 = ArrayField(models.FloatField())
     double_gauss_width2 = ArrayField(models.FloatField())
     double_gauss_chisq = models.FloatField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     hist_dark_values = ArrayField(models.FloatField())
     hist_amplitudes = ArrayField(models.FloatField())
 
@@ -332,16 +342,16 @@ class NIRSpecDarkDarkCurrent(models.Model):
 
 class NIRSpecDarkPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    mean_dark_image_file = models.CharField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    mean_dark_image_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -351,9 +361,9 @@ class NIRSpecDarkPixelStats(models.Model):
 
 class NIRSpecDarkQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    readpattern = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)

@@ -29,9 +29,10 @@ References
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
+from jwql.utils.constants import MAX_LEN_DEPENDENCY_VALUE, MAX_LEN_MNEMONIC
 
 class FGSEdbBlocksStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -48,7 +49,7 @@ class FGSEdbBlocksStats(models.Model):
 
 
 class FGSEdbDailyStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -65,14 +66,14 @@ class FGSEdbDailyStats(models.Model):
 
 
 class FGSEdbEveryChangeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = ArrayField(models.DateTimeField())
     mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    dependency_mnemonic = models.CharField(blank=True, null=True)
-    dependency_value = models.CharField(blank=True, null=True)
+    dependency_mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
+    dependency_value = models.CharField(max_length=MAX_LEN_DEPENDENCY_VALUE, blank=True, null=True)
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -82,7 +83,7 @@ class FGSEdbEveryChangeStats(models.Model):
 
 
 class FGSEdbTimeIntervalStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -99,7 +100,7 @@ class FGSEdbTimeIntervalStats(models.Model):
 
 
 class FGSEdbTimeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -113,7 +114,7 @@ class FGSEdbTimeStats(models.Model):
 
 
 class MIRIEdbBlocksStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -130,7 +131,7 @@ class MIRIEdbBlocksStats(models.Model):
 
 
 class MIRIEdbDailyStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -147,14 +148,14 @@ class MIRIEdbDailyStats(models.Model):
 
 
 class MIRIEdbEveryChangeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = ArrayField(models.DateTimeField())
     mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    dependency_mnemonic = models.CharField(blank=True, null=True)
-    dependency_value = models.CharField(blank=True, null=True)
+    dependency_mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
+    dependency_value = models.CharField(max_length=MAX_LEN_DEPENDENCY_VALUE, blank=True, null=True)
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -164,7 +165,7 @@ class MIRIEdbEveryChangeStats(models.Model):
 
 
 class MIRIEdbTimeIntervalStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -181,7 +182,7 @@ class MIRIEdbTimeIntervalStats(models.Model):
 
 
 class MIRIEdbTimeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -195,7 +196,7 @@ class MIRIEdbTimeStats(models.Model):
 
 
 class NIRCamEdbBlocksStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -212,7 +213,7 @@ class NIRCamEdbBlocksStats(models.Model):
 
 
 class NIRCamEdbDailyStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -229,14 +230,14 @@ class NIRCamEdbDailyStats(models.Model):
 
 
 class NIRCamEdbEveryChangeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = ArrayField(models.DateTimeField())
     mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    dependency_mnemonic = models.CharField(blank=True, null=True)
-    dependency_value = models.CharField(blank=True, null=True)
+    dependency_mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
+    dependency_value = models.CharField(max_length=MAX_LEN_DEPENDENCY_VALUE, blank=True, null=True)
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -246,7 +247,7 @@ class NIRCamEdbEveryChangeStats(models.Model):
 
 
 class NIRCamEdbTimeIntervalStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -263,7 +264,7 @@ class NIRCamEdbTimeIntervalStats(models.Model):
 
 
 class NIRCamEdbTimeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -277,7 +278,7 @@ class NIRCamEdbTimeStats(models.Model):
 
 
 class NIRISSEdbBlocksStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -294,7 +295,7 @@ class NIRISSEdbBlocksStats(models.Model):
 
 
 class NIRISSEdbDailyStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -311,14 +312,14 @@ class NIRISSEdbDailyStats(models.Model):
 
 
 class NIRISSEdbEveryChangeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = ArrayField(models.DateTimeField())
     mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    dependency_mnemonic = models.CharField(blank=True, null=True)
-    dependency_value = models.CharField(blank=True, null=True)
+    dependency_mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
+    dependency_value = models.CharField(max_length=MAX_LEN_DEPENDENCY_VALUE, blank=True, null=True)
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -328,7 +329,7 @@ class NIRISSEdbEveryChangeStats(models.Model):
 
 
 class NIRISSEdbTimeIntervalStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -345,7 +346,7 @@ class NIRISSEdbTimeIntervalStats(models.Model):
 
 
 class NIRISSEdbTimeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -359,7 +360,7 @@ class NIRISSEdbTimeStats(models.Model):
 
 
 class NIRSpecEdbBlocksStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -376,7 +377,7 @@ class NIRSpecEdbBlocksStats(models.Model):
 
 
 class NIRSpecEdbDailyStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -393,14 +394,14 @@ class NIRSpecEdbDailyStats(models.Model):
 
 
 class NIRSpecEdbEveryChangeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     time = ArrayField(models.DateTimeField())
     mnemonic_value = ArrayField(models.FloatField())
     median = models.FloatField(blank=True, null=True)
     stdev = models.FloatField(blank=True, null=True)
-    dependency_mnemonic = models.CharField(blank=True, null=True)
-    dependency_value = models.CharField(blank=True, null=True)
+    dependency_mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
+    dependency_value = models.CharField(max_length=MAX_LEN_DEPENDENCY_VALUE, blank=True, null=True)
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -410,7 +411,7 @@ class NIRSpecEdbEveryChangeStats(models.Model):
 
 
 class NIRSpecEdbTimeIntervalStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
@@ -427,7 +428,7 @@ class NIRSpecEdbTimeIntervalStats(models.Model):
 
 
 class NIRSpecEdbTimeStats(models.Model):
-    mnemonic = models.CharField(blank=True, null=True)
+    mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
     data = ArrayField(models.FloatField())
