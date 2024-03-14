@@ -31,6 +31,7 @@ from django.contrib.postgres.fields import ArrayField
 
 from jwql.utils.constants import MAX_LEN_DEPENDENCY_VALUE, MAX_LEN_MNEMONIC
 
+
 class FGSEdbBlocksStats(models.Model):
     mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
