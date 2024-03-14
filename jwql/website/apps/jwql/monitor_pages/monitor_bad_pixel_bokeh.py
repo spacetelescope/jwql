@@ -162,7 +162,8 @@ class BadPixelPlots():
         template_dir = os.path.join(os.path.dirname(__file__), '../templates')
         template_file = os.path.join(template_dir, 'bad_pixel_monitor_savefile_basic.html')
         temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div': div}
-        self._html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
+        self._html = file_html(tabs, CDN, title=f'{self.instrument} bad pix monitor', 
+                               template=template_file, template_variables=temp_vars)
 
         # Modify the html such that our Django-related lines are kept in place,
         # which will allow the page to keep the same formatting and styling as
