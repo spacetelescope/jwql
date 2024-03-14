@@ -27,19 +27,22 @@ from bokeh.plotting import figure
 from datetime import datetime, timedelta
 import numpy as np
 from PIL import Image
-from sqlalchemy import func
-from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import get_unique_values_per_column, session
-from jwql.database.database_interface import NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkPixelStats, FGSDarkDarkCurrent
-from jwql.utils.constants import FULL_FRAME_APERTURES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config, read_png
 from jwql.website.apps.jwql.bokeh_utils import PlaceholderPlot
+from jwql.website.apps.jwql.models import get_model_column_names, get_unique_values_per_column
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.dark_current import *  # noqa: E402 (module level import not at top of file)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR = get_config()['outputs']
@@ -199,7 +202,7 @@ class DarkHistPlot():
             title_str = f'{self.aperture}: Dark Rate Histogram'
             x_label = 'Dark Rate (DN/sec)'
             y_label = 'Number of Pixels'
-            self.plot = PlaceholderPlot(title_str, x_label, y_label).create()
+            self.plot = PlaceholderPlot(title_str, x_label, y_label).plot
 
 
 class DarkImagePlot():
@@ -294,12 +297,12 @@ class DarkMonitorData():
         """Determine which dark current database tables as associated with
         a given instrument"""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
-        self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
-        self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
+        self.pixel_table = eval(f'{mixed_case_name}DarkPixelStats')
+        self.stats_table = eval(f'{mixed_case_name}DarkDarkCurrent')
 
         # Get a list of column names for each
-        self.stats_table_columns = self.stats_table.metadata.tables[f'{self.instrument.lower()}_dark_dark_current'].columns.keys()
-        self.pixel_table_columns = self.pixel_table.metadata.tables[f'{self.instrument.lower()}_dark_pixel_stats'].columns.keys()
+        self.stats_table_columns = get_model_column_names(self.stats_table)
+        self.pixel_table_columns = get_model_column_names(self.pixel_table)
 
     def retrieve_data(self, aperture, get_pixtable_for_detector=False):
         """Get all nedded data from the database tables.
@@ -314,9 +317,7 @@ class DarkMonitorData():
             detector associated with the given aperture.
         """
         # Query database for all data in <instrument>DarkDarkCurrent with a matching aperture
-        self.stats_data = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == aperture) \
-            .all()
+        self.stats_data = self.stats_table.objects.filter(aperture__iexact=aperture).all()
 
         if get_pixtable_for_detector:
             self.detector = aperture.split('_')[0].upper()
@@ -330,19 +331,17 @@ class DarkMonitorData():
 
             # For the given detector, get the latest entry for each bad pixel type, and
             # return the bad pixel type, detector, and mean dark image file
-            subq = (session
-                    .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
-                    .filter(self.pixel_table.detector == self.detector)
-                    .group_by(self.pixel_table.type)
-                    .subquery()
-                    )
+            bad_pixel_types = self.pixel_table.objects.values('type').distinct()
+            for bad_type in bad_pixel_types:
+                bad_filters = {'detector__iexact': self.detector, 'type': bad_type}
 
-            query = (session.query(self.pixel_table.type, self.pixel_table.detector, self.pixel_table.mean_dark_image_file)
-                     .join(subq, self.pixel_table.entry_date == subq.c.max_created)
-                     )
-
-            self.pixel_data = query.all()
-        session.close()
+                # Note that this function is currently never called with get_pixtable_for_detector = True
+                # 'record' below is a dictionary. e.g {'type': 'dead',
+                #                                      'detector': 'NRCA1',
+                #                                      'mean_dark_image_file': 'nircam_nrca1_full_59607.0_to_59865.91846797105_mean_slope_image.fits',
+                #                                      'obs_end_time': datetime.datetime(2022, 8, 3, 1, 33)}
+                record = self.pixel_table.objects.values('type', 'detector', 'mean_dark_image_file', 'obs_end_time').filter(**bad_filters).order_by("-obs_end_time").first()
+                self.pixel_data.append(record)
 
 
 class DarkMonitorPlots():
@@ -554,11 +553,12 @@ class DarkMonitorPlots():
             # amplifier values (note that these are strings e.g. '1'), and the
             # values are tuples of (x, y) lists
             for idx in most_recent_idx:
-                self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
-                                                                     self.db.stats_data[idx].hist_amplitudes)
+                idx_int = int(idx)  # np.where returns a 64-bit int, but QuerySets must be indexed using an int()
+                self.hist_data[self.db.stats_data[idx_int].amplifier] = (self.db.stats_data[idx_int].hist_dark_values,
+                                                                         self.db.stats_data[idx_int].hist_amplitudes)
 
             # Keep track of the observation date of the most recent entry
-            self.hist_date = self.db.stats_data[most_recent_idx[0]].obs_mid_time
+            self.hist_date = self.db.stats_data[int(most_recent_idx[0])].obs_mid_time
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for

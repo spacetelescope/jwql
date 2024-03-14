@@ -268,7 +268,7 @@ def get_obstime(filename):
         time = h[0].header['TIME-OBS']
     year, month, day = [int(element) for element in date.split('-')]
     hour, minute, second = [float(element) for element in time.split(':')]
-    return datetime.datetime(year, month, day, int(hour), int(minute), int(second))
+    return datetime.datetime(year, month, day, int(hour), int(minute), int(second), tzinfo=datetime.timezone.utc)
 
 
 def mean_time(times):

@@ -88,7 +88,7 @@ def background_monitor(request):
 
 
 def bad_pixel_monitor(request, inst):
-    """Generate the dark monitor page for a given instrument
+    """Generate the bad pixel monitor page for a given instrument
 
     Parameters
     ----------
