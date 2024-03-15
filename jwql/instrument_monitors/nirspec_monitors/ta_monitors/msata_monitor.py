@@ -57,12 +57,19 @@ from bs4 import BeautifulSoup
 from sqlalchemy.sql.expression import and_
 
 # jwql imports
-from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    from jwql.website.apps.jwql.monitor_models.ta import NIRSpecTaQueryHistory, NIRSpecTaStats # noqa: E402 (module level import not at top of file)
 
 
 class MSATA():
@@ -985,8 +992,8 @@ class MSATA():
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}TAQueryHistory'.format(mixed_case_name))
-        self.stats_table = eval('{}TAStats'.format(mixed_case_name))
+        self.query_table = eval('{}TaQueryHistory'.format(mixed_case_name))
+        self.stats_table = eval('{}TaStats'.format(mixed_case_name))
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -999,20 +1006,18 @@ class MSATA():
             Date (in MJD) of the ending range of the previous MAST query
             where the msata monitor was run.
         """
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                                                            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
-        dates = np.zeros(0)
-        for instance in query:
-            dates = np.append(dates, instance.end_time_mjd)
+        filters = {"aperture__iexact": self.aperture,
+                   "run_monitor": True}
 
-        query_count = len(dates)
-        if query_count == 0:
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
+
+        if record is None:
             query_result = self.query_very_beginning
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.query_very_beginning)))
         else:
-            query_result = np.max(dates)
+            query_result = record.end_time_mjd
 
         return query_result
 
@@ -1384,8 +1389,9 @@ class MSATA():
                      'files_found': len(new_filenames),
                      'run_monitor': monitor_run,
                      'entry_date': datetime.now()}
-        with engine.begin() as connection:
-            connection.execute(self.query_table.__table__.insert(), new_entry)
+
+        entry = self.query_table(**new_entry)
+        entry.save()
         logging.info('\tUpdated the query history table')
 
         logging.info('MSATA Monitor completed successfully.')
