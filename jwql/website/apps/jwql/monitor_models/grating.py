@@ -27,7 +27,8 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+
+from jwql.utils.constants import MAX_LEN_TIME
 
 
 class NIRSpecGratingQueryHistory(models.Model):
@@ -44,7 +45,7 @@ class NIRSpecGratingQueryHistory(models.Model):
 
 class NIRSpecGratingStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    time = models.CharField(blank=True, null=True)
+    time = models.CharField(max_length=MAX_LEN_TIME, blank=True, null=True)
     inrsh_gwa_adcmgain = models.FloatField(blank=True, null=True)
     inrsh_gwa_adcmoffset = models.FloatField(blank=True, null=True)
     inrsh_gwa_motor_vref = models.FloatField(blank=True, null=True)
