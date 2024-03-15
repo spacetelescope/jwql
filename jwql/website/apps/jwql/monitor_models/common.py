@@ -116,7 +116,7 @@ related to the JWQL monitors.
         from django.contrib.postgres.fields import ArrayField
 
         class NIRISSMyMonitorStats(models.Model):
-            aperture = models.CharField(blank=True, null=True)
+            aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
             mean = models.FloatField(blank=True, null=True)
             median = models.FloatField(blank=True, null=True)
             stddev = models.FloatField(blank=True, null=True)
