@@ -18,7 +18,7 @@
             <div class="APT_parameters">Observation: <a id="obs_id"></a></div>
             <div class="APT_parameters">Visit: <a id="visit_id"></a></div>
             <div class="APT_parameters"> <a></a></div>
-            <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{file_root}}", "{{base_url}}");'>
+            <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed_group("{{group_root}}", "{{base_url}}");'>
         </div>
         <div class="d-flex flex-row">
             <div class="APT_parameters">Visit Status: {{ basic_info.visit_status }}</div>
@@ -264,7 +264,7 @@
         {% elif 'uncal' in suffixes %}
             <script>change_all_filetypes('uncal', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}', "{{ detectors|join(',') }}");</script>
         {% elif suffixes|length == 1 %}
-            <script>change_all_filetypes('{{suffixes.0}}', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}, "{{ detectors|join(',') }}";</script>
+            <script>change_all_filetypes('{{suffixes.0}}', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}', "{{ detectors|join(',') }}");</script>
         {% else %}
             <a>Unable to show image for: {{suffixes}}</a>
         {% endif %}
