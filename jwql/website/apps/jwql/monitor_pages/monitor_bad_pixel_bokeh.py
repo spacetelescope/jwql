@@ -98,7 +98,16 @@ class BadPixelPlots():
         lines_to_remove = ["<!DOCTYPE html>",
                            '<html lang="en">',
                            '  </body>',
-                           '</html>']
+                           '</html>',
+                           '    <style>',
+                           '      html, body {',
+                           '        box-sizing: border-box;',
+                           '        display: flow-root;',
+                           '        height: 100%;',
+                           '        margin: 0;',
+                           '        padding: 0;',
+                           '      }',
+                           '    </style>']
 
         # Our Django-related lines that need to be at the top of the file
         hstring = """href="{{'/jwqldb/%s_bad_pixel_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Go to JWQLDB page</a>"""
