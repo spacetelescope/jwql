@@ -1,5 +1,21 @@
 ## What's Changed
 
+1.2.5 (2024-03-19)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Fix Bokeh `file_html` Call by @mfixstsci
+- Update Bad Pix Exclude Line by @mfixstsci
+- Interactive preview image - updates for Bokeh 3 by @bhilbert4
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Allow creation of pngs from 3D and 4D arrays by @bhilbert4
+- Add max length to charfield by @BradleySappington
+- Header fix by @BradleySappington
+
+
 1.2.4 (2024-03-11)
 ==================
 
