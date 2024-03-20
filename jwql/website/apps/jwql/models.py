@@ -31,6 +31,7 @@ References
 from django.db import models
 
 from jwql.utils.constants import (
+    DEFAULT_MODEL_CHARFIELD,
     MAX_LEN_APERTURE,
     MAX_LEN_DETECTOR,
     MAX_LEN_FILTER,
@@ -74,9 +75,9 @@ class Proposal(models.Model):
     """A class defining the model used to hold information about a given proposal"""
     # Fields
     prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
-    thumbnail_path = models.CharField(max_length=MAX_LEN_PATH, help_text='Path to the proposal thumbnail', default='')
+    thumbnail_path = models.CharField(max_length=MAX_LEN_PATH, help_text='Path to the proposal thumbnail', default=DEFAULT_MODEL_CHARFIELD)
     archive = models.ForeignKey(Archive, blank=False, null=False, on_delete=models.CASCADE)
-    category = models.CharField(max_length=10, help_text="Category Type", default='')
+    category = models.CharField(max_length=10, help_text="Category Type", default=DEFAULT_MODEL_CHARFIELD)
 
     # Metadata
     class Meta:
@@ -119,15 +120,15 @@ class RootFileInfo(models.Model):
     proposal = models.CharField(max_length=MAX_LEN_PROPOSAL, help_text="5-digit proposal ID string")
     root_name = models.TextField(primary_key=True, max_length=300)
     viewed = models.BooleanField(default=False)
-    filter = models.CharField(max_length=MAX_LEN_FILTER, help_text="Instrument name", default='', null=True, blank=True)
-    aperture = models.CharField(max_length=MAX_LEN_APERTURE, help_text="Aperture", default='', null=True, blank=True)
-    detector = models.CharField(max_length=MAX_LEN_DETECTOR, help_text="Detector", default='', null=True, blank=True)
+    filter = models.CharField(max_length=MAX_LEN_FILTER, help_text="Instrument name", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, help_text="Aperture", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, help_text="Detector", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=0)
-    read_patt = models.CharField(max_length=MAX_LEN_READPATTERN, help_text="Read Pattern", default='', null=True, blank=True)
-    grating = models.CharField(max_length=MAX_LEN_GRATING, help_text="Grating", default='', null=True, blank=True)
-    subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, help_text="Subarray", default='', null=True, blank=True)
-    pupil = models.CharField(max_length=MAX_LEN_PUPIL, help_text="Pupil", default='', null=True, blank=True)
-    exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default='', null=True, blank=True)
+    read_patt = models.CharField(max_length=MAX_LEN_READPATTERN, help_text="Read Pattern", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    grating = models.CharField(max_length=MAX_LEN_GRATING, help_text="Grating", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, help_text="Subarray", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    pupil = models.CharField(max_length=MAX_LEN_PUPIL, help_text="Pupil", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     expstart = models.FloatField(help_text='Exposure Start Time', default=0.0)
 
     # Metadata
