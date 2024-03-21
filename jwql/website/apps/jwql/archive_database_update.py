@@ -163,11 +163,11 @@ def get_updates(update_database):
 @log_info
 @log_fail
 def cleanup_past_runs():
-    logging.debug("Starting cleanup_past_runs")
-    rootfileinfo_field_set = ["filter", "detector", "exp_type", "readpatt", "grating", "patt_num", "apername", "subarray", "pupil", "expstart"]
+    logging.info("Starting cleanup_past_runs")
+    rootfileinfo_field_set = ["filter", "detector", "exp_type", "read_patt", "grating", "patt_num", "aperture", "subarray", "pupil", "expstart"]
     # Consume iterator created in map with list in order to make it run
     list(map(lambda x: fill_empty_model("rootfileinfo", x), rootfileinfo_field_set))
-    logging.debug("Finished cleanup_past_runs")
+    logging.info("Finished cleanup_past_runs")
 
 def get_all_possible_filenames_for_proposal(instrument, proposal_num):
     """Wrapper around a MAST query for filenames from a given instrument/proposal
