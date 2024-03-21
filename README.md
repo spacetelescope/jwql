@@ -44,7 +44,7 @@ Getting `jwql` up and running on your own computer requires four steps, detailed
 
 ### Prerequisites
 
-It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.9+.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.10+.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
@@ -86,13 +86,13 @@ source activate base/root
 Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3.9.yml`, for python 3.9, and `environment_python_3.10.yml`, for python 3.10, are supported by `jwql`):
 
 ```
-conda env create -f environment_python_3.9.yml
+conda env create -f environment_python_3.10.yml
 ```
 
 or
 
 ```
-conda env create -f environment_python_3.10.yml
+conda env create -f environment_python_3.11.yml
 ```
 
 ### Configuration File
