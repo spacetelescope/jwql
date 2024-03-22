@@ -490,6 +490,9 @@ def fill_empty_rootfileinfo(rootfileinfo_set):
                         expstart=defaults_dict.get('expstart', 0.0))
 
         for key, value in defaults.items():
+            # Final check to verify no None exists
+            if value is None:
+                value = DEFAULT_MODEL_CHARFIELD
             setattr(rootfileinfo_mod, key, value)
         try:
             rootfileinfo_mod.save()
