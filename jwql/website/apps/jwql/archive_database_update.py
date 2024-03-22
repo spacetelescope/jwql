@@ -346,7 +346,7 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
                                 exp_type=defaults_dict.get('exp_type', DEFAULT_MODEL_CHARFIELD),
                                 read_patt=defaults_dict.get('readpatt', DEFAULT_MODEL_CHARFIELD),
                                 grating=defaults_dict.get('grating', DEFAULT_MODEL_CHARFIELD),
-                                read_patt_num=defaults_dict.get('patt_num', 0),
+                                read_patt_num=defaults_dict.get('patt_num', 1),
                                 aperture=defaults_dict.get('apername', DEFAULT_MODEL_CHARFIELD),
                                 subarray=defaults_dict.get('subarray', DEFAULT_MODEL_CHARFIELD),
                                 pupil=defaults_dict.get('pupil', DEFAULT_MODEL_CHARFIELD),
@@ -378,10 +378,14 @@ def fill_empty_model(model_name, model_field):
 
     '''
 
+    is_proposal = (model_name == "proposal")
+    is_rootfileinfo = (model_name == "rootfileinfo")
+    rootfile_info_fields_default_ok = ["filter", "grating", "pupil"]
+
     model_field_null = model_field + "__isnull"
     model_field_empty = model_field + "__exact"
 
-    model = apps.get_model('jwql', model_name)
+    model = apps.get_model("jwql", model_name)
     null_models = empty_models = zero_models = model.objects.none()
 
     # filter(field__isnull=True)
@@ -398,7 +402,8 @@ def fill_empty_model(model_name, model_field):
 
     # filter(field__exact=DEFAULT_MODEL_CHARFIELD)
     try:
-        empty_models = model.objects.filter(**{model_field_empty: DEFAULT_MODEL_CHARFIELD})
+        if is_proposal or model_field not in rootfile_info_fields_default_ok:
+            empty_models = model.objects.filter(**{model_field_empty: DEFAULT_MODEL_CHARFIELD})
     except ValueError:
         pass
 
@@ -411,9 +416,9 @@ def fill_empty_model(model_name, model_field):
     model_set = null_models | empty_models | zero_models
     if model_set.exists():
         logging.info(f'{model_set.count()} models to be updated')
-        if model_name == 'proposal':
+        if is_proposal:
             fill_empty_proposals(model_set)
-        elif model_name == 'rootfileinfo':
+        elif is_rootfileinfo:
             fill_empty_rootfileinfo(model_set)
         else:
             logging.warning(f'Filling {model_name} model is not currently implemented')
@@ -478,7 +483,7 @@ def fill_empty_rootfileinfo(rootfileinfo_set):
                         exp_type=defaults_dict.get('exp_type', DEFAULT_MODEL_CHARFIELD),
                         read_patt=defaults_dict.get('readpatt', DEFAULT_MODEL_CHARFIELD),
                         grating=defaults_dict.get('grating', DEFAULT_MODEL_CHARFIELD),
-                        read_patt_num=defaults_dict.get('patt_num', 0),
+                        read_patt_num=defaults_dict.get('patt_num', 1),
                         aperture=defaults_dict.get('apername', DEFAULT_MODEL_CHARFIELD),
                         subarray=defaults_dict.get('subarray', DEFAULT_MODEL_CHARFIELD),
                         pupil=defaults_dict.get('pupil', DEFAULT_MODEL_CHARFIELD),
