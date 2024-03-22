@@ -199,7 +199,6 @@ def test_get_all_proposals():
                            (['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'], {'bad'})),
                           (False, ['rate', 'uncal', 'bad', 'o006_crfints', 'o001_crf'],
                            ['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'])])
-
 def test_get_available_suffixes(untracked, input_suffixes, expected):
     result = data_containers.get_available_suffixes(
         input_suffixes, return_untracked=untracked)
@@ -338,6 +337,7 @@ def test_get_anomaly_form_post_group(mocker):
     assert 'Failed to submit anomaly' in request._messages.messages
     assert update_mock.call_count == 2
 """
+
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_dashboard_components():

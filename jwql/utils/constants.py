@@ -364,7 +364,7 @@ EXPOSURE_PAGE_SUFFIX_ORDER = [
     "wfscmb",
 ]
 
-#Default Model Values
+# Default Model Values
 DEFAULT_MODEL_CHARFIELD = "empty"
 
 # Filename Component Lengths
