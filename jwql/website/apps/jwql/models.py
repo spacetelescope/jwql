@@ -123,7 +123,7 @@ class RootFileInfo(models.Model):
     filter = models.CharField(max_length=MAX_LEN_FILTER, help_text="Instrument name", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     aperture = models.CharField(max_length=MAX_LEN_APERTURE, help_text="Aperture", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     detector = models.CharField(max_length=MAX_LEN_DETECTOR, help_text="Detector", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
-    read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=0)
+    read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=1)
     read_patt = models.CharField(max_length=MAX_LEN_READPATTERN, help_text="Read Pattern", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     grating = models.CharField(max_length=MAX_LEN_GRATING, help_text="Grating", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, help_text="Subarray", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
