@@ -517,6 +517,20 @@ class EdbMnemonicMonitor():
         medians = ensure_list(mnem.median)
         maxs = ensure_list(mnem.max)
         mins = ensure_list(mnem.min)
+
+        # Make sure the max and min values are floats rather than ints
+        if len(maxs) > 0:
+            if (isinstance(maxs[0], int) | isinstance(maxs[0], np.integer)):
+                maxs = [float(v) for v in maxs]
+        else:
+            print('len of maxs is zero! {mnem.mnemonic_identifier}, {maxs}, {mins}, {medians}')
+        if len(mins) > 0:
+            if (isinstance(mins[0], int) | isinstance(mins[0], np.integer)):
+                mins = [float(v) for v in mins]
+        if len(medians) > 0:
+            if (isinstance(medians[0], int) | isinstance(medians[0], np.integer)):
+                medians = [float(v) for v in medians]
+
         db_entry = {'mnemonic': mnem.mnemonic_identifier,
                     'latest_query': query_time,
                     'times': times,
@@ -705,7 +719,7 @@ class EdbMnemonicMonitor():
             # as defined by the json files. This is the default operation.
 
             # Loop over instruments
-            for instrument_name in ['miri']:  # JWST_INSTRUMENT_NAMES:     ########UNCOMMETN BEFORE MERGING######
+            for instrument_name in JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
@@ -1558,7 +1572,7 @@ class EdbMnemonicMonitor():
 
         # At the top level, we loop over the different types of telemetry. These types
         # largely control if/how the data will be averaged.
-        for telemetry_kind in ['every_change']:  # mnemonic_dict:   ##############UNCOMMETN BEFORE MERGING
+        for telemetry_kind in mnemonic_dict:   # ['every_change']']
             telem_type = telemetry_kind
             logging.info(f'Working on telemetry_type: {telem_type}')
 
@@ -1584,6 +1598,16 @@ class EdbMnemonicMonitor():
             # Work on one mnemonic at a time
             for mnemonic in mnemonic_dict[telemetry_kind]:
                 logging.info(f'Working on {mnemonic["name"]}')
+
+                # It seems that some mnemonics that were previously in the EDB are no longer
+                # present. Check for the existence of the mnemonic before proceeding. If the
+                # mnemonic is not present in the EDB, make a note in the log and move on to
+                # the next one.
+                present_in_edb = ed.get_mnemonic_info(mnemonic["name"])
+                if not present_in_edb:
+                    logging.info(f'WARNING: {mnemonic["name"]} is not present in the EDB. Skipping')
+                    continue  # Move on to the next mnemonic
+
                 create_new_history_entry = True
 
                 # Only two types of plots are currently supported. Plotting the data in the EdbMnemonic
@@ -1891,7 +1915,8 @@ def add_every_change_history(dict1, dict2):
     """
 
 
-
+    print('dict1 keys: ', dict1.keys())
+    print('dict2 keys: ', dict2.keys())
 
 
 
@@ -1902,19 +1927,28 @@ def add_every_change_history(dict1, dict2):
         all_values = []
         all_medians = []
         all_devs = []
+
+
+        print(key)
+        print(type(value))  # tuple
+        print(type(value[0]))  # list (of lists)
+        print(value[0]) #- list of lists
+        print('')
+        for v0, v2 in zip(value[0], value[2]):
+            print(type(v0), v0)
+            print(type(v2), v2)
+            print('')
+        print('')
+        #stop
+        #print(type(dict2[key][0]), dict2[key][0])
+
+
+
+
         if key in dict2:
 
-            if key == 'F1000W':
-                print(type(value))  # tuple
-                print(type(value[0]))  # list (of lists)
-                print(value[0]) #- list of lists
-                print('')
-                for v0, v2 in zip(value[0], value[2]):
-                    print(type(v0), v0)
-                    print(type(v2), v2)
-                    print('')
-                print('')
-                print(type(dict2[key][0]), dict2[key][0])
+
+            #if key == 'OPAQUE':
                 #print(dict1[key]) #- tuple(array of times, array of data, list of medians, list of stdevs)
 
 
@@ -1985,9 +2019,19 @@ def add_every_change_history(dict1, dict2):
             updated_value = (all_dates, all_values, all_medians, all_devs)
             combined[key] = updated_value
         else:
+            if key == 'OPAQUE':
+                print(key)
+                print(value[0])
+                print(value[1])
+                print(value[2])
+                print(value[3])
+                stop
+            print(key)
+            print(value)
+            #stop
             combined[key] = value
 
-        if key == 'F1000W':
+        if key == 'OPAQUE':
             print('before dict2 only keys:')
             for e in combined[key][0]:
                 print(e)
@@ -1997,7 +2041,7 @@ def add_every_change_history(dict1, dict2):
                 print(e)
                 print('')
             print('')
-
+            #stop
 
 
 
@@ -2006,7 +2050,17 @@ def add_every_change_history(dict1, dict2):
     # Add entries for keys that are in dict2 but not dict1
     for key, value in dict2.items():
         if key not in dict1:
-            combined[key] = value
+            #combined[key] = value
+            dates =[]
+            vals = []
+            meds = []
+            devs = []
+            dates.append(list(value[0]))
+            vals.append(list(value[1]))
+            meds.append(list(value[2]))
+            devs.append(list(value[3]))
+            combined[key] = (dates, vals, meds, devs)
+
 
         logging.info(f'dict2 only add_every_change_history: key: {key}, len data: {len(value[0])}, median: {dict2[key][2]}, dev: {dict2[key][3]}')
 
@@ -2278,6 +2332,8 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         if len(value) > 0:
             val_times, val_data, normval, stdevval = value
 
+            print(key)
+            print(value)
 
             print('in plotting code')
             print('val_times is:')
@@ -2293,7 +2349,21 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
             # normval (expected value)
             all_val_data = []
             all_val_times = []
+
+            print('val_data:')
+            print(val_data)
+            print('')
+
             for time_ele, data_ele, norm_ele in zip(val_times, val_data, normval):
+
+
+                print(data_ele)
+                print('')
+                print(time_ele)
+                print('\n\n')
+
+
+
                 if type(data_ele[0]) not in [np.str_, str]:
 
 
@@ -2302,7 +2372,7 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
 
                     data_ele_arr = np.array(data_ele) / norm_ele[0]
                     #data_ele /= norm_ele[0]
-                    all_val_data.extend(list(data_ele))
+                    all_val_data.extend(list(data_ele_arr))
                     all_val_times.extend(time_ele)
                     logging.info(f'key: {key}, len_data: {len(data_ele)}, firstentry: {data_ele[0]}, stats: {norm_ele}')
 
