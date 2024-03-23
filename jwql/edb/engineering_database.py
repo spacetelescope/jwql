@@ -1265,8 +1265,13 @@ class EdbMnemonic:
                 good = ((date_arr >= min_date) & (date_arr < max_date))
                 if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                     avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
-                    maxval = np.max(self.data["euvalues"][good])
-                    minval = np.min(self.data["euvalues"][good])
+                    # if self.data is empty, or good is empty, then calculating the max and
+                    # min values will not work.
+                    try:
+                        maxval = np.max(self.data["euvalues"][good])
+                        minval = np.min(self.data["euvalues"][good])
+                    except ValueError:
+                        pass
                 else:
                     avg, med, dev, maxval, minval = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
                 if np.isfinite(avg):
