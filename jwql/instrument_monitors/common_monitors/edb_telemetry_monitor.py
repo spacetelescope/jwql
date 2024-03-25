@@ -1863,7 +1863,7 @@ class EdbMnemonicMonitor():
             panel_list.append(TabPanel(child=grid, title=key))
 
         # Assign the panels to Tabs
-        tabbed = Tabs(tabs=panel_list)
+        tabbed = Tabs(tabs=panel_list, tabs_location='left')
 
         # Save the tabbed plot to a json file
         item_text = json.dumps(json_item(tabbed, "tabbed_edb_plot"))
