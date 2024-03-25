@@ -475,7 +475,6 @@ def get_additional_exposure_info(root_file_infos, image_info):
         additional_info['TITLE'] = header.get('TITLE', 'N/A')
         additional_info['PI_NAME'] = header.get('PI_NAME', 'N/A')
         additional_info['TARGNAME'] = header.get('TARGPROP', 'N/A')
-        additional_info['BRADTEST'] = header.get('BRADTEST', 'N/A')
 
         # For the exposure level (i.e. multiple files) present the target
         # RA and Dec. For the image level, give RA_REF, DEC_REF, since those
