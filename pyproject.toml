@@ -36,7 +36,7 @@ dependencies = [
   "numpydoc",
   "pandas",
   "pip",
-  "postgresql",
+  "postgres",
   "psycopg2-binary",
   "pysiaf",
   "pysqlite3",
@@ -57,7 +57,7 @@ dependencies = [
   "twine",
   "vine",
   "wtforms",
-  "git+https://github.com/spacetelescope/jwst_reffiles"
+  "jwst_reffiles@git+https://github.com/spacetelescope/jwst_reffiles"
 ]
 dynamic = ["version"]
 
