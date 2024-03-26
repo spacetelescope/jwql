@@ -1,0 +1,37 @@
+name: build
+
+on:
+  release:
+    types: [ released ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
+    with:
+      upload_to_pypi: false
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install .
+      - run: pip list
+      - id: version
+        uses: mtkennerly/dunamai-action@v1
+      - run: echo "filename=jwql_${{ matrix.python-version }}_${{ steps.version.outputs.version }}.txt" >> $GITHUB_OUTPUT
+        id: output
+      - run: pip freeze > ${{ steps.output.outputs.filename }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.output.outputs.filename }}
+          path: ${{ steps.output.outputs.filename }}
+      - if: (github.event_name == 'release' && github.event.action == 'published')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ${{ steps.output.outputs.filename }}
+            
+
