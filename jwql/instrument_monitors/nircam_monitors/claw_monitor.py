@@ -337,7 +337,7 @@ class ClawMonitor():
                                  'skyflat_filename': os.path.basename(self.outfile),
                                  'doy': float(doy),
                                  'total_bkg': float(total_bkg),
-                                 'entry_date': datetime.datetime.now()
+                                 'entry_date': datetime.datetime.now(datetime.timezone.utc)
                                  }
                 entry = self.stats_table(**claw_db_entry)
                 entry.save()
@@ -476,7 +476,7 @@ class ClawMonitor():
                      'start_time_mjd': self.query_start_mjd,
                      'end_time_mjd': self.query_end_mjd,
                      'run_monitor': monitor_run,
-                     'entry_date': datetime.datetime.now()}
+                     'entry_date': datetime.datetime.now(datetime.timezone.utc)}
         entry = self.query_table(**new_entry)
         entry.save()
 
