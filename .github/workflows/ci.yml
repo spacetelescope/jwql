@@ -1,14 +1,12 @@
-name: JWQL CI
+name: test
 
-on: [push, pull_request]
+on: 
+  push:
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash -l {0}
 
 jobs:
   check:
@@ -20,35 +18,29 @@ jobs:
           python-version: "3.x"
       - run: pip install bandit
       - run: bandit ./jwql/ -c .bandit
-
   test:
     name: test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 5
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.9, "3.10"]
-
+        python-version: ["3.11", "3.12"]
+      fail-fast: false
+    env:
+      PYTHONUNBUFFERED: 1
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: mamba-org/provision-with-micromamba@v15
+      - uses: actions/setup-python@v5
         with:
-          environment-file: ./environment_python_${{ matrix.python-version }}.yml
-          cache-env: true
-          cache-downloads: true
-
-      - run: pip install -e .[test]
-
-      - run: conda env export
-
-      - uses: supercharge/redis-github-action@1.4.0
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - if: runner.os == 'Linux'
+        uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
-        if: runner.os == 'Linux'
-
+      - run: pip install -e .[test] pytest-xdist
+      - run: pip list
       - run: python -c "import jwql; print('Version ' + jwql.__version__); print('Path ' + jwql.__path__[0])"
-
-      - run: pytest jwql/tests/
+      - run: pytest -n auto jwql/tests/
+      
