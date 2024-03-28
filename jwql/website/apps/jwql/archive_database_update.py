@@ -26,7 +26,7 @@ Use
         Use the '--fill_empty' argument to provide a model and field.  Updates ALL fields for any model with empty/null/0 specified field
         $ python archive_database_update.py --fill_empty rootfileinfo expstart
         WARNING: Not all fields will be populated by all model objects. This will result in updates that may not be necessary.
-                 While this will not disturb the data, it has the potential to increase run time.  
+                 While this will not disturb the data, it has the potential to increase run time.
                  Select the field that is most pertient to the models you need updated minimize run time
 
         Use the 'update' argument to update every rootfileinfo data model with the most complete information from MAST
@@ -49,6 +49,7 @@ import django
 
 from django.apps import apps
 from jwql.utils.protect_module import lock_module
+from jwql.utils.constants import DEFAULT_MODEL_CHARFIELD
 
 # These lines are needed in order to use the Django models in a standalone
 # script (as opposed to code run as a result of a webpage request). If these
@@ -158,6 +159,16 @@ def get_updates(update_database):
                                           exp_types, starting_date, latest_date, proposal_category)
 
         create_archived_proposals_context(inst)
+
+
+@log_info
+@log_fail
+def cleanup_past_runs():
+    logging.info("Starting cleanup_past_runs")
+    rootfileinfo_field_set = ["filter", "detector", "exp_type", "read_patt", "grating", "read_patt_num", "aperture", "subarray", "pupil", "expstart"]
+    # Consume iterator created in map with list in order to make it run
+    list(map(lambda x: fill_empty_model("rootfileinfo", x), rootfileinfo_field_set))
+    logging.info("Finished cleanup_past_runs")
 
 
 def get_all_possible_filenames_for_proposal(instrument, proposal_num):
@@ -332,15 +343,15 @@ def update_database_table(update, instrument, prop, obs, thumbnail, obsfiles, ty
                 # Updating defaults only on update or creation to prevent call to mast_query_by_rootname on every file name.
                 defaults_dict = mast_query_by_rootname(instrument, file)
 
-                defaults = dict(filter=defaults_dict.get('filter', ''),
-                                detector=defaults_dict.get('detector', ''),
-                                exp_type=defaults_dict.get('exp_type', ''),
-                                read_patt=defaults_dict.get('readpatt', ''),
-                                grating=defaults_dict.get('grating', ''),
-                                read_patt_num=defaults_dict.get('patt_num', 0),
-                                aperture=defaults_dict.get('apername', ''),
-                                subarray=defaults_dict.get('subarray', ''),
-                                pupil=defaults_dict.get('pupil', ''),
+                defaults = dict(filter=defaults_dict.get('filter', DEFAULT_MODEL_CHARFIELD),
+                                detector=defaults_dict.get('detector', DEFAULT_MODEL_CHARFIELD),
+                                exp_type=defaults_dict.get('exp_type', DEFAULT_MODEL_CHARFIELD),
+                                read_patt=defaults_dict.get('readpatt', DEFAULT_MODEL_CHARFIELD),
+                                grating=defaults_dict.get('grating', DEFAULT_MODEL_CHARFIELD),
+                                read_patt_num=defaults_dict.get('patt_num', 1),
+                                aperture=defaults_dict.get('apername', DEFAULT_MODEL_CHARFIELD),
+                                subarray=defaults_dict.get('subarray', DEFAULT_MODEL_CHARFIELD),
+                                pupil=defaults_dict.get('pupil', DEFAULT_MODEL_CHARFIELD),
                                 expstart=defaults_dict.get('expstart', 0.0))
 
                 for key, value in defaults.items():
@@ -369,10 +380,14 @@ def fill_empty_model(model_name, model_field):
 
     '''
 
+    is_proposal = (model_name == "proposal")
+    is_rootfileinfo = (model_name == "rootfileinfo")
+    rootfile_info_fields_default_ok = ["filter", "grating", "pupil"]
+
     model_field_null = model_field + "__isnull"
     model_field_empty = model_field + "__exact"
 
-    model = apps.get_model('jwql', model_name)
+    model = apps.get_model("jwql", model_name)
     null_models = empty_models = zero_models = model.objects.none()
 
     # filter(field__isnull=True)
@@ -387,6 +402,13 @@ def fill_empty_model(model_name, model_field):
     except ValueError:
         pass
 
+    # filter(field__exact=DEFAULT_MODEL_CHARFIELD)
+    try:
+        if is_proposal or model_field not in rootfile_info_fields_default_ok:
+            empty_models = model.objects.filter(**{model_field_empty: DEFAULT_MODEL_CHARFIELD})
+    except ValueError:
+        pass
+
     # filter(field=0)
     try:
         zero_models = model.objects.filter(**{model_field: 0})
@@ -396,9 +418,9 @@ def fill_empty_model(model_name, model_field):
     model_set = null_models | empty_models | zero_models
     if model_set.exists():
         logging.info(f'{model_set.count()} models to be updated')
-        if model_name == 'proposal':
+        if is_proposal:
             fill_empty_proposals(model_set)
-        elif model_name == 'rootfileinfo':
+        elif is_rootfileinfo:
             fill_empty_rootfileinfo(model_set)
         else:
             logging.warning(f'Filling {model_name} model is not currently implemented')
@@ -458,18 +480,21 @@ def fill_empty_rootfileinfo(rootfileinfo_set):
     for rootfileinfo_mod in rootfileinfo_set:
         defaults_dict = mast_query_by_rootname(rootfileinfo_mod.instrument, rootfileinfo_mod.root_name)
 
-        defaults = dict(filter=defaults_dict.get('filter', ''),
-                        detector=defaults_dict.get('detector', ''),
-                        exp_type=defaults_dict.get('exp_type', ''),
-                        read_patt=defaults_dict.get('readpatt', ''),
-                        grating=defaults_dict.get('grating', ''),
-                        read_patt_num=defaults_dict.get('patt_num', 0),
-                        aperture=defaults_dict.get('apername', ''),
-                        subarray=defaults_dict.get('subarray', ''),
-                        pupil=defaults_dict.get('pupil', ''),
+        defaults = dict(filter=defaults_dict.get('filter', DEFAULT_MODEL_CHARFIELD),
+                        detector=defaults_dict.get('detector', DEFAULT_MODEL_CHARFIELD),
+                        exp_type=defaults_dict.get('exp_type', DEFAULT_MODEL_CHARFIELD),
+                        read_patt=defaults_dict.get('readpatt', DEFAULT_MODEL_CHARFIELD),
+                        grating=defaults_dict.get('grating', DEFAULT_MODEL_CHARFIELD),
+                        read_patt_num=defaults_dict.get('patt_num', 1),
+                        aperture=defaults_dict.get('apername', DEFAULT_MODEL_CHARFIELD),
+                        subarray=defaults_dict.get('subarray', DEFAULT_MODEL_CHARFIELD),
+                        pupil=defaults_dict.get('pupil', DEFAULT_MODEL_CHARFIELD),
                         expstart=defaults_dict.get('expstart', 0.0))
 
         for key, value in defaults.items():
+            # Final check to verify no None exists
+            if value is None:
+                value = DEFAULT_MODEL_CHARFIELD
             setattr(rootfileinfo_mod, key, value)
         try:
             rootfileinfo_mod.save()
@@ -496,6 +521,7 @@ def protected_code(update_database, fill_empty_list):
         fill_empty_model(fill_empty_list[0], fill_empty_list[1])
     else:
         get_updates(update_database)
+        cleanup_past_runs()
 
 
 if __name__ == '__main__':
