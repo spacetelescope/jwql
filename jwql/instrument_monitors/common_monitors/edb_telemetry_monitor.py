@@ -385,7 +385,6 @@ from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter,
 from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
-from jwql.database import database_interface
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
@@ -395,7 +394,7 @@ from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MIRI_POS_RATIO_VALUES
 from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, get_config
+from jwql.utils.utils import add_timezone_to_datetime, ensure_dir_exists, get_config
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
@@ -516,10 +515,9 @@ class EdbMnemonicMonitor():
         logging.info(f"Adding new entry for {mnem.mnemonic_identifier} to history table.")
         times = mnem.data["dates"].data
         data = mnem.data["euvalues"].data
-        stdevs = mnem.stdev
         times = ensure_list(times)
         data = ensure_list(data)
-        stdevs = ensure_list(stdevs)
+        stdevs = ensure_list(mnem.stdev)
         medians = ensure_list(mnem.median)
         maxs = ensure_list(mnem.max)
         mins = ensure_list(mnem.min)
@@ -536,6 +534,15 @@ class EdbMnemonicMonitor():
         if len(medians) > 0:
             if (isinstance(medians[0], int) | isinstance(medians[0], np.integer)):
                 medians = [float(v) for v in medians]
+
+
+        print('In add_new_block_db_entry:')
+        for ll, name in zip([times, data, stdevs, medians, maxs, mins],['times', 'data', 'stdevs', 'medians', 'maxs', 'mins']):
+            if isinstance(ll, np.ndarray):
+                print(f'{name} is a numpy array.')
+                print(ll)
+
+
 
         db_entry = {'mnemonic': mnem.mnemonic_identifier,
                     'latest_query': query_time,
@@ -1090,8 +1097,13 @@ class EdbMnemonicMonitor():
         # outside of the plot range. Return only the points inside the desired
         # plot range
         for row in data:
-            good = np.where((np.array(row.times) > self._plot_start) & (np.array(row.times) < self._plot_end))[0]
-            times = list(np.array(row.times)[good])
+            # Make sure the data from the database has timezone info
+            time_vals = row.times
+            if time_vals[0].tzinfo == None or tie_vals[0].tzinfo.utcoffset(time_vals[0]) == None:
+                time_vals = [val.replace(tzinfo=datetime.timezone.utc) for val in time_vals]
+
+            good = np.where((np.array(time_vals) > self._plot_start) & (np.array(time_vals) < self._plot_end))[0]
+            times = list(np.array(time_vals)[good])
             data = list(np.array(row.data)[good])
             medians = list(np.array(row.median)[good])
             maxs = list(np.array(row.max)[good])
@@ -1273,8 +1285,8 @@ class EdbMnemonicMonitor():
             Examples include "every_change", "daily", "all", etc
         """
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]
-        if '_means' in tel_type:
-            tel_type = tel_type.strip('_means')
+        #if '_means' in tel_type:
+        #    tel_type = tel_type.strip('_means')
         tel_type = tel_type.title().replace('_', '')
         self.history_table_name = f'{mixed_case_name}Edb{tel_type}Stats'
         self.history_table = eval(self.history_table_name)
@@ -1299,11 +1311,13 @@ class EdbMnemonicMonitor():
 
         if len(query) == 0:
             base_time = '2022-11-15 00:00:0.0'
-            query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
+            query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=datetime.timezone.utc)
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
         else:
             # Negative indexing not allowed in QuerySet
             query_result = query[len(query) - 1].latest_query
+            if query_result.tzinfo == None or query_result.tzinfo.utcoffset(query_result) == None:
+                query_result = query_result.replace(tzinfo=datetime.timezone.utc)
             logging.info(f'For {telem_name}, the previous query time is {query_result}')
 
         return query_result
@@ -1527,7 +1541,7 @@ class EdbMnemonicMonitor():
 
         # SPEED UP TESTING. REMOVE BEFORE MERGING
         plot_start = self._today - datetime.timedelta(days=3.)
-        plot_end = self._today
+        plot_end = self._today #- datetime.timedelta(days=56.)
 
 
 
@@ -1609,7 +1623,7 @@ class EdbMnemonicMonitor():
                     # For daily_means mnemonics, we force the search to always start at noon, and
                     # have a 1 day cadence
                     if telem_type == 'daily_means':
-                        most_recent_search = datetime.datetime.combine(most_recent_search.date(), datetime.time(hour=12))
+                        most_recent_search = datetime.datetime.combine(most_recent_search.date(), datetime.time(hour=12)).replace(tzinfo=datetime.timezone.utc)
 
                     logging.info(f'Most recent search is {most_recent_search}.')
                     logging.info(f'Query cadence is {self.query_cadence}')
@@ -2116,8 +2130,13 @@ def ensure_list(var):
     var : list
         var, translated into a list if necessary
     """
-    if not isinstance(var, list) and not isinstance(var, np.ndarray):
-        return [var]
+    if not isinstance(var, list):
+        if not isinstance(var, np.ndarray):
+            # Here we assume var is a single float, int, str, etc.
+            return [var]
+        else:
+            # Here we convert a numpy array to a list
+            return var.tolist()
     else:
         return var
 

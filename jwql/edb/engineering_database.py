@@ -45,7 +45,7 @@ Notes
 """
 import calendar
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from numbers import Number
 import os
 import warnings
@@ -1417,8 +1417,14 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     if isinstance(starttime, Time):
         starttime = starttime.datetime
 
+    if starttime.tzinfo == None or starttime.tzinfo.utcoffset(starttime) == None:
+        starttime = starttime.replace(tzinfo=timezone.utc)
+
     if isinstance(endtime, Time):
         endtime = endtime.datetime
+
+    if endtime.tzinfo == None or endtime.tzinfo.utcoffset(endtime) == None:
+        endtime = endtime.replace(tzinfo=timezone.utc)
 
     valid_idx = np.where((date_list_arr <= endtime) & (date_list_arr >= starttime))[0]
     before_startime = np.where(date_list_arr < starttime)[0]
@@ -1606,7 +1612,7 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
     data = service.get_values(mnemonic_identifier, start_time, end_time, include_obstime=True,
                               include_bracket_values=bracket)
 
-    dates = [datetime.strptime(row.obstime.iso, "%Y-%m-%d %H:%M:%S.%f") for row in data]
+    dates = [datetime.strptime(row.obstime.iso, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc) for row in data]
     values = [row.value for row in data]
 
     if bracket:
