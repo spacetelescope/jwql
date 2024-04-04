@@ -374,6 +374,7 @@ import os
 from requests.exceptions import HTTPError
 import urllib
 
+from astropy.modeling import models
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 from astropy.time import Time, TimeDelta
@@ -385,12 +386,6 @@ from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
 from jwql.database import database_interface
-from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
-    NIRCamEDBTimeIntervalStats, NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
-    NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats, MIRIEDBBlockStats, \
-    MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats, \
-    FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats, NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
-    NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session, engine
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
@@ -398,8 +393,19 @@ from jwql.shared_tasks.shared_tasks import only_one
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MIRI_POS_RATIO_VALUES
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, get_config
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.edb import *  # noqa: E402 (module level import not at top of file)
 
 
 ALLOWED_COMBINATION_TYPES = ['all+daily_means', 'all+block_means', 'all+every_change', 'all+time_interval']
@@ -539,10 +545,10 @@ class EdbMnemonicMonitor():
                     'median': medians,
                     'max': maxs,
                     'min': mins,
-                    'entry_date': datetime.datetime.now()
+                    'entry_date': datetime.datetime.now(datetime.timezone.utc)
                     }
-        with engine.begin() as connection:
-            connection.execute(self.history_table.__table__.insert(), db_entry)
+        entry = self.history_table(**db_entry)
+        entry.save()
 
     def add_new_every_change_db_entry(self, mnem, mnem_dict, dependency_name, query_time):
         """Add new entries to the database table for "every change"
@@ -580,11 +586,10 @@ class EdbMnemonicMonitor():
                         'median': medians[0],
                         'stdev': stdevs[0],
                         'latest_query': query_time,
-                        'entry_date': datetime.datetime.now()
+                        'entry_date': datetime.datetime.now(datetime.timezone.utc)
                         }
-            with engine.begin() as connection:
-                connection.execute(
-                    self.history_table.__table__.insert(), db_entry)
+            entry = self.history_table(**db_entry)
+            entry.save()
 
     def calc_timed_stats(self, mnem_data, bintime, sigma=3):
         """Not currently used.
@@ -1070,10 +1075,10 @@ class EdbMnemonicMonitor():
         hist : jwql.edb.engineering_database.EdbMnemonic
             Retrieved data
         """
-        data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic,
-                    self.history_table.latest_query > start_date,
-                    self.history_table.latest_query < end_date)
+        filters = {"mnemonic__iexact": mnemonic,
+                   "latest_query__range": (start_date, end_date)
+                   }
+        data = self.history_table.objects.filter(**filters).order_by("latest_query")
 
         all_dates = []
         all_values = []
@@ -1312,6 +1317,7 @@ class EdbMnemonicMonitor():
         tel_type = tel_type.title().replace('_', '')
         self.history_table_name = f'{mixed_case_name}EDB{tel_type}Stats'
         self.history_table = getattr(database_interface, f'{mixed_case_name}EDB{tel_type}Stats')
+        self.history_table =
 
     def most_recent_search(self, telem_name):
         """Query the database and return the information
@@ -1545,7 +1551,7 @@ class EdbMnemonicMonitor():
         # Container to hold and organize all plots
         self.figures = {}
         self.instrument = instrument
-        self._today = datetime.datetime.now()
+        self._today = datetime.datetime.now(datetime.timezone.utc)
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
@@ -2043,14 +2049,10 @@ def add_every_change_history(dict1, dict2):
             print('')
             #stop
 
-
-
-
         logging.info(f'In add_every_change_history: key: {key}, len data: {len(all_dates)}, median: {all_medians}, dev: {all_devs}')
     # Add entries for keys that are in dict2 but not dict1
     for key, value in dict2.items():
         if key not in dict1:
-            #combined[key] = value
             dates =[]
             vals = []
             meds = []
@@ -2061,16 +2063,7 @@ def add_every_change_history(dict1, dict2):
             devs.append(list(value[3]))
             combined[key] = (dates, vals, meds, devs)
 
-
         logging.info(f'dict2 only add_every_change_history: key: {key}, len data: {len(value[0])}, median: {dict2[key][2]}, dev: {dict2[key][3]}')
-
-
-    #print('after dict2 only keys:')
-    #for e in combined['F1000W'][0]:
-    #    print(e)
-    #print('')
-    #for e in combined['F1000W'][2]:
-    #    print(e)
     return combined
 
 
@@ -2332,46 +2325,15 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         if len(value) > 0:
             val_times, val_data, normval, stdevval = value
 
-            print(key)
-            print(value)
-
-            print('in plotting code')
-            print('val_times is:')
-            print(val_times)
-            print('\n')
-            print('normval is:')
-            print(normval)
-            print('')
-
             # At this point, val_times and val_data will be a list of numpy arrays
             # normval and stdevval will be lists. First, iterate through the lists
             # and normalize the data values in each element by the corresponding
             # normval (expected value)
             all_val_data = []
             all_val_times = []
-
-            print('val_data:')
-            print(val_data)
-            print('')
-
             for time_ele, data_ele, norm_ele in zip(val_times, val_data, normval):
-
-
-                print(data_ele)
-                print('')
-                print(time_ele)
-                print('\n\n')
-
-
-
                 if type(data_ele[0]) not in [np.str_, str]:
-
-
-                    print(type(data_ele), data_ele)
-                    print(type(norm_ele), norm_ele)
-
                     data_ele_arr = np.array(data_ele) / norm_ele[0]
-                    #data_ele /= norm_ele[0]
                     all_val_data.extend(list(data_ele_arr))
                     all_val_times.extend(time_ele)
                     logging.info(f'key: {key}, len_data: {len(data_ele)}, firstentry: {data_ele[0]}, stats: {norm_ele}')
