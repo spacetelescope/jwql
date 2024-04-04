@@ -1137,10 +1137,10 @@ class EdbMnemonicMonitor():
             and mean value of the primary mnemonic corresponding to the times
             that they dependency mnemonic has the value of the key.
         """
-        data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic,
-                    self.history_table.latest_query > start_date,
-                    self.history_table.latest_query < end_date)
+        filters = {"mnemonic__iexact": mnemonic,
+                   "latest_query__range": (start_date, end_date)
+                   }
+        data = self.history_table.objects.filter(**filters).order_by("latest_query")
 
         # Set up the dictionary to contain the data
         hist = {}
@@ -1150,21 +1150,6 @@ class EdbMnemonicMonitor():
             if row.dependency_value in hist:
                 if len(hist[row.dependency_value]) > 0:
                     times, values, medians, devs = hist[row.dependency_value]
-
-                    """
-                    if row.dependency_value == 'F1000W':
-                        print('BEFORE NEXT ENTRY, RETRIEVED DATA:')
-                        for e in times:
-                            print(e)
-                            print('')
-                        for e in medians:
-                            print(e)
-                            print('')
-                    """
-
-
-
-
                 else:
                     times = []
                     values = []
@@ -1179,30 +1164,6 @@ class EdbMnemonicMonitor():
                     medians.append([row.median])
                     devs.append([row.stdev])
                     hist[row.dependency_value] = (times, values, medians, devs)
-
-                    """
-                    if row.dependency_value == 'F1000W':
-                        print('AFTER NEXT ENTRY:')
-                        for e in times:
-                            print(e)
-                            print('')
-                        for e in medians:
-                            print(e)
-                            print('')
-                        for e in hist[row.dependency_value][0]:
-                            print(e)
-                            print('')
-                        for e in hist[row.dependency_value][2]:
-                            print(e)
-                            print('')
-                    """
-
-
-
-
-
-
-
             else:
                 if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
                 | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
@@ -1315,9 +1276,8 @@ class EdbMnemonicMonitor():
         if '_means' in tel_type:
             tel_type = tel_type.strip('_means')
         tel_type = tel_type.title().replace('_', '')
-        self.history_table_name = f'{mixed_case_name}EDB{tel_type}Stats'
-        self.history_table = getattr(database_interface, f'{mixed_case_name}EDB{tel_type}Stats')
-        self.history_table =
+        self.history_table_name = f'{mixed_case_name}Edb{tel_type}Stats'
+        self.history_table = eval(self.history_table_name)
 
     def most_recent_search(self, telem_name):
         """Query the database and return the information
@@ -1334,14 +1294,16 @@ class EdbMnemonicMonitor():
         query_result : datetime.datetime
             Date of the ending range of the previous query
         """
-        query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.history_table.latest_query).all()
+        filters = {"mnemonic__iexact": telem_name}
+        query = self.history_table.objects.filter(**filters).order_by("latest_query")
 
         if len(query) == 0:
             base_time = '2022-11-15 00:00:0.0'
             query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
         else:
-            query_result = query[-1].latest_query
+            # Negative indexing not allowed in QuerySet
+            query_result = query[len(query) - 1].latest_query
             logging.info(f'For {telem_name}, the previous query time is {query_result}')
 
         return query_result
