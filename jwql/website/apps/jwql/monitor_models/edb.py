@@ -41,11 +41,12 @@ class FGSEdbBlockMeansStats(models.Model):
     median = ArrayField(models.FloatField())
     max = ArrayField(models.FloatField())
     min = ArrayField(models.FloatField())
+    delme = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     entry_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = True
-        db_table = 'fgs_edb_block_means_stats'
+        db_table = 'fgs_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -127,7 +128,7 @@ class MIRIEdbBlockMeansStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'miri_edb_block_means_stats'
+        db_table = 'miri_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -209,7 +210,7 @@ class NIRCamEdbBlockMeansStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'nircam_edb_block_means_stats'
+        db_table = 'nircam_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -291,7 +292,7 @@ class NIRISSEdbBlockMeansStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'niriss_edb_block_means_stats'
+        db_table = 'niriss_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -373,7 +374,7 @@ class NIRSpecEdbBlockMeansStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'nirspec_edb_block_means_stats'
+        db_table = 'nirspec_edb_blocks_stats'
         unique_together = (('id', 'entry_date'),)
 
 

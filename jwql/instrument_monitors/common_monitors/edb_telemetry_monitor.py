@@ -404,7 +404,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
 
     # Import * is okay here because this module specifically only contains database models
     # for this monitor
-    from jwql.website.apps.jwql.monitor_models.edb import *  # noqa: E402 (module level import not at top of file)
+    #from jwql.website.apps.jwql.monitor_models.edb import *  # noqa: E402 (module level import not at top of file)
 
 
 ALLOWED_COMBINATION_TYPES = ['all+daily_means', 'all+block_means', 'all+every_change', 'all+time_interval']
