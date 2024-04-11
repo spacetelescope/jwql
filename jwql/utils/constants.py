@@ -364,6 +364,9 @@ EXPOSURE_PAGE_SUFFIX_ORDER = [
     "wfscmb",
 ]
 
+# Default Model Values
+DEFAULT_MODEL_CHARFIELD = "empty"
+
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4
 FILE_AC_O_ID_LEN = 3

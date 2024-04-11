@@ -62,6 +62,7 @@ echo "Reset: $reset";
 echo "Notify: $notify $recipient";
 
 # 1. Pull updated code from GitHub deployment branch (keep second checkout in case its already defined for some weird reason)
+git fetch origin
 git checkout -b $branch_name --track origin/$branch_name
 git checkout $branch_name
 git fetch origin $branch_name
