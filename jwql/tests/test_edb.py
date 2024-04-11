@@ -17,7 +17,7 @@ Use
 
         pytest -s test_edb.py
 """
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 from astropy.table import Table
@@ -65,10 +65,10 @@ def test_change_only_bounding_points():
     """Make sure we correctly add starting and ending time entries to
     a set of change-only data
     """
-    dates = [datetime(2022, 3, 2, 12, i) for i in range(10)]
+    dates = [datetime(2022, 3, 2, 12, i, tzinfo=timezone.utc) for i in range(10)]
     values = np.arange(10)
-    starting_time = datetime(2022, 3, 2, 12, 3, 3)
-    ending_time = datetime(2022, 3, 2, 12, 8, 4)
+    starting_time = datetime(2022, 3, 2, 12, 3, 3, tzinfo=timezone.utc)
+    ending_time = datetime(2022, 3, 2, 12, 8, 4, tzinfo=timezone.utc)
 
     new_dates, new_values = ed.change_only_bounding_points(dates, values, starting_time, ending_time)
 

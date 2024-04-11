@@ -43,6 +43,10 @@ def test_add_every_change_history():
     """Test that every_change data is correctly combined with an existing
     set of every_change data
     """
+
+this test needs work....
+
+
     dates1 = np.array([datetime.datetime(2022, 3, 4, 1, 5, i) for i in range(10)])
     data1 = np.array([0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2])
     means1 = 0.15
@@ -51,14 +55,14 @@ def test_add_every_change_history():
     data2 = np.array([0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4])
     means2 = 0.35
     devs2 = 0.07
-    ec1 = {'0.15': (dates1, data1, means1, devs1),
-           '0.35': (dates2, data2, means2, devs2)
+    ec1 = {'0.15': ([dates1], [data1], [means1], [devs1]),
+           '0.35': ([dates2], [data2], [means2], [devs2])
            }
-    ec2 = {'0.15': (dates1, data1, means1, devs1)}
+    ec2 = {'0.15': ([dates2], [data2], [means2], [devs2])}
     combine1 = etm.add_every_change_history(ec1, ec2)
     expected1 = defaultdict(list)
-    expected1['0.15'] = (np.append(dates1, dates1), np.append(data1, data1), np.append(means1, means1), np.append(devs1, devs1))
-    expected1['0.35'] = (dates2, data2, means2, devs2)
+    expected1['0.15'] = ([np.append(dates1, dates1)], [np.append(data1, data1)], np.append(means1, means1), np.append(devs1, devs1))
+    expected1['0.35'] = ([dates2], [data2], [means2], [devs2])
 
     for key in combine1:
         print('compare ', key)
@@ -66,7 +70,7 @@ def test_add_every_change_history():
             assert np.all(cele == expected1[key][i])
 
     dates3 = np.array([dates2[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)])
-    ec3 = {'0.55': (dates3, data2 + 0.2, means2 + 0.2, devs2)}
+    ec3 = {'0.55': ([dates3], [data2 + 0.2], [means2 + 0.2], [devs2])}
     combine2 = etm.add_every_change_history(ec1, ec3)
     expected2 = defaultdict(list)
     expected2['0.15'] = (dates1, data1, means1, devs1)
@@ -299,11 +303,11 @@ def test_organize_every_change():
     f770mean, _, _ = sigma_clipped_stats(f770_vals, sigma=3)
     f1000mean, _, _ = sigma_clipped_stats(f1000_vals, sigma=3)
     f1500mean, _, _ = sigma_clipped_stats(f1500_vals, sigma=3)
-    expected = {'F2550W': (np.array(dates[f2550_idx]), f2550_vals, MIRI_POS_RATIO_VALUES['FW']['F2550W'][0]),
-                'F560W': (np.array(dates[f560_idx]), f560_vals, MIRI_POS_RATIO_VALUES['FW']['F560W'][0]),
-                'F770W': (np.array(dates[f770_idx]), f770_vals, MIRI_POS_RATIO_VALUES['FW']['F770W'][0]),
-                'F1000W': (np.array(dates[f1000_idx]), f1000_vals, MIRI_POS_RATIO_VALUES['FW']['F1000W'][0]),
-                'F1500W': (np.array(dates[f1500_idx]), f1500_vals, MIRI_POS_RATIO_VALUES['FW']['F1500W'][0])}
+    expected = {'F2550W': (np.array(dates[f2550_idx]), f2550_vals, [MIRI_POS_RATIO_VALUES['FW']['F2550W'][0]], [MIRI_POS_RATIO_VALUES['FW']['F2550W'][1]]),
+                'F560W': (np.array(dates[f560_idx]), f560_vals, [MIRI_POS_RATIO_VALUES['FW']['F560W'][0]], [MIRI_POS_RATIO_VALUES['FW']['F560W'][1]]),
+                'F770W': (np.array(dates[f770_idx]), f770_vals, [MIRI_POS_RATIO_VALUES['FW']['F770W'][0]], [MIRI_POS_RATIO_VALUES['FW']['F770W'][1]]),
+                'F1000W': (np.array(dates[f1000_idx]), f1000_vals, [MIRI_POS_RATIO_VALUES['FW']['F1000W'][0]], [MIRI_POS_RATIO_VALUES['FW']['F1000W'][1]]),
+                'F1500W': (np.array(dates[f1500_idx]), f1500_vals, [MIRI_POS_RATIO_VALUES['FW']['F1500W'][0]], [MIRI_POS_RATIO_VALUES['FW']['F1500W'][1]])}
 
     for key, val in expected.items():
         assert np.all(val[0] == data[key][0])
