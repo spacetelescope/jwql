@@ -1,19 +1,5 @@
 ## What's Changed
 
-1.2.6 (2024-04-15)
-==================
-
-Web Application
-~~~~~~~~~~~~~~~
-- Update NIRCam Background Monitor plots to handle new Claw Monitor columns by @bsunnquist
-
-Project & API Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- add default to read_patt_num by @BradleySappington
-- migration work for next RC by @BradleySappington
-- Fix database empty fields by @BradleySappington
-
-
 1.2.5 (2024-03-19)
 ==================
 
