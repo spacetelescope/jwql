@@ -404,8 +404,8 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
 
     # Import * is okay here because this module specifically only contains database models
     # for this monitor
-    #from jwql.website.apps.jwql.monitor_models.edb import *  # noqa: E402 (module level import not at top of file)
-
+    from jwql.website.apps.jwql.monitor_models.edb import *  # noqa: E402 (module level import not at top of file)
+    #from jwql.website.apps.jwql.monitor_models.edb import MIRIEdbDailyMeansStats
 
 ALLOWED_COMBINATION_TYPES = ['all+daily_means', 'all+block_means', 'all+every_change', 'all+time_interval']
 
@@ -731,7 +731,7 @@ class EdbMnemonicMonitor():
             # as defined by the json files. This is the default operation.
 
             # Loop over instruments
-            for instrument_name in JWST_INSTRUMENT_NAMES:
+            for instrument_name in ['miri']:  #JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
@@ -1145,9 +1145,10 @@ class EdbMnemonicMonitor():
         -------
         hist : dict
             Retrieved data. Keys are the value of the dependency mnemonic,
-            and each value is a 3-tuple. The tuple contains the times, values,
-            and mean value of the primary mnemonic corresponding to the times
-            that they dependency mnemonic has the value of the key.
+            and each value is a 4-tuple. The tuple contains the times, values,
+            mean value, and standard deviation of the primary mnemonic corresponding
+            to the times that they dependency mnemonic has the value of the key.
+            Values are lists of lists.
         """
         filters = {"mnemonic__iexact": mnemonic,
                    "latest_query__range": (start_date, end_date)
@@ -1285,10 +1286,15 @@ class EdbMnemonicMonitor():
             Examples include "every_change", "daily", "all", etc
         """
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]
-        #if '_means' in tel_type:
-        #    tel_type = tel_type.strip('_means')
+        if '_means' in tel_type:            # this is used for dailymeans and blockmeans. need to update both table names
+            tel_type = tel_type.strip('_means')  # in order to get rid of these lines
         tel_type = tel_type.title().replace('_', '')
         self.history_table_name = f'{mixed_case_name}Edb{tel_type}Stats'
+
+        # temporary fix
+        if 'BlockStats' in self.history_table_name:
+            self.history_table_name = self.history_table_name.replace('BlockStats', 'BlocksStats')
+
         self.history_table = eval(self.history_table_name)
 
     def most_recent_search(self, telem_name):
@@ -1554,7 +1560,7 @@ class EdbMnemonicMonitor():
 
         # At the top level, we loop over the different types of telemetry. These types
         # largely control if/how the data will be averaged.
-        for telemetry_kind in mnemonic_dict:   # ['every_change']']
+        for telemetry_kind in ['every_change']:  # mnemonic_dict:
             telem_type = telemetry_kind
             logging.info(f'Working on telemetry_type: {telem_type}')
 
@@ -1727,7 +1733,20 @@ class EdbMnemonicMonitor():
 
                         # Before we can add the every-change data to the database, organize it to make it
                         # easier to access. Note that every_change_data is now a dict rather than an EDBMnemonic instance
+
+                        print('new_data:')
+                        print(new_data.data)
+                        print(new_data.every_change_values)
+                        print(new_data.blocks)
+
+
                         every_change_data = organize_every_change(new_data)
+
+                        print('\n\nevery_change_data:')
+                        print(every_change_data)
+                        print('\n\nhistorical data:')
+                        print(historical_data)
+                        stop
 
                         # Add new data to JWQLDB.
                         # If no new data were retrieved from the EDB, then there is no need to add an entry to the JWQLDB
@@ -1745,6 +1764,12 @@ class EdbMnemonicMonitor():
 
                         # Note that the line below will change mnemonic_info into a dictionary
                         mnemonic_info = add_every_change_history(historical_data, every_change_data)
+
+
+                        print('mnemonic_info:')
+                        print(mnemonic_info)
+
+
 
                         logging.info(f'Combined new data plus historical data. Number of data points per key:')
                         for key in mnemonic_info:
@@ -1872,10 +1897,15 @@ def add_every_change_history(dict1, dict2):
     Parameters
     ----------
     dict1 : dict
-        First dictionary to combine
+        First dictionary to combine. The intention is that dict1 will contain
+        the historical data for the mnemonic, retrieved from the database. This
+        means the values will be tuples of nested lists. Also allow for this to be an
+        empty dictionary, if there are no historical data.
 
     dict2 : dict
-        Second dictionary to combine
+        Second dictionary to combine. The intention is that dict2 will contain
+        the new mnemonic data from the latest EDB query. This means the values
+        will be tuples of lists.
 
     Returns
     -------
@@ -1943,19 +1973,23 @@ def add_every_change_history(dict1, dict2):
 
             min_time_dict1 = min(min(m) for m in value[0])
             if min_time_dict1 < np.min(dict2[key][0]):
+                # Here, the minimum date in the history (dict1) is earlier
+                # than the minimum date in the new EDB query data (dict2).
+                # This is where we expect to be most of the time.
+
                 #all_dates = np.append(value[0], dict2[key][0])
                 #all_data = np.append(value[1], dict2[key][1])
 
-                all_dates = value[0]
+                all_dates = deepcopy(value[0])
                 all_dates.append(list(dict2[key][0]))
 
-                all_values = value[1]
+                all_values = deepcopy(value[1])
                 all_values.append(list(dict2[key][1]))
 
-                all_medians = value[2]
+                all_medians = deepcopy(value[2])
                 all_medians.append(list(dict2[key][2]))
 
-                all_devs = value[3]
+                all_devs = deepcopy(value[3])
                 all_devs.append(list(dict2[key][3]))
 
                 #all_medians = np.append(value[2], dict2[key][2])
@@ -1964,6 +1998,7 @@ def add_every_change_history(dict1, dict2):
                 # Seems unlikely we'll ever want to be here. This would be
                 # for a case where a given set of values has an earliest date
                 # that is earlier than anything in the database.
+
                 #all_dates = np.append(dict2[key][0], value[0])
                 #all_data = np.append(dict2[key][1], value[1])
                 #all_medians = np.append(dict2[key][2], value[2])
@@ -2001,6 +2036,8 @@ def add_every_change_history(dict1, dict2):
             updated_value = (all_dates, all_values, all_medians, all_devs)
             combined[key] = updated_value
         else:
+            # In this case, a given key is present in the historical data from the database,
+            # but not in the data from the new EDB query
             if key == 'OPAQUE':
                 print(key)
                 print(value[0])
@@ -2011,7 +2048,9 @@ def add_every_change_history(dict1, dict2):
             print(key)
             print(value)
             #stop
-            combined[key] = value
+
+            # value here is already a nested list, so we can transfer that directly to the new dictionary
+            combined[key] = deepcopy(value)
 
         if key == 'OPAQUE':
             print('before dict2 only keys:')
@@ -2026,7 +2065,8 @@ def add_every_change_history(dict1, dict2):
             #stop
 
         logging.info(f'In add_every_change_history: key: {key}, len data: {len(all_dates)}, median: {all_medians}, dev: {all_devs}')
-    # Add entries for keys that are in dict2 but not dict1
+
+    # Add entries for keys that are in dict2 (recent query) but not dict1 (historical data)
     for key, value in dict2.items():
         if key not in dict1:
             dates =[]
@@ -2162,8 +2202,9 @@ def organize_every_change(mnemonic):
     all_data : dict
         Dictionary of organized results. Keys are the dependency values,
         and values are tuples. The first element of each tuple is a list
-        of dates, the second element is a list of data values, and the third
-        is a the sigma-clipped mean value of the data.
+        of dates, the second element is a list of data values, the third is
+        a single element list of the sigma-clipped mean value of the data,
+        and the fourth is a single element list of the stdev of the data.
     """
     all_data = {}
 
@@ -2298,8 +2339,8 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
     # Find the min and max values in the x-range. These may be used for plotting
     # the nominal_value line later. Initialize here, and then dial them in based
     # on the data.
-    min_time = datetime.datetime.today()
-    max_time = datetime.datetime(2021, 12, 25)
+    min_time = datetime.datetime.now(datetime.timezone.utc)
+    max_time = datetime.datetime(2021, 12, 25, tzinfo=datetime.timezone.utc)
 
     logging.info('In plot_every_change_data:')
     for (key, value), color in zip(data.items(), colors):

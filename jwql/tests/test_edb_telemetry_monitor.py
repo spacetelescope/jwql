@@ -43,44 +43,46 @@ def test_add_every_change_history():
     """Test that every_change data is correctly combined with an existing
     set of every_change data
     """
+    dates1 = [datetime.datetime(2022, 3, 4, 1, 5, i) for i in range(10)]
+    data1 = [0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2]
+    means1 = [0.15]
+    devs1 = [0.07]
+    dates2 = [dates1[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)]
+    data2 = [0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4]
+    means2 = [0.35]
+    devs2 = [0.07]
+    #ec1 = {'0.15': (dates1, data1, means1, devs1),
+    #       '0.35': (dates2, data2, means2, devs2)
+    #       }
+    history = {'0.15': ([dates1], [data1], [means1], [devs1]),
+              '0.35': ([dates2], [data2], [means2], [devs2])
+               }
+    ec2 = {'0.15': (dates2, data2, means2, devs2)}
+    combine1 = etm.add_every_change_history(history, ec2)
 
-this test needs work....
-
-
-    dates1 = np.array([datetime.datetime(2022, 3, 4, 1, 5, i) for i in range(10)])
-    data1 = np.array([0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2])
-    means1 = 0.15
-    devs1 = 0.07
-    dates2 = np.array([dates1[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)])
-    data2 = np.array([0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4])
-    means2 = 0.35
-    devs2 = 0.07
-    ec1 = {'0.15': ([dates1], [data1], [means1], [devs1]),
-           '0.35': ([dates2], [data2], [means2], [devs2])
-           }
-    ec2 = {'0.15': ([dates2], [data2], [means2], [devs2])}
-    combine1 = etm.add_every_change_history(ec1, ec2)
     expected1 = defaultdict(list)
-    expected1['0.15'] = ([np.append(dates1, dates1)], [np.append(data1, data1)], np.append(means1, means1), np.append(devs1, devs1))
+    expected_dates = [dates1]
+    expected_dates.append(dates2)
+    expected_data = [data1]
+    expected_data.append(data2)
+    expected_means = [means1]
+    expected_means.append(means2)
+    expected_devs = [devs1]
+    expected_devs.append(devs2)
+    expected1['0.15'] = (expected_dates, expected_data, expected_means, expected_devs)
     expected1['0.35'] = ([dates2], [data2], [means2], [devs2])
+    assert combine1 == expected1
 
-    for key in combine1:
-        print('compare ', key)
-        for i, cele in enumerate(combine1[key]):
-            assert np.all(cele == expected1[key][i])
-
-    dates3 = np.array([dates2[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)])
-    ec3 = {'0.55': ([dates3], [data2 + 0.2], [means2 + 0.2], [devs2])}
-    combine2 = etm.add_every_change_history(ec1, ec3)
+    dates3 = [dates2[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)]
+    data3 = [e + 0.2 for e in data2]
+    means3 = [0.55]
+    ec3 = {'0.55': (dates3, data3, means3, devs2)}
+    combine2 = etm.add_every_change_history(history, ec3)
     expected2 = defaultdict(list)
-    expected2['0.15'] = (dates1, data1, means1, devs1)
-    expected2['0.35'] = (dates2, data2, means2, devs2)
-    expected2['0.55'] = (dates3, data2 + 0.2, means2 + 0.2, devs2)
-
-    for key in combine2:
-        print('compare ', key)
-        for i, cele in enumerate(combine2[key]):
-            assert np.all(cele == expected2[key][i])
+    expected2['0.15'] = ([dates1], [data1], [means1], [devs1])
+    expected2['0.35'] = ([dates2], [data2], [means2], [devs2])
+    expected2['0.55'] = ([dates3], [data3], [means3], [devs2])
+    assert combine2 == expected2
 
 
 def test_change_only_add_points():
