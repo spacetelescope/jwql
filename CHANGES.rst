@@ -6,11 +6,11 @@
 Web Application
 ~~~~~~~~~~~~~~~
 - Fixed background prediction call for narrow and medium bands to use correct pivot wavelength by @bsunnquist
-- Update database default values by @bsappington
+- Update database default values by @BradleySappington
 
 Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Handle empty values in archive_database_update by @bsappington
+- Handle empty values in archive_database_update by @BradleySappington
 - Resolve timezone warnings by @bsunnquist
 
 
