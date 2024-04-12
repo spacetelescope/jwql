@@ -1,19 +1,5 @@
 ## What's Changed
 
-1.2.6 (2024-04-15)
-==================
-
-Web Application
-~~~~~~~~~~~~~~~
-- Fixed background prediction call for narrow and medium bands to use correct pivot wavelength by @bsunnquist
-- Update database default values by @BradleySappington
-
-Project & API Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Handle empty values in archive_database_update by @BradleySappington
-- Resolve timezone warnings by @bsunnquist
-
-
 1.2.5 (2024-03-19)
 ==================
 
