@@ -32,7 +32,7 @@ from django.contrib.postgres.fields import ArrayField
 from jwql.utils.constants import MAX_LEN_DEPENDENCY_VALUE, MAX_LEN_MNEMONIC
 
 
-class FGSEdbBlocksStats(models.Model):
+class FGSEdbBlockMeansStats(models.Model):
     mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
@@ -45,7 +45,7 @@ class FGSEdbBlocksStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'fgs_edb_blocks_stats'
+        db_table = 'fgs_edb_block_means_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -114,7 +114,7 @@ class FGSEdbTimeStats(models.Model):
         unique_together = (('id', 'entry_date'),)
 
 
-class MIRIEdbBlocksStats(models.Model):
+class MIRIEdbBlockMeansStats(models.Model):
     mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
@@ -127,7 +127,7 @@ class MIRIEdbBlocksStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'miri_edb_blocks_stats'
+        db_table = 'miri_edb_block_means_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -196,7 +196,7 @@ class MIRIEdbTimeStats(models.Model):
         unique_together = (('id', 'entry_date'),)
 
 
-class NIRCamEdbBlocksStats(models.Model):
+class NIRCamEdbBlockMeansStats(models.Model):
     mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
@@ -209,7 +209,7 @@ class NIRCamEdbBlocksStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'nircam_edb_blocks_stats'
+        db_table = 'nircam_edb_block_means_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -278,7 +278,7 @@ class NIRCamEdbTimeStats(models.Model):
         unique_together = (('id', 'entry_date'),)
 
 
-class NIRISSEdbBlocksStats(models.Model):
+class NIRISSEdbBlockMeansStats(models.Model):
     mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
@@ -291,7 +291,7 @@ class NIRISSEdbBlocksStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'niriss_edb_blocks_stats'
+        db_table = 'niriss_edb_block_means_stats'
         unique_together = (('id', 'entry_date'),)
 
 
@@ -360,7 +360,7 @@ class NIRISSEdbTimeStats(models.Model):
         unique_together = (('id', 'entry_date'),)
 
 
-class NIRSpecEdbBlocksStats(models.Model):
+class NIRSpecEdbBlockMeansStats(models.Model):
     mnemonic = models.CharField(max_length=MAX_LEN_MNEMONIC, blank=True, null=True)
     latest_query = models.DateTimeField(blank=True, null=True)
     times = ArrayField(models.DateTimeField())
@@ -373,7 +373,7 @@ class NIRSpecEdbBlocksStats(models.Model):
 
     class Meta:
         managed = True
-        db_table = 'nirspec_edb_blocks_stats'
+        db_table = 'nirspec_edb_block_means_stats'
         unique_together = (('id', 'entry_date'),)
 
 

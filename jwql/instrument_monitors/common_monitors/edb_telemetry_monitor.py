@@ -374,6 +374,7 @@ import os
 from requests.exceptions import HTTPError
 import urllib
 
+from astropy.modeling import models
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 from astropy.time import Time, TimeDelta
@@ -381,16 +382,9 @@ import astropy.units as u
 from bokeh.embed import components, json_item
 from bokeh.layouts import gridplot
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
-from bokeh.models.layouts import Tabs
+from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
-from jwql.database import database_interface
-from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
-    NIRCamEDBTimeIntervalStats, NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
-    NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats, MIRIEDBBlockStats, \
-    MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats, \
-    FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats, NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
-    NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session, engine
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
@@ -398,8 +392,19 @@ from jwql.shared_tasks.shared_tasks import only_one
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MIRI_POS_RATIO_VALUES
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, get_config
+from jwql.utils.utils import add_timezone_to_datetime, ensure_dir_exists, get_config
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.edb import *  # noqa: E402 (module level import not at top of file)
 
 
 ALLOWED_COMBINATION_TYPES = ['all+daily_means', 'all+block_means', 'all+every_change', 'all+time_interval']
@@ -510,13 +515,35 @@ class EdbMnemonicMonitor():
         logging.info(f"Adding new entry for {mnem.mnemonic_identifier} to history table.")
         times = mnem.data["dates"].data
         data = mnem.data["euvalues"].data
-        stdevs = mnem.stdev
         times = ensure_list(times)
         data = ensure_list(data)
-        stdevs = ensure_list(stdevs)
+        stdevs = ensure_list(mnem.stdev)
         medians = ensure_list(mnem.median)
         maxs = ensure_list(mnem.max)
         mins = ensure_list(mnem.min)
+
+        # Make sure the max and min values are floats rather than ints
+        if len(maxs) > 0:
+            if (isinstance(maxs[0], int) | isinstance(maxs[0], np.integer)):
+                maxs = [float(v) for v in maxs]
+        else:
+            print('len of maxs is zero! {mnem.mnemonic_identifier}, {maxs}, {mins}, {medians}')
+        if len(mins) > 0:
+            if (isinstance(mins[0], int) | isinstance(mins[0], np.integer)):
+                mins = [float(v) for v in mins]
+        if len(medians) > 0:
+            if (isinstance(medians[0], int) | isinstance(medians[0], np.integer)):
+                medians = [float(v) for v in medians]
+
+
+        print('In add_new_block_db_entry:')
+        for ll, name in zip([times, data, stdevs, medians, maxs, mins],['times', 'data', 'stdevs', 'medians', 'maxs', 'mins']):
+            if isinstance(ll, np.ndarray):
+                print(f'{name} is a numpy array.')
+                print(ll)
+
+
+
         db_entry = {'mnemonic': mnem.mnemonic_identifier,
                     'latest_query': query_time,
                     'times': times,
@@ -525,10 +552,10 @@ class EdbMnemonicMonitor():
                     'median': medians,
                     'max': maxs,
                     'min': mins,
-                    'entry_date': datetime.datetime.now()
+                    'entry_date': datetime.datetime.now(datetime.timezone.utc)
                     }
-        with engine.begin() as connection:
-            connection.execute(self.history_table.__table__.insert(), db_entry)
+        entry = self.history_table(**db_entry)
+        entry.save()
 
     def add_new_every_change_db_entry(self, mnem, mnem_dict, dependency_name, query_time):
         """Add new entries to the database table for "every change"
@@ -556,19 +583,20 @@ class EdbMnemonicMonitor():
             times = ensure_list(times)
             values = ensure_list(values)
 
+            # medians and stdevs will be single-element lists, so provide the
+            # 0th element to the database entry
             db_entry = {'mnemonic': mnem,
                         'dependency_mnemonic': dependency_name,
                         'dependency_value': key,
                         'mnemonic_value': values,
                         'time': times,
-                        'median': medians,
-                        'stdev': stdevs,
+                        'median': medians[0],
+                        'stdev': stdevs[0],
                         'latest_query': query_time,
-                        'entry_date': datetime.datetime.now()
+                        'entry_date': datetime.datetime.now(datetime.timezone.utc)
                         }
-            with engine.begin() as connection:
-                connection.execute(
-                    self.history_table.__table__.insert(), db_entry)
+            entry = self.history_table(**db_entry)
+            entry.save()
 
     def calc_timed_stats(self, mnem_data, bintime, sigma=3):
         """Not currently used.
@@ -1054,10 +1082,10 @@ class EdbMnemonicMonitor():
         hist : jwql.edb.engineering_database.EdbMnemonic
             Retrieved data
         """
-        data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic,
-                    self.history_table.latest_query > start_date,
-                    self.history_table.latest_query < end_date)
+        filters = {"mnemonic__iexact": mnemonic,
+                   "latest_query__range": (start_date, end_date)
+                   }
+        data = self.history_table.objects.filter(**filters).order_by("latest_query")
 
         all_dates = []
         all_values = []
@@ -1069,8 +1097,13 @@ class EdbMnemonicMonitor():
         # outside of the plot range. Return only the points inside the desired
         # plot range
         for row in data:
-            good = np.where((np.array(row.times) > self._plot_start) & (np.array(row.times) < self._plot_end))[0]
-            times = list(np.array(row.times)[good])
+            # Make sure the data from the database has timezone info
+            time_vals = row.times
+            if time_vals[0].tzinfo == None or tie_vals[0].tzinfo.utcoffset(time_vals[0]) == None:
+                time_vals = [val.replace(tzinfo=datetime.timezone.utc) for val in time_vals]
+
+            good = np.where((np.array(time_vals) > self._plot_start) & (np.array(time_vals) < self._plot_end))[0]
+            times = list(np.array(time_vals)[good])
             data = list(np.array(row.data)[good])
             medians = list(np.array(row.median)[good])
             maxs = list(np.array(row.max)[good])
@@ -1116,10 +1149,10 @@ class EdbMnemonicMonitor():
             and mean value of the primary mnemonic corresponding to the times
             that they dependency mnemonic has the value of the key.
         """
-        data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic,
-                    self.history_table.latest_query > start_date,
-                    self.history_table.latest_query < end_date)
+        filters = {"mnemonic__iexact": mnemonic,
+                   "latest_query__range": (start_date, end_date)
+                   }
+        data = self.history_table.objects.filter(**filters).order_by("latest_query")
 
         # Set up the dictionary to contain the data
         hist = {}
@@ -1129,8 +1162,6 @@ class EdbMnemonicMonitor():
             if row.dependency_value in hist:
                 if len(hist[row.dependency_value]) > 0:
                     times, values, medians, devs = hist[row.dependency_value]
-                    medians = [medians]
-                    devs = [devs]
                 else:
                     times = []
                     values = []
@@ -1140,15 +1171,26 @@ class EdbMnemonicMonitor():
                 # Keep only data that fall at least partially within the plot range
                 if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
                 | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
-                    times.extend(row.time)
-                    values.extend(row.mnemonic_value)
-                    medians.append(row.median)
-                    devs.append(row.stdev)
+                    times.append(row.time)
+                    values.append(row.mnemonic_value)
+                    medians.append([row.median])
+                    devs.append([row.stdev])
                     hist[row.dependency_value] = (times, values, medians, devs)
             else:
                 if (((np.min(row.time) > self._plot_start) & (np.min(row.time) < self._plot_end))
                 | ((np.max(row.time) > self._plot_start) & (np.max(row.time) < self._plot_end))):
-                    hist[row.dependency_value] = (row.time, row.mnemonic_value, row.median, row.stdev)
+                    hist[row.dependency_value] = ([row.time], [row.mnemonic_value], [[row.median]], [[row.stdev]])
+                    if row.dependency_value == 'F1000W':
+                        print('INITIAL ENTRY:')
+                        for e in hist[row.dependency_value][0]:
+                            print(e)
+                            print('')
+                        for e in hist[row.dependency_value][2]:
+                            print(e)
+                            print('')
+
+
+
 
         return hist
 
@@ -1243,11 +1285,11 @@ class EdbMnemonicMonitor():
             Examples include "every_change", "daily", "all", etc
         """
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]
-        if '_means' in tel_type:
-            tel_type = tel_type.strip('_means')
+        #if '_means' in tel_type:
+        #    tel_type = tel_type.strip('_means')
         tel_type = tel_type.title().replace('_', '')
-        self.history_table_name = f'{mixed_case_name}EDB{tel_type}Stats'
-        self.history_table = getattr(database_interface, f'{mixed_case_name}EDB{tel_type}Stats')
+        self.history_table_name = f'{mixed_case_name}Edb{tel_type}Stats'
+        self.history_table = eval(self.history_table_name)
 
     def most_recent_search(self, telem_name):
         """Query the database and return the information
@@ -1264,14 +1306,18 @@ class EdbMnemonicMonitor():
         query_result : datetime.datetime
             Date of the ending range of the previous query
         """
-        query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.history_table.latest_query).all()
+        filters = {"mnemonic__iexact": telem_name}
+        query = self.history_table.objects.filter(**filters).order_by("latest_query")
 
         if len(query) == 0:
             base_time = '2022-11-15 00:00:0.0'
-            query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
+            query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=datetime.timezone.utc)
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
         else:
-            query_result = query[-1].latest_query
+            # Negative indexing not allowed in QuerySet
+            query_result = query[len(query) - 1].latest_query
+            if query_result.tzinfo == None or query_result.tzinfo.utcoffset(query_result) == None:
+                query_result = query_result.replace(tzinfo=datetime.timezone.utc)
             logging.info(f'For {telem_name}, the previous query time is {query_result}')
 
         return query_result
@@ -1431,7 +1477,12 @@ class EdbMnemonicMonitor():
         # Combine the mean values and median time data from multiple days into a single EdbMnemonic
         # instance.
         multiday_table["dates"] = multiday_median_times
-        multiday_table["euvalues"] = multiday_median_vals
+
+        if telemetry_type != 'all':
+            multiday_table["euvalues"] = multiday_median_vals
+        else:
+            multiday_table["euvalues"] = multiday_mean_vals
+
         all_data = ed.EdbMnemonic(identifier, starting_time_list[0], ending_time_list[-1],
                                   multiday_table, meta, info)
         all_data.stdev = multiday_stdev_vals
@@ -1476,7 +1527,7 @@ class EdbMnemonicMonitor():
         # Container to hold and organize all plots
         self.figures = {}
         self.instrument = instrument
-        self._today = datetime.datetime.now()
+        self._today = datetime.datetime.now(datetime.timezone.utc)
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
@@ -1485,13 +1536,25 @@ class EdbMnemonicMonitor():
         if plot_end is None:
             plot_end = self._today
 
+
+
+
+        # SPEED UP TESTING. REMOVE BEFORE MERGING
+        plot_start = self._today - datetime.timedelta(days=3.)
+        plot_end = self._today #- datetime.timedelta(days=56.)
+
+
+
+
+
+
         # Only used as fall-back plot range for cases where there is no data
         self._plot_start = plot_start
         self._plot_end = plot_end
 
         # At the top level, we loop over the different types of telemetry. These types
         # largely control if/how the data will be averaged.
-        for telemetry_kind in mnemonic_dict:
+        for telemetry_kind in mnemonic_dict:   # ['every_change']']
             telem_type = telemetry_kind
             logging.info(f'Working on telemetry_type: {telem_type}')
 
@@ -1517,6 +1580,16 @@ class EdbMnemonicMonitor():
             # Work on one mnemonic at a time
             for mnemonic in mnemonic_dict[telemetry_kind]:
                 logging.info(f'Working on {mnemonic["name"]}')
+
+                # It seems that some mnemonics that were previously in the EDB are no longer
+                # present. Check for the existence of the mnemonic before proceeding. If the
+                # mnemonic is not present in the EDB, make a note in the log and move on to
+                # the next one.
+                present_in_edb = ed.get_mnemonic_info(mnemonic["name"])
+                if not present_in_edb:
+                    logging.info(f'WARNING: {mnemonic["name"]} is not present in the EDB. Skipping')
+                    continue  # Move on to the next mnemonic
+
                 create_new_history_entry = True
 
                 # Only two types of plots are currently supported. Plotting the data in the EdbMnemonic
@@ -1550,7 +1623,7 @@ class EdbMnemonicMonitor():
                     # For daily_means mnemonics, we force the search to always start at noon, and
                     # have a 1 day cadence
                     if telem_type == 'daily_means':
-                        most_recent_search = datetime.datetime.combine(most_recent_search.date(), datetime.time(hour=12))
+                        most_recent_search = datetime.datetime.combine(most_recent_search.date(), datetime.time(hour=12)).replace(tzinfo=datetime.timezone.utc)
 
                     logging.info(f'Most recent search is {most_recent_search}.')
                     logging.info(f'Query cadence is {self.query_cadence}')
@@ -1569,6 +1642,14 @@ class EdbMnemonicMonitor():
                         logging.info(f"Plot time span contained entirely in JWQLDB. No need to query EDB.")
                         create_new_history_entry = False
                         starttime = None
+
+
+
+
+                    # SPEED UP TESTING - REMOVE BEFORE MERGING
+                    starttime = plot_start
+
+
 
                 else:
                     # In the case where telemetry data have no averaging done, we do not store the data
@@ -1651,8 +1732,9 @@ class EdbMnemonicMonitor():
                         # Add new data to JWQLDB.
                         # If no new data were retrieved from the EDB, then there is no need to add an entry to the JWQLDB
                         if create_new_history_entry:
-                            self.add_new_every_change_db_entry(new_data.mnemonic_identifier, every_change_data, mnemonic['dependency'][0]["name"],
-                                                               query_start_times[-1])
+                            #self.add_new_every_change_db_entry(new_data.mnemonic_identifier, every_change_data, mnemonic['dependency'][0]["name"],
+                            #                                   query_start_times[-1])
+                            pass     # UNCOMMENT ABOVE BEFORE MERGING
                         else:
                             logging.info("No new data retrieved from EDB, so no new entry added to JWQLDB")
 
@@ -1760,10 +1842,10 @@ class EdbMnemonicMonitor():
             grid = gridplot(plot_list, ncols=ncols, merge_tools=False)
 
             # Create one panel for each plot category
-            panel_list.append(Panel(child=grid, title=key))
+            panel_list.append(TabPanel(child=grid, title=key))
 
         # Assign the panels to Tabs
-        tabbed = Tabs(tabs=panel_list)
+        tabbed = Tabs(tabs=panel_list, tabs_location='left')
 
         # Save the tabbed plot to a json file
         item_text = json.dumps(json_item(tabbed, "tabbed_edb_plot"))
@@ -1777,6 +1859,15 @@ class EdbMnemonicMonitor():
 def add_every_change_history(dict1, dict2):
     """Combine two dictionaries that contain every change data. For keys that are
     present in both dictionaries, remove any duplicate entries based on date.
+
+    For the every change data at the moment (MIRI), the key values
+    are filter names, and the values are data corresponding to those
+    filters. The median and stdev values for each filter come from
+    MIRI_POS_RATIO_VALUES in constants.py. So for a given filter, it
+    is safe (and in fact necessary for plotting purposes) to have only
+    a single value for the median, and the same for stdev. So in combining
+    the dictionaries, we combine dates and data values, but keep only a
+    single value for median and stdev.
 
     Parameters
     ----------
@@ -1793,19 +1884,106 @@ def add_every_change_history(dict1, dict2):
     """
     combined = defaultdict(list)
 
+    """
+    Looks good
+    print('Before combining:')
+    print(dict1['F1000W'][0])
+    print(dict1['F1000W'][2])
+    print('')
+    for e in dict1['F1000W'][0]:
+        print(e)
+    for e in dict1['F1000W'][2]:
+        print(e)
+    """
+
+
+    print('dict1 keys: ', dict1.keys())
+    print('dict2 keys: ', dict2.keys())
+
+
+
+
+
     for key, value in dict1.items():
+        all_dates = []
+        all_values = []
+        all_medians = []
+        all_devs = []
+
+
+        print(key)
+        print(type(value))  # tuple
+        print(type(value[0]))  # list (of lists)
+        print(value[0]) #- list of lists
+        print('')
+        for v0, v2 in zip(value[0], value[2]):
+            print(type(v0), v0)
+            print(type(v2), v2)
+            print('')
+        print('')
+        #stop
+        #print(type(dict2[key][0]), dict2[key][0])
+
+
+
+
         if key in dict2:
 
-            if np.min(value[0]) < np.min(dict2[key][0]):
-                all_dates = np.append(value[0], dict2[key][0])
-                all_data = np.append(value[1], dict2[key][1])
-                all_medians = np.append(value[2], dict2[key][2])
-                all_devs = np.append(value[3], dict2[key][3])
+
+            #if key == 'OPAQUE':
+                #print(dict1[key]) #- tuple(array of times, array of data, list of medians, list of stdevs)
+
+
+            #print(type(value[0]))
+            #print(type(np.array(value[0])))
+
+
+            #print(np.min(np.array(value[0])))
+            #print(np.min(dict2[key][0]))
+
+            min_time_dict1 = min(min(m) for m in value[0])
+            if min_time_dict1 < np.min(dict2[key][0]):
+                #all_dates = np.append(value[0], dict2[key][0])
+                #all_data = np.append(value[1], dict2[key][1])
+
+                all_dates = value[0]
+                all_dates.append(list(dict2[key][0]))
+
+                all_values = value[1]
+                all_values.append(list(dict2[key][1]))
+
+                all_medians = value[2]
+                all_medians.append(list(dict2[key][2]))
+
+                all_devs = value[3]
+                all_devs.append(list(dict2[key][3]))
+
+                #all_medians = np.append(value[2], dict2[key][2])
+                #all_devs = np.append(value[3], dict2[key][3])
             else:
-                all_dates = np.append(dict2[key][0], value[0])
-                all_data = np.append(dict2[key][1], value[1])
-                all_medians = np.append(dict2[key][2], value[2])
-                all_devs = np.append(dict2[key][3], value[3])
+                # Seems unlikely we'll ever want to be here. This would be
+                # for a case where a given set of values has an earliest date
+                # that is earlier than anything in the database.
+                #all_dates = np.append(dict2[key][0], value[0])
+                #all_data = np.append(dict2[key][1], value[1])
+                #all_medians = np.append(dict2[key][2], value[2])
+                #all_devs = np.append(dict2[key][3], value[3])
+                all_dates = [list(dict2[key][0])]
+                all_dates.extend(value[0])
+
+                all_values = [list(dict2[key][1])]
+                all_values.extend(value[1])
+
+                all_medians = [list(dict2[key][2])]
+                all_medians.extend(value[2])
+
+                all_devs = [list(dict2[key][3])]
+                all_devs.extend(value[3])
+
+            # Remove any duplicates
+            #unique_dates, unique_idx = np.unique(all_dates, return_index=True)
+            #all_dates = all_dates[unique_idx]
+            #all_data = all_data[unique_idx]
 
             # Not sure how to treat duplicates here. If we remove duplicates, then
             # the mean values may not be valid any more. For example, if there is a
@@ -1813,19 +1991,55 @@ def add_every_change_history(dict1, dict2):
             # those 4 hours of entries, but then what would we do with the mean values
             # that cover those times. Let's instead warn the user if there are duplicate
             # entries, but don't take any action
-            unique_dates = np.unique(all_dates, return_index=False)
-            if len(unique_dates) != len(all_dates):
-                logging.info(("WARNING - There are duplicate entries in the every-change history "
-                              "and the new entry. Keeping and plotting all values, but be sure the "
-                              "data look ok."))
-            updated_value = (all_dates, all_data, all_medians, all_devs)
+            #unique_dates = np.unique(all_dates, return_index=False)
+            #if len(unique_dates) != len(all_dates):
+            #    n_duplicates = len(unique_dates) != len(all_dates)
+            #    logging.info((f"WARNING - There are {n_duplicates} duplicate entries in the "
+            #                  f"every-change history (total length {value[0]}) and the new entry "
+            #                  f"(total length {dict2[key][0]}). Keeping and plotting all values, "
+            #                  "but be sure the data look ok."))
+            updated_value = (all_dates, all_values, all_medians, all_devs)
             combined[key] = updated_value
         else:
+            if key == 'OPAQUE':
+                print(key)
+                print(value[0])
+                print(value[1])
+                print(value[2])
+                print(value[3])
+                stop
+            print(key)
+            print(value)
+            #stop
             combined[key] = value
+
+        if key == 'OPAQUE':
+            print('before dict2 only keys:')
+            for e in combined[key][0]:
+                print(e)
+                print('')
+            print('')
+            for e in combined[key][2]:
+                print(e)
+                print('')
+            print('')
+            #stop
+
+        logging.info(f'In add_every_change_history: key: {key}, len data: {len(all_dates)}, median: {all_medians}, dev: {all_devs}')
     # Add entries for keys that are in dict2 but not dict1
     for key, value in dict2.items():
         if key not in dict1:
-            combined[key] = value
+            dates =[]
+            vals = []
+            meds = []
+            devs = []
+            dates.append(list(value[0]))
+            vals.append(list(value[1]))
+            meds.append(list(value[2]))
+            devs.append(list(value[3]))
+            combined[key] = (dates, vals, meds, devs)
+
+        logging.info(f'dict2 only add_every_change_history: key: {key}, len data: {len(value[0])}, median: {dict2[key][2]}, dev: {dict2[key][3]}')
     return combined
 
 
@@ -1916,8 +2130,13 @@ def ensure_list(var):
     var : list
         var, translated into a list if necessary
     """
-    if not isinstance(var, list) and not isinstance(var, np.ndarray):
-        return [var]
+    if not isinstance(var, list):
+        if not isinstance(var, np.ndarray):
+            # Here we assume var is a single float, int, str, etc.
+            return [var]
+        else:
+            # Here we convert a numpy array to a list
+            return var.tolist()
     else:
         return var
 
@@ -1968,7 +2187,7 @@ def organize_every_change(mnemonic):
         # Normalize by the expected value
         medianval, stdevval = MIRI_POS_RATIO_VALUES[mnemonic.mnemonic_identifier.split('_')[2]][val]
 
-        all_data[val] = (val_times, val_data, medianval, stdevval)
+        all_data[val] = (val_times, val_data, [medianval], [stdevval])
 
     return all_data
 
@@ -2086,15 +2305,32 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
     for (key, value), color in zip(data.items(), colors):
         if len(value) > 0:
             val_times, val_data, normval, stdevval = value
-            val_data = np.array(val_data)
-            dependency_val = np.repeat(key, len(val_times))
+
+            # At this point, val_times and val_data will be a list of numpy arrays
+            # normval and stdevval will be lists. First, iterate through the lists
+            # and normalize the data values in each element by the corresponding
+            # normval (expected value)
+            all_val_data = []
+            all_val_times = []
+            for time_ele, data_ele, norm_ele in zip(val_times, val_data, normval):
+                if type(data_ele[0]) not in [np.str_, str]:
+                    data_ele_arr = np.array(data_ele) / norm_ele[0]
+                    all_val_data.extend(list(data_ele_arr))
+                    all_val_times.extend(time_ele)
+                    logging.info(f'key: {key}, len_data: {len(data_ele)}, firstentry: {data_ele[0]}, stats: {norm_ele}')
+
+            all_val_data = np.array(all_val_data)
+            all_val_times = np.array(all_val_times)
+            dependency_val = np.repeat(key, len(all_val_times))
+            #val_data = np.array(val_data)
+            #dependency_val = np.repeat(key, len(val_times))
 
             # Normalize by normval (the expected value) so that all data will fit on one plot easily
-            if type(val_data[0]) not in [np.str_, str]:
-                logging.info(f'key: {key}, len_data: {len(val_data)}, firstentry: {val_data[0]}, stats: {normval}, {stdevval}')
-                val_data /= normval
+            #if type(val_data[0]) not in [np.str_, str]:
+            #    logging.info(f'key: {key}, len_data: {len(val_data)}, firstentry: {val_data[0]}, stats: {normval}, {stdevval}')
+            #    val_data /= normval
 
-            source = ColumnDataSource(data={'x': val_times, 'y': val_data, 'dep': dependency_val})
+            source = ColumnDataSource(data={'x': all_val_times, 'y': all_val_data, 'dep': dependency_val})
 
             ldata = fig.line(x='x', y='y', line_width=1, line_color=Turbo256[color], source=source, legend_label=key)
             cdata = fig.circle(x='x', y='y', fill_color=Turbo256[color], size=8, source=source, legend_label=key)
@@ -2106,10 +2342,10 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
             hover_tool.formatters = {'@x': 'datetime'}
             fig.tools.append(hover_tool)
 
-            if np.min(val_times) < min_time:
-                min_time = np.min(val_times)
-            if np.max(val_times) > max_time:
-                max_time = np.max(val_times)
+            if np.min(all_val_times) < min_time:
+                min_time = np.min(all_val_times)
+            if np.max(all_val_times) > max_time:
+                max_time = np.max(all_val_times)
 
     # If the input dictionary is empty, then create an empty plot with reasonable
     # x range

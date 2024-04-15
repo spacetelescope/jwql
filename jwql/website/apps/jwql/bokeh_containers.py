@@ -230,7 +230,7 @@ def edb_monitor_tabs(instrument):
     """
     html_file_list = file_list[instrument]
     print('read in html files')
-
+    #CLEARLY THIS IS NOT BEING USED
 
 def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limits=None,
                            red_limits=None, save=True):

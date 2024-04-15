@@ -27,6 +27,7 @@ References
     - JWST TR JWST-STScI-004800, SM-12
  """
 
+import datetime
 import getpass
 import glob
 import itertools
@@ -151,6 +152,25 @@ def _validate_config(config_file_dict):
             'Provided config.json does not match the '
             'required JSON schema: {}'.format(e.message)
         )
+
+
+def add_timezone_to_datetime(dt):
+    """Check to see if timezone information is present in the given
+    datetime.datetime object. If not, set it to UTC.
+
+    Parameters
+    ----------
+    dt : datetime.datetime
+        Datetime object
+
+    Returns
+    -------
+    dt : datetime.datetime
+        Datetime object with UTC timezone info added
+    """
+    if dt.tzinfo == None or dt.tzinfo.utcoffset(dt) == None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return dt
 
 
 def create_png_from_fits(filename, outdir):
