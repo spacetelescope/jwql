@@ -672,6 +672,16 @@ MIRI_POS_RATIO_VALUES = {
     },
 }
 
+# Names of monitor Django models where information about the
+# hitory of monitor runs is stored
+MONITOR_HISTORY_MODELS = {'fgs': [('Bad Pixel', 'FGSBadPixelQueryHistory'),
+                                  ''],
+                          'nircam': [('Bad Pixel': 'NIRCamBadPixelQueryHistory'),
+                                     ('Bias', 'NIRCamBiasQueryHistory'),
+                                     ('Claw', 'NIRCamClawQueryHistory'),
+                                     ('Dark Current', 'NIRCamDarkQueryHistory'),
+                                     ('Readnoise', 'NIRCamReadnoiseQueryHistory')]}
+
 # Names of all of the monitor database tables
 MONITOR_TABLE_NAMES = [
     "fgs_bad_pixel_query_history", "fgs_bad_pixel_stats",

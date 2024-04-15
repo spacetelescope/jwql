@@ -47,9 +47,131 @@ from sqlalchemy import func, and_
 import jwql.database.database_interface as di
 from jwql.database.database_interface import CentralStore
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
 from jwql.website.apps.jwql.models import Anomalies
+
+
+def build_monitor_status_table(instrument='all'):
+    """Query the monitor database tables and create a dataframe listing the
+    dates of the most recent run and the most recent run that updated the
+    database for each.
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the instrument whose database tables are to be queried. If
+        'all', all instruments' tables will be queried.
+
+    Returns
+    -------
+    status_df : pandas.DataFrame
+        DataFrame containing monitor run dates
+    """
+    if instrument == 'all':
+        instrument = JWST_INSTRUMENT_NAMES
+
+    if isinstance(instrument, str):
+        instrument = [instrument]
+
+    # dataframe columns: instrument, monitor name, date of last monitor call, date of last monitor run
+    # maybe add success/fail later, in another function, by looking at logs
+    status = {'Instrument': [],
+              'Monitor': [],
+              'Date_of_last_call': [],
+              'Date_of_last_execution': []
+              }
+    status_df = pd.DataFrame(data=status)
+
+    for inst in instrument:
+        inst_mixed_case = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]
+
+        # Get a list of all monitors for the instrument
+        inst_monitors = MONITORS[inst]
+
+        # Exclude monitors that are not active. Ignore those where the relative
+        # path is set to '#'
+        #active_monitors = [e[0] for e in inst_monitors if e[1] != '#']
+
+        #or
+
+        monitor_query_models = [e[1] for e in MONITOR_HISTORY_MODELS[inst]]
+        monitor_model_names = [e[0] for e in MONITOR_HISTORY_MODELS[inst]]
+
+        # Translate monitor names into Django model names
+        for query_model, model_name in zip(monitor_query_models, monitor_model_names):
+            last_call_time, last_full_execution_time = get_most_recent_run_times(query_model)
+
+            # Add new entry to the dataframe
+            status_df.loc[len(status_df.index)] = [inst, model_name, last_call_time, last_full_execution_time]
+
+        # Here we need to do something special for the EDB monitor because
+        # it does not have a query history table
+        edb_table_names = [f'{inst_mixed_case}EdbBlocksStats',
+                           f'{inst_mixed_case}EdbDailyStats',
+                           f'{inst_mixed_case}EdbEveryChangeStats',
+                           f'{inst_mixed_case}EdbTimeIntervalStats',
+                           f'{inst_mixed_case}EdbTimeStats']
+
+        last_call_time = Time.now()
+        last_full_execution_time = Time.now()
+        orig_call_time = deepcopy(last_call_time)
+        orig_full_execution_time = deepcopy(last_full_execution_time)
+        for edb_table in edb_table_names:
+            call_time, full_execution_time = get_most_recent_run_times(edb_table) - but in this case we need "latest_query" rather than "start_time_mjd"
+            is there a way to do that without making a second copy of the function below???
+            if call_time is not None:
+                if call_time > last_call_time:
+                    last_call_time = deepcopy(call_time)
+            if full_execution_time is not None:
+                if full_execution_time > last_full_execution_time:
+                    last_full_execution_time = deepcopy(full_execution_time)
+        if last_call_time == orig_call_time:
+            last_call_time = 'None'
+        if last_full_execution_time == orig_full_execution_time:
+            last_full_execution_time = 'None'
+        # Add new entry to the dataframe
+        status_df.loc[len(status_df.index)] = [inst, 'EDB', last_call_time, last_full_execution_time]
+
+
+
+
+def get_most_recent_run_times(model_name):
+    """
+    """
+    model_instance = eval(model_name)
+    filters = {'run_monitor': True}
+    full_execution = model_instance.objects.filter(**filters).order_by('-end_time_mjd').first()
+
+    if full_execution is not None:
+        full_execution_time = Time(full_execution.start_time_mjd, format='mjd').to_value(format='iso')  # Stick to starting time. Hopefully that lines up with log filenames?
+    else:
+        # Handle the case of no recorded monitor executions in the database
+        full_execution_time = 'None'
+
+    call = model_instance.objects.all().order_by('-end_time_mjd').first()
+
+    if call is not None:
+        call_time = Time(call.start_time_mjd, format='mjd').to_value(format='iso')
+    else:
+        # Handle the case of no monitor calls in the database
+        call_time = 'None'
+    return call_time, full_execution_time
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def build_table_latest_entry(tablename):
