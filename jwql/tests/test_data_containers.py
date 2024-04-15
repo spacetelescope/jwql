@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from jwql.utils.constants import ON_GITHUB_ACTIONS
+from jwql.utils.constants import ON_GITHUB_ACTIONS, DEFAULT_MODEL_CHARFIELD
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 
@@ -45,7 +45,7 @@ if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config  # noqa: E402 (module level import not at top of file)
     from jwql.website.apps.jwql.models import RootFileInfo
 
-    
+
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_build_table():
     tab = data_containers.build_table('filesystem_general')
@@ -199,7 +199,6 @@ def test_get_all_proposals():
                            (['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'], {'bad'})),
                           (False, ['rate', 'uncal', 'bad', 'o006_crfints', 'o001_crf'],
                            ['uncal', 'rate', 'o001_crf', 'o006_crfints', 'bad'])])
-
 def test_get_available_suffixes(untracked, input_suffixes, expected):
     result = data_containers.get_available_suffixes(
         input_suffixes, return_untracked=untracked)
@@ -338,6 +337,7 @@ def test_get_anomaly_form_post_group(mocker):
     assert 'Failed to submit anomaly' in request._messages.messages
     assert update_mock.call_count == 2
 """
+
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to django models.')
 def test_get_dashboard_components():
@@ -607,42 +607,42 @@ def test_mast_query_by_rootname():
     instrument = 'NIRCam'
     rootname1 = 'jw02767002001_02103_00005_nrcb4'
     dict_stuff = data_containers.mast_query_by_rootname(instrument, rootname1)
-    defaults = dict(filter=dict_stuff.get('filter', ''),
-                    detector=dict_stuff.get('detector', ''),
-                    exp_type=dict_stuff.get('exp_type', ''),
-                    read_pat=dict_stuff.get('readpatt', ''),
-                    grating=dict_stuff.get('grating', ''),
+    defaults = dict(filter=dict_stuff.get('filter', DEFAULT_MODEL_CHARFIELD),
+                    detector=dict_stuff.get('detector', DEFAULT_MODEL_CHARFIELD),
+                    exp_type=dict_stuff.get('exp_type', DEFAULT_MODEL_CHARFIELD),
+                    read_pat=dict_stuff.get('readpatt', DEFAULT_MODEL_CHARFIELD),
+                    grating=dict_stuff.get('grating', DEFAULT_MODEL_CHARFIELD),
                     patt_num=dict_stuff.get('patt_num', 0),
-                    aperture=dict_stuff.get('apername', ''),
-                    subarray=dict_stuff.get('subarray', ''),
-                    pupil=dict_stuff.get('pupil', ''))
+                    aperture=dict_stuff.get('apername', DEFAULT_MODEL_CHARFIELD),
+                    subarray=dict_stuff.get('subarray', DEFAULT_MODEL_CHARFIELD),
+                    pupil=dict_stuff.get('pupil', DEFAULT_MODEL_CHARFIELD))
     assert isinstance(defaults, dict)
 
     rootname2 = 'jw02084001001_04103_00001-seg003_nrca3'
     dict_stuff = data_containers.mast_query_by_rootname(instrument, rootname2)
-    defaults = dict(filter=dict_stuff.get('filter', ''),
-                    detector=dict_stuff.get('detector', ''),
-                    exp_type=dict_stuff.get('exp_type', ''),
-                    read_pat=dict_stuff.get('readpatt', ''),
-                    grating=dict_stuff.get('grating', ''),
+    defaults = dict(filter=dict_stuff.get('filter', DEFAULT_MODEL_CHARFIELD),
+                    detector=dict_stuff.get('detector', DEFAULT_MODEL_CHARFIELD),
+                    exp_type=dict_stuff.get('exp_type', DEFAULT_MODEL_CHARFIELD),
+                    read_pat=dict_stuff.get('readpatt', DEFAULT_MODEL_CHARFIELD),
+                    grating=dict_stuff.get('grating', DEFAULT_MODEL_CHARFIELD),
                     patt_num=dict_stuff.get('patt_num', 0),
-                    aperture=dict_stuff.get('apername', ''),
-                    subarray=dict_stuff.get('subarray', ''),
-                    pupil=dict_stuff.get('pupil', ''))
+                    aperture=dict_stuff.get('apername', DEFAULT_MODEL_CHARFIELD),
+                    subarray=dict_stuff.get('subarray', DEFAULT_MODEL_CHARFIELD),
+                    pupil=dict_stuff.get('pupil', DEFAULT_MODEL_CHARFIELD))
     assert isinstance(defaults, dict)
 
     instrument2 = 'FGS'
     rootname3 = 'jw01029003001_06201_00001_guider2'
     dict_stuff = data_containers.mast_query_by_rootname(instrument2, rootname3)
-    defaults = dict(filter=dict_stuff.get('filter', ''),
-                    detector=dict_stuff.get('detector', ''),
-                    exp_type=dict_stuff.get('exp_type', ''),
-                    read_pat=dict_stuff.get('readpatt', ''),
-                    grating=dict_stuff.get('grating', ''),
+    defaults = dict(filter=dict_stuff.get('filter', DEFAULT_MODEL_CHARFIELD),
+                    detector=dict_stuff.get('detector', DEFAULT_MODEL_CHARFIELD),
+                    exp_type=dict_stuff.get('exp_type', DEFAULT_MODEL_CHARFIELD),
+                    read_pat=dict_stuff.get('readpatt', DEFAULT_MODEL_CHARFIELD),
+                    grating=dict_stuff.get('grating', DEFAULT_MODEL_CHARFIELD),
                     patt_num=dict_stuff.get('patt_num', 0),
-                    aperture=dict_stuff.get('apername', ''),
-                    subarray=dict_stuff.get('subarray', ''),
-                    pupil=dict_stuff.get('pupil', ''))
+                    aperture=dict_stuff.get('apername', DEFAULT_MODEL_CHARFIELD),
+                    subarray=dict_stuff.get('subarray', DEFAULT_MODEL_CHARFIELD),
+                    pupil=dict_stuff.get('pupil', DEFAULT_MODEL_CHARFIELD))
     assert isinstance(defaults, dict)
 
 

@@ -26,14 +26,16 @@ References
 """
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
+from jwql.utils.constants import MAX_LEN_APERTURE, MAX_LEN_DETECTOR, MAX_LEN_FILENAME, MAX_LEN_INSTRUMENT, MAX_LEN_TYPE
 
 
 class FGSBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     dark_start_time_mjd = models.FloatField(blank=True, null=True)
     dark_end_time_mjd = models.FloatField(blank=True, null=True)
     flat_start_time_mjd = models.FloatField(blank=True, null=True)
@@ -52,15 +54,15 @@ class FGSBadPixelQueryHistory(models.Model):
 
 class FGSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
 
     class Meta:
         managed = True
@@ -70,8 +72,8 @@ class FGSBadPixelStats(models.Model):
 
 class MIRIBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     dark_start_time_mjd = models.FloatField(blank=True, null=True)
     dark_end_time_mjd = models.FloatField(blank=True, null=True)
     flat_start_time_mjd = models.FloatField(blank=True, null=True)
@@ -90,15 +92,15 @@ class MIRIBadPixelQueryHistory(models.Model):
 
 class MIRIBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -108,8 +110,8 @@ class MIRIBadPixelStats(models.Model):
 
 class NIRCamBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     dark_start_time_mjd = models.FloatField(blank=True, null=True)
     dark_end_time_mjd = models.FloatField(blank=True, null=True)
     flat_start_time_mjd = models.FloatField(blank=True, null=True)
@@ -128,15 +130,15 @@ class NIRCamBadPixelQueryHistory(models.Model):
 
 class NIRCamBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -146,8 +148,8 @@ class NIRCamBadPixelStats(models.Model):
 
 class NIRISSBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     dark_start_time_mjd = models.FloatField(blank=True, null=True)
     dark_end_time_mjd = models.FloatField(blank=True, null=True)
     flat_start_time_mjd = models.FloatField(blank=True, null=True)
@@ -166,15 +168,15 @@ class NIRISSBadPixelQueryHistory(models.Model):
 
 class NIRISSBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True
@@ -184,8 +186,8 @@ class NIRISSBadPixelStats(models.Model):
 
 class NIRSpecBadPixelQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     dark_start_time_mjd = models.FloatField(blank=True, null=True)
     dark_end_time_mjd = models.FloatField(blank=True, null=True)
     flat_start_time_mjd = models.FloatField(blank=True, null=True)
@@ -204,15 +206,15 @@ class NIRSpecBadPixelQueryHistory(models.Model):
 
 class NIRSpecBadPixelStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    detector = models.CharField(blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
-    type = models.CharField(blank=True, null=True)
+    type = models.CharField(max_length=MAX_LEN_TYPE, blank=True, null=True)
     source_files = models.TextField(blank=True, null=True)  # This field type is a guess.
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    baseline_file = models.CharField(blank=True, null=True)
+    baseline_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
 
     class Meta:
         managed = True

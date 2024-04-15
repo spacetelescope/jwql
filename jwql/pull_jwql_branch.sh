@@ -62,6 +62,7 @@ echo "Reset: $reset";
 echo "Notify: $notify $recipient";
 
 # 1. Pull updated code from GitHub deployment branch (keep second checkout in case its already defined for some weird reason)
+git fetch origin
 git checkout -b $branch_name --track origin/$branch_name
 git checkout $branch_name
 git fetch origin $branch_name
@@ -76,8 +77,9 @@ fi
 # 3. Install jwql
 pip install -e ..
 
-# 4. Merge Any Migrations
-python ./website/manage.py migrate
+# 4. Merge Any Migrations that exist in either database (router.py will sort where they go)
+python ./website/manage.py migrate jwql
+python ./website/manage.py migrate jwql --database=monitors
 
 # 5. Bring the service back up
 if [ "$reset" = true ]; then
