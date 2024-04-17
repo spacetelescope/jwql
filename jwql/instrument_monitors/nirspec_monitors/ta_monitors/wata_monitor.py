@@ -21,6 +21,7 @@ Author
 ______
     - Maria Pena-Guerrero
     - Melanie Clarke
+    - Mees Fix
 
 Use
 ---
@@ -28,7 +29,6 @@ Use
     python wata_monitor.py
 
 """
-
 
 # general imports
 import json
@@ -45,33 +45,46 @@ from bokeh.embed import components
 from bokeh.io import output_file
 from bokeh.layouts import gridplot, layout
 from bokeh.models import (
-    ColumnDataSource, Range1d, CustomJS, CustomJSFilter, CDSView,
-    Span, Label, DateRangeSlider)
+    ColumnDataSource,
+    Range1d,
+    CustomJS,
+    CustomJSFilter,
+    CDSView,
+    Span,
+    Label,
+    DateRangeSlider,
+)
 from bokeh.models.tools import HoverTool, BoxSelectTool
 from bokeh.plotting import figure, save
 from bs4 import BeautifulSoup
-from sqlalchemy.sql.expression import and_
 
 # jwql imports
 from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
+from jwql.utils.utils import (
+    ensure_dir_exists,
+    filesystem_path,
+    get_config,
+)
 
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     # Need to set up django apps before we can access the models
     import django  # noqa: E402 (module level import not at top of file)
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
 
-    from jwql.website.apps.jwql.monitor_models.ta import NIRSpecTaQueryHistory, NIRSpecTaStats # noqa: E402 (module level import not at top of file)
+    from jwql.website.apps.jwql.monitor_models.ta import (
+        NIRSpecTaQueryHistory,
+        NIRSpecTaStats,
+    )  # noqa: E402 (module level import not at top of file)
 
 
-
-class WATA():
-    """ Class for executing the NIRSpec WATA monitor.
+class WATA:
+    """Class for executing the NIRSpec WATA monitor.
 
     This class will search for new WATA current files in the file systems
     for NIRSpec and will run the monitor on these files. The monitor will
@@ -98,48 +111,63 @@ class WATA():
     """
 
     def __init__(self):
-        """ Initialize an instance of the WATA class """
+        """Initialize an instance of the WATA class"""
         # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
         self.query_very_beginning = 59607.0
 
         # structure to define required keywords to extract and where they live
-        self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
-                               'DATE-BEG': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
-                               'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
-                               'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
-                               'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
-                               'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
-                               'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_reason'},
-                               'REFSTNAM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_name'},
-                               'REFSTRA': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_ra'},
-                               'REFSTDEC': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_dec'},
-                               'REFSTMAG': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_mag'},
-                               'REFSTCAT': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_catalog'},
-                               'V2_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v2'},
-                               'V3_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v3'},
-                               'EXTCOLST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_col'},
-                               'EXTROWST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_row'},
-                               'TA_DTCTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_detector'},
-                               'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
-                               'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
-                               'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
-                               'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': 'CENITERS', 'name': 'iterations'},
-                               'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
-                               'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
-                               'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
-                               'IMCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_row'},
-                               'DTCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_col'},
-                               'DTCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_row'},
-                               'SCIXCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_x'},
-                               'SCIYCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_y'},
-                               'TARGETV2': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v2'},
-                               'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
-                               'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
-                               'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
-                               'V2_RESID': {'loc': 'ta_hdr', 'alt_key': 'V2_OFFST', 'name': 'v2_offset'},
-                               'V3_RESID': {'loc': 'ta_hdr', 'alt_key': 'V3_OFFST', 'name': 'v3_offset'},
-                               'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
-                               'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}}
+        self.keywds2extract = {
+            "FILENAME": {
+                "loc": "main_hdr",
+                "alt_key": None,
+                "name": "filename",
+                "type": str,
+            },
+            "DATE-BEG": {"loc": "main_hdr", "alt_key": None, "name": "date_obs"},
+            "OBS_ID": {"loc": "main_hdr", "alt_key": "OBSID", "name": "visit_id"},
+            "FILTER": {"loc": "main_hdr", "alt_key": "FWA_POS", "name": "tafilter"},
+            "READOUT": {"loc": "main_hdr", "alt_key": "READPATT", "name": "readout"},
+            "TASTATUS": {"loc": "ta_hdr", "alt_key": None, "name": "ta_status"},
+            "STAT_RSN": {"loc": "ta_hdr", "alt_key": None, "name": "status_reason"},
+            "REFSTNAM": {"loc": "ta_hdr", "alt_key": None, "name": "star_name"},
+            "REFSTRA": {"loc": "ta_hdr", "alt_key": None, "name": "star_ra"},
+            "REFSTDEC": {"loc": "ta_hdr", "alt_key": None, "name": "star_dec"},
+            "REFSTMAG": {"loc": "ta_hdr", "alt_key": None, "name": "star_mag"},
+            "REFSTCAT": {"loc": "ta_hdr", "alt_key": None, "name": "star_catalog"},
+            "V2_PLAND": {"loc": "ta_hdr", "alt_key": None, "name": "planned_v2"},
+            "V3_PLAND": {"loc": "ta_hdr", "alt_key": None, "name": "planned_v3"},
+            "EXTCOLST": {"loc": "ta_hdr", "alt_key": None, "name": "stamp_start_col"},
+            "EXTROWST": {"loc": "ta_hdr", "alt_key": None, "name": "stamp_start_row"},
+            "TA_DTCTR": {"loc": "ta_hdr", "alt_key": None, "name": "star_detector"},
+            "BOXPKVAL": {"loc": "ta_hdr", "alt_key": None, "name": "max_val_box"},
+            "BOXPKCOL": {"loc": "ta_hdr", "alt_key": None, "name": "max_val_box_col"},
+            "BOXPKROW": {"loc": "ta_hdr", "alt_key": None, "name": "max_val_box_row"},
+            "TA_ITERS": {"loc": "ta_hdr", "alt_key": "CENITERS", "name": "iterations"},
+            "CORR_COL": {"loc": "ta_hdr", "alt_key": None, "name": "corr_col"},
+            "CORR_ROW": {"loc": "ta_hdr", "alt_key": None, "name": "corr_row"},
+            "IMCENCOL": {"loc": "ta_hdr", "alt_key": None, "name": "stamp_final_col"},
+            "IMCENROW": {"loc": "ta_hdr", "alt_key": None, "name": "stamp_final_row"},
+            "DTCENCOL": {
+                "loc": "ta_hdr",
+                "alt_key": None,
+                "name": "detector_final_col",
+            },
+            "DTCENROW": {
+                "loc": "ta_hdr",
+                "alt_key": None,
+                "name": "detector_final_row",
+            },
+            "SCIXCNTR": {"loc": "ta_hdr", "alt_key": None, "name": "final_sci_x"},
+            "SCIYCNTR": {"loc": "ta_hdr", "alt_key": None, "name": "final_sci_y"},
+            "TARGETV2": {"loc": "ta_hdr", "alt_key": None, "name": "measured_v2"},
+            "TARGETV3": {"loc": "ta_hdr", "alt_key": None, "name": "measured_v3"},
+            "V2_REF": {"loc": "ta_hdr", "alt_key": None, "name": "ref_v2"},
+            "V3_REF": {"loc": "ta_hdr", "alt_key": None, "name": "ref_v3"},
+            "V2_RESID": {"loc": "ta_hdr", "alt_key": "V2_OFFST", "name": "v2_offset"},
+            "V3_RESID": {"loc": "ta_hdr", "alt_key": "V3_OFFST", "name": "v3_offset"},
+            "SAM_X": {"loc": "ta_hdr", "alt_key": None, "name": "sam_x"},
+            "SAM_Y": {"loc": "ta_hdr", "alt_key": None, "name": "sam_y"},
+        }
 
         # initialize attributes to be set later
         self.source = None
@@ -148,7 +176,7 @@ class WATA():
         self.date_view = None
 
     def get_tainfo_from_fits(self, fits_file):
-        """ Get the TA information from the fits file
+        """Get the TA information from the fits file
         Parameters
         ----------
         fits_file: str
@@ -163,22 +191,22 @@ class WATA():
         with fits.open(fits_file) as ff:
             # make sure this is a WATA file
             for hdu in ff:
-                if 'TARG_ACQ' in hdu.name:
+                if "TARG_ACQ" in hdu.name:
                     wata = True
                     break
             if not wata:
                 return None
             main_hdr = ff[0].header
             try:
-                ta_hdr = ff['TARG_ACQ'].header
+                ta_hdr = ff["TARG_ACQ"].header
             except KeyError:
-                no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
+                no_ta_ext_msg = "No TARG_ACQ extension in file " + fits_file
                 return no_ta_ext_msg
         wata_info = [main_hdr, ta_hdr]
         return wata_info
 
     def get_wata_data(self, new_filenames):
-        """ Create the data array for the WATA input files
+        """Create the data array for the WATA input files
         Parameters
         ----------
         new_filenames: list
@@ -200,18 +228,18 @@ class WATA():
                 continue
             main_hdr, ta_hdr = wata_info
             for key, key_dict in self.keywds2extract.items():
-                key_name = key_dict['name']
+                key_name = key_dict["name"]
                 if key_name not in wata_dict:
                     wata_dict[key_name] = []
                 ext = main_hdr
-                if key_dict['loc'] == 'ta_hdr':
+                if key_dict["loc"] == "ta_hdr":
                     ext = ta_hdr
                 try:
                     val = ext[key]
-                    if key == 'filename':
+                    if key == "filename":
                         val = fits_file
                 except KeyError:
-                    val = ext[key_dict['alt_key']]
+                    val = ext[key_dict["alt_key"]]
                 wata_dict[key_name].append(val)
         # create the pandas dataframe
         wata_df = pd.DataFrame(wata_dict)
@@ -231,7 +259,7 @@ class WATA():
             self.source.data["time_arr"] = time_arr
 
     def plt_status(self):
-        """ Plot the WATA status (passed = 0 or failed = 1).
+        """Plot the WATA status (passed = 0 or failed = 1).
         Parameters
         ----------
             None
@@ -239,41 +267,54 @@ class WATA():
         -------
             plot: bokeh plot object
         """
-        ta_status = self.source.data['ta_status']
+        ta_status = self.source.data["ta_status"]
 
         # check if this column exists in the data already, else create it
-        if 'bool_status' not in self.source.data:
+        if "bool_status" not in self.source.data:
             # bokeh does not like to plot strings, turn into binary type
             bool_status, status_colors = [], []
             for tas in ta_status:
-                if 'unsuccessful' not in tas.lower():
+                if "unsuccessful" not in tas.lower():
                     bool_status.append(1)
-                    status_colors.append('blue')
+                    status_colors.append("blue")
                 else:
                     bool_status.append(0)
-                    status_colors.append('red')
+                    status_colors.append("red")
 
             # add these to the bokeh data structure
             self.source.data["ta_status_bool"] = bool_status
             self.source.data["status_colors"] = status_colors
 
         # create a new bokeh plot
-        plot = figure(title="WATA Status [Success=1, Fail=0]", x_axis_label='Time',
-                      y_axis_label='WATA Status', x_axis_type='datetime',)
+        plot = figure(
+            title="WATA Status [Success=1, Fail=0]",
+            x_axis_label="Time",
+            y_axis_label="WATA Status",
+            x_axis_type="datetime",
+        )
         plot.y_range = Range1d(-0.5, 1.5)
-        plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
-                    color='status_colors', size=7, fill_alpha=0.3, view=self.date_view)
+        plot.circle(
+            x="time_arr",
+            y="ta_status_bool",
+            source=self.source,
+            color="status_colors",
+            size=7,
+            fill_alpha=0.3,
+            view=self.date_view,
+        )
 
         # make tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
-                          ('Visit ID', '@visit_id'),
-                          ('TA status', '@ta_status'),
-                          ('Filter', '@tafilter'),
-                          ('Readout', '@readout'),
-                          ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag'),
-                          ('--------', '----------------')]
+        hover.tooltips = [
+            ("File name", "@filename"),
+            ("Visit ID", "@visit_id"),
+            ("TA status", "@ta_status"),
+            ("Filter", "@tafilter"),
+            ("Readout", "@readout"),
+            ("Date-Obs", "@date_obs"),
+            ("Magnitude", "@star_mag"),
+            ("--------", "----------------"),
+        ]
 
         plot.add_tools(hover)
 
@@ -283,7 +324,7 @@ class WATA():
         return plot
 
     def plt_residual_offsets(self):
-        """ Plot the residual V2 and V3 offsets
+        """Plot the residual V2 and V3 offsets
         Parameters
         ----------
             None
@@ -292,28 +333,40 @@ class WATA():
             plot: bokeh plot object
         """
         # create a new bokeh plot
-        plot = figure(title="WATA Residual V2-V3 Offsets", x_axis_label='Residual V2 Offset',
-                      y_axis_label='Residual V3 Offset')
-        plot.circle(x='v2_offset', y='v3_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
+        plot = figure(
+            title="WATA Residual V2-V3 Offsets",
+            x_axis_label="Residual V2 Offset",
+            y_axis_label="Residual V3 Offset",
+        )
+        plot.circle(
+            x="v2_offset",
+            y="v3_offset",
+            source=self.source,
+            color="blue",
+            size=7,
+            fill_alpha=0.3,
+            view=self.date_view,
+        )
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
 
         # mark origin lines
-        vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
-        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        vline = Span(location=0, dimension="height", line_color="black", line_width=0.7)
+        hline = Span(location=0, dimension="width", line_color="black", line_width=0.7)
         plot.renderers.extend([vline, hline])
 
         # add tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
-                          ('Visit ID', '@visit_id'),
-                          ('TA status', '@ta_status'),
-                          ('Filter', '@tafilter'),
-                          ('Readout', '@readout'),
-                          ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag'),
-                          ('--------', '----------------')]
+        hover.tooltips = [
+            ("File name", "@filename"),
+            ("Visit ID", "@visit_id"),
+            ("TA status", "@ta_status"),
+            ("Filter", "@tafilter"),
+            ("Readout", "@readout"),
+            ("Date-Obs", "@date_obs"),
+            ("Magnitude", "@star_mag"),
+            ("--------", "----------------"),
+        ]
         plot.add_tools(hover)
 
         # add shared selection tools
@@ -322,7 +375,7 @@ class WATA():
         return plot
 
     def plt_v2offset_time(self):
-        """ Plot the residual V2 versus time
+        """Plot the residual V2 versus time
         Parameters
         ----------
             None
@@ -331,26 +384,39 @@ class WATA():
             plot: bokeh plot object
         """
         # create a new bokeh plot
-        plot = figure(title="WATA V2 Offset vs Time", x_axis_label='Time',
-                      y_axis_label='Residual V2 Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='v2_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
+        plot = figure(
+            title="WATA V2 Offset vs Time",
+            x_axis_label="Time",
+            y_axis_label="Residual V2 Offset",
+            x_axis_type="datetime",
+        )
+        plot.circle(
+            x="time_arr",
+            y="v2_offset",
+            source=self.source,
+            color="blue",
+            size=7,
+            fill_alpha=0.3,
+            view=self.date_view,
+        )
         plot.y_range = Range1d(-0.5, 0.5)
 
         # mark origin line
-        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension="width", line_color="black", line_width=0.7)
         plot.renderers.extend([hline])
 
         # add tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
-                          ('Visit ID', '@visit_id'),
-                          ('TA status', '@ta_status'),
-                          ('Filter', '@tafilter'),
-                          ('Readout', '@readout'),
-                          ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag'),
-                          ('--------', '----------------')]
+        hover.tooltips = [
+            ("File name", "@filename"),
+            ("Visit ID", "@visit_id"),
+            ("TA status", "@ta_status"),
+            ("Filter", "@tafilter"),
+            ("Readout", "@readout"),
+            ("Date-Obs", "@date_obs"),
+            ("Magnitude", "@star_mag"),
+            ("--------", "----------------"),
+        ]
         plot.add_tools(hover)
 
         # add shared selection tools
@@ -359,7 +425,7 @@ class WATA():
         return plot
 
     def plt_v3offset_time(self):
-        """ Plot the residual V3 versus time
+        """Plot the residual V3 versus time
         Parameters
         ----------
             None
@@ -368,26 +434,39 @@ class WATA():
             plot: bokeh plot object
         """
         # create a new bokeh plot
-        plot = figure(title="WATA V3 Offset vs Time", x_axis_label='Time',
-                      y_axis_label='Residual V3 Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='v3_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.3, view=self.date_view)
+        plot = figure(
+            title="WATA V3 Offset vs Time",
+            x_axis_label="Time",
+            y_axis_label="Residual V3 Offset",
+            x_axis_type="datetime",
+        )
+        plot.circle(
+            x="time_arr",
+            y="v3_offset",
+            source=self.source,
+            color="blue",
+            size=7,
+            fill_alpha=0.3,
+            view=self.date_view,
+        )
         plot.y_range = Range1d(-0.5, 0.5)
 
         # mark origin line
-        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension="width", line_color="black", line_width=0.7)
         plot.renderers.extend([hline])
 
         # add tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
-                          ('Visit ID', '@visit_id'),
-                          ('TA status', '@ta_status'),
-                          ('Filter', '@tafilter'),
-                          ('Readout', '@readout'),
-                          ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag'),
-                          ('--------', '----------------')]
+        hover.tooltips = [
+            ("File name", "@filename"),
+            ("Visit ID", "@visit_id"),
+            ("TA status", "@ta_status"),
+            ("Filter", "@tafilter"),
+            ("Readout", "@readout"),
+            ("Date-Obs", "@date_obs"),
+            ("Magnitude", "@star_mag"),
+            ("--------", "----------------"),
+        ]
         plot.add_tools(hover)
 
         # add shared selection tools
@@ -396,7 +475,7 @@ class WATA():
         return plot
 
     def plt_mag_time(self):
-        """ Plot the star magnitude versus time
+        """Plot the star magnitude versus time
         Parameters
         ----------
             None
@@ -405,39 +484,45 @@ class WATA():
             plot: bokeh plot object
         """
         # calculate the pseudo magnitudes
-        max_val_box, time_arr = self.source.data['max_val_box'], self.source.data['time_arr']
+        max_val_box, time_arr = (
+            self.source.data["max_val_box"],
+            self.source.data["time_arr"],
+        )
 
         # check if this column exists in the data already, else create it
         if "nrsrapid_f140x" not in self.source.data:
             # create the arrays per filter and readout pattern
             nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
             nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
-            filter_used, readout = self.source.data['tafilter'], self.source.data['readout']
+            filter_used, readout = (
+                self.source.data["tafilter"],
+                self.source.data["readout"],
+            )
             for i, val in enumerate(max_val_box):
-                if '140' in filter_used[i]:
-                    if readout[i].lower() == 'nrsrapid':
+                if "140" in filter_used[i]:
+                    if readout[i].lower() == "nrsrapid":
                         nrsrapid_f140x.append(val)
                         nrsrapid_f110w.append(np.NaN)
                         nrsrapid_clear.append(np.NaN)
                         nrsrapidd6_f140x.append(np.NaN)
                         nrsrapidd6_f110w.append(np.NaN)
                         nrsrapidd6_clear.append(np.NaN)
-                    elif readout[i].lower() == 'nrsrapidd6':
+                    elif readout[i].lower() == "nrsrapidd6":
                         nrsrapid_f140x.append(np.NaN)
                         nrsrapid_f110w.append(np.NaN)
                         nrsrapid_clear.append(np.NaN)
                         nrsrapidd6_f140x.append(val)
                         nrsrapidd6_f110w.append(np.NaN)
                         nrsrapidd6_clear.append(np.NaN)
-                elif '110' in filter_used[i]:
-                    if readout[i].lower() == 'nrsrapid':
+                elif "110" in filter_used[i]:
+                    if readout[i].lower() == "nrsrapid":
                         nrsrapid_f140x.append(np.NaN)
                         nrsrapid_f110w.append(val)
                         nrsrapid_clear.append(np.NaN)
                         nrsrapidd6_f140x.append(np.NaN)
                         nrsrapidd6_f110w.append(np.NaN)
                         nrsrapidd6_clear.append(np.NaN)
-                    elif readout[i].lower() == 'nrsrapidd6':
+                    elif readout[i].lower() == "nrsrapidd6":
                         nrsrapid_f140x.append(np.NaN)
                         nrsrapid_f110w.append(np.NaN)
                         nrsrapid_clear.append(np.NaN)
@@ -445,14 +530,14 @@ class WATA():
                         nrsrapidd6_f110w.append(val)
                         nrsrapidd6_clear.append(np.NaN)
                 else:
-                    if readout[i].lower() == 'nrsrapid':
+                    if readout[i].lower() == "nrsrapid":
                         nrsrapid_f140x.append(np.NaN)
                         nrsrapid_f110w.append(np.NaN)
                         nrsrapid_clear.append(val)
                         nrsrapidd6_f140x.append(np.NaN)
                         nrsrapidd6_f110w.append(np.NaN)
                         nrsrapidd6_clear.append(np.NaN)
-                    elif readout[i].lower() == 'nrsrapidd6':
+                    elif readout[i].lower() == "nrsrapidd6":
                         nrsrapid_f140x.append(np.NaN)
                         nrsrapid_f110w.append(np.NaN)
                         nrsrapid_clear.append(np.NaN)
@@ -469,31 +554,81 @@ class WATA():
             self.source.data["nrsrapidd6_clear"] = nrsrapidd6_clear
 
         # create a new bokeh plot
-        plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
-                      y_axis_label='box_peak [Counts]', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='nrsrapid_f140x', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4, view=self.date_view)
-        plot.circle(x='time_arr', y='nrsrapidd6_f140x', source=self.source,
-                    color="purple", size=12, fill_alpha=0.4, view=self.date_view)
-        plot.triangle(x='time_arr', y='nrsrapid_f110w', source=self.source,
-                      color="orange", size=8, fill_alpha=0.4, view=self.date_view)
-        plot.triangle(x='time_arr', y='nrsrapidd6_f110w', source=self.source,
-                      color="orange", size=13, fill_alpha=0.4, view=self.date_view)
-        plot.square(x='time_arr', y='nrsrapid_clear', source=self.source,
-                    color="gray", size=7, fill_alpha=0.4, view=self.date_view)
-        plot.square(x='time_arr', y='nrsrapidd6_clear', source=self.source,
-                    color="gray", size=12, fill_alpha=0.4, view=self.date_view)
+        plot = figure(
+            title="WATA Counts vs Time",
+            x_axis_label="Time",
+            y_axis_label="box_peak [Counts]",
+            x_axis_type="datetime",
+        )
+        plot.circle(
+            x="time_arr",
+            y="nrsrapid_f140x",
+            source=self.source,
+            color="purple",
+            size=7,
+            fill_alpha=0.4,
+            view=self.date_view,
+        )
+        plot.circle(
+            x="time_arr",
+            y="nrsrapidd6_f140x",
+            source=self.source,
+            color="purple",
+            size=12,
+            fill_alpha=0.4,
+            view=self.date_view,
+        )
+        plot.triangle(
+            x="time_arr",
+            y="nrsrapid_f110w",
+            source=self.source,
+            color="orange",
+            size=8,
+            fill_alpha=0.4,
+            view=self.date_view,
+        )
+        plot.triangle(
+            x="time_arr",
+            y="nrsrapidd6_f110w",
+            source=self.source,
+            color="orange",
+            size=13,
+            fill_alpha=0.4,
+            view=self.date_view,
+        )
+        plot.square(
+            x="time_arr",
+            y="nrsrapid_clear",
+            source=self.source,
+            color="gray",
+            size=7,
+            fill_alpha=0.4,
+            view=self.date_view,
+        )
+        plot.square(
+            x="time_arr",
+            y="nrsrapidd6_clear",
+            source=self.source,
+            color="gray",
+            size=12,
+            fill_alpha=0.4,
+            view=self.date_view,
+        )
 
         # add count saturation warning lines
         loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
-        hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
-        hline2 = Span(location=loc2, dimension='width', line_color='yellow', line_width=3)
-        hline3 = Span(location=loc3, dimension='width', line_color='red', line_width=3)
+        hline1 = Span(
+            location=loc1, dimension="width", line_color="green", line_width=3
+        )
+        hline2 = Span(
+            location=loc2, dimension="width", line_color="yellow", line_width=3
+        )
+        hline3 = Span(location=loc3, dimension="width", line_color="red", line_width=3)
         plot.renderers.extend([hline1, hline2, hline3])
 
-        label1 = Label(x=time_arr[-1], y=loc1, y_units='data', text='45000 counts')
-        label2 = Label(x=time_arr[-1], y=loc2, y_units='data', text='50000 counts')
-        label3 = Label(x=time_arr[-1], y=loc3, y_units='data', text='60000 counts')
+        label1 = Label(x=time_arr[-1], y=loc1, y_units="data", text="45000 counts")
+        label2 = Label(x=time_arr[-1], y=loc2, y_units="data", text="50000 counts")
+        label3 = Label(x=time_arr[-1], y=loc3, y_units="data", text="60000 counts")
         plot.add_layout(label1)
         plot.add_layout(label2)
         plot.add_layout(label3)
@@ -501,14 +636,16 @@ class WATA():
 
         # add tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
-                          ('Visit ID', '@visit_id'),
-                          ('TA status', '@ta_status'),
-                          ('Filter', '@tafilter'),
-                          ('Readout', '@readout'),
-                          ('Date-Obs', '@date_obs'),
-                          ('Box peak', '@max_val_box'),
-                          ('--------', '----------------')]
+        hover.tooltips = [
+            ("File name", "@filename"),
+            ("Visit ID", "@visit_id"),
+            ("TA status", "@ta_status"),
+            ("Filter", "@tafilter"),
+            ("Readout", "@readout"),
+            ("Date-Obs", "@date_obs"),
+            ("Box peak", "@max_val_box"),
+            ("--------", "----------------"),
+        ]
         plot.add_tools(hover)
 
         # add shared selection tools
@@ -517,7 +654,7 @@ class WATA():
         return plot
 
     def get_unsuccessful_ta(self, arr_name):
-        """ Find unsuccessful TAs in this set (to be plotted in red)
+        """Find unsuccessful TAs in this set (to be plotted in red)
         Parameters
         ----------
             arr_name: str, name of the array of interest
@@ -538,7 +675,7 @@ class WATA():
         return new_list_failed, new_list_else
 
     def plt_centroid(self):
-        """ Plot the WATA centroid
+        """Plot the WATA centroid
         Parameters
         ----------
             None
@@ -548,8 +685,8 @@ class WATA():
         """
         # get the failed TAs to plot in red
         if "corr_col_failed" not in self.source.data:
-            corr_col_failed, corr_col_not_failed = self.get_unsuccessful_ta('corr_col')
-            corr_row_failed, corr_row_not_failed = self.get_unsuccessful_ta('corr_row')
+            corr_col_failed, corr_col_not_failed = self.get_unsuccessful_ta("corr_col")
+            corr_row_failed, corr_row_not_failed = self.get_unsuccessful_ta("corr_row")
 
             # add these to the bokeh data structure
             self.source.data["corr_col_failed"] = corr_col_failed
@@ -558,32 +695,47 @@ class WATA():
             self.source.data["corr_row_not_failed"] = corr_row_not_failed
 
         # create a new bokeh plot
-        plot = figure(title="WATA Centroid", x_axis_label='Column',
-                      y_axis_label='Row')
+        plot = figure(title="WATA Centroid", x_axis_label="Column", y_axis_label="Row")
         limits = [10, 25]
         plot.x_range = Range1d(limits[0], limits[1])
         plot.y_range = Range1d(limits[0], limits[1])
-        plot.circle(x='corr_col_not_failed', y='corr_row_not_failed', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5, view=self.date_view)
-        plot.circle(x='corr_col_failed', y='corr_row_failed', source=self.source,
-                    color="red", size=7, fill_alpha=0.5, view=self.date_view)
+        plot.circle(
+            x="corr_col_not_failed",
+            y="corr_row_not_failed",
+            source=self.source,
+            color="blue",
+            size=7,
+            fill_alpha=0.5,
+            view=self.date_view,
+        )
+        plot.circle(
+            x="corr_col_failed",
+            y="corr_row_failed",
+            source=self.source,
+            color="red",
+            size=7,
+            fill_alpha=0.5,
+            view=self.date_view,
+        )
         plot.x_range = Range1d(0.0, 32.0)
         plot.y_range = Range1d(0.0, 32.0)
 
         # add tooltips
         hover = HoverTool()
-        hover.tooltips = [('File name', '@filename'),
-                          ('Visit ID', '@visit_id'),
-                          ('TA status', '@ta_status'),
-                          ('Filter', '@tafilter'),
-                          ('Readout', '@readout'),
-                          ('Date-Obs', '@date_obs'),
-                          ('Magnitude', '@star_mag'),
-                          ('Box Centr Col', '@corr_col'),
-                          ('Box Centr Row', '@corr_row'),
-                          ('Det Centr Col', '@detector_final_col'),
-                          ('Det Centr Row', '@detector_final_row'),
-                          ('--------', '----------------')]
+        hover.tooltips = [
+            ("File name", "@filename"),
+            ("Visit ID", "@visit_id"),
+            ("TA status", "@ta_status"),
+            ("Filter", "@tafilter"),
+            ("Readout", "@readout"),
+            ("Date-Obs", "@date_obs"),
+            ("Magnitude", "@star_mag"),
+            ("Box Centr Col", "@corr_col"),
+            ("Box Centr Row", "@corr_row"),
+            ("Det Centr Col", "@detector_final_col"),
+            ("Det Centr Row", "@detector_final_row"),
+            ("--------", "----------------"),
+        ]
         plot.add_tools(hover)
 
         # add shared selection tools
@@ -595,8 +747,8 @@ class WATA():
         """Set up a date range filter, defaulting to the last week of data."""
         end_date = datetime.now(tz=timezone.utc)
         one_week_ago = end_date.date() - timedelta(days=7)
-        first_data_point = np.min(self.source.data['time_arr']).date()
-        last_data_point = np.max(self.source.data['time_arr']).date()
+        first_data_point = np.min(self.source.data["time_arr"]).date()
+        last_data_point = np.max(self.source.data["time_arr"]).date()
         if last_data_point < one_week_ago:
             # keep at least one point in the plot if there was
             # no TA data this week
@@ -606,15 +758,24 @@ class WATA():
 
         # allowed range is from the first ever data point to today
         self.date_range = DateRangeSlider(
-            title="Date range displayed", start=first_data_point,
-            end=end_date, value=(start_date, end_date), step=1)
+            title="Date range displayed",
+            start=first_data_point,
+            end=end_date,
+            value=(start_date, end_date),
+            step=1,
+        )
 
-        callback = CustomJS(args=dict(s=self.source), code="""
+        callback = CustomJS(
+            args=dict(s=self.source),
+            code="""
             s.change.emit();
-        """)
-        self.date_range.js_on_change('value', callback)
+        """,
+        )
+        self.date_range.js_on_change("value", callback)
 
-        filt = CustomJSFilter(args=dict(slider=self.date_range), code="""
+        filt = CustomJSFilter(
+            args=dict(slider=self.date_range),
+            code="""
                 var indices = [];
                 var start = slider.value[0];
                 var end = slider.value[1];
@@ -628,7 +789,8 @@ class WATA():
                     }
                 }
                 return indices;
-                """)
+                """,
+        )
         self.date_view = CDSView(source=self.source, filters=[filt])
 
     def mk_plt_layout(self):
@@ -671,8 +833,8 @@ class WATA():
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}TaQueryHistory'.format(mixed_case_name))
-        self.stats_table = eval('{}TaStats'.format(mixed_case_name))
+        self.query_table = eval("{}TaQueryHistory".format(mixed_case_name))
+        self.stats_table = eval("{}TaStats".format(mixed_case_name))
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -685,14 +847,21 @@ class WATA():
             Date (in MJD) of the ending range of the previous MAST query
             where the wata monitor was run.
         """
-        filters = {"aperture__iexact": self.aperture,
-                   "run_monitor": True}
+        filters = {"aperture__iexact": self.aperture, "run_monitor": True}
 
-        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
+        record = (
+            self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
+        )
 
         if record is None:
             query_result = self.query_very_beginning
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, self.query_very_beginning)))
+            logging.info(
+                (
+                    "\tNo query history for {}. Beginning search date will be set to {}.".format(
+                        self.aperture, self.query_very_beginning
+                    )
+                )
+            )
         else:
             query_result = record.end_time_mjd
 
@@ -714,70 +883,22 @@ class WATA():
         # set the value to add
         val = -999
         # return the right type of value
-        if keywd_dict['type'] == float:
+        if keywd_dict["type"] == float:
             val = float(val)
-        if keywd_dict['type'] == str:
+        if keywd_dict["type"] == str:
             val = str(val)
         val4dict = val
         return val4dict
 
-    def get_data_from_html(self, html_file):
-        """
-        This function gets the data from the Bokeh html file created with
-        the NIRSpec TA monitor script.
-        Parameters
-        ----------
-        html_file: str
-            File created by the monitor script
-        Returns
-        -------
-        prev_data: pandas dataframe
-            Contains all expected columns to be combined with the new data
-        latest_prev_obs: str
-            Date of the latest observation in the previously plotted data
-        """
+    def get_previous_data(self):
+        """This method gets data WATA Django model. Replacing `get_data_from_html`"""
 
-        # open the html file and get the contents
-        htmlFileToBeOpened = open(html_file, "r")
-        contents = htmlFileToBeOpened.read()
-        soup = BeautifulSoup(contents, 'html.parser')
+        previous_data = pd.read_csv(self.previous_data_file)
 
-        # now read as python dictionary and search for the data
-        prev_data_dict = {}
-        html_data = json.loads(soup.find('script', type='application/json').string)
-        for key, val in html_data.items():
-            if 'roots' in val:   # this is a dictionary
-                if 'references' in val['roots']:
-                    for item in val['roots']['references']:    # this is a list
-                        # each item of the list is a dictionary
-                        for item_key, item_val in item.items():
-                            if 'data' in item_val:
-                                # finally the data dictionary!
-                                for data_key, data_val in item_val['data'].items():
-                                    prev_data_dict[data_key] = data_val
-        # find the latest observation date
-        time_in_millis = max(prev_data_dict['time_arr'])
-        latest_prev_obs = Time(time_in_millis / 1000., format='unix')
-        latest_prev_obs = latest_prev_obs.mjd
-        # put data in expected format
-        prev_data_expected_cols = {}
-        visit_ids = prev_data_dict['visit_id']
-        for file_keywd, keywd_dict in self.keywds2extract.items():
-            key = keywd_dict['name']
-            if key in prev_data_dict:
-                # case when the html stored thing is just an object but does not have data
-                if len(prev_data_dict[key]) < len(visit_ids):
-                    list4dict = self.get_expected_data(keywd_dict, visit_ids)
-                    prev_data_expected_cols[key] = list4dict
-                # case when nothing special to do
-                else:
-                    prev_data_expected_cols[key] = prev_data_dict[key]
-            else:
-                list4dict = self.get_expected_data(keywd_dict, visit_ids)
-                prev_data_expected_cols[key] = list4dict
-        # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_expected_cols)
-        return prev_data, latest_prev_obs
+        previous_time = previous_data["date_obs"].max()
+        latest_prev_obs = Time(previous_time, format="isot").mjd
+
+        return previous_data, latest_prev_obs
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
@@ -795,10 +916,10 @@ class WATA():
         """
         files = []
         for list_element in file_info:
-            if 'filename' in list_element:
-                files.append(list_element['filename'])
-            elif 'root_name' in list_element:
-                files.append(list_element['root_name'])
+            if "filename" in list_element:
+                files.append(list_element["filename"])
+            elif "root_name" in list_element:
+                files.append(list_element["root_name"])
         return files
 
     def get_uncal_names(self, file_list):
@@ -814,13 +935,13 @@ class WATA():
         """
         good_files = []
         for filename in file_list:
-            if filename.endswith('.fits'):
+            if filename.endswith(".fits"):
                 # MAST names look like: jw01133003001_02101_00001_nrs2_cal.fits
-                suffix2replace = filename.split('_')[-1]
-                filename = filename.replace(suffix2replace, 'uncal.fits')
+                suffix2replace = filename.split("_")[-1]
+                filename = filename.replace(suffix2replace, "uncal.fits")
             else:
                 # rootnames look like: jw01133003001_02101_00001_nrs2
-                filename += '_uncal.fits'
+                filename += "_uncal.fits"
             if filename not in good_files:
                 good_files.append(filename)
         return good_files
@@ -838,13 +959,19 @@ class WATA():
         # check if previous file exists and read the data from it
         if os.path.isfile(output_success_ta_txtfile):
             # now rename the previous file, for backup
-            os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_wata_success.txt"))
+            os.rename(
+                output_success_ta_txtfile,
+                os.path.join(self.output_dir, "prev_wata_success.txt"),
+            )
         # get the new data
         ta_success, ta_failure = [], []
-        filenames, ta_status = self.wata_data.loc[:,'filename'], self.wata_data.loc[:,'ta_status']
+        filenames, ta_status = (
+            self.wata_data.loc[:, "filename"],
+            self.wata_data.loc[:, "ta_status"],
+        )
         for fname, ta_stat in zip(filenames, ta_status):
             # select the appropriate list to append to
-            if ta_stat == 'SUCCESSFUL':
+            if ta_stat == "SUCCESSFUL":
                 ta_success.append(fname)
             else:
                 ta_failure.append(fname)
@@ -862,9 +989,11 @@ class WATA():
                 for _ in range(remaining_items):
                     ta_list.append("")
         # write the new output file
-        with open(output_success_ta_txtfile, 'w+') as txt:
+        with open(output_success_ta_txtfile, "w+") as txt:
             txt.write("# WATA successes and failure file names \n")
-            filehdr1 = "# {} Total successful and {} total failed WATA ".format(successes, failures)
+            filehdr1 = "# {} Total successful and {} total failed WATA ".format(
+                successes, failures
+            )
             filehdr2 = "# {:<50} {:<50}".format("Successes", "Failures")
             txt.write(filehdr1 + "\n")
             txt.write(filehdr2 + "\n")
@@ -877,25 +1006,25 @@ class WATA():
         This function gets the data from the Bokeh html file created with
         the NIRSpec TA monitor script.
         """
-        self.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor')
+        self.output_dir = os.path.join(get_config()["outputs"], "wata_monitor")
         ensure_dir_exists(self.output_dir)
 
         self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
         if not os.path.isfile(self.output_file_name):
-            return 'No WATA data available', '', ''
+            return "No WATA data available", "", ""
 
         # open the html file and get the contents
         with open(self.output_file_name, "r") as html_file:
             contents = html_file.read()
 
-        soup = BeautifulSoup(contents, 'html.parser').body
+        soup = BeautifulSoup(contents, "html.parser").body
 
         # find the script elements
-        script1 = str(soup.find('script', type='text/javascript'))
-        script2 = str(soup.find('script', type='application/json'))
+        script1 = str(soup.find("script", type="text/javascript"))
+        script2 = str(soup.find("script", type="application/json"))
 
         # find the div element
-        div = str(soup.find('div', class_='bk-root'))
+        div = str(soup.find("div", class_="bk-root"))
         return div, script1, script2
 
     @log_fail
@@ -903,7 +1032,7 @@ class WATA():
     def run(self):
         """The main method. See module docstrings for further details."""
 
-        logging.info('Begin logging for wata_monitor')
+        logging.info("Begin logging for wata_monitor")
 
         # define WATA variables
         self.instrument = "nirspec"
@@ -913,74 +1042,98 @@ class WATA():
         self.identify_tables()
 
         # Get the output directory and setup a directory to store the data
-        self.output_dir = os.path.join(get_config()['outputs'], 'wata_monitor')
+        self.output_dir = os.path.join(get_config()["outputs"], "wata_monitor")
         ensure_dir_exists(self.output_dir)
         # Set up directories for the copied data
-        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-        self.data_dir = os.path.join(self.output_dir,
-                                     'data/{}_{}'.format(self.instrument.lower(),
-                                                         self.aperture.lower()))
+        ensure_dir_exists(os.path.join(self.output_dir, "data"))
+        self.data_dir = os.path.join(
+            self.output_dir,
+            "data/{}_{}".format(self.instrument.lower(), self.aperture.lower()),
+        )
         ensure_dir_exists(self.data_dir)
 
         # Locate the record of most recent MAST search; use this time
-        self.query_start = self.most_recent_search()
         # get the data of the plots previously created and set the query start date
-        self.prev_data = None
+        self.previous_data_file = os.path.join(self.output_dir, "wata_data.csv")
         self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
-        logging.info('\tNew output plot file will be written as: {}'.format(self.output_file_name))
-        if os.path.isfile(self.output_file_name):
-            self.prev_data, self.query_start = self.get_data_from_html(self.output_file_name)
-            logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
-            # copy this plot to a previous version
-            shutil.copyfile(self.output_file_name, os.path.join(self.output_dir, "prev_wata_layout.html"))
-        # fail save - start from the beginning if there is no html file
+        logging.info(
+            "\tNew output plot file will be written as: {}".format(
+                self.output_file_name
+            )
+        )
+        # Query for TA records, if no records found, start from beginning.
+        if os.path.isfile(self.previous_data_file):
+            self.prev_data, self.query_start = self.get_previous_data()
+            logging.info(
+                "\tPrevious data read from django model: {}".format(self.stats_table)
+            )
+        # fail save - start from the beginning if there are no records
         else:
+            self.prev_data = None
             self.query_start = self.query_very_beginning
-            logging.info('\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)')
+            logging.info(
+                "\tPrevious output data file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)"
+            )
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
-        logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-
-        # Query for data using the aperture and the time of the
-        # most recent previous search as the starting time
-
-        # via MAST:
-        # new_entries = monitor_utils.mast_query_ta(
-        #     self.instrument, self.aperture, self.query_start, self.query_end)
+        logging.info("\tQuery times: {} {}".format(self.query_start, self.query_end))
 
         # via django model:
         new_entries = monitor_utils.model_query_ta(
-            self.instrument, self.aperture, self.query_start, self.query_end)
+            self.instrument, self.aperture, self.query_start, self.query_end
+        )
         wata_entries = len(new_entries)
-        logging.info('\tQuery has returned {} WATA files for {}, {}.'.format(wata_entries, self.instrument, self.aperture))
+        logging.info(
+            "\tQuery has returned {} WATA files for {}, {}.".format(
+                wata_entries, self.instrument, self.aperture
+            )
+        )
 
         # Filter new entries to only keep uncal files
         new_entries = self.pull_filenames(new_entries)
         new_entries = self.get_uncal_names(new_entries)
         wata_entries = len(new_entries)
-        logging.info('\tThere are {} uncal TA files to run the WATA monitor.'.format(wata_entries))
+        logging.info(
+            "\tThere are {} uncal TA files to run the WATA monitor.".format(
+                wata_entries
+            )
+        )
 
         # Get full paths to the files
         new_filenames = []
         for filename_of_interest in new_entries:
-            if (self.prev_data is not None
-                    and filename_of_interest in self.prev_data['filename'].values):
-                logging.warning('\t\tFile {} already in previous data. Skipping.'.format(filename_of_interest))
+            if (
+                self.prev_data is not None
+                and filename_of_interest in self.prev_data["filename"].values
+            ):
+                logging.warning(
+                    "\t\tFile {} already in previous data. Skipping.".format(
+                        filename_of_interest
+                    )
+                )
                 continue
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
-                logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
+                logging.warning(
+                    "\tFile {} included for processing.".format(filename_of_interest)
+                )
             except FileNotFoundError:
-                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
+                logging.warning(
+                    "\t\tUnable to locate {} in filesystem. Not including in processing.".format(
+                        filename_of_interest
+                    )
+                )
 
         if len(new_filenames) == 0:
-            logging.warning('\t\t ** Unable to locate any file in filesystem. Nothing to process. ** ')
+            logging.warning(
+                "\t\t ** Unable to locate any file in filesystem. Nothing to process. ** "
+            )
 
         # Run the monitor on any new files
         self.script, self.div, self.wata_data = None, None, None
         monitor_run = False
-        if len(new_filenames) > 0:   # new data was found
+        if len(new_filenames) > 0:  # new data was found
             # get the data
             self.new_wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
             if len(no_ta_ext_msgs) >= 1:
@@ -990,49 +1143,61 @@ class WATA():
                 # concatenate with previous data
                 if self.prev_data is not None:
                     self.wata_data = pd.concat([self.prev_data, self.new_wata_data])
-                    logging.info('\tData from previous html output file and new data concatenated.')
+                    logging.info(
+                        "\tData from previous data output file and new data concatenated."
+                    )
                 else:
                     self.wata_data = self.new_wata_data
-                    logging.info('\tOnly new data was found - no previous html file.')
+                    logging.info("\tOnly new data was found - no previous data file.")
             else:
-                logging.info('\tWATA monitor skipped. No WATA data found.')
+                logging.info("\tWATA monitor skipped. No WATA data found.")
         # make sure to return the old data if no new data is found
         elif self.prev_data is not None:
             self.wata_data = self.prev_data
-            logging.info('\tNo new data found. Using data from previous html output file.')
+            logging.info(
+                "\tNo new data found. Using data from previous data output file."
+            )
         # do the plots if there is any data
         if self.wata_data is not None:
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
-            logging.info('\tOutput html plot file created: {}'.format(self.output_file_name))
-            wata_files_used4plots = len(self.wata_data['visit_id'])
-            logging.info('\t{} WATA files were used to make plots.'.format(wata_files_used4plots))
+            logging.info(
+                "\tOutput html plot file created: {}".format(self.output_file_name)
+            )
+            wata_files_used4plots = len(self.wata_data["visit_id"])
+            logging.info(
+                "\t{} WATA files were used to make plots.".format(wata_files_used4plots)
+            )
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
-            logging.info('\tWATA status file was updated')
+            logging.info("\tWATA status file was updated")
+            self.wata_data = self.wata_data.sort_values(by=['date_obs'])
+            self.wata_data.to_csv(self.previous_data_file, index=False)
+            logging.info("\tWrote new previous data file to {}".format(self.previous_data_file))
         else:
-            logging.info('\tWATA monitor skipped.')
+            logging.info("\tWATA monitor skipped.")
 
         # Update the query history
-        new_entry = {'instrument': self.instrument,
-                     'aperture': self.aperture,
-                     'start_time_mjd': self.query_start,
-                     'end_time_mjd': self.query_end,
-                     'entries_found': wata_entries,
-                     'files_found': len(new_filenames),
-                     'run_monitor': monitor_run,
-                     'entry_date': datetime.now()}
+        new_entry = {
+            "instrument": self.instrument,
+            "aperture": self.aperture,
+            "start_time_mjd": self.query_start,
+            "end_time_mjd": self.query_end,
+            "entries_found": wata_entries,
+            "files_found": len(new_filenames),
+            "run_monitor": monitor_run,
+            "entry_date": datetime.now(),
+        }
 
         entry = self.query_table(**new_entry)
         entry.save()
-        logging.info('\tUpdated the query history table')
+        logging.info("\tUpdated the query history table")
 
-        logging.info('WATA Monitor completed successfully.')
+        logging.info("WATA Monitor completed successfully.")
 
 
-if __name__ == '__main__':
-
-    module = os.path.basename(__file__).strip('.py')
+if __name__ == "__main__":
+    module = os.path.basename(__file__).strip(".py")
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = WATA()
