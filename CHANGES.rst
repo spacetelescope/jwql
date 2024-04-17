@@ -1,5 +1,16 @@
 ## What's Changed
 
+1.2.7 (2024-04-18)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Import monitor models by @bhilbert4
+
+
 1.2.6 (2024-04-15)
 ==================
 
