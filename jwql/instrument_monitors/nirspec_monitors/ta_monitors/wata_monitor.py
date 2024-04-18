@@ -78,8 +78,8 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     django.setup()
 
     from jwql.website.apps.jwql.monitor_models.ta import (
+        NIRSpecWataStats,
         NIRSpecTaQueryHistory,
-        NIRSpecTaStats,
     )  # noqa: E402 (module level import not at top of file)
 
 
@@ -247,8 +247,8 @@ class WATA:
 
     def add_time_column(self):
         """Add time column to data source, to be used by all plots."""
-        date_obs = self.source.data['date_obs']
-        if 'time_arr' not in self.source.data:
+        date_obs = self.source.data["date_obs"]
+        if "time_arr" not in self.source.data:
             time_arr = []
             for do_str in date_obs:
                 # convert time string into an array of time (this is in UT)
@@ -1142,7 +1142,9 @@ class WATA:
             if self.new_wata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
-                    self.wata_data = pd.concat([self.prev_data, self.new_wata_data], ignore_index=True)
+                    self.wata_data = pd.concat(
+                        [self.prev_data, self.new_wata_data], ignore_index=True
+                    )
                     logging.info(
                         "\tData from previous data output file and new data concatenated."
                     )
@@ -1171,9 +1173,11 @@ class WATA:
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
             logging.info("\tWATA status file was updated")
-            self.wata_data = self.wata_data.sort_values(by=['date_obs'])
+            self.wata_data = self.wata_data.sort_values(by=["date_obs"])
             self.wata_data.to_csv(self.previous_data_file)
-            logging.info("\tWrote new previous data file to {}".format(self.previous_data_file))
+            logging.info(
+                "\tWrote new previous data file to {}".format(self.previous_data_file)
+            )
         else:
             logging.info("\tWATA monitor skipped.")
 
