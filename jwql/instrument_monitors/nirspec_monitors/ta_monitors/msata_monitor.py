@@ -1021,42 +1021,15 @@ class MSATA():
 
         return query_result
 
-    def get_data_from_html(self, html_file):
-        """
-        This function gets the data from the Bokeh html file created with
-        the NIRSpec TA monitor script.
-        Parameters
-        ----------
-        html_file: str
-            File created by the monitor script
-        Returns
-        -------
-        prev_data_dict: dict
-            Dictionary containing all data used in the plots
-        """
+    def get_previous_data(self):
+        """This method gets data WATA Django model. Replacing `get_data_from_html`"""
 
-        # open the html file and get the contents
-        htmlFileToBeOpened = open(html_file, "r")
-        contents = htmlFileToBeOpened.read()
-        soup = BeautifulSoup(contents, 'html.parser')
+        previous_data = pd.read_csv(self.previous_data_file, index_col=0)
 
-        # now read as python dictionary and search for the data
-        prev_data_dict = {}
-        html_data = json.loads(soup.find('script', type='application/json').string)
-        for key, val in html_data.items():
-            if 'roots' in val:   # this is a dictionary
-                if 'references' in val['roots']:
-                    for item in val['roots']['references']:    # this is a list
-                        # each item of the list is a dictionary
-                        for item_key, item_val in item.items():
-                            if 'data' in item_val:
-                                # finally the data dictionary!
-                                for data_key, data_val in item_val['data'].items():
-                                    prev_data_dict[data_key] = data_val
-        # set to None if dictionary is empty
-        if not bool(prev_data_dict):
-            prev_data_dict = None
-        return prev_data_dict
+        previous_time = previous_data["date_obs"].max()
+        latest_prev_obs = Time(previous_time, format="isot").mjd
+
+        return previous_data, latest_prev_obs
 
     def construct_expected_data(self, keywd_dict, tot_number_of_stars):
         """This function creates the list to append to the dictionary key in the expected format.
@@ -1092,53 +1065,6 @@ class MSATA():
                     list2append.append(val)
                 list4dict.append(list2append)
         return list4dict
-
-    def prev_data2expected_format(self, prev_data_dict):
-        """Add all the necessary columns to match expected format to combine previous
-        and new data.
-        Parameters
-        ----------
-        prev_data_dict: dictionary
-            Dictionary containing all data used in the Bokeh html file plots
-        Returns
-        -------
-        prev_data: pandas dataframe
-            Contains all expected columns to be combined with the new data
-        latest_prev_obs: str
-            Date of the latest observation in the previously plotted data
-        """
-        # remember that the time array created is in milliseconds, removing to get time object
-        time_in_millis = max(prev_data_dict['time_arr'])
-        latest_prev_obs = Time(time_in_millis / 1000., format='unix')
-        latest_prev_obs = latest_prev_obs.mjd
-        prev_data_expected_cols = {}
-        tot_number_of_stars = prev_data_dict['tot_number_of_stars']
-        for file_keywd, keywd_dict in self.keywds2extract.items():
-            key = keywd_dict['name']
-            if key in prev_data_dict:
-                # case when all the info of all visits and ref stars is in the same list
-                if len(prev_data_dict[key]) > len(tot_number_of_stars):
-                    correct_arrangement = []
-                    correct_start_idx, correct_end_idx = 0, tot_number_of_stars[0]
-                    for idx, tns in enumerate(tot_number_of_stars):
-                        list2append = prev_data_dict[key][correct_start_idx: correct_end_idx]
-                        correct_arrangement.append(list2append)
-                        correct_start_idx = correct_end_idx
-                        correct_end_idx += tns
-                    prev_data_expected_cols[key] = correct_arrangement
-                # case when the html stored thing is just an object but does not have data
-                elif len(prev_data_dict[key]) < len(tot_number_of_stars):
-                    list4dict = self.construct_expected_data(keywd_dict, tot_number_of_stars)
-                    prev_data_expected_cols[key] = list4dict
-                # case when nothing special to do
-                else:
-                    prev_data_expected_cols[key] = prev_data_dict[key]
-            else:
-                list4dict = self.construct_expected_data(keywd_dict, tot_number_of_stars)
-                prev_data_expected_cols[key] = list4dict
-        # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_expected_cols)
-        return prev_data, latest_prev_obs
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
@@ -1288,19 +1214,19 @@ class MSATA():
         ensure_dir_exists(self.data_dir)
 
         # Locate the record of most recent MAST search; use this time
-        self.query_start = self.most_recent_search()
+        # self.query_start = self.most_recent_search()
         # get the data of the plots previously created and set the query start date
-        self.prev_data = None
+        self.previous_data_file = os.path.join(self.output_dir, "msata_data.csv")
         self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
         logging.info('\tNew output plot file will be written as: {}'.format(self.output_file_name))
-        if os.path.isfile(self.output_file_name):
-            prev_data_dict = self.get_data_from_html(self.output_file_name)
-            self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
-            logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+        if os.path.isfile(self.previous_data_file):
+            self.prev_data, self.query_start = self.get_previous_data()
+            logging.info('\tPrevious data read from file: {}'.format(self.previous_data_file))
             # move this plot to a previous version
             shutil.copyfile(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
         # fail save - start from the beginning if there is no html file
         else:
+            self.prev_data = None
             self.query_start = self.query_very_beginning
             logging.info('\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)')
 
@@ -1356,8 +1282,8 @@ class MSATA():
             if self.new_msata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
-                    self.msata_data = pd.concat([self.prev_data, self.new_msata_data])
-                    logging.info('\tData from previous html output file and new data concatenated.')
+                    self.msata_data = pd.concat([self.prev_data, self.new_msata_data], ignore_index=True)
+                    logging.info('\tData from previous data output file and new data concatenated.')
                 else:
                     self.msata_data = self.new_msata_data
                     logging.info('\tOnly new data was found - no previous html file.')
@@ -1369,6 +1295,8 @@ class MSATA():
             logging.info('\tNo new data found. Using data from previous html output file.')
         # make the plots if there is data
         if self.msata_data is not None:
+            logging.info('\t{}'.format(self.msata_data))
+            logging.info('\tMSATA DATA SHAPE: {}'.format(self.msata_data.shape))
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
             logging.info('\tOutput html plot file created: {}'.format(self.output_file_name))
@@ -1377,6 +1305,9 @@ class MSATA():
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
             logging.info('\tMSATA status file was updated')
+            self.msata_data = self.msata_data.sort_values(by=['date_obs'])
+            self.msata_data.to_csv(self.previous_data_file)
+            logging.info("\tWrote new previous data file to {}".format(self.previous_data_file))
         else:
             logging.info('\tMSATA monitor skipped.')
 

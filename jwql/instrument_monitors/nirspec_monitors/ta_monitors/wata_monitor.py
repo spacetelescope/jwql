@@ -893,7 +893,7 @@ class WATA:
     def get_previous_data(self):
         """This method gets data WATA Django model. Replacing `get_data_from_html`"""
 
-        previous_data = pd.read_csv(self.previous_data_file)
+        previous_data = pd.read_csv(self.previous_data_file, index_col=0)
 
         previous_time = previous_data["date_obs"].max()
         latest_prev_obs = Time(previous_time, format="isot").mjd
@@ -1142,7 +1142,7 @@ class WATA:
             if self.new_wata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
-                    self.wata_data = pd.concat([self.prev_data, self.new_wata_data])
+                    self.wata_data = pd.concat([self.prev_data, self.new_wata_data], ignore_index=True)
                     logging.info(
                         "\tData from previous data output file and new data concatenated."
                     )
@@ -1172,7 +1172,7 @@ class WATA:
             self.update_ta_success_txtfile()
             logging.info("\tWATA status file was updated")
             self.wata_data = self.wata_data.sort_values(by=['date_obs'])
-            self.wata_data.to_csv(self.previous_data_file, index=False)
+            self.wata_data.to_csv(self.previous_data_file)
             logging.info("\tWrote new previous data file to {}".format(self.previous_data_file))
         else:
             logging.info("\tWATA monitor skipped.")
