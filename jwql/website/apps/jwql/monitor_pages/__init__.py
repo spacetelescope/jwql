@@ -13,7 +13,13 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from jwql.website.apps.jwql.monitor_models.bad_pixel import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats, NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
     from jwql.website.apps.jwql.monitor_models.bad_pixel import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 
+    from jwql.website.apps.jwql.monitor_models.bias import NIRCamBiasQueryHistory
+
     from jwql.website.apps.jwql.monitor_models.claw import NIRCamClawQueryHistory, NIRCamClawStats
+
+    from jwql.website.apps.jwql.monitor_models.common import Monitor
+
+    from jwql.website.apps.jwql.monitor_models.cosmic_ray import FGSCosmicRayQueryHistory
 
     from jwql.website.apps.jwql.monitor_models.dark_current import FGSDarkDarkCurrent, FGSDarkPixelStats, FGSDarkQueryHistory
     from jwql.website.apps.jwql.monitor_models.dark_current import MIRIDarkDarkCurrent, MIRIDarkPixelStats, MIRIDarkQueryHistory
@@ -27,8 +33,12 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from jwql.website.apps.jwql.monitor_models.edb import NIRISSEdbBlocksStats, NIRISSEdbDailyStats, NIRISSEdbEveryChangeStats, NIRISSEdbTimeIntervalStats, NIRISSEdbTimeStats
     from jwql.website.apps.jwql.monitor_models.edb import NIRSpecEdbBlocksStats, NIRSpecEdbDailyStats, NIRSpecEdbEveryChangeStats, NIRSpecEdbTimeIntervalStats, NIRSpecEdbTimeStats
 
+    from jwql.website.apps.jwql.monitor_models.grating import NIRSpecGratingQueryHistory
+
     from jwql.website.apps.jwql.monitor_models.readnoise import FGSReadnoiseQueryHistory, FGSReadnoiseStats
     from jwql.website.apps.jwql.monitor_models.readnoise import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
     from jwql.website.apps.jwql.monitor_models.readnoise import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
     from jwql.website.apps.jwql.monitor_models.readnoise import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
     from jwql.website.apps.jwql.monitor_models.readnoise import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
+
+    from jwql.website.apps.jwql.monitor_models.ta import MIRITaQueryHistory
