@@ -703,6 +703,7 @@ MONITOR_TABLE_NAMES = [
     "nircam_dark_dark_current", "nircam_dark_pixel_stats", "nircam_dark_query_history",
     "niriss_dark_dark_current", "niriss_dark_pixel_stats", "niriss_dark_query_history",
     "nirspec_dark_dark_current", "nirspec_dark_pixel_stats", "nirspec_dark_query_history",
+    "nirspec_grating_query_history",
     "fgs_edb_blocks_stats", "fgs_edb_daily_stats", "fgs_edb_every_change_stats", "fgs_edb_time_interval_stats", "fgs_edb_time_stats",
     "miri_edb_blocks_stats", "miri_edb_daily_stats", "miri_edb_every_change_stats", "miri_edb_time_interval_stats", "miri_edb_time_stats",
     "nircam_edb_blocks_stats", "nircam_edb_daily_stats", "nircam_edb_every_change_stats", "nircam_edb_time_interval_stats", "nircam_edb_time_stats",
