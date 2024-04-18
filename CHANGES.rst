@@ -1,5 +1,16 @@
 ## What's Changed
 
+1.2.8 (2024-04-18)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- final model define for faking by @BradleySappington
+
+
 1.2.7 (2024-04-18)
 ==================
 
