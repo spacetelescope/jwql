@@ -112,6 +112,10 @@ class WATA:
 
     def __init__(self):
         """Initialize an instance of the WATA class"""
+        # define WATA variables
+        self.instrument = "nirspec"
+        self.aperture = "NRS_S1600A1_SLIT"
+
         # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
         self.query_very_beginning = 59607.0
 
@@ -830,11 +834,28 @@ class WATA:
         script, div = components(box_layout)
         return script, div
 
+    def file_exists_in_database(self, filename):
+        """Checks if an entry for filename exists in the readnoise stats
+        database.
+
+        Parameters
+        ----------
+        filename : str
+            The full path to the uncal filename.
+
+        Returns
+        -------
+        file_exists : bool
+            ``True`` if filename exists in the readnoise stats database.
+        """
+        results = self.stats_table.objects.filter(filename__iexact=filename).values()
+        return len(results) != 0
+
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
         self.query_table = eval("{}TaQueryHistory".format(mixed_case_name))
-        self.stats_table = eval("{}TaStats".format(mixed_case_name))
+        self.stats_table = eval("{}WataStats".format(mixed_case_name))
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -866,39 +887,6 @@ class WATA:
             query_result = record.end_time_mjd
 
         return query_result
-
-    def get_expected_data(self, keywd_dict, tot_number_of_stars):
-        """This function gets the value append to the dictionary key in the expected format.
-        Parameters
-        ----------
-        keywd_dict: dictonary
-            Dictionary corresponding to the file keyword
-        tot_number_of_stars: integer
-            Number of stars in the observation
-        Returns
-        -------
-        val4dict: value
-            Value appended to the data structure; either string, float or integer
-        """
-        # set the value to add
-        val = -999
-        # return the right type of value
-        if keywd_dict["type"] == float:
-            val = float(val)
-        if keywd_dict["type"] == str:
-            val = str(val)
-        val4dict = val
-        return val4dict
-
-    def get_previous_data(self):
-        """This method gets data WATA Django model. Replacing `get_data_from_html`"""
-
-        previous_data = pd.read_csv(self.previous_data_file, index_col=0)
-
-        previous_time = previous_data["date_obs"].max()
-        latest_prev_obs = Time(previous_time, format="isot").mjd
-
-        return previous_data, latest_prev_obs
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
@@ -1001,31 +989,55 @@ class WATA:
                 line = "{:<50} {:<50}".format(suc, ta_failure[idx])
                 txt.write(line + "\n")
 
-    def read_existing_html(self):
-        """
-        This function gets the data from the Bokeh html file created with
-        the NIRSpec TA monitor script.
-        """
-        self.output_dir = os.path.join(get_config()["outputs"], "wata_monitor")
-        ensure_dir_exists(self.output_dir)
+    def add_wata_data(self):
+        """Method to add WATA data to stats database"""
+        for _, row in self.wata_data.iterrows():
+            stats_db_entry = {
+                "filename": row["filename"],
+                "date_obs": row["date_obs"],
+                "visit_id": row["visit_id"],
+                "tafilter": row["tafilter"],
+                "readout": row["readout"],
+                "ta_status": row["ta_status"],
+                "star_name": row["star_name"],
+                "star_ra": row["star_ra"],
+                "star_dec": row["star_dec"],
+                "star_mag": row["star_mag"],
+                "star_catalog": row["star_catalog"],
+                "planned_v2": row["planned_v2"],
+                "planned_v3": row["planned_v3"],
+                "stamp_start_col": row["stamp_start_col"],
+                "stamp_start_row": row["stamp_start_row"],
+                "star_detector": row["star_detector"],
+                "max_val_box": row["max_val_box"],
+                "max_val_box_col": row["max_val_box_col"],
+                "max_val_box_row": row["max_val_box_row"],
+                "iterations": row["iterations"],
+                "corr_col": row["corr_col"],
+                "corr_row": row["corr_row"],
+                "stamp_final_col": row["stamp_final_col"],
+                "stamp_final_row": row["stamp_final_row"],
+                "detector_final_col": row["detector_final_col"],
+                "detector_final_row": row["detector_final_row"],
+                "final_sci_x": row["final_sci_x"],
+                "final_sci_y": row["final_sci_y"],
+                "measured_v2": row["measured_v2"],
+                "measured_v3": row["measured_v3"],
+                "ref_v2": row["ref_v2"],
+                "ref_v3": row["ref_v3"],
+                "v2_offset": row["v2_offset"],
+                "v3_offset": row["v3_offset"],
+                "sam_x": row["sam_x"],
+                "sam_y": row["sam_y"],
+                "entry_date": datetime.now(),
+            }
 
-        self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
-        if not os.path.isfile(self.output_file_name):
-            return "No WATA data available", "", ""
+            entry = self.stats_table(**stats_db_entry)
+            entry.save()
 
-        # open the html file and get the contents
-        with open(self.output_file_name, "r") as html_file:
-            contents = html_file.read()
+            logging.info("\tNew entry added to readnoise database table")
 
-        soup = BeautifulSoup(contents, "html.parser").body
-
-        # find the script elements
-        script1 = str(soup.find("script", type="text/javascript"))
-        script2 = str(soup.find("script", type="application/json"))
-
-        # find the div element
-        div = str(soup.find("div", class_="bk-root"))
-        return div, script1, script2
+        logging.info("\tUpdated the WATA statistics table")
 
     @log_fail
     @log_info
@@ -1033,10 +1045,6 @@ class WATA:
         """The main method. See module docstrings for further details."""
 
         logging.info("Begin logging for wata_monitor")
-
-        # define WATA variables
-        self.instrument = "nirspec"
-        self.aperture = "NRS_S1600A1_SLIT"
 
         # Identify which database tables to use
         self.identify_tables()
@@ -1054,26 +1062,8 @@ class WATA:
 
         # Locate the record of most recent MAST search; use this time
         # get the data of the plots previously created and set the query start date
-        self.previous_data_file = os.path.join(self.output_dir, "wata_data.csv")
+        self.query_start = self.most_recent_search()
         self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
-        logging.info(
-            "\tNew output plot file will be written as: {}".format(
-                self.output_file_name
-            )
-        )
-        # Query for TA records, if no records found, start from beginning.
-        if os.path.isfile(self.previous_data_file):
-            self.prev_data, self.query_start = self.get_previous_data()
-            logging.info(
-                "\tPrevious data read from django model: {}".format(self.stats_table)
-            )
-        # fail save - start from the beginning if there are no records
-        else:
-            self.prev_data = None
-            self.query_start = self.query_very_beginning
-            logging.info(
-                "\tPrevious output data file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)"
-            )
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -1103,83 +1093,74 @@ class WATA:
         # Get full paths to the files
         new_filenames = []
         for filename_of_interest in new_entries:
-            if (
-                self.prev_data is not None
-                and filename_of_interest in self.prev_data["filename"].values
-            ):
+            if self.file_exists_in_database(filename_of_interest):
                 logging.warning(
-                    "\t\tFile {} already in previous data. Skipping.".format(
+                    "\tFile {} in database already, passing.".format(
                         filename_of_interest
                     )
                 )
                 continue
-            try:
-                new_filenames.append(filesystem_path(filename_of_interest))
-                logging.warning(
-                    "\tFile {} included for processing.".format(filename_of_interest)
-                )
-            except FileNotFoundError:
-                logging.warning(
-                    "\t\tUnable to locate {} in filesystem. Not including in processing.".format(
-                        filename_of_interest
+            else:
+                try:
+                    new_filenames.append(filesystem_path(filename_of_interest))
+                    logging.warning(
+                        "\tFile {} included for processing.".format(
+                            filename_of_interest
+                        )
                     )
-                )
+                except FileNotFoundError:
+                    logging.warning(
+                        "\t\tUnable to locate {} in filesystem. Not including in processing.".format(
+                            filename_of_interest
+                        )
+                    )
 
         if len(new_filenames) == 0:
-            logging.warning(
+            logging.info(
                 "\t\t ** Unable to locate any file in filesystem. Nothing to process. ** "
             )
+            logging.info("\tWATA monitor skipped. No WATA data found.")
+            monitor_run = False
+        else:
+            # Run the monitor on any new files
+            self.wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
 
-        # Run the monitor on any new files
-        self.script, self.div, self.wata_data = None, None, None
-        monitor_run = False
-        if len(new_filenames) > 0:  # new data was found
-            # get the data
-            self.new_wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
+            # Log msgs from TA files.
             if len(no_ta_ext_msgs) >= 1:
                 for item in no_ta_ext_msgs:
                     logging.info(item)
-            if self.new_wata_data is not None:
-                # concatenate with previous data
-                if self.prev_data is not None:
-                    self.wata_data = pd.concat(
-                        [self.prev_data, self.new_wata_data], ignore_index=True
-                    )
-                    logging.info(
-                        "\tData from previous data output file and new data concatenated."
-                    )
-                else:
-                    self.wata_data = self.new_wata_data
-                    logging.info("\tOnly new data was found - no previous data file.")
             else:
-                logging.info("\tWATA monitor skipped. No WATA data found.")
-        # make sure to return the old data if no new data is found
-        elif self.prev_data is not None:
-            self.wata_data = self.prev_data
+                logging.info("\t No TA Ext Msgs Found")
+
+            # Add WATA data to stats table.
+            self.add_wata_data()
+
+            # Generate plot
+            self.mk_plt_layout()
             logging.info(
-                "\tNo new data found. Using data from previous data output file."
+                "\tNew output plot file will be written as: {}".format(
+                    self.output_file_name
+                )
             )
-        # do the plots if there is any data
-        if self.wata_data is not None:
-            self.script, self.div = self.mk_plt_layout()
+
             monitor_run = True
+
             logging.info(
                 "\tOutput html plot file created: {}".format(self.output_file_name)
             )
+
             wata_files_used4plots = len(self.wata_data["visit_id"])
             logging.info(
                 "\t{} WATA files were used to make plots.".format(wata_files_used4plots)
             )
+
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
+
             logging.info("\tWATA status file was updated")
-            self.wata_data = self.wata_data.sort_values(by=["date_obs"])
-            self.wata_data.to_csv(self.previous_data_file)
             logging.info(
-                "\tWrote new previous data file to {}".format(self.previous_data_file)
+                "\tWrote new previous data file to {}".format(self.output_file_name)
             )
-        else:
-            logging.info("\tWATA monitor skipped.")
 
         # Update the query history
         new_entry = {

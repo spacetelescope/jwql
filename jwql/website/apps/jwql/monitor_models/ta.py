@@ -101,7 +101,6 @@ class NIRSpecWataStats(models.Model):
     tafilter = models.CharField(blank=True, null=True)
     readout = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
     ta_status = models.CharField(blank=True, null=True)
-    status_reason = models.FloatField(blank=True, null=True)
     star_name = models.IntegerField(blank=True, null=True)
     star_ra = models.FloatField(blank=True, null=True)
     star_dec = models.FloatField(blank=True, null=True)
