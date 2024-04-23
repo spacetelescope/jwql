@@ -789,7 +789,7 @@ class WATA:
                 var end = slider.value[1];
 
                 for (var i=0; i < source.get_length(); i++) {
-                    if (source.data['time_arr'][i] >= start 
+                    if (source.data['time_arr'][i] >= start
                             && source.data['time_arr'][i] <= end) {
                         indices.push(true);
                     } else {

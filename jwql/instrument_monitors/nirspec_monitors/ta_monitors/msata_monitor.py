@@ -511,7 +511,7 @@ class MSATA:
         )
         plot.y_range = Range1d(-0.5, 1.5)
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="number_status",
             source=self.source,
@@ -557,7 +557,7 @@ class MSATA:
             y_axis_label="Least Squares Residual V3 Offset",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="lsv2offset",
             y="lsv3offset",
             source=self.source,
@@ -641,7 +641,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="lsv2offset",
             source=self.source,
@@ -712,7 +712,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="lsv3offset",
             source=self.source,
@@ -782,7 +782,7 @@ class MSATA:
             y_axis_label="Least Squares Residual V3 Sigma Offset",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="lsv2sigma",
             y="lsv3sigma",
             source=self.source,
@@ -860,7 +860,7 @@ class MSATA:
             y_axis_label="Least Squares Residual V3 Offset + half-facet",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="v2_half_fac_corr",
             y="v3_half_fac_corr",
             source=self.source,
@@ -939,7 +939,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="lsv2sigma",
             source=self.source,
@@ -990,7 +990,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="lsv3sigma",
             source=self.source,
@@ -1044,7 +1044,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="lsrolloffset",
             source=self.source,
@@ -1109,7 +1109,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="lsoffsetmag",
             source=self.source,
@@ -1185,7 +1185,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="tot_number_of_stars",
             source=self.source,
@@ -1195,7 +1195,7 @@ class MSATA:
             view=self.date_view,
         )
         plot.scatter(
-            marker='triangle',
+            marker="triangle",
             x="time_arr",
             y="stars_in_fit",
             source=self.source,
@@ -1316,7 +1316,7 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.scatter(
-            marker='circle',
+            marker="circle",
             x="time_arr",
             y="peaks",
             source=mini_source,
@@ -1400,7 +1400,7 @@ class MSATA:
                 var end = slider.value[1];
 
                 for (var i=0; i < source.get_length(); i++) {
-                    if (source.data['time_arr'][i] >= start 
+                    if (source.data['time_arr'][i] >= start
                             && source.data['time_arr'][i] <= end) {
                         indices.push(true);
                     } else {
