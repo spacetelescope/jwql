@@ -251,16 +251,9 @@ class WATA:
 
     def add_time_column(self):
         """Add time column to data source, to be used by all plots."""
-        date_obs = self.source.data["date_obs"]
-        if "time_arr" not in self.source.data:
-            time_arr = []
-            for do_str in date_obs:
-                # convert time string into an array of time (this is in UT)
-                t = datetime.fromisoformat(do_str)
-                time_arr.append(t)
-
-            # add to the bokeh data structure
-            self.source.data["time_arr"] = time_arr
+        date_obs = self.source.data["date_obs"].astype(str)
+        time_arr = [self.add_timezone(do_str) for do_str in date_obs]
+        self.source.data["time_arr"] = time_arr
 
     def plt_status(self):
         """Plot the WATA status (passed = 0 or failed = 1).
@@ -297,7 +290,8 @@ class WATA:
             x_axis_type="datetime",
         )
         plot.y_range = Range1d(-0.5, 1.5)
-        plot.circle(
+        plot.scatter(
+            marker="circle",
             x="time_arr",
             y="ta_status_bool",
             source=self.source,
@@ -342,7 +336,8 @@ class WATA:
             x_axis_label="Residual V2 Offset",
             y_axis_label="Residual V3 Offset",
         )
-        plot.circle(
+        plot.scatter(
+            marker="circle",
             x="v2_offset",
             y="v3_offset",
             source=self.source,
@@ -394,7 +389,8 @@ class WATA:
             y_axis_label="Residual V2 Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker="circle",
             x="time_arr",
             y="v2_offset",
             source=self.source,
@@ -444,7 +440,8 @@ class WATA:
             y_axis_label="Residual V3 Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker="triangle",
             x="time_arr",
             y="v3_offset",
             source=self.source,
@@ -564,7 +561,8 @@ class WATA:
             y_axis_label="box_peak [Counts]",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker="circle",
             x="time_arr",
             y="nrsrapid_f140x",
             source=self.source,
@@ -573,7 +571,8 @@ class WATA:
             fill_alpha=0.4,
             view=self.date_view,
         )
-        plot.circle(
+        plot.scatter(
+            marker="circle",
             x="time_arr",
             y="nrsrapidd6_f140x",
             source=self.source,
@@ -582,7 +581,8 @@ class WATA:
             fill_alpha=0.4,
             view=self.date_view,
         )
-        plot.triangle(
+        plot.scatter(
+            marker="triangle",
             x="time_arr",
             y="nrsrapid_f110w",
             source=self.source,
@@ -591,7 +591,8 @@ class WATA:
             fill_alpha=0.4,
             view=self.date_view,
         )
-        plot.triangle(
+        plot.scatter(
+            marker="triangle",
             x="time_arr",
             y="nrsrapidd6_f110w",
             source=self.source,
@@ -600,7 +601,8 @@ class WATA:
             fill_alpha=0.4,
             view=self.date_view,
         )
-        plot.square(
+        plot.scatter(
+            marker="square",
             x="time_arr",
             y="nrsrapid_clear",
             source=self.source,
@@ -609,7 +611,8 @@ class WATA:
             fill_alpha=0.4,
             view=self.date_view,
         )
-        plot.square(
+        plot.scatter(
+            marker="square",
             x="time_arr",
             y="nrsrapidd6_clear",
             source=self.source,
@@ -703,7 +706,8 @@ class WATA:
         limits = [10, 25]
         plot.x_range = Range1d(limits[0], limits[1])
         plot.y_range = Range1d(limits[0], limits[1])
-        plot.circle(
+        plot.scatter(
+            marker="circle",
             x="corr_col_not_failed",
             y="corr_row_not_failed",
             source=self.source,
@@ -712,7 +716,7 @@ class WATA:
             fill_alpha=0.5,
             view=self.date_view,
         )
-        plot.circle(
+        plot.scatter(
             x="corr_col_failed",
             y="corr_row_failed",
             source=self.source,
@@ -795,17 +799,13 @@ class WATA:
                 return indices;
                 """,
         )
-        self.date_view = CDSView(source=self.source, filters=[filt])
+        self.date_view = CDSView(filters=[filt])
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
-        self.source = ColumnDataSource(data=self.wata_data)
+        self.query_results = pd.DataFrame(list(NIRSpecWataStats.objects.all().values()))
 
-        # make sure all arrays are lists in order to later be able to read the data
-        # from the html file
-        for item in self.source.data:
-            if not isinstance(self.source.data[item], (str, float, int, list)):
-                self.source.data[item] = self.source.data[item].tolist()
+        self.source = ColumnDataSource(data=self.query_results)
 
         # add a time array to the data source
         self.add_time_column()
@@ -989,12 +989,17 @@ class WATA:
                 line = "{:<50} {:<50}".format(suc, ta_failure[idx])
                 txt.write(line + "\n")
 
+    def add_timezone(self, date_str):
+        """Method to bypass timezone warning from Django"""
+        dt_timezone = datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
+        return dt_timezone
+
     def add_wata_data(self):
         """Method to add WATA data to stats database"""
         for _, row in self.wata_data.iterrows():
             stats_db_entry = {
                 "filename": row["filename"],
-                "date_obs": row["date_obs"],
+                "date_obs": self.add_timezone(row["date_obs"]),
                 "visit_id": row["visit_id"],
                 "tafilter": row["tafilter"],
                 "readout": row["readout"],
@@ -1029,7 +1034,7 @@ class WATA:
                 "v3_offset": row["v3_offset"],
                 "sam_x": row["sam_x"],
                 "sam_y": row["sam_y"],
-                "entry_date": datetime.now(),
+                "entry_date": datetime.now(tz=timezone.utc),
             }
 
             entry = self.stats_table(**stats_db_entry)
@@ -1060,8 +1065,7 @@ class WATA:
         )
         ensure_dir_exists(self.data_dir)
 
-        # Locate the record of most recent MAST search; use this time
-        # get the data of the plots previously created and set the query start date
+        # Locate the record of most recent time the monitor was run
         self.query_start = self.most_recent_search()
         self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
 
@@ -1095,7 +1099,7 @@ class WATA:
         for filename_of_interest in new_entries:
             if self.file_exists_in_database(filename_of_interest):
                 logging.warning(
-                    "\tFile {} in database already, passing.".format(
+                    "\t\tFile {} in database already, passing.".format(
                         filename_of_interest
                     )
                 )
@@ -1104,7 +1108,7 @@ class WATA:
                 try:
                     new_filenames.append(filesystem_path(filename_of_interest))
                     logging.warning(
-                        "\tFile {} included for processing.".format(
+                        "\t\tFile {} included for processing.".format(
                             filename_of_interest
                         )
                     )
@@ -1144,11 +1148,6 @@ class WATA:
             )
 
             monitor_run = True
-
-            logging.info(
-                "\tOutput html plot file created: {}".format(self.output_file_name)
-            )
-
             wata_files_used4plots = len(self.wata_data["visit_id"])
             logging.info(
                 "\t{} WATA files were used to make plots.".format(wata_files_used4plots)
@@ -1158,9 +1157,6 @@ class WATA:
             self.update_ta_success_txtfile()
 
             logging.info("\tWATA status file was updated")
-            logging.info(
-                "\tWrote new previous data file to {}".format(self.output_file_name)
-            )
 
         # Update the query history
         new_entry = {
@@ -1171,7 +1167,7 @@ class WATA:
             "entries_found": wata_entries,
             "files_found": len(new_filenames),
             "run_monitor": monitor_run,
-            "entry_date": datetime.now(),
+            "entry_date": datetime.now(tz=timezone.utc),
         }
 
         entry = self.query_table(**new_entry)

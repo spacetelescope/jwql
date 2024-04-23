@@ -115,6 +115,10 @@ class MSATA:
         # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
         self.query_very_beginning = 59607.0
 
+        # Set instrument and aperture
+        self.instrument = "nirspec"
+        self.aperture = "NRS_FULL_MSA"
+
         # dictionary to define required keywords to extract MSATA data and where it lives
         self.keywds2extract = {
             "FILENAME": {
@@ -460,16 +464,14 @@ class MSATA:
 
     def add_time_column(self):
         """Add time column to data source, to be used by all plots."""
-        date_obs = self.source.data["date_obs"]
-        if "time_arr" not in self.source.data:
-            time_arr = []
-            for do_str in date_obs:
-                # convert time string into an array of time (this is in UT)
-                t = datetime.fromisoformat(do_str)
-                time_arr.append(t)
+        date_obs = self.source.data["date_obs"].astype(str)
+        time_arr = [self.add_timezone(do_str) for do_str in date_obs]
+        self.source.data["time_arr"] = time_arr
 
-            # add to the bokeh data structure
-            self.source.data["time_arr"] = time_arr
+    def add_timezone(self, date_str):
+        """Method to bypass timezone warning from Django"""
+        dt_timezone = datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
+        return dt_timezone
 
     def plt_status(self):
         """Plot the MSATA status versus time.
@@ -508,7 +510,8 @@ class MSATA:
             x_axis_type="datetime",
         )
         plot.y_range = Range1d(-0.5, 1.5)
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="number_status",
             source=self.source,
@@ -553,7 +556,8 @@ class MSATA:
             x_axis_label="Least Squares Residual V2 Offset",
             y_axis_label="Least Squares Residual V3 Offset",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="lsv2offset",
             y="lsv3offset",
             source=self.source,
@@ -636,7 +640,8 @@ class MSATA:
             y_axis_label="Least Squares Residual V2 Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="lsv2offset",
             source=self.source,
@@ -706,7 +711,8 @@ class MSATA:
             y_axis_label="Least Squares Residual V3 Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="lsv3offset",
             source=self.source,
@@ -775,7 +781,8 @@ class MSATA:
             x_axis_label="Least Squares Residual V2 Sigma Offset",
             y_axis_label="Least Squares Residual V3 Sigma Offset",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="lsv2sigma",
             y="lsv3sigma",
             source=self.source,
@@ -852,7 +859,8 @@ class MSATA:
             x_axis_label="Least Squares Residual V2 Offset + half-facet",
             y_axis_label="Least Squares Residual V3 Offset + half-facet",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="v2_half_fac_corr",
             y="v3_half_fac_corr",
             source=self.source,
@@ -930,7 +938,8 @@ class MSATA:
             y_axis_label="Least Squares Residual V2 Sigma Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="lsv2sigma",
             source=self.source,
@@ -980,7 +989,8 @@ class MSATA:
             y_axis_label="Least Squares Residual V3 Sigma Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="lsv3sigma",
             source=self.source,
@@ -1033,7 +1043,8 @@ class MSATA:
             y_axis_label="Least Squares Residual Roll Offset",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="lsrolloffset",
             source=self.source,
@@ -1097,7 +1108,8 @@ class MSATA:
             y_axis_label="sqrt((V2_off)**2 + (V3_off)**2)",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="lsoffsetmag",
             source=self.source,
@@ -1172,7 +1184,8 @@ class MSATA:
             y_axis_label="Total number of measurements",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="tot_number_of_stars",
             source=self.source,
@@ -1181,7 +1194,8 @@ class MSATA:
             fill_alpha=0.3,
             view=self.date_view,
         )
-        plot.triangle(
+        plot.scatter(
+            marker='triangle',
             x="time_arr",
             y="stars_in_fit",
             source=self.source,
@@ -1292,7 +1306,7 @@ class MSATA:
         """,
         )
         self.date_range.js_on_change("value", callback)
-        mini_view = CDSView(source=mini_source, filters=[self.date_filter])
+        mini_view = CDSView(filters=[self.date_filter])
 
         # create the bokeh plot
         plot = figure(
@@ -1301,7 +1315,8 @@ class MSATA:
             y_axis_label="box_peak [Counts]",
             x_axis_type="datetime",
         )
-        plot.circle(
+        plot.scatter(
+            marker='circle',
             x="time_arr",
             y="peaks",
             source=mini_source,
@@ -1395,17 +1410,14 @@ class MSATA:
                 return indices;
                 """,
         )
-        self.date_view = CDSView(source=self.source, filters=[self.date_filter])
+        self.date_view = CDSView(filters=[self.date_filter])
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
-        self.source = ColumnDataSource(data=self.msata_data)
-
-        # make sure all arrays are lists in order to later be able to read the data
-        # from the html file
-        for item in self.source.data:
-            if not isinstance(self.source.data[item], (str, float, int, list)):
-                self.source.data[item] = self.source.data[item].tolist()
+        self.query_results = pd.DataFrame(
+            list(NIRSpecMsataStats.objects.all().values())
+        )
+        self.source = ColumnDataSource(data=self.query_results)
 
         # add a time array to the data source
         self.add_time_column()
@@ -1448,7 +1460,24 @@ class MSATA:
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
         self.query_table = eval("{}TaQueryHistory".format(mixed_case_name))
-        self.stats_table = eval("{}TaStats".format(mixed_case_name))
+        self.stats_table = eval("{}MsataStats".format(mixed_case_name))
+
+    def file_exists_in_database(self, filename):
+        """Checks if an entry for filename exists in the readnoise stats
+        database.
+
+        Parameters
+        ----------
+        filename : str
+            The full path to the uncal filename.
+
+        Returns
+        -------
+        file_exists : bool
+            ``True`` if filename exists in the readnoise stats database.
+        """
+        results = self.stats_table.objects.filter(filename__iexact=filename).values()
+        return len(results) != 0
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -1481,16 +1510,6 @@ class MSATA:
             query_result = record.end_time_mjd
 
         return query_result
-
-    def get_previous_data(self):
-        """This method gets data WATA Django model. Replacing `get_data_from_html`"""
-
-        previous_data = pd.read_csv(self.previous_data_file, index_col=0)
-
-        previous_time = previous_data["date_obs"].max()
-        latest_prev_obs = Time(previous_time, format="isot").mjd
-
-        return previous_data, latest_prev_obs
 
     def construct_expected_data(self, keywd_dict, tot_number_of_stars):
         """This function creates the list to append to the dictionary key in the expected format.
@@ -1642,31 +1661,57 @@ class MSATA:
                 )
                 txt.write(line + "\n")
 
-    def read_existing_html(self):
-        """
-        This function gets the data from the Bokeh html file created with
-        the NIRSpec TA monitor script.
-        """
-        self.output_dir = os.path.join(get_config()["outputs"], "msata_monitor")
-        ensure_dir_exists(self.output_dir)
+    def add_msata_data(self):
+        """Method to add MSATA data to stats database"""
+        for _, row in self.msata_data.iterrows():
+            stats_db_entry = {
+                "filename": row["filename"],
+                "date_obs": self.add_timezone(row["date_obs"]),
+                "visit_id": row["visit_id"],
+                "tafilter": row["tafilter"],
+                "detector": row["detector"],
+                "readout": row["readout"],
+                "subarray": row["subarray"],
+                "num_refstars": row["num_refstars"],
+                "ta_status": row["ta_status"],
+                "v2halffacet": row["v2halffacet"],
+                "v3halffacet": row["v3halffacet"],
+                "v2msactr": row["v2msactr"],
+                "v3msactr": row["v3msactr"],
+                "lsv2offset": row["lsv2offset"],
+                "lsv3offset": row["lsv3offset"],
+                "lsoffsetmag": row["lsoffsetmag"],
+                "lsrolloffset": row["lsrolloffset"],
+                "lsv2sigma": row["lsv2sigma"],
+                "lsv3sigma": row["lsv3sigma"],
+                "lsiterations": row["lsiterations"],
+                "guidestarid": row["guidestarid"],
+                "guidestarx": row["guidestarx"],
+                "guidestary": row["guidestary"],
+                "guidestarroll": row["guidestarroll"],
+                "samx": row["samx"],
+                "samy": row["samy"],
+                "samroll": row["samroll"],
+                "box_peak_value": list(row["box_peak_value"]),
+                "reference_star_mag": list(row["reference_star_mag"]),
+                "convergence_status": list(row["convergence_status"]),
+                "reference_star_number": list(row["reference_star_number"]),
+                "lsf_removed_status": list(row["lsf_removed_status"]),
+                "lsf_removed_reason": list(row["lsf_removed_reason"]),
+                "lsf_removed_x": list(row["lsf_removed_x"]),
+                "lsf_removed_y": list(row["lsf_removed_y"]),
+                "planned_v2": list(row["planned_v2"]),
+                "planned_v3": list(row["planned_v3"]),
+                "stars_in_fit": row["stars_in_fit"],
+                "entry_date": datetime.now(tz=timezone.utc),
+            }
 
-        self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
-        if not os.path.isfile(self.output_file_name):
-            return "No MSATA data available", "", ""
+            entry = self.stats_table(**stats_db_entry)
+            entry.save()
 
-        # open the html file and get the contents
-        with open(self.output_file_name, "r") as html_file:
-            contents = html_file.read()
+            logging.info("\tNew entry added to readnoise database table")
 
-        soup = BeautifulSoup(contents, "html.parser").body
-
-        # find the script elements
-        script1 = str(soup.find("script", type="text/javascript"))
-        script2 = str(soup.find("script", type="application/json"))
-
-        # find the div element
-        div = str(soup.find("div", class_="bk-root"))
-        return div, script1, script2
+        logging.info("\tUpdated the MSATA statistics table")
 
     @log_fail
     @log_info
@@ -1675,11 +1720,6 @@ class MSATA:
 
         logging.info("Begin logging for msata_monitor")
 
-        # define MSATA variables
-        self.instrument = "nirspec"
-        self.aperture = "NRS_FULL_MSA"
-
-        # Identify which database tables to use
         self.identify_tables()
 
         # Get the output directory and setup a directory to store the data
@@ -1693,49 +1733,19 @@ class MSATA:
         )
         ensure_dir_exists(self.data_dir)
 
-        # Locate the record of most recent MAST search; use this time
-        # self.query_start = self.most_recent_search()
-        # get the data of the plots previously created and set the query start date
-        self.previous_data_file = os.path.join(self.output_dir, "msata_data.csv")
+        # Locate the record of most recent time the monitor was run
+        self.query_start = self.most_recent_search()
         self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
-        logging.info(
-            "\tNew output plot file will be written as: {}".format(
-                self.output_file_name
-            )
-        )
-        if os.path.isfile(self.previous_data_file):
-            self.prev_data, self.query_start = self.get_previous_data()
-            logging.info(
-                "\tPrevious data read from file: {}".format(self.previous_data_file)
-            )
-            # move this plot to a previous version
-            shutil.copyfile(
-                self.output_file_name,
-                os.path.join(self.output_dir, "prev_msata_layout.html"),
-            )
-        # fail save - start from the beginning if there is no html file
-        else:
-            self.prev_data = None
-            self.query_start = self.query_very_beginning
-            logging.info(
-                "\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)"
-            )
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
         logging.info("\tQuery times: {} {}".format(self.query_start, self.query_end))
 
-        # Query for data using the aperture and the time of the
-        # most recent previous search as the starting time
-
         # via MAST:
-        # new_entries = monitor_utils.mast_query_ta(
-        #     self.instrument, self.aperture, self.query_start, self.query_end)
-
-        # via django model:
-        new_entries = monitor_utils.model_query_ta(
+        new_entries = monitor_utils.mast_query_ta(
             self.instrument, self.aperture, self.query_start, self.query_end
         )
+
         msata_entries = len(new_entries)
         logging.info(
             "\tQuery has returned {} MSATA files for {}, {}.".format(
@@ -1756,70 +1766,56 @@ class MSATA:
         # Get full paths to the files
         new_filenames = []
         for filename_of_interest in new_entries:
-            if (
-                self.prev_data is not None
-                and filename_of_interest in self.prev_data["filename"].values
-            ):
+            if self.file_exists_in_database(filename_of_interest):
                 logging.warning(
-                    "\t\tFile {} already in previous data. Skipping.".format(
+                    "\t\tFile {} in database already, passing.".format(
                         filename_of_interest
                     )
                 )
                 continue
-            try:
-                new_filenames.append(filesystem_path(filename_of_interest))
-                logging.warning(
-                    "\tFile {} included for processing.".format(filename_of_interest)
-                )
-            except FileNotFoundError:
-                logging.warning(
-                    "\t\tUnable to locate {} in filesystem. Not including in processing.".format(
-                        filename_of_interest
+            else:
+                try:
+                    new_filenames.append(filesystem_path(filename_of_interest))
+                    logging.warning(
+                        "\t\tFile {} included for processing.".format(
+                            filename_of_interest
+                        )
                     )
-                )
+                except FileNotFoundError:
+                    logging.warning(
+                        "\t\tUnable to locate {} in filesystem. Not including in processing.".format(
+                            filename_of_interest
+                        )
+                    )
 
         if len(new_filenames) == 0:
-            logging.warning(
+            logging.info(
                 "\t\t ** Unable to locate any file in filesystem. Nothing to process. ** "
             )
+            logging.info("\tMSATA monitor skipped. No MSATA data found.")
+            monitor_run = False
+        else:
+            self.msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
+            logging.info(
+                "\tMSATA monitor found {} new uncal files.".format(len(new_filenames))
+            )
 
-        # Run the monitor on any new files
-        logging.info(
-            "\tMSATA monitor found {} new uncal files.".format(len(new_filenames))
-        )
-        self.script, self.div, self.msata_data = None, None, None
-        monitor_run = False
-        if len(new_filenames) > 0:  # new data was found
-            # get the data
-            self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
             if len(no_ta_ext_msgs) >= 1:
                 for item in no_ta_ext_msgs:
                     logging.info(item)
-            if self.new_msata_data is not None:
-                # concatenate with previous data
-                if self.prev_data is not None:
-                    self.msata_data = pd.concat(
-                        [self.prev_data, self.new_msata_data], ignore_index=True
-                    )
-                    logging.info(
-                        "\tData from previous data output file and new data concatenated."
-                    )
-                else:
-                    self.msata_data = self.new_msata_data
-                    logging.info("\tOnly new data was found - no previous html file.")
             else:
-                logging.info("\tMSATA monitor skipped. No MSATA data found.")
-        # make sure to return the old data if no new data is found
-        elif self.prev_data is not None:
-            self.msata_data = self.prev_data
+                logging.info("\tNo TA Ext Msgs Found")
+
+            # Add MSATA data to stats table.
+            self.add_msata_data()
+
+            # make the plots if there is data
+            self.mk_plt_layout()
             logging.info(
-                "\tNo new data found. Using data from previous html output file."
+                "\tNew output plot file will be written as: {}".format(
+                    self.output_file_name
+                )
             )
-        # make the plots if there is data
-        if self.msata_data is not None:
-            logging.info("\t{}".format(self.msata_data))
-            logging.info("\tMSATA DATA SHAPE: {}".format(self.msata_data.shape))
-            self.script, self.div = self.mk_plt_layout()
             monitor_run = True
             logging.info(
                 "\tOutput html plot file created: {}".format(self.output_file_name)
@@ -1833,13 +1829,6 @@ class MSATA:
             # update the list of successful and failed TAs
             self.update_ta_success_txtfile()
             logging.info("\tMSATA status file was updated")
-            self.msata_data = self.msata_data.sort_values(by=["date_obs"])
-            self.msata_data.to_csv(self.previous_data_file)
-            logging.info(
-                "\tWrote new previous data file to {}".format(self.previous_data_file)
-            )
-        else:
-            logging.info("\tMSATA monitor skipped.")
 
         # Update the query history
         new_entry = {
@@ -1850,7 +1839,7 @@ class MSATA:
             "entries_found": msata_entries,
             "files_found": len(new_filenames),
             "run_monitor": monitor_run,
-            "entry_date": datetime.now(),
+            "entry_date": datetime.now(tz=timezone.utc),
         }
 
         entry = self.query_table(**new_entry)

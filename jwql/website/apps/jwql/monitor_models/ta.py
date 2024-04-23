@@ -149,7 +149,6 @@ class NIRSpecMsataStats(models.Model):
     subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, blank=True, null=True)
     num_refstars = models.IntegerField(blank=True, null=True)
     ta_status = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
-    status_rsn = models.FloatField(blank=True, null=True)
     v2halffacet = models.FloatField(blank=True, null=True)
     v3halffacet = models.FloatField(blank=True, null=True)
     v2msactr = models.FloatField(blank=True, null=True)
