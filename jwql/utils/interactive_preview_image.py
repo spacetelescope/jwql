@@ -554,7 +554,7 @@ class InteractivePreviewImg:
         # JS callbacks for client side controls
 
         # set alternate image visibility when scale selection changes
-        scale_group.js_on_click(CustomJS(args={'i1': images[0], 'c1': color_bars[0],
+        scale_group.js_on_change('active', CustomJS(args={'i1': images[0], 'c1': color_bars[0],
                                                'i2': images[1], 'c2': color_bars[1]},
                                          code="""
             if (i1.visible == true) {
@@ -594,10 +594,10 @@ class InteractivePreviewImg:
             limit_high.js_link('value', color_bars[i].color_mapper, 'high')
 
         # reset boxes to preset range on button click
-        reset.js_on_click(limit_reset)
+        reset.js_on_event('button_click', limit_reset)
 
         # also reset when swapping limit style
-        scale_group.js_on_click(limit_reset)
+        scale_group.js_on_change('active', limit_reset)
 
         # return widgets
         spacer = Spacer(height=20)

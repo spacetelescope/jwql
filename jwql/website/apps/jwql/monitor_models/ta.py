@@ -26,13 +26,26 @@ References
 """
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
+from jwql.utils.constants import (
+    MAX_LEN_APERTURE,
+    MAX_LEN_DETECTOR,
+    MAX_LEN_TIME,
+    MAX_LEN_FILENAME,
+    MAX_LEN_INSTRUMENT,
+    MAX_LEN_NGROUPS,
+    MAX_LEN_NINTS,
+    MAX_LEN_PATH,
+    MAX_LEN_READPATTERN,
+    MAX_LEN_SUBARRAY,
+)
 
 
 class MIRITaQueryHistory(models.Model):
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     entries_found = models.IntegerField(blank=True, null=True)
@@ -44,31 +57,29 @@ class MIRITaQueryHistory(models.Model):
         managed = True
         db_table = 'miri_ta_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRITaStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    cal_file_name = models.CharField(blank=True, null=True)
+    cal_file_name = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    detector = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
     targx = models.FloatField(blank=True, null=True)
     targy = models.FloatField(blank=True, null=True)
     offset = models.FloatField(blank=True, null=True)
-    full_im_path = models.CharField(blank=True, null=True)
-    zoom_im_path = models.CharField(blank=True, null=True)
+    full_im_path = models.CharField(max_length=MAX_LEN_PATH, blank=True, null=True)
+    zoom_im_path = models.CharField(max_length=MAX_LEN_PATH, blank=True, null=True)
 
     class Meta:
         managed = True
         db_table = 'miri_ta_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecTaQueryHistory(models.Model):
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     entries_found = models.IntegerField(blank=True, null=True)
@@ -80,19 +91,18 @@ class NIRSpecTaQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_ta_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecTaStats(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
-    uncal_filename = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
-    detector = models.CharField(blank=True, null=True)
-    subarray = models.CharField(blank=True, null=True)
-    read_pattern = models.CharField(blank=True, null=True)
-    nints = models.CharField(blank=True, null=True)
-    ngroups = models.CharField(blank=True, null=True)
-    expstart = models.CharField(blank=True, null=True)
+    uncal_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
+    subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, blank=True, null=True)
+    read_pattern = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
+    nints = models.CharField(max_length=MAX_LEN_NINTS, blank=True, null=True)
+    ngroups = models.CharField(max_length=MAX_LEN_NGROUPS, blank=True, null=True)
+    expstart = models.CharField(max_length=MAX_LEN_TIME, blank=True, null=True)
     full_image_mean = models.FloatField(blank=True, null=True)
     full_image_stddev = models.FloatField(blank=True, null=True)
     full_image_n = ArrayField(models.FloatField())
@@ -122,4 +132,3 @@ class NIRSpecTaStats(models.Model):
         managed = True
         db_table = 'nirspec_ta_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
