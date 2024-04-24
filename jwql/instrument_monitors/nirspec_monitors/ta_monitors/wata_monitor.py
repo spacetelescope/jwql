@@ -7,7 +7,7 @@
 #    Sep 2022 - Vr. 1.1: Modified ColumnDataSource so that data could be recovered
 #                        from an html file of a previous run of the monitor and
 #                        included the code to read and format the data from the html file
-
+#    Apr 2024 - Vr. 1.2: Removed html webscraping and now store data in django models
 
 """
 This module contains the code for the NIRSpec Wide Aperture Target
@@ -31,10 +31,8 @@ Use
 """
 
 # general imports
-import json
 import os
 import logging
-import shutil
 from datetime import datetime, timezone, timedelta
 
 import numpy as np
@@ -56,7 +54,6 @@ from bokeh.models import (
 )
 from bokeh.models.tools import HoverTool, BoxSelectTool
 from bokeh.plotting import figure, save
-from bs4 import BeautifulSoup
 
 # jwql imports
 from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
@@ -835,7 +832,7 @@ class WATA:
         return script, div
 
     def file_exists_in_database(self, filename):
-        """Checks if an entry for filename exists in the readnoise stats
+        """Checks if an entry for filename exists in the wata stats
         database.
 
         Parameters
@@ -846,7 +843,7 @@ class WATA:
         Returns
         -------
         file_exists : bool
-            ``True`` if filename exists in the readnoise stats database.
+            ``True`` if filename exists in the WATA stats database.
         """
         results = self.stats_table.objects.filter(filename__iexact=filename).values()
         return len(results) != 0
@@ -996,6 +993,11 @@ class WATA:
 
     def add_wata_data(self):
         """Method to add WATA data to stats database"""
+        # self.wata_data is a pandas dataframe. When creating the django model
+        # to store all of the WATA data, this data was previously extracted and stored
+        # into a dataframe. To avoid rewriting self.get_wata_data(), it is easier to
+        # iterate over the rows of the returned dataframe and access the metadata this
+        # way.
         for _, row in self.wata_data.iterrows():
             stats_db_entry = {
                 "filename": row["filename"],
@@ -1040,7 +1042,7 @@ class WATA:
             entry = self.stats_table(**stats_db_entry)
             entry.save()
 
-            logging.info("\tNew entry added to readnoise database table")
+            logging.info("\tNew entry added to WATA stats database table")
 
         logging.info("\tUpdated the WATA statistics table")
 
@@ -1073,7 +1075,7 @@ class WATA:
         self.query_end = Time.now().mjd
         logging.info("\tQuery times: {} {}".format(self.query_start, self.query_end))
 
-        # via django model:
+        # Obtain all entries with instrument/aperture combinations:
         new_entries = monitor_utils.model_query_ta(
             self.instrument, self.aperture, self.query_start, self.query_end
         )
@@ -1094,7 +1096,7 @@ class WATA:
             )
         )
 
-        # Get full paths to the files
+        # Check if filenames RootFileInfo model are in data storgage
         new_filenames = []
         for filename_of_interest in new_entries:
             if self.file_exists_in_database(filename_of_interest):
@@ -1119,6 +1121,7 @@ class WATA:
                         )
                     )
 
+        # If there are no new files, monitor is skipped
         if len(new_filenames) == 0:
             logging.info(
                 "\t\t ** Unable to locate any file in filesystem. Nothing to process. ** "
@@ -1127,6 +1130,7 @@ class WATA:
             monitor_run = False
         else:
             # Run the monitor on any new files
+            # self.wata_data is a pandas dataframe
             self.wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
 
             # Log msgs from TA files.
@@ -1139,14 +1143,15 @@ class WATA:
             # Add WATA data to stats table.
             self.add_wata_data()
 
-            # Generate plot
+            # Generate plot -- the database is queried in mk_plt_layout().
             self.mk_plt_layout()
             logging.info(
                 "\tNew output plot file will be written as: {}".format(
                     self.output_file_name
                 )
             )
-
+            # Once data is added to database table and plots are made, the
+            # monitor has run successfully.
             monitor_run = True
             wata_files_used4plots = len(self.wata_data["visit_id"])
             logging.info(
