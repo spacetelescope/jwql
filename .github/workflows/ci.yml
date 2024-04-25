@@ -42,7 +42,7 @@ jobs:
 
       - run: pip install -e .[test]
 
-      - run: conda env export
+      - run: mamba env export
 
       - uses: supercharge/redis-github-action@1.4.0
         with:
