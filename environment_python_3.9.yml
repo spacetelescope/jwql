@@ -45,8 +45,7 @@ dependencies:
   - pytest-mock=3.11.1
   - python=3.9.17
   - pyyaml=6.0.1
-  - redis-py=5.0.0
-  - redis-server=7.2.4
+  - redis=5.0.0
   - ruff=0.0.292
   - scipy=1.9.3
   - setuptools=68.2.2
@@ -64,6 +63,7 @@ dependencies:
     - pysiaf==0.20.0
     - pysqlite3==0.5.2
     - pyvo==1.4.2
+    - redis==5.0.0
     - selenium==4.13.0
     - stdatamodels==1.8.3
     - stsci_rtd_theme==1.0.0
