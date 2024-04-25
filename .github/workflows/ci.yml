@@ -43,6 +43,8 @@ jobs:
 
       - run: pip install -e .[test]
 
+      - run: micromamba env export
+
       - uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
