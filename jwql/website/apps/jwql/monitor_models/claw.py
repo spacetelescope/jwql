@@ -28,10 +28,21 @@ References
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
+from jwql.utils.constants import (
+    MAX_LEN_DETECTOR,
+    MAX_LEN_TIME,
+    MAX_LEN_FILENAME,
+    MAX_LEN_FILTER,
+    MAX_LEN_INSTRUMENT,
+    MAX_LEN_OBS,
+    MAX_LEN_PROPOSAL,
+    MAX_LEN_PUPIL,
+)
+
 
 class NIRCamClawQueryHistory(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
-    instrument = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     run_monitor = models.BooleanField(blank=True, null=True)
@@ -40,18 +51,17 @@ class NIRCamClawQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_claw_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamClawStats(models.Model):
     entry_date = models.DateTimeField(blank=True, null=True)
-    filename = models.CharField(blank=True, null=True)
-    proposal = models.CharField(blank=True, null=True)
-    obs = models.CharField(blank=True, null=True)
-    detector = models.CharField(blank=True, null=True)
-    filter = models.CharField(blank=True, null=True)
-    pupil = models.CharField(blank=True, null=True)
-    expstart = models.CharField(blank=True, null=True)
+    filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    proposal = models.CharField(max_length=MAX_LEN_PROPOSAL, blank=True, null=True)
+    obs = models.CharField(max_length=MAX_LEN_OBS, blank=True, null=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, blank=True, null=True)
+    filter = models.CharField(max_length=MAX_LEN_FILTER, blank=True, null=True)
+    pupil = models.CharField(max_length=MAX_LEN_PUPIL, blank=True, null=True)
+    expstart = models.CharField(max_length=MAX_LEN_TIME, blank=True, null=True)
     expstart_mjd = models.FloatField(blank=True, null=True)
     effexptm = models.FloatField(blank=True, null=True)
     ra = models.FloatField(blank=True, null=True)
@@ -61,10 +71,11 @@ class NIRCamClawStats(models.Model):
     median = models.FloatField(blank=True, null=True)
     stddev = models.FloatField(blank=True, null=True)
     frac_masked = models.FloatField(blank=True, null=True)
-    skyflat_filename = models.CharField(blank=True, null=True)
+    skyflat_filename = models.CharField(max_length=MAX_LEN_FILENAME, blank=True, null=True)
+    doy = models.FloatField(blank=True, null=True)
+    total_bkg = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = True
         db_table = 'nircam_claw_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'

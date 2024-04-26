@@ -98,7 +98,16 @@ class BadPixelPlots():
         lines_to_remove = ["<!DOCTYPE html>",
                            '<html lang="en">',
                            '  </body>',
-                           '</html>']
+                           '</html>',
+                           '    <style>',
+                           '      html, body {',
+                           '        box-sizing: border-box;',
+                           '        display: flow-root;',
+                           '        height: 100%;',
+                           '        margin: 0;',
+                           '        padding: 0;',
+                           '      }',
+                           '    </style>']
 
         # Our Django-related lines that need to be at the top of the file
         hstring = """href="{{'/jwqldb/%s_bad_pixel_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Go to JWQLDB page</a>"""
@@ -162,7 +171,8 @@ class BadPixelPlots():
         template_dir = os.path.join(os.path.dirname(__file__), '../templates')
         template_file = os.path.join(template_dir, 'bad_pixel_monitor_savefile_basic.html')
         temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div': div}
-        self._html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
+        self._html = file_html(tabs, CDN, title=f'{self.instrument} bad pix monitor',
+                               template=template_file, template_variables=temp_vars)
 
         # Modify the html such that our Django-related lines are kept in place,
         # which will allow the page to keep the same formatting and styling as

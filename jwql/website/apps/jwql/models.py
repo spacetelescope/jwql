@@ -30,6 +30,22 @@ References
 
 from django.db import models
 
+from jwql.utils.constants import (
+    DEFAULT_MODEL_CHARFIELD,
+    MAX_LEN_APERTURE,
+    MAX_LEN_DETECTOR,
+    MAX_LEN_FILTER,
+    MAX_LEN_GRATING,
+    MAX_LEN_INSTRUMENT,
+    MAX_LEN_OBS,
+    MAX_LEN_PATH,
+    MAX_LEN_PROPOSAL,
+    MAX_LEN_PUPIL,
+    MAX_LEN_READPATTERN,
+    MAX_LEN_SUBARRAY,
+    MAX_LEN_TYPE,
+    MAX_LEN_USER,
+)
 
 INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('MIRI', 'MIRI'),
@@ -42,7 +58,7 @@ class Archive(models.Model):
     """A class defining the model used to hold information needed for the archive pages."""
 
     # Fields
-    instrument = models.CharField(max_length=7, help_text="Instrument name", primary_key=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, help_text="Instrument name", primary_key=True)
 
     # …
     # Metadata
@@ -59,9 +75,9 @@ class Proposal(models.Model):
     """A class defining the model used to hold information about a given proposal"""
     # Fields
     prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
-    thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail', default='')
+    thumbnail_path = models.CharField(max_length=MAX_LEN_PATH, help_text='Path to the proposal thumbnail', default=DEFAULT_MODEL_CHARFIELD)
     archive = models.ForeignKey(Archive, blank=False, null=False, on_delete=models.CASCADE)
-    category = models.CharField(max_length=10, help_text="Category Type", default='')
+    category = models.CharField(max_length=10, help_text="Category Type", default=DEFAULT_MODEL_CHARFIELD)
 
     # Metadata
     class Meta:
@@ -78,7 +94,7 @@ class Proposal(models.Model):
 class Observation(models.Model):
     """A class defining the model used to hold information about an observation from a given proposal"""
     # Fields
-    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
+    obsnum = models.CharField(max_length=MAX_LEN_OBS, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal', default=0)
     obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD', default=0.)
     obsend = models.FloatField(help_text='Time of the end of the observation in MJD', default=0.)
@@ -99,20 +115,20 @@ class Observation(models.Model):
 
 class RootFileInfo(models.Model):
     """ All info stored with root file for ease of sorting """
-    instrument = models.CharField(max_length=7, help_text="Instrument name")
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, help_text="Instrument name")
     obsnum = models.ForeignKey(Observation, blank=False, null=False, on_delete=models.CASCADE)
-    proposal = models.CharField(max_length=5, help_text="5-digit proposal ID string")
+    proposal = models.CharField(max_length=MAX_LEN_PROPOSAL, help_text="5-digit proposal ID string")
     root_name = models.TextField(primary_key=True, max_length=300)
     viewed = models.BooleanField(default=False)
-    filter = models.CharField(max_length=7, help_text="Instrument name", default='', null=True, blank=True)
-    aperture = models.CharField(max_length=40, help_text="Aperture", default='', null=True, blank=True)
-    detector = models.CharField(max_length=40, help_text="Detector", default='', null=True, blank=True)
-    read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=0)
-    read_patt = models.CharField(max_length=40, help_text="Read Pattern", default='', null=True, blank=True)
-    grating = models.CharField(max_length=40, help_text="Grating", default='', null=True, blank=True)
-    subarray = models.CharField(max_length=40, help_text="Subarray", default='', null=True, blank=True)
-    pupil = models.CharField(max_length=40, help_text="Pupil", default='', null=True, blank=True)
-    exp_type = models.CharField(max_length=40, help_text="Exposure Type", default='', null=True, blank=True)
+    filter = models.CharField(max_length=MAX_LEN_FILTER, help_text="Instrument name", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, help_text="Aperture", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, help_text="Detector", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=1)
+    read_patt = models.CharField(max_length=MAX_LEN_READPATTERN, help_text="Read Pattern", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    grating = models.CharField(max_length=MAX_LEN_GRATING, help_text="Grating", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, help_text="Subarray", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    pupil = models.CharField(max_length=MAX_LEN_PUPIL, help_text="Pupil", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     expstart = models.FloatField(help_text='Exposure Start Time', default=0.0)
 
     # Metadata
@@ -134,7 +150,7 @@ class Anomalies(models.Model):
         primary_key=True,
     )
     flag_date = models.DateTimeField(help_text="flag date", null=True, blank=True)
-    user = models.CharField(max_length=50, help_text="user", default='', null=True, blank=True)
+    user = models.CharField(max_length=MAX_LEN_USER, help_text="user", default='', null=True, blank=True)
     cosmic_ray_shower = models.BooleanField(default=False)
     diffraction_spike = models.BooleanField(default=False)
     excessive_saturation = models.BooleanField(default=False)

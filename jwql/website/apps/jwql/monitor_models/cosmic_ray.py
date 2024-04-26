@@ -27,13 +27,14 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+
+from jwql.utils.constants import MAX_LEN_APERTURE, MAX_LEN_FILENAME, MAX_LEN_INSTRUMENT
 
 
 class FGSCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -43,13 +44,12 @@ class FGSCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'fgs_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class FGSCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -61,13 +61,12 @@ class FGSCosmicRayStats(models.Model):
         managed = True
         db_table = 'fgs_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRICosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -77,13 +76,12 @@ class MIRICosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'miri_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class MIRICosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -95,13 +93,12 @@ class MIRICosmicRayStats(models.Model):
         managed = True
         db_table = 'miri_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -111,13 +108,12 @@ class NIRCamCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'nircam_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRCamCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -129,13 +125,12 @@ class NIRCamCosmicRayStats(models.Model):
         managed = True
         db_table = 'nircam_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -145,13 +140,12 @@ class NIRISSCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'niriss_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRISSCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -163,13 +157,12 @@ class NIRISSCosmicRayStats(models.Model):
         managed = True
         db_table = 'niriss_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -179,13 +172,12 @@ class NIRSpecCosmicRayQueryHistory(models.Model):
         managed = True
         db_table = 'nirspec_cosmic_ray_query_history'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
 
 
 class NIRSpecCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -197,4 +189,3 @@ class NIRSpecCosmicRayStats(models.Model):
         managed = True
         db_table = 'nirspec_cosmic_ray_stats'
         unique_together = (('id', 'entry_date'),)
-        app_label = 'monitors'
