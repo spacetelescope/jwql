@@ -29,20 +29,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.9, "3.10"]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: mamba-org/provision-with-micromamba@v15
+      - uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: ./environment_python_${{ matrix.python-version }}.yml
-          cache-env: true
+          cache-environment: true
           cache-downloads: true
+          init-shell: bash
 
       - run: pip install -e .[test]
 
-      - run: conda env export
+      - run: micromamba env export
 
       - uses: supercharge/redis-github-action@1.4.0
         with:
