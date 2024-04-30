@@ -1171,6 +1171,8 @@ def view_exposure(request, inst, group_root):
 
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
+    if len(root_file_info) == 0:
+        return generate_error_view(request, inst, f"No groups starting with {group_root} currently in JWQL database.")
     viewed = all([rf.viewed for rf in root_file_info])
 
     # Convert expstart from MJD to a date
@@ -1178,7 +1180,14 @@ def view_exposure(request, inst, group_root):
 
     # Create one dict of info to show at the top of the page, and another dict of info
     # to show in the collapsible text box.
-    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+    try:
+        basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+    except FileNotFoundError as e:
+        return generate_error_view(request, inst,
+                                  "Looks like at least one of your files has not yet been ingested into the JWQL database.  \
+                                   If this is a newer observation, please wait a few hours and try again.  \
+                                   If this observation is over a day old please contact JWQL support.",
+                                   exception_message=f"Received Error: '{e}'")
 
     # Build the context
     context = {'base_url': get_base_url(),
@@ -1296,4 +1305,9 @@ def view_image(request, inst, file_root):
                'basic_info': basic_info,
                'additional_info': additional_info}
 
+    return render(request, template, context)
+
+def generate_error_view(request, inst, error_message, exception_message=""):
+    template = 'error_view.html'
+    context = {'base_url': get_base_url(), 'inst': inst, 'error_message': error_message, 'exception_message': exception_message }
     return render(request, template, context)

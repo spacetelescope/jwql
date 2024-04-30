@@ -652,7 +652,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         elif os.path.isfile(full_path_proprietary):
             full_path = full_path_proprietary
         else:
-            raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
+            raise FileNotFoundError('{} is not in the expected location: {}'.format(filename, full_path))
 
     return full_path
 

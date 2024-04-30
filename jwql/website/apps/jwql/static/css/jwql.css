@@ -620,6 +620,11 @@
       font-size: 0.65rem;
   }
 
+  .wrapped-error-text {
+    max-width: 650px; /* Set the maximum width */
+    word-wrap: break-word; /* Ensure words break if they exceed the width */
+}
+
   /*Format the version identifier text in bottom corner*/
   #version-div {
     float: right;
