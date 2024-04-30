@@ -461,7 +461,10 @@ def get_additional_exposure_info(root_file_infos, image_info):
         # get_image_info() has already globbed over the directory with the files and
         # returned the list of existing suffixes, so we shouldn't need to check for
         # file existence here.
-        file_path = filesystem_path(filename, check_existence=True)
+        try:
+            file_path = filesystem_path(filename, check_existence=True)
+        except FileNotFoundError as e:
+            raise e
 
         header = fits.getheader(file_path)
         header_sci = fits.getheader(file_path, 1)
@@ -1203,7 +1206,10 @@ def get_header_info(filename, filetype):
     header_info = {}
 
     # Open the file
-    fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
+    try:
+        fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
+    except FileNotFoundError as e:
+        raise e
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file

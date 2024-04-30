@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+    <title>There seems to be an issue - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+        <!--Add JavaScript to make text fade in after video loads-->
+        <script>
+            $(document).ready(function() {
+                $("#space_404_text").delay(500).fadeIn(200);
+            });
+        </script>
+
+        <!-- The video -->
+        <video autoplay muted loop id="space_404">
+          <source src={{ static("img/flyby.mov") }} type="video/mp4" alt="">
+        </video>
+
+        <!-- Overlay text to describe the video -->
+        <div id="space_404_text">
+          <h1>Don't Panic!</h1>
+          <p class="wrapped-error-text">{{ error_message }}</p>
+          <p class="wrapped-error-text">{{ exception_message }}</p>
+          <img src={{ static("img/spacecat.jpg") }} alt='SpaceCAT' style="width:650px;height:400px;">
+
+        </div>
+
+    </main>
+
+{% endblock %}
