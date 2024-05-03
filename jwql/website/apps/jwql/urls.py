@@ -85,6 +85,8 @@ urlpatterns = [
     path('jwqldb/<str:tablename_param>', views.jwqldb_table_viewer, name='jwqldb_table_viewer'),
     path('log_view/', views.log_view, name='log_view'),
     path('query_submit/', views.query_submit, name='query_submit'),
+    path('query_download/', views.query_download, name='query_download'),
+
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),

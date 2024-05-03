@@ -142,7 +142,13 @@ def jwql_query(request):
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
-            return redirect('/query_submit')
+            # Check if the download button value exists in the POST message (meaning Download was pressed)
+            download_button_value = request.POST.get('download_jwstqueryform', None)
+            if(download_button_value):
+                return redirect('/query_download')
+            else:
+                # submit was pressed go to the query_submit page
+                return redirect('/query_submit')
 
     context = {'form': form,
                'inst': ''}
@@ -769,6 +775,37 @@ def query_submit(request):
                'page': page_number}
 
     return render(request, template, context)
+
+
+def query_download(request):
+    """Download query results in csv format
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage (csv file to be downloaded)
+    """
+    parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
+    filtered_rootnames = get_rootnames_from_query(parameters)
+
+    today = datetime.datetime.now().strftime('%Y%m%d_%H:%M')
+    filename = f'jwql_query_{today}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    header_row = ["Index", "Name"]
+    writer = csv.writer(response)
+    writer.writerow(header_row)
+    for index, rootname in enumerate(filtered_rootnames):
+        writer.writerow([index, rootname])
+
+    return response
+
 
 
 def unlooked_images(request, inst):
