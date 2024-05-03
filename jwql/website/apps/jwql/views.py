@@ -57,14 +57,13 @@ from bokeh.embed import components
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-import numpy as np
 from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config
+from jwql.utils.utils import filename_parser, get_base_url, get_config
 from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -805,7 +804,6 @@ def query_download(request):
         writer.writerow([index, rootname])
 
     return response
-
 
 
 def unlooked_images(request, inst):
