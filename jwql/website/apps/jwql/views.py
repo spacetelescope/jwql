@@ -57,14 +57,13 @@ from bokeh.embed import components
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-import numpy as np
 from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config
+from jwql.utils.utils import filename_parser, get_base_url, get_config
 from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -142,7 +141,13 @@ def jwql_query(request):
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
-            return redirect('/query_submit')
+            # Check if the download button value exists in the POST message (meaning Download was pressed)
+            download_button_value = request.POST.get('download_jwstqueryform', None)
+            if(download_button_value):
+                return redirect('/query_download')
+            else:
+                # submit was pressed go to the query_submit page
+                return redirect('/query_submit')
 
     context = {'form': form,
                'inst': ''}
@@ -769,6 +774,36 @@ def query_submit(request):
                'page': page_number}
 
     return render(request, template, context)
+
+
+def query_download(request):
+    """Download query results in csv format
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage (csv file to be downloaded)
+    """
+    parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
+    filtered_rootnames = get_rootnames_from_query(parameters)
+
+    today = datetime.datetime.now().strftime('%Y%m%d_%H:%M')
+    filename = f'jwql_query_{today}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    header_row = ["Index", "Name"]
+    writer = csv.writer(response)
+    writer.writerow(header_row)
+    for index, rootname in enumerate(filtered_rootnames):
+        writer.writerow([index, rootname])
+
+    return response
 
 
 def unlooked_images(request, inst):
