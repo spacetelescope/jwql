@@ -681,7 +681,7 @@ def get_group_anomalies(file_root):
         root file name key with string of anomalies
     """
     # Check for group root name
-    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root).order_by("root_name")
     group_anomaly_dict = {}
     for rootfileinfo in rootfileinfo_set:
         anomalies_list = get_current_flagged_anomalies([rootfileinfo])
