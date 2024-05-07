@@ -665,6 +665,29 @@ def get_anomaly_form(request, inst, file_root):
 
     return form
 
+def get_group_anomalies (file_root):
+    """Generate form data for context
+
+    Parameters
+    ----------
+    file_root : str
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
+
+    Returns
+    -------
+    group_anomaly_dict dict
+        root file name key with string of anomalies
+    """
+    # Check for group root name
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
+    group_anomaly_dict = {}
+    for rootfileinfo in rootfileinfo_set:
+        anomalies_list = get_current_flagged_anomalies([rootfileinfo])
+        anomalies_string = ', '.join(anomalies_list)
+        group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+    return group_anomaly_dict
+
 
 def get_dashboard_components(request):
     """Build and return a Dashboard class.

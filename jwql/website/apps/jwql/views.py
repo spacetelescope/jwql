@@ -44,16 +44,16 @@ Dependencies
 
 import csv
 import datetime
-import json
 import glob
+import json
 import logging
-import os
 import operator
+import os
 import socket
 
 from astropy.time import Time
-from bokeh.layouts import layout
 from bokeh.embed import components
+from bokeh.layouts import layout
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -61,29 +61,31 @@ from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, QUERY_CONFIG_TEMPLATE, URL_DICT, QueryConfigKeys
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
-from jwql.utils.utils import filename_parser, get_base_url, get_config
-from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unformat
+from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
-from .data_containers import build_table
-from .data_containers import get_acknowledgements
-from .data_containers import get_additional_exposure_info
-from .data_containers import get_available_suffixes
-from .data_containers import get_anomaly_form
-from .data_containers import get_dashboard_components
-from .data_containers import get_edb_components
-from .data_containers import get_explorer_extension_names
-from .data_containers import get_header_info
-from .data_containers import get_image_info
-from .data_containers import get_instrument_looks
-from .data_containers import get_rootnames_from_query
-from .data_containers import random_404_page
-from .data_containers import text_scrape
-from .data_containers import thumbnails_ajax
-from .data_containers import thumbnails_query_ajax
-from .forms import JwqlQueryForm
-from .forms import FileSearchForm
+from .data_containers import (
+    build_table,
+    get_acknowledgements,
+    get_additional_exposure_info,
+    get_anomaly_form,
+    get_available_suffixes,
+    get_dashboard_components,
+    get_edb_components,
+    get_explorer_extension_names,
+    get_group_anomalies,
+    get_header_info,
+    get_image_info,
+    get_instrument_looks,
+    get_rootnames_from_query,
+    random_404_page,
+    text_scrape,
+    thumbnails_ajax,
+    thumbnails_query_ajax,
+)
+from .forms import FileSearchForm, JwqlQueryForm
+
 if not os.environ.get("READTHEDOCS"):
     from .models import RootFileInfo
 from astropy.io import fits
@@ -1173,6 +1175,7 @@ def view_exposure(request, inst, group_root):
 
     # Get the anomaly submission form
     form = get_anomaly_form(request, inst, group_root)
+    group_anomalies = get_group_anomalies(group_root)
 
     # if we get to this page without any navigation data,
     # previous/next buttons will be hidden
@@ -1240,7 +1243,8 @@ def view_exposure(request, inst, group_root):
                'marked_viewed': viewed,
                'expstart_str': expstart_str,
                'basic_info': basic_info,
-               'additional_info': additional_info}
+               'additional_info': additional_info,
+               'group_anomalies':group_anomalies}
 
     return render(request, template, context)
 
