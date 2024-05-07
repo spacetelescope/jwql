@@ -34,6 +34,7 @@ Use
 import os
 import logging
 from datetime import datetime, timezone, timedelta
+from dateutil import parser
 
 import numpy as np
 import pandas as pd
@@ -988,7 +989,7 @@ class WATA:
 
     def add_timezone(self, date_str):
         """Method to bypass timezone warning from Django"""
-        dt_timezone = datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
+        dt_timezone = parser.parse(date_str).replace(tzinfo=timezone.utc)
         return dt_timezone
 
     def add_wata_data(self):
