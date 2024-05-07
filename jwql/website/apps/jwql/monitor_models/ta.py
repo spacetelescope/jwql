@@ -35,6 +35,7 @@ from jwql.utils.constants import (
     MAX_LEN_DETECTOR,
     MAX_LEN_FILENAME,
     MAX_LEN_FILTER,
+    MAX_LEN_GENERIC_TEXT,
     MAX_LEN_INSTRUMENT,
     MAX_LEN_PATH,
     MAX_LEN_READPATTERN,
@@ -99,7 +100,7 @@ class NIRSpecWataStats(models.Model):
     visit_id = models.CharField(max_length=MAX_LEN_VISIT, blank=True, null=True)
     tafilter = models.CharField(max_length=MAX_LEN_FILTER, blank=True, null=True)
     readout = models.CharField(max_length=MAX_LEN_READPATTERN, blank=True, null=True)
-    ta_status = models.CharField(max_length=100, blank=True, null=True)
+    ta_status = models.CharField(max_length=MAX_LEN_GENERIC_TEXT, blank=True, null=True)
     star_name = models.IntegerField(blank=True, null=True)
     star_ra = models.FloatField(blank=True, null=True)
     star_dec = models.FloatField(blank=True, null=True)
@@ -168,10 +169,16 @@ class NIRSpecMsataStats(models.Model):
     samroll = models.FloatField(blank=True, null=True)
     box_peak_value = ArrayField(models.FloatField())
     reference_star_mag = ArrayField(models.FloatField())
-    convergence_status = ArrayField(models.CharField(max_length=100, blank=True, null=True))
+    convergence_status = ArrayField(
+        models.CharField(max_length=MAX_LEN_GENERIC_TEXT, blank=True, null=True)
+    )
     reference_star_number = ArrayField(models.IntegerField())
-    lsf_removed_status = ArrayField(models.CharField(max_length=100, blank=True, null=True))
-    lsf_removed_reason = ArrayField(models.CharField(max_length=100, blank=True, null=True))
+    lsf_removed_status = ArrayField(
+        models.CharField(max_length=MAX_LEN_GENERIC_TEXT, blank=True, null=True)
+    )
+    lsf_removed_reason = ArrayField(
+        models.CharField(max_length=MAX_LEN_GENERIC_TEXT, blank=True, null=True)
+    )
     lsf_removed_x = ArrayField(models.FloatField())
     lsf_removed_y = ArrayField(models.FloatField())
     planned_v2 = ArrayField(models.FloatField())
