@@ -1244,7 +1244,7 @@ def view_exposure(request, inst, group_root):
                'expstart_str': expstart_str,
                'basic_info': basic_info,
                'additional_info': additional_info,
-               'group_anomalies':group_anomalies}
+               'group_anomalies': group_anomalies}
 
     return render(request, template, context)
 

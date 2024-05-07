@@ -665,7 +665,8 @@ def get_anomaly_form(request, inst, file_root):
 
     return form
 
-def get_group_anomalies (file_root):
+
+def get_group_anomalies(file_root):
     """Generate form data for context
 
     Parameters
