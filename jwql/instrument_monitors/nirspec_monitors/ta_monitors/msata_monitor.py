@@ -38,6 +38,7 @@ Use
 import os
 import logging
 from datetime import datetime, timezone, timedelta
+from dateutil import parser
 from random import randint
 
 import numpy as np
@@ -467,7 +468,7 @@ class MSATA:
 
     def add_timezone(self, date_str):
         """Method to bypass timezone warning from Django"""
-        dt_timezone = datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
+        dt_timezone = parser.parse(date_str).replace(tzinfo=timezone.utc)
         return dt_timezone
 
     def plt_status(self):
