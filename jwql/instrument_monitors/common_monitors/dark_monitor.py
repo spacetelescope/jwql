@@ -725,7 +725,7 @@ class Dark():
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
             # Get the observation time for each file
-            obstime = instrument_properties.get_obstime(item)  # .replace(tzinfo=datetime.timezone.utc) - if get_obstime can't be changed
+            obstime = instrument_properties.get_obstime(item)
             obs_times.append(obstime)
 
         # Find the earliest and latest observation time, and calculate
@@ -960,7 +960,7 @@ class Dark():
                 self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
                 self.aperture = aperture
 
-                for readpatt in ['RAPID']:  #possible_readpatts:
+                for readpatt in possible_readpatts:
                     self.readpatt = readpatt
                     logging.info(f'\tWorking on readout pattern: {self.readpatt}')
 
