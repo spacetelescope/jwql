@@ -44,47 +44,48 @@ Dependencies
 
 import csv
 import datetime
-import json
 import glob
+import json
 import logging
-import os
 import operator
+import os
 import socket
 
 from astropy.time import Time
-from bokeh.layouts import layout
 from bokeh.embed import components
+from bokeh.layouts import layout
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-import numpy as np
 from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, QUERY_CONFIG_TEMPLATE, URL_DICT, QueryConfigKeys
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QueryConfigKeys
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config
-from jwql.utils.utils import get_rootnames_for_instrument_proposal, query_unformat
+from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
-from .data_containers import build_table
-from .data_containers import get_acknowledgements
-from .data_containers import get_additional_exposure_info
-from .data_containers import get_available_suffixes
-from .data_containers import get_anomaly_form
-from .data_containers import get_dashboard_components
-from .data_containers import get_edb_components
-from .data_containers import get_explorer_extension_names
-from .data_containers import get_header_info
-from .data_containers import get_image_info
-from .data_containers import get_instrument_looks
-from .data_containers import get_rootnames_from_query
-from .data_containers import random_404_page
-from .data_containers import text_scrape
-from .data_containers import thumbnails_ajax
-from .data_containers import thumbnails_query_ajax
-from .forms import JwqlQueryForm
-from .forms import FileSearchForm
+from .data_containers import (
+    build_table,
+    get_acknowledgements,
+    get_additional_exposure_info,
+    get_anomaly_form,
+    get_available_suffixes,
+    get_dashboard_components,
+    get_edb_components,
+    get_explorer_extension_names,
+    get_group_anomalies,
+    get_header_info,
+    get_image_info,
+    get_instrument_looks,
+    get_rootnames_from_query,
+    random_404_page,
+    text_scrape,
+    thumbnails_ajax,
+    thumbnails_query_ajax,
+)
+from .forms import FileSearchForm, JwqlQueryForm
+
 if not os.environ.get("READTHEDOCS"):
     from .models import RootFileInfo
 from astropy.io import fits
@@ -142,7 +143,13 @@ def jwql_query(request):
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
-            return redirect('/query_submit')
+            # Check if the download button value exists in the POST message (meaning Download was pressed)
+            download_button_value = request.POST.get('download_jwstqueryform', None)
+            if(download_button_value):
+                return redirect('/query_download')
+            else:
+                # submit was pressed go to the query_submit page
+                return redirect('/query_submit')
 
     context = {'form': form,
                'inst': ''}
@@ -771,6 +778,36 @@ def query_submit(request):
     return render(request, template, context)
 
 
+def query_download(request):
+    """Download query results in csv format
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage (csv file to be downloaded)
+    """
+    parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
+    filtered_rootnames = get_rootnames_from_query(parameters)
+
+    today = datetime.datetime.now().strftime('%Y%m%d_%H:%M')
+    filename = f'jwql_query_{today}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    header_row = ["Index", "Name"]
+    writer = csv.writer(response)
+    writer.writerow(header_row)
+    for index, rootname in enumerate(filtered_rootnames):
+        writer.writerow([index, rootname])
+
+    return response
+
+
 def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
 
@@ -1138,6 +1175,7 @@ def view_exposure(request, inst, group_root):
 
     # Get the anomaly submission form
     form = get_anomaly_form(request, inst, group_root)
+    group_anomalies = get_group_anomalies(group_root)
 
     # if we get to this page without any navigation data,
     # previous/next buttons will be hidden
@@ -1171,6 +1209,8 @@ def view_exposure(request, inst, group_root):
 
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
+    if len(root_file_info) == 0:
+        return generate_error_view(request, inst, f"No groups starting with {group_root} currently in JWQL database.")
     viewed = all([rf.viewed for rf in root_file_info])
 
     # Convert expstart from MJD to a date
@@ -1178,7 +1218,14 @@ def view_exposure(request, inst, group_root):
 
     # Create one dict of info to show at the top of the page, and another dict of info
     # to show in the collapsible text box.
-    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+    try:
+        basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+    except FileNotFoundError as e:
+        return generate_error_view(request, inst,
+                                   "Looks like at least one of your files has not yet been ingested into the JWQL database.  \
+                                   If this is a newer observation, please wait a few hours and try again.  \
+                                   If this observation is over a day old please contact JWQL support.",
+                                   exception_message=f"Received Error: '{e}'")
 
     # Build the context
     context = {'base_url': get_base_url(),
@@ -1196,7 +1243,8 @@ def view_exposure(request, inst, group_root):
                'marked_viewed': viewed,
                'expstart_str': expstart_str,
                'basic_info': basic_info,
-               'additional_info': additional_info}
+               'additional_info': additional_info,
+               'group_anomalies': group_anomalies}
 
     return render(request, template, context)
 
@@ -1296,4 +1344,28 @@ def view_image(request, inst, file_root):
                'basic_info': basic_info,
                'additional_info': additional_info}
 
+    return render(request, template, context)
+
+
+def generate_error_view(request, inst, error_message, exception_message=""):
+    """Generate the error view page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    error_message : str
+        Custom Error Message to be seen in error_view.html
+    exception_message: str
+        if an exception caused this to be generated, pass the exception message along for display
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'error_view.html'
+    context = {'base_url': get_base_url(), 'inst': inst, 'error_message': error_message, 'exception_message': exception_message}
     return render(request, template, context)

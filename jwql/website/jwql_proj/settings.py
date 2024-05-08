@@ -38,7 +38,7 @@ if not os.environ.get("READTHEDOCS"):
     SECRET_KEY = get_config()['django_secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = get_config()['django_debug']
 
 
 ALLOWED_HOSTS = ['*']

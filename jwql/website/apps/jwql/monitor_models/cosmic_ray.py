@@ -27,13 +27,14 @@ References
 # This is an auto-generated Django model module.
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+
+from jwql.utils.constants import MAX_LEN_APERTURE, MAX_LEN_FILENAME, MAX_LEN_INSTRUMENT
 
 
 class FGSCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -47,8 +48,8 @@ class FGSCosmicRayQueryHistory(models.Model):
 
 class FGSCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -64,8 +65,8 @@ class FGSCosmicRayStats(models.Model):
 
 class MIRICosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -79,8 +80,8 @@ class MIRICosmicRayQueryHistory(models.Model):
 
 class MIRICosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -96,8 +97,8 @@ class MIRICosmicRayStats(models.Model):
 
 class NIRCamCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -111,8 +112,8 @@ class NIRCamCosmicRayQueryHistory(models.Model):
 
 class NIRCamCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -128,8 +129,8 @@ class NIRCamCosmicRayStats(models.Model):
 
 class NIRISSCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -143,8 +144,8 @@ class NIRISSCosmicRayQueryHistory(models.Model):
 
 class NIRISSCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
@@ -160,8 +161,8 @@ class NIRISSCosmicRayStats(models.Model):
 
 class NIRSpecCosmicRayQueryHistory(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    instrument = models.CharField(blank=True, null=True)
-    aperture = models.CharField(blank=True, null=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
     start_time_mjd = models.FloatField(blank=True, null=True)
     end_time_mjd = models.FloatField(blank=True, null=True)
     files_found = models.IntegerField(blank=True, null=True)
@@ -175,8 +176,8 @@ class NIRSpecCosmicRayQueryHistory(models.Model):
 
 class NIRSpecCosmicRayStats(models.Model):
     entry_date = models.DateTimeField(unique=True)
-    aperture = models.CharField(blank=True, null=True)
-    source_file = models.CharField(blank=True, null=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, blank=True, null=True)
+    source_file = models.CharField(max_length=MAX_LEN_FILENAME, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
     jump_count = models.IntegerField(blank=True, null=True)
