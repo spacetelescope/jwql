@@ -30,6 +30,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from jwql.utils.constants import (
+    DEFAULT_MODEL_CHARFIELD,
     MAX_LEN_AMPLIFIER,
     MAX_LEN_APERTURE,
     MAX_LEN_DETECTOR,
