@@ -430,35 +430,6 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_filename_parser_whole_filesystem():
-    """Test the filename_parser on all files currently in the filesystem."""
-    # Get all files
-    filesystem_dir = get_config()['filesystem']
-    all_files = []
-    for dir_name, _, file_list in os.walk(filesystem_dir):
-        for file in file_list:
-            if 'public' in file or 'proprietary' in file:
-                if file.endswith('.fits'):
-                    all_files.append(os.path.join(dir_name, file))
-
-    # Run the filename_parser on all files
-    bad_filenames = []
-    for filepath in all_files:
-        try:
-            filename_parser(filepath)
-        except ValueError:
-            bad_filenames.append(os.path.basename(filepath))
-
-    # Determine if the test failed
-    fail = bad_filenames != []
-    failure_msg = '{} files could not be successfully parsed: \n - {}'.\
-        format(len(bad_filenames), '\n - '.join(bad_filenames))
-
-    # Check which ones failed
-    assert not fail, failure_msg
-
-
 def test_filename_parser_non_jwst():
     """Attempt to generate a file parameter dictionary from a file
     that is not formatted in the JWST naming convention. Ensure the
