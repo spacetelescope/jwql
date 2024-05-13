@@ -1,0 +1,53 @@
+name: build
+
+on:
+  release:
+    types: [ released ]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: micromamba-shell {0}
+
+jobs:
+  build:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
+    with:
+      upload_to_pypi: false
+  freeze:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.11"
+      fail-fast: false
+    name: freeze versions (Python ${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
+          environment-file: environment.yml
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: none
+          generate-run-shell: true
+      - run: pip install .
+      - run: pip list
+      - id: version
+        uses: mtkennerly/dunamai-action@v1
+      - run: mkdir envs
+      - run: pip freeze > envs/jwql_pip_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}.txt
+      - run: micromamba env export > envs/jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}.yml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: envs
+          path: envs/*
+      - if: (github.event_name == 'release' && github.event.action == 'published')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: envs/*
+          file_glob: true
+            
+

@@ -6,10 +6,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash -l {0}
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -25,30 +21,37 @@ jobs:
     name: test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 5
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.10"]
-
+        os: [ "ubuntu-latest", "macos-latest" ]
+        python-version: [ "3.11" ]
+      fail-fast: false
+    env:
+      PYTHONUNBUFFERED: 1
+    defaults:
+      run:
+        shell: micromamba-shell {0}
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: ./environment_python_${{ matrix.python-version }}.yml
-          cache-environment: true
-          cache-downloads: true
-          init-shell: bash
-
+          environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
+          environment-file: environment.yml
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: none
+          generate-run-shell: true
+          
       - run: pip install -e .[test]
+
+      - run: pip list
 
       - run: micromamba env export
 
-      - uses: supercharge/redis-github-action@1.4.0
+      - if: runner.os == 'Linux'
+        uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
-        if: runner.os == 'Linux'
 
       - run: python -c "import jwql; print('Version ' + jwql.__version__); print('Path ' + jwql.__path__[0])"
 
