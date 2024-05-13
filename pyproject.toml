@@ -27,6 +27,7 @@ dependencies = [
     "celery>=5.3.6,<6",
     "crds>=11.17.19,<12",
     "django>=5.0.3,<6",
+    "gunicorn",
     "inflection>=0.5.1,<0.6",
     "jsonschema>=4.21.1,<5",
     "jwst>=1.13.4,<2",
