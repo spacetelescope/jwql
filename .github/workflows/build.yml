@@ -41,6 +41,7 @@ jobs:
       - id: filename
         run: echo "filename=jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
+      - run: cat ${{ steps.filename.outputs.filename }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.filename.outputs.filename }}
