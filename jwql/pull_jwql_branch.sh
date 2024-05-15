@@ -62,12 +62,12 @@ echo "Reset: $reset";
 echo "Notify: $notify $recipient";
 
 # 1. Pull updated code from GitHub deployment branch (keep second checkout in case its already defined for some weird reason)
-git fetch origin
-git checkout -b $branch_name --track origin/$branch_name
+git fetch upstream
+git checkout -b $branch_name --track upstream/$branch_name
 git checkout $branch_name
-git fetch origin $branch_name
-git pull origin $branch_name
-git fetch origin --tags
+git fetch upstream $branch_name
+git pull upstream $branch_name
+git fetch upstream --tags
 
 # 2. Bring the service down
 if [ "$reset" = true ]; then
