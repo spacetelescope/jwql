@@ -494,12 +494,8 @@ class PreviewImage():
                 # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
                 # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
                 warnings.filterwarnings("ignore", message="AutoMinorLocator does not work with logarithmic scale")
-                #if xsize <= ysize:
 
-                print(self.file, xsize, ysize, xsize/ysize)
                 xyratio = xsize / ysize
-
-
                 if xyratio < 1.6:
                     # For apertures that are taller than they are wide, square, or that are wider than
                     # they are tall but still reasonably close to square, put the colorbar on the right
@@ -509,7 +505,7 @@ class PreviewImage():
                     if xyratio > 0.4:
                         cb_width = 0.05
                     else:
-                        cb_width = 0.05 * 0.4/xyratio
+                        cb_width = 0.05 * 0.4 / xyratio
 
                     upper_x_anchor = 0.02
                     if xyratio < 0.1:
