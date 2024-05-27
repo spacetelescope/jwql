@@ -461,19 +461,23 @@ def get_additional_exposure_info(root_file_infos, image_info):
         # get_image_info() has already globbed over the directory with the files and
         # returned the list of existing suffixes, so we shouldn't need to check for
         # file existence here.
-        file_path = filesystem_path(filename, check_existence=True)
+        try:
+            file_path = filesystem_path(filename, check_existence=True)
+        except FileNotFoundError as e:
+            raise e
 
         header = fits.getheader(file_path)
         header_sci = fits.getheader(file_path, 1)
 
-        basic_info['category'] = header['CATEGORY']
-        basic_info['visit_status'] = header['VISITSTA']
-        additional_info['NGROUPS'] = header['NGROUPS']
-        additional_info['NINTS'] = header['NINTS']
-        additional_info['EXPTIME'] = header['EFFEXPTM']
-        additional_info['TITLE'] = header['TITLE']
-        additional_info['PI_NAME'] = header['PI_NAME']
-        additional_info['TARGNAME'] = header['TARGPROP']
+        # Dont assume headers exist, some are omitted in parallel observations
+        basic_info['category'] = header.get('CATEGORY', 'N/A')
+        basic_info['visit_status'] = header.get('VISITSTA', 'N/A')
+        additional_info['NGROUPS'] = header.get('NGROUPS', 'N/A')
+        additional_info['NINTS'] = header.get('NINTS', 'N/A')
+        additional_info['EXPTIME'] = header.get('EFFEXPTM', 'N/A')
+        additional_info['TITLE'] = header.get('TITLE', 'N/A')
+        additional_info['PI_NAME'] = header.get('PI_NAME', 'N/A')
+        additional_info['TARGNAME'] = header.get('TARGPROP', 'N/A')
 
         # For the exposure level (i.e. multiple files) present the target
         # RA and Dec. For the image level, give RA_REF, DEC_REF, since those
@@ -481,21 +485,21 @@ def get_additional_exposure_info(root_file_infos, image_info):
         # PA_V3, which applies to all detectors. At the image level, show
         # ROLL_REF, which is detector-specific.
         if isinstance(root_file_infos, QuerySet):
-            additional_info['TARG_RA'] = header['TARG_RA']
-            additional_info['TARG_DEC'] = header['TARG_DEC']
-            additional_info['PA_V3'] = header_sci['PA_V3']
+            additional_info['TARG_RA'] = header.get('TARG_RA', 'N/A')
+            additional_info['TARG_DEC'] = header.get('TARG_DEC', 'N/A')
+            additional_info['PA_V3'] = header_sci.get('PA_V3', 'N/A')
         elif isinstance(root_file_infos, RootFileInfo):
-            additional_info['RA_REF'] = header_sci['RA_REF']
-            additional_info['DEC_REF'] = header_sci['DEC_REF']
-            additional_info['ROLL_REF'] = header_sci['ROLL_REF']
+            additional_info['RA_REF'] = header_sci.get('RA_REF', 'N/A')
+            additional_info['DEC_REF'] = header_sci.get('DEC_REF', 'N/A')
+            additional_info['ROLL_REF'] = header_sci.get('ROLL_REF', 'N/A')
 
         additional_info['CAL_VER'] = 'N/A'
         additional_info['CRDS context'] = 'N/A'
 
         # Pipeline version and CRDS context info are not in uncal files
         if suffix != 'uncal':
-            additional_info['CAL_VER'] = header['CAL_VER']
-            additional_info['CRDS context'] = header['CRDS_CTX']
+            additional_info['CAL_VER'] = header.get('CAL_VER', 'N/A')
+            additional_info['CRDS context'] = header.get('CRDS_CTX', 'N/A')
 
     return basic_info, additional_info
 
@@ -660,6 +664,30 @@ def get_anomaly_form(request, inst, file_root):
             messages.error(request, "Failed to submit anomaly")
 
     return form
+
+
+def get_group_anomalies(file_root):
+    """Generate form data for context
+
+    Parameters
+    ----------
+    file_root : str
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
+
+    Returns
+    -------
+    group_anomaly_dict dict
+        root file name key with string of anomalies
+    """
+    # Check for group root name
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root).order_by("root_name")
+    group_anomaly_dict = {}
+    for rootfileinfo in rootfileinfo_set:
+        anomalies_list = get_current_flagged_anomalies([rootfileinfo])
+        anomalies_string = ', '.join(anomalies_list)
+        group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+    return group_anomaly_dict
 
 
 def get_dashboard_components(request):
@@ -1202,7 +1230,10 @@ def get_header_info(filename, filetype):
     header_info = {}
 
     # Open the file
-    fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
+    try:
+        fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
+    except FileNotFoundError as e:
+        raise e
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file

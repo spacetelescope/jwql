@@ -173,6 +173,22 @@ def create_png_from_fits(filename, outdir):
     """
     if os.path.isfile(filename):
         image = fits.getdata(filename)
+
+        # If the input file is a rateints/calints file, it will have 3 dimensions.
+        # If it is a file containing all groups, prior to ramp-fitting, it will have
+        # 4 dimensions. In this case, grab the appropriate 2D image to work with. For
+        # a 3D case, get the first integration. For a 4D case, get the last group
+        # (which will have the highest SNR).
+        ndim = len(image.shape)
+        if ndim == 2:
+            pass
+        elif ndim == 3:
+            image = image[0, :, :]
+        elif ndim == 4:
+            image = image[0, -1, :, :]
+        else:
+            raise ValueError(f'File {filename} has an unsupported number of dimensions: {ndim}.')
+
         ny, nx = image.shape
         img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
 
@@ -636,7 +652,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         elif os.path.isfile(full_path_proprietary):
             full_path = full_path_proprietary
         else:
-            raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
+            raise FileNotFoundError('{} is not in the expected location: {}'.format(filename, full_path))
 
     return full_path
 

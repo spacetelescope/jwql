@@ -303,7 +303,8 @@ class BiasMonitorPlots():
         """
         # Insert into our html template and save
         temp_vars = {'inst': self.instrument, 'plot_script': self.script, 'plot_div': self.div}
-        html_lines = file_html(self.tabs, CDN, f'{self.instrument} bias monitor', self.html_file, temp_vars)
+        html_lines = file_html(self.tabs, CDN, title=f'{self.instrument} bias monitor', 
+                               template=self.html_file, template_variables=temp_vars)
 
         lines = html_lines.split('\n')
 

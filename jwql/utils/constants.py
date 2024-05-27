@@ -364,6 +364,9 @@ EXPOSURE_PAGE_SUFFIX_ORDER = [
     "wfscmb",
 ]
 
+# Default Model Values
+DEFAULT_MODEL_CHARFIELD = "empty"
+
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4
 FILE_AC_O_ID_LEN = 3
@@ -700,6 +703,7 @@ MONITOR_TABLE_NAMES = [
     "nircam_dark_dark_current", "nircam_dark_pixel_stats", "nircam_dark_query_history",
     "niriss_dark_dark_current", "niriss_dark_pixel_stats", "niriss_dark_query_history",
     "nirspec_dark_dark_current", "nirspec_dark_pixel_stats", "nirspec_dark_query_history",
+    "nirspec_grating_query_history",
     "fgs_edb_blocks_stats", "fgs_edb_daily_stats", "fgs_edb_every_change_stats", "fgs_edb_time_interval_stats", "fgs_edb_time_stats",
     "miri_edb_blocks_stats", "miri_edb_daily_stats", "miri_edb_every_change_stats", "miri_edb_time_interval_stats", "miri_edb_time_stats",
     "nircam_edb_blocks_stats", "nircam_edb_daily_stats", "nircam_edb_every_change_stats", "nircam_edb_time_interval_stats", "nircam_edb_time_stats",
@@ -712,7 +716,7 @@ MONITOR_TABLE_NAMES = [
     "niriss_readnoise_query_history", "niriss_readnoise_stats",
     "nirspec_readnoise_query_history", "nirspec_readnoise_stats",
     "miri_ta_query_history", "miri_ta_stats",
-    "nirspec_ta_query_history", "nirspec_ta_stats"
+    "nirspec_ta_query_history", "nirspec_ta_stats", "nirspec_wata_stats", "nirspec_msata_stats"
 ]
 
 # Suffix for msa files
@@ -1032,3 +1036,28 @@ FILE_SUFFIX_TYPES = (
     + WFSC_SUFFIX_TYPES
     + MSA_SUFFIX
 )
+
+# Model.Charfield Max Length Constants
+MAX_LEN_AMPLIFIER = 40
+MAX_LEN_APERTURE = 40
+MAX_LEN_DEPENDENCY_VALUE = 40
+MAX_LEN_DETECTOR = 40
+MAX_LEN_DIFF_IMAGE = 1000
+MAX_LEN_FILENAME = 1000
+MAX_LEN_FILTER = 7
+MAX_LEN_GENERIC_TEXT = 100
+MAX_LEN_GRATING = 40
+MAX_LEN_INSTRUMENT = 7
+MAX_LEN_MNEMONIC = 40
+MAX_LEN_NGROUPS = 10
+MAX_LEN_NINTS = 10
+MAX_LEN_OBS = 3
+MAX_LEN_PATH = 1000
+MAX_LEN_PROPOSAL = 5
+MAX_LEN_PUPIL = 40
+MAX_LEN_READPATTERN = 40
+MAX_LEN_SUBARRAY = 40
+MAX_LEN_TIME = 50
+MAX_LEN_TYPE = 40
+MAX_LEN_USER = 50
+MAX_LEN_VISIT = 30

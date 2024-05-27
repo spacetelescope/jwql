@@ -28,6 +28,7 @@
             "PORT" : ""
         }
     },
+    "django_debug" : false,
     "jwql_dir" : "",
     "jwql_version": "",
     "server_type": "",
