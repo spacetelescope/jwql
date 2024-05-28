@@ -25,6 +25,8 @@ jobs:
     name: freeze versions (Python ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: mamba-org/setup-micromamba@v1
         with:
           environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
