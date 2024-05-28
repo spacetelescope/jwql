@@ -41,7 +41,7 @@ jobs:
       - id: version
         uses: mtkennerly/dunamai-action@v1
         with:
-          args: --strict --pattern "(?P<base>\d+\.\d+\.\d+)"
+          args: --strict --pattern "default-unprefixed" --style semver
       - id: filename
         run: echo "filename=jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
