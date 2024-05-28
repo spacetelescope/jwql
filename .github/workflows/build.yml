@@ -46,7 +46,7 @@ jobs:
         with:
           name: ${{ steps.filename.outputs.filename }}
           path: ${{ steps.filename.outputs.filename }}
-      - if: (github.event_name == 'release' && github.event.action == 'published')
+      - if: (github.event_name == 'release' && github.event.action == 'released')
         uses: svenstaro/upload-release-action@v2
         with:
           file: ${{ steps.filename.outputs.filename }}
