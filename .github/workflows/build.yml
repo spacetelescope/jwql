@@ -25,6 +25,8 @@ jobs:
     name: freeze versions (Python ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: mamba-org/setup-micromamba@v1
         with:
           environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
@@ -38,6 +40,8 @@ jobs:
       - run: pip list
       - id: version
         uses: mtkennerly/dunamai-action@v1
+        with:
+          args: --strict --pattern "(?P<base>\d+\.\d+\.\d+)"
       - id: filename
         run: echo "filename=jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
