@@ -470,7 +470,6 @@ FILTERS_PER_INSTRUMENT = {
         "F170LP",
         "F290LP",
         "OPAQUE",
-        "P750L",
     ],
 }
 
