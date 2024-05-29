@@ -24,7 +24,7 @@ jobs:
         python-version:
           [ "3.11", "3.12" ]
       fail-fast: false
-    name: freeze versions (Python ${{ matrix.python-version }})
+    name: freeze versions (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     steps:
       - uses: actions/checkout@v4
         with:
