@@ -19,10 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: 
+          [ "ubuntu-latest", "macos-latest" ]
         python-version:
-          - "3.11"
+          [ "3.11", "3.12" ]
       fail-fast: false
-    name: freeze versions (Python ${{ matrix.python-version }})
+    name: freeze versions (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,7 +45,7 @@ jobs:
         with:
           args: --strict --pattern "default-unprefixed" --style semver
       - id: filename
-        run: echo "filename=jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}.yml" >> $GITHUB_OUTPUT
+        run: echo "filename=jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}_${{ matrix.os }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
       - run: cat ${{ steps.filename.outputs.filename }}
       - uses: actions/upload-artifact@v4
