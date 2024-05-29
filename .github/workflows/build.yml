@@ -19,8 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: 
+          [ "ubuntu-latest", "macos-latest" ]
         python-version:
-          - "3.11"
+          [ "3.11", "3.12" ]
       fail-fast: false
     name: freeze versions (Python ${{ matrix.python-version }})
     steps:
