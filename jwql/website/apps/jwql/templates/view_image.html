@@ -8,7 +8,7 @@
 
 {% block content %}
 
-    <main role="main" class="container">
+    <main role="main" class="image_views">
     	<!-- Show image group name -->
     	<h3>{{ file_root }}</h3>
 
@@ -85,7 +85,7 @@
     		    <span class="image_preview">
     		    	<img class="image_preview_viewer" id="image_viewer"
                          onerror="image_error(this, true);"
-                         title="Preview image for {{ file_root }}">
+                         title="Preview image for {{ file_root }}" width=1000rem height=auto>
     		    </span>
 
                 <div class="int_changer">
