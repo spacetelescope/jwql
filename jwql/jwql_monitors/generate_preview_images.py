@@ -551,9 +551,8 @@ def generate_preview_images(overwrite, programs=None):
         If True, any existing preview images and thumbnails are overwritten
 
     programs : list
-        List of program ID numbers for which to generate preview images. If
-        None (the default), preview images are generated for all
-        programs.
+        List of program ID numbers (e.g. 1068, 01220) for which to generate preview
+        images. If None (the default), preview images are generated for all programs.
     """
     # Get a list of programs to create preview images for. First, generate a list of all
     # possible programs. We can compare any user inputs to this list, and if there are no
