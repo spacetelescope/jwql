@@ -16,7 +16,7 @@ jobs:
     with:
       upload_to_pypi: false
   freeze:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: 
@@ -45,7 +45,7 @@ jobs:
         with:
           args: --strict --pattern "default-unprefixed" --style semver
       - id: filename
-        run: echo "filename=jwql_conda_py${{ matrix.python-version }}_${{ steps.version.outputs.version }}_${{ matrix.os }}.yml" >> $GITHUB_OUTPUT
+        run: echo "filename=jwql_${{ steps.version.outputs.version }}_conda_${{ runner.os }}_${{ runner.arch }}_py${{ matrix.python-version }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
       - run: cat ${{ steps.filename.outputs.filename }}
       - uses: actions/upload-artifact@v4
