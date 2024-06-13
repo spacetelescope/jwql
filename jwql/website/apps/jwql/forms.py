@@ -160,7 +160,7 @@ class JwqlQueryForm(BaseForm):
     num_choices = [(50, 50), (100, 100), (200, 200), (500, 500)]
     num_per_page = forms.ChoiceField(
         required=True,
-        choices=num_choices, initial=num_choices[1],
+        choices=num_choices, initial=num_choices[3],
         widget=forms.RadioSelect)
 
     # instrument specific parameters
