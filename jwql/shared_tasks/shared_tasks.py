@@ -70,38 +70,38 @@ There are many other ways to call and use tasks, including ways to group tasks, 
 synchronously, run a group of tasks with a final callback function, etc. These are best
 explained by the celery documentation itself.
 """
-from astropy.io import fits
-from collections import OrderedDict
-from copy import deepcopy
+# from astropy.io import fits
+# from collections import OrderedDict
+# from copy import deepcopy
 import gc
 from glob import glob
-import json
+# import json
 import logging
-from logging import FileHandler, StreamHandler
+from logging import FileHandler #, StreamHandler
 import os
 import redis
-import shutil
+# import shutil
 from subprocess import Popen, PIPE, run, STDOUT
-import sys
+# import sys
 
-from astropy.io import fits
+# from astropy.io import fits
 
-from jwst import datamodels
-from jwst.dq_init import DQInitStep
-from jwst.dark_current import DarkCurrentStep
-from jwst.firstframe import FirstFrameStep
-from jwst.group_scale import GroupScaleStep
-from jwst.ipc import IPCStep
-from jwst.jump import JumpStep
-from jwst.lastframe import LastFrameStep
-from jwst.linearity import LinearityStep
-from jwst.persistence import PersistenceStep
-from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
-from jwst.ramp_fitting import RampFitStep
-from jwst.refpix import RefPixStep
-from jwst.rscd import RscdStep
-from jwst.saturation import SaturationStep
-from jwst.superbias import SuperBiasStep
+# from jwst import datamodels
+# from jwst.dq_init import DQInitStep
+# from jwst.dark_current import DarkCurrentStep
+# from jwst.firstframe import FirstFrameStep
+# from jwst.group_scale import GroupScaleStep
+# from jwst.ipc import IPCStep
+# from jwst.jump import JumpStep
+# from jwst.lastframe import LastFrameStep
+# from jwst.linearity import LinearityStep
+# from jwst.persistence import PersistenceStep
+# from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
+# from jwst.ramp_fitting import RampFitStep
+# from jwst.refpix import RefPixStep
+# from jwst.rscd import RscdStep
+# from jwst.saturation import SaturationStep
+# from jwst.superbias import SuperBiasStep
 
 from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, get_pipeline_steps
 from jwql.utils.logging_functions import configure_logging
@@ -111,7 +111,7 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 from celery import Celery
 from celery.app.log import TaskFormatter
 from celery.signals import after_setup_logger, after_setup_task_logger, task_postrun
-from celery.utils.log import get_task_logger
+# from celery.utils.log import get_task_logger
 
 try:
     REDIS_HOST = get_config()["redis_host"]

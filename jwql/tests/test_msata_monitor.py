@@ -21,10 +21,10 @@ import os
 import warnings
 
 import pandas as pd
-import numpy as np
+# import numpy as np
 import pytest
 from random import randint
-from datetime import datetime
+# from datetime import datetime
 from bokeh.embed import components
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure

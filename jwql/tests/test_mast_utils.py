@@ -17,7 +17,7 @@ Use
         pytest -s test_mast_utils.py
 """
 
-import os
+# import os
 
 from astroquery.mast import Mast
 

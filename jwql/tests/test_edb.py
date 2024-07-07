@@ -18,7 +18,7 @@ Use
         pytest -s test_edb.py
 """
 from datetime import datetime
-import os
+# import os
 
 from astropy.table import Table
 from astropy.time import Time

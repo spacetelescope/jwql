@@ -22,7 +22,7 @@ import warnings
 from astropy.modeling import fitting, models
 from astropy.stats import sigma_clip
 from scipy.optimize import curve_fit
-from scipy.stats import sigmaclip
+# from scipy.stats import sigmaclip
 
 
 def double_gaussian(x, amp1, peak1, sigma1, amp2, peak2, sigma2):

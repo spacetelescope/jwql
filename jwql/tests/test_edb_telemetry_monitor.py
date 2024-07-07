@@ -18,14 +18,14 @@ Use
 """
 from collections import defaultdict
 from copy import deepcopy
-import os
+# import os
 import pytest
 from types import SimpleNamespace
 
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 from astropy.table.column import Column
-from astropy.time import Time, TimeDelta
+from astropy.time import Time #, TimeDelta
 import astropy.units as u
 import datetime
 import numpy as np

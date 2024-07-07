@@ -27,10 +27,10 @@ Use
 """
 
 import os
-import shutil
+# import shutil
 
-from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, get_config, ensure_dir_exists, filename_parser
+# from jwql.utils.permissions import set_permissions
+from jwql.utils.utils import get_config, filename_parser
 
 SETTINGS = get_config()
 

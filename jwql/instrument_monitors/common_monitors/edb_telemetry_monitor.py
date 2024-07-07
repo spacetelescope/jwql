@@ -376,21 +376,22 @@ import urllib
 
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
-from astropy.time import Time, TimeDelta
+# from astropy.time import Time, TimeDelta
 import astropy.units as u
 from bokeh.embed import components, json_item
 from bokeh.layouts import gridplot
-from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
 from bokeh.models.layouts import Tabs
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
 from jwql.database import database_interface
-from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
-    NIRCamEDBTimeIntervalStats, NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
-    NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats, MIRIEDBBlockStats, \
-    MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats, \
-    FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats, NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
-    NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session, engine
+# from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
+#     NIRCamEDBTimeIntervalStats, NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
+#     NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats, MIRIEDBBlockStats, \
+#     MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats, \
+#     FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats, NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
+#     NIRSpecEDBTimeIntervalStats, NIRSpecEDBEveryChangeStats, session, engine
+from jwql.database.database_interface import session, engine
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils

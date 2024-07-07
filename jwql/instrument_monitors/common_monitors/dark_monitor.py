@@ -84,7 +84,7 @@ from astropy.io import ascii, fits
 from astropy.modeling import models
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
+from bokeh.models import ColorBar, ColumnDataSource, Legend #, HoverTool
 from bokeh.models import LinearColorMapper
 from bokeh.plotting import figure
 import numpy as np
@@ -93,14 +93,14 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
+# from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
+# from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
+# from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
+# from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
+# from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
-from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
+from jwql.utils import calculations, instrument_properties, monitor_utils #, mast_utils
 from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, RAPID_READPATTERNS

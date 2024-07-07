@@ -41,7 +41,7 @@ import jsonschema
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from bokeh.io import export_png
-from bokeh.models import LinearColorMapper, LogColorMapper
+from bokeh.models import LogColorMapper
 from bokeh.plotting import figure
 import numpy as np
 from PIL import Image
