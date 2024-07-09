@@ -785,7 +785,7 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = [
 ]
 
 # Possible suffix types for AMI files
-NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg"]
+NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg", "psf-ami-oi", "ami-oi", "aminorm-oi", "amimulti-oi", "amilg"]
 
 # Determine if the code is being run as part of CI checking on github
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
