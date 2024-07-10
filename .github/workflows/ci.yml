@@ -1,14 +1,12 @@
-name: JWQL CI
+name: test
 
-on: [push, pull_request]
+on: 
+  push:
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash -l {0}
 
 jobs:
   check:
@@ -17,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.11"
       - run: pip install bandit
       - run: bandit ./jwql/ -c .bandit
 
@@ -25,30 +23,38 @@ jobs:
     name: test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 5
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: [3.9, "3.10"]
-
+        os: [ "ubuntu-latest", "macos-latest" ]
+        python-version: [ "3.11", "3.12" ]
+      fail-fast: false
+    env:
+      PYTHONUNBUFFERED: 1
+    defaults:
+      run:
+        shell: micromamba-shell {0}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: mamba-org/provision-with-micromamba@v15
+      
+      - uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: ./environment_python_${{ matrix.python-version }}.yml
-          cache-env: true
-          cache-downloads: true
+          environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
+          environment-file: environment.yml
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: none
+          generate-run-shell: true
+          
+      - run: pip install -e .[test] pytest-xdist
 
-      - run: pip install -e .[test]
+      - run: pip list
 
-      - run: conda env export
+      - run: micromamba env export
 
-      - uses: supercharge/redis-github-action@1.4.0
+      - if: runner.os == 'Linux'
+        uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
-        if: runner.os == 'Linux'
 
       - run: python -c "import jwql; print('Version ' + jwql.__version__); print('Path ' + jwql.__path__[0])"
 
-      - run: pytest jwql/tests/
+      - run: pytest -n auto jwql/tests/

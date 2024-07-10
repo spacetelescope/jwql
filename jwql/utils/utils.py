@@ -530,7 +530,8 @@ def filename_parser(filename):
         time_series,
         time_series_2c,
         guider,
-        guider_segment]
+        guider_segment
+    ]
 
     filename_type_names = [
         'stage_1_and_2',
@@ -652,7 +653,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         elif os.path.isfile(full_path_proprietary):
             full_path = full_path_proprietary
         else:
-            raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
+            raise FileNotFoundError('{} is not in the expected location: {}'.format(filename, full_path))
 
     return full_path
 

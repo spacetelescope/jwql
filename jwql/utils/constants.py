@@ -470,7 +470,6 @@ FILTERS_PER_INSTRUMENT = {
         "F170LP",
         "F290LP",
         "OPAQUE",
-        "P750L",
     ],
 }
 
@@ -716,7 +715,7 @@ MONITOR_TABLE_NAMES = [
     "niriss_readnoise_query_history", "niriss_readnoise_stats",
     "nirspec_readnoise_query_history", "nirspec_readnoise_stats",
     "miri_ta_query_history", "miri_ta_stats",
-    "nirspec_ta_query_history", "nirspec_ta_stats"
+    "nirspec_ta_query_history", "nirspec_ta_stats", "nirspec_wata_stats", "nirspec_msata_stats"
 ]
 
 # Suffix for msa files
@@ -786,7 +785,7 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = [
 ]
 
 # Possible suffix types for AMI files
-NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg"]
+NIRISS_AMI_SUFFIX_TYPES = ["amiavg", "aminorm", "ami", "psf-amiavg", "psf-ami-oi", "ami-oi", "aminorm-oi", "amimulti-oi", "amilg"]
 
 # Determine if the code is being run as part of CI checking on github
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
@@ -1045,6 +1044,7 @@ MAX_LEN_DETECTOR = 40
 MAX_LEN_DIFF_IMAGE = 1000
 MAX_LEN_FILENAME = 1000
 MAX_LEN_FILTER = 7
+MAX_LEN_GENERIC_TEXT = 100
 MAX_LEN_GRATING = 40
 MAX_LEN_INSTRUMENT = 7
 MAX_LEN_MNEMONIC = 40
@@ -1059,3 +1059,4 @@ MAX_LEN_SUBARRAY = 40
 MAX_LEN_TIME = 50
 MAX_LEN_TYPE = 40
 MAX_LEN_USER = 50
+MAX_LEN_VISIT = 30

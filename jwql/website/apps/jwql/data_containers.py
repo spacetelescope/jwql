@@ -461,7 +461,10 @@ def get_additional_exposure_info(root_file_infos, image_info):
         # get_image_info() has already globbed over the directory with the files and
         # returned the list of existing suffixes, so we shouldn't need to check for
         # file existence here.
-        file_path = filesystem_path(filename, check_existence=True)
+        try:
+            file_path = filesystem_path(filename, check_existence=True)
+        except FileNotFoundError as e:
+            raise e
 
         header = fits.getheader(file_path)
         header_sci = fits.getheader(file_path, 1)
@@ -661,6 +664,30 @@ def get_anomaly_form(request, inst, file_root):
             messages.error(request, "Failed to submit anomaly")
 
     return form
+
+
+def get_group_anomalies(file_root):
+    """Generate form data for context
+
+    Parameters
+    ----------
+    file_root : str
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
+
+    Returns
+    -------
+    group_anomaly_dict dict
+        root file name key with string of anomalies
+    """
+    # Check for group root name
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root).order_by("root_name")
+    group_anomaly_dict = {}
+    for rootfileinfo in rootfileinfo_set:
+        anomalies_list = get_current_flagged_anomalies([rootfileinfo])
+        anomalies_string = ', '.join(anomalies_list)
+        group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+    return group_anomaly_dict
 
 
 def get_dashboard_components(request):
@@ -1203,7 +1230,10 @@ def get_header_info(filename, filetype):
     header_info = {}
 
     # Open the file
-    fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
+    try:
+        fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
+    except FileNotFoundError as e:
+        raise e
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
