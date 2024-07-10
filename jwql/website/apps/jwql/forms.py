@@ -330,10 +330,15 @@ class FileSearchForm(forms.Form):
                     if any(map(filename.__contains__, GUIDER_FILENAME_TYPE)):
                         continue
                     else:
-                        instrument = filename_parser(file)['instrument']
-                        observation = filename_parser(file)['observation']
-                        all_instruments.append(instrument)
-                        all_observations[instrument].append(observation)
+                        fileinfo = filename_parser(file)
+                        try:
+                            instrument = fileinfo['instrument']
+                            observation = fileinfo['observation']
+                            all_instruments.append(instrument)
+                            all_observations[instrument].append(observation)
+                        except KeyError:
+                            # If the filename is not recognized by filename_parser(), skip it.
+                            continue
 
                 # sort lists so first observation is available when link is clicked.
                 for instrument in all_instruments:
@@ -384,10 +389,12 @@ class FileSearchForm(forms.Form):
         """
 
         try:
-            self.fileroot_dict = filename_parser(search)
-            return True
-        except ValueError:
-            return False
+            parsed = filename_parser(search)
+            if 'instrument' in parsed:
+                self.fileroot_dict = filename_parser(search)
+                return True
+            else:
+                return False
 
     def redirect_to_files(self):
         """Determine where to redirect the web app based on user input.

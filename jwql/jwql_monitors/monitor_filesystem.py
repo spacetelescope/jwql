@@ -137,9 +137,10 @@ def gather_statistics(general_results_dict, instrument_results_dict):
                     if filename.endswith(".fits"):
 
                         # Parse out filename information
+                        filename_dict = filename_parser(filename)
                         try:
-                            filename_dict = filename_parser(filename)
-                        except ValueError:
+                            filename_type = filename_dict['filename_type']
+                        except KeyError:
                             break
 
                         # For MSA files, which do not have traditional suffixes, set the

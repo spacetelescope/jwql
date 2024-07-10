@@ -212,6 +212,11 @@ def check_existence(file_list, outdir):
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
         file_parts = filename_parser(file_list[0])
+
+        # If filename_parser() does not recognize the filename, return False
+        if 'program_id' not in file_parts:
+            return False
+
         if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
         elif file_parts['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
@@ -253,7 +258,11 @@ def create_dummy_filename(filelist):
     modules = []
     for filename in filelist:
         indir, infile = os.path.split(filename)
-        det_string = filename_parser(infile)['detector']
+        try:
+            det_string = filename_parser(infile)['detector']
+        except KeyError:
+            # If filename_parser() does not recognize the file, skip it
+            continue
         det_string_list.append(det_string)
         modules.append(det_string[3].upper())
 
@@ -307,7 +316,11 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        detector.append(filename_parser(filename)['detector'].upper())
+        try:
+            detector.append(filename_parser(filename)['detector'].upper())
+        except KeyError:
+            # If filename_parser() does not recognize the file, skip it.
+            pass
         data_lower_left.append((image.xstart, image.ystart))
 
     # Make sure SW and LW data are not being mixed. Create the
@@ -623,9 +636,8 @@ def group_filenames(filenames):
         subgroup = []
 
         # Generate string to be matched with other filenames
-        try:
-            filename_dict = filename_parser(os.path.basename(filename))
-        except ValueError:
+        filename_dict = filename_parser(os.path.basename(filename))
+        if 'detector' not in filename_dict:
             logging.warning('Could not parse filename for {}'.format(filename))
             break
 
@@ -704,7 +716,12 @@ def process_program(program, overwrite):
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
 
     # Remove guiding files, as these are not currently visible in JWQL anyway
-    filenames = [filename for filename in filenames if 'guider_mode' not in filename_parser(filename)]
+    filtered_filenames = []
+    for filename in filenames:
+        parsed = filename_parser(filename)
+        if 'guider_mode' not in parsed and 'detector' in parsed:
+            filtered_filenames.append(filename)
+    filenames = filtered_filenames
 
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
@@ -720,7 +737,7 @@ def process_program(program, overwrite):
         # Determine the save location
         try:
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
-        except ValueError:
+        except KeyError:
             identifier = os.path.basename(filename).split('.fits')[0]
         preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)

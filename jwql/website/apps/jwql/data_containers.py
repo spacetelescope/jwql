@@ -1326,7 +1326,11 @@ def get_image_info(file_root):
         parsed_fn = filename_parser(filename)
 
         # Get suffix information
-        suffix = parsed_fn['suffix']
+        try:
+            suffix = parsed_fn['suffix']
+        except KeyError:
+            # If the filename parser does not recognize the file, skip it
+            continue
 
         # For crf or crfints suffixes, we need to also include the association value
         # in the suffix, so that preview images can be found later.
@@ -2204,18 +2208,18 @@ def thumbnails_query_ajax(rootnames):
         # Parse filename
         try:
             filename_dict = filename_parser(rootname)
-        except ValueError:
-            continue
 
-        # Add to list of all exposure groups
-        exp_groups.add(filename_dict['group_root'])
+            # Add to list of all exposure groups
+            exp_groups.add(filename_dict['group_root'])
+        except KeyError:
+            continue
 
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
-        data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
+        data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_dict['instrument']]
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         root_file_info = RootFileInfo.objects.get(root_name=rootname)
@@ -2228,7 +2232,7 @@ def thumbnails_query_ajax(rootnames):
             try:
                 suffix = filename_parser(filename)['suffix']
                 data_dict['file_data'][rootname]['suffixes'].append(suffix)
-            except ValueError:
+            except KeyError:
                 continue
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 

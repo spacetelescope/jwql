@@ -435,9 +435,10 @@ def test_filename_parser_non_jwst():
     that is not formatted in the JWST naming convention. Ensure the
     appropriate error is raised.
     """
-    with pytest.raises(ValueError):
-        filename = 'not_a_jwst_file.fits'
-        filename_parser(filename)
+    filename = 'not_a_jwst_file.fits'
+    filename_dict = filename_parser(filename)
+    assert 'recognized_filename' in filename_dict
+    assert filename_dict['recognized_filename'] is False
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

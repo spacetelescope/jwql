@@ -57,7 +57,9 @@ def organize_filesystem():
                     SETTINGS['filesystem'],
                     'jw{}'.format(filename_dict['program_id']),
                     'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']))
-            except KeyError:  # Some filenames do not have a program_id/observation/visit structure
+            except KeyError:
+                # Some filenames do not have a program_id/observation/visit structure
+                # Files that are not recognized by filename_parser will also end up here.
                 break
 
             # Build complete destination location
@@ -96,7 +98,9 @@ def revert_filesystem():
                 destination_directory = os.path.join(
                     SETTINGS['old_filesystem'],
                     'jw{}'.format(filename_dict['program_id']))
-            except KeyError:  # Some filenames do not have a program_id/observation/visit structure
+            except KeyError:
+                # Some filenames do not have a program_id/observation/visit structure
+                # Filenames not recognized by filename_parser() will also end up here.
                 break
 
             # Build complete destination location
