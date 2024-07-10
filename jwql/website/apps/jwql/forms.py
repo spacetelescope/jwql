@@ -387,14 +387,12 @@ class FileSearchForm(forms.Form):
         bool
             Is the search term formatted like a fileroot?
         """
-
-        try:
-            parsed = filename_parser(search)
-            if 'instrument' in parsed:
-                self.fileroot_dict = filename_parser(search)
-                return True
-            else:
-                return False
+        parsed = filename_parser(search)
+        if 'instrument' in parsed:
+            self.fileroot_dict = filename_parser(search)
+            return True
+        else:
+            return False
 
     def redirect_to_files(self):
         """Determine where to redirect the web app based on user input.
