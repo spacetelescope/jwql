@@ -2,6 +2,15 @@
 
 1.2.9 (2024-07-10)
 ==================
+
+Web Application
+~~~~~~~~~~~~~~~
+* Add Download CSV button to query page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1561
+* show file anomalies on exposure group page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1564
+* create generic error page to handle exceptions in views. by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1549
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * final model define for faking by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1544
 * Update Redis Package Names in Environment Files by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1546
 * [SCSB-145] require Python 3.10 by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1515
@@ -24,16 +33,6 @@
 * Num results fix by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1608
 * Add Environment Update Script by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1609
 * Add new NIRISS AMI-related suffixes by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1613
-
-Web Application
-~~~~~~~~~~~~~~~
-* Add Download CSV button to query page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1561
-* show file anomalies on exposure group page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1564
-* create generic error page to handle exceptions in views. by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1549
-
-
-Project & API Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 1.2.8 (2024-04-18)
