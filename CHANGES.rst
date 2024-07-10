@@ -1,5 +1,11 @@
 ## What's Changed
 
+1.2.10 (2024-07-10)
+===================
+
+Duplicate of 1.2.9, caused by changes to versioning conflicts with pypi. 
+
+
 1.2.9 (2024-07-10)
 ==================
 
