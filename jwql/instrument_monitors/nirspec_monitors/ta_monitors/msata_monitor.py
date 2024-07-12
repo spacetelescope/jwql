@@ -1304,7 +1304,7 @@ class MSATA:
         """,
         )
         self.date_range.js_on_change("value", callback)
-        mini_view = CDSView(filters=[self.date_filter])
+        mini_view = CDSView(filter=self.date_filter)
 
         # create the bokeh plot
         plot = figure(
@@ -1408,7 +1408,7 @@ class MSATA:
                 return indices;
                 """,
         )
-        self.date_view = CDSView(filters=[self.date_filter])
+        self.date_view = CDSView(filter=self.date_filter)
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""

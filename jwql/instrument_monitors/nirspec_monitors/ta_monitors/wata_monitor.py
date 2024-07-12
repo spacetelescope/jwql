@@ -797,7 +797,7 @@ class WATA:
                 return indices;
                 """,
         )
-        self.date_view = CDSView(filters=[filt])
+        self.date_view = CDSView(filter=filt)
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
