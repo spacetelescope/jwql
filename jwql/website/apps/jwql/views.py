@@ -131,6 +131,7 @@ def jwql_query(request):
             parameters[QueryConfigKeys.DATE_RANGE] = form.cleaned_data['date_range']
             parameters[QueryConfigKeys.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
             parameters[QueryConfigKeys.SORT_TYPE] = form.cleaned_data['sort_type']
+            parameters[QueryConfigKeys.NUM_PER_PAGE] = form.cleaned_data['num_per_page']
             parameters[QueryConfigKeys.ANOMALIES] = all_anomalies
             parameters[QueryConfigKeys.APERTURES] = all_apers
             parameters[QueryConfigKeys.FILTERS] = all_filters
