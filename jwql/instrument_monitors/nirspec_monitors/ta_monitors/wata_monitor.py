@@ -801,7 +801,7 @@ class WATA:
 
     def mk_plt_layout(self, plot_data):
         """Create the bokeh plot layout
-        
+
         Parameters
         ----------
         plot_data : pandas.DataFrame
