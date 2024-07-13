@@ -530,7 +530,8 @@ def filename_parser(filename):
         time_series,
         time_series_2c,
         guider,
-        guider_segment]
+        guider_segment
+    ]
 
     filename_type_names = [
         'stage_1_and_2',
