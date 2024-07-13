@@ -7,8 +7,7 @@ Part 1: Intro
 """
 
 import sys
-from typing import (List, Set, Dict, Tuple, Union, Optional, Callable,
-                    Iterable, Any)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 assert sys.version_info >= (3, 6)  # PEP 526 added variable annotations
 
@@ -18,7 +17,7 @@ a_bool: bool = True
 a_string: str = "jwql"
 a_list: List[int] = [1]
 a_set: Set[int] = {1, 2, 3}
-a_dict: Dict[str, bool] = {'jwql': True}  # Have to specify both keys and values
+a_dict: Dict[str, bool] = {"jwql": True}  # Have to specify both keys and values
 
 # For python versions prior to 3.6, the variable annotation syntax uses comments:
 #    annotated_variable = 1 # type: int
@@ -68,6 +67,7 @@ print(__annotations__["my_metavar"])
 # Type annotations are stored in __annotations__, either as a local variable
 # or as an object attribute.
 
+
 def print_annotations(arg: Any) -> bool:
     if not hasattr(arg, "__annotations__"):
         print("Sorry, that argument doesn't have its own __annotations__.")
@@ -76,8 +76,7 @@ def print_annotations(arg: Any) -> bool:
     return bool(arg.__annotations__)
 
 
-for name in ["an_integer", "a_generic_function", "two_arg_function",
-             "func_alias", "anon_func", "a_generator"]:
+for name in ["an_integer", "a_generic_function", "two_arg_function", "func_alias", "anon_func", "a_generator"]:
     var = locals()[name]
     print(f"Annotations for {name}:")
     if not print_annotations(var):
