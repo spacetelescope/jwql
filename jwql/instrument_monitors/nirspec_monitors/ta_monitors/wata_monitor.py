@@ -799,11 +799,16 @@ class WATA:
         )
         self.date_view = CDSView(filter=filt)
 
-    def mk_plt_layout(self):
-        """Create the bokeh plot layout"""
-        self.query_results = pd.DataFrame(list(NIRSpecWataStats.objects.all().values()))
+    def mk_plt_layout(self, plot_data):
+        """Create the bokeh plot layout
+        
+        Parameters
+        ----------
+        plot_data : pandas.DataFrame
+            Dataframe of data to plot in bokeh
+        """
 
-        self.source = ColumnDataSource(data=self.query_results)
+        self.source = ColumnDataSource(data=plot_data)
 
         # add a time array to the data source
         self.add_time_column()
@@ -1144,8 +1149,10 @@ class WATA:
             # Add WATA data to stats table.
             self.add_wata_data()
 
-            # Generate plot -- the database is queried in mk_plt_layout().
-            self.mk_plt_layout()
+            # Get Results from database table
+            self.query_results = pd.DataFrame(list(NIRSpecWataStats.objects.all().values()))
+            # Generate plot.
+            self.mk_plt_layout(self.query_results)
             logging.info(
                 "\tNew output plot file will be written as: {}".format(
                     self.output_file_name
