@@ -71,7 +71,7 @@ content-type = "text/plain"
 [build-system]
 requires = [
     "setuptools>=68.0.0",
-    "numpy>=2.0.0rc2",
+    "numpy>=2.0.0",
     "wheel",
     "setuptools_scm",
 ]
