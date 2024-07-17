@@ -2103,13 +2103,19 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                     exp_type = columns['exp_type'][i]
         exp_types.add(exp_type)
 
-        # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+        # These attributes are stored by rootname in the Model db.  Save them with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
             root_file_info = RootFileInfo.objects.get(root_name=rootname)
             viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
+            filter_type = root_file_info.filter
+            pupil_type = root_file_info.pupil
+            grating_type = root_file_info.grating
         except RootFileInfo.DoesNotExist:
             viewed = THUMBNAIL_FILTER_LOOK[0]
+            filter_type = ""
+            pupil_type = ""
+            grating_type = ""
 
         # Add to list of all exposure groups
         exp_groups.add(filename_dict['group_root'])
@@ -2121,6 +2127,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['viewed'] = viewed
         data_dict['file_data'][rootname]['exp_type'] = exp_type
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
+        data_dict['file_data'][rootname]['filter'] = filter_type
+        data_dict['file_data'][rootname]['pupil'] = pupil_type
+        data_dict['file_data'][rootname]['grating'] = grating_type
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -2133,7 +2142,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors, proposals, visits = [], [], []
+    detectors, proposals, visits, filters, pupils, gratings = [], [], [], [], [],[]
     for rootname in list(data_dict['file_data'].keys()):
         proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
         try:  # Some rootnames cannot parse out detectors
@@ -2142,6 +2151,18 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             pass
         try:  # Some rootnames cannot parse out visit
             visits.append(data_dict['file_data'][rootname]['filename_dict']['visit'])
+        except KeyError:
+            pass
+        try:
+            filters.append(data_dict['file_data'][rootname]['filter'])
+        except KeyError:
+            pass
+        try:
+            pupils.append(data_dict['file_data'][rootname]['pupil'])
+        except KeyError:
+            pass
+        try:
+            gratings.append(data_dict['file_data'][rootname]['grating'])
         except KeyError:
             pass
 
@@ -2156,6 +2177,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                           'look': THUMBNAIL_FILTER_LOOK,
                           'exp_type': sorted(exp_types),
                           'visit': sorted(visits)}
+    if filters is not None:
+        dropdown_menus['filter'] = sorted(filters)
+    if pupils is not None:
+        dropdown_menus['pupil'] = sorted(pupils)
+    if gratings is not None:
+        dropdown_menus['grating'] = sorted(gratings)
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -2207,6 +2234,16 @@ def thumbnails_query_ajax(rootnames):
         except ValueError:
             continue
 
+        try:
+            root_file_info = RootFileInfo.objects.get(root_name=rootname)
+            filter_type = root_file_info.filter
+            pupil_type = root_file_info.pupil
+            grating_type = root_file_info.grating
+        except RootFileInfo.DoesNotExist:
+            filter_type = ""
+            pupil_type = ""
+            grating_type = ""
+
         # Add to list of all exposure groups
         exp_groups.add(filename_dict['group_root'])
 
@@ -2224,6 +2261,9 @@ def thumbnails_query_ajax(rootnames):
         data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         data_dict['file_data'][rootname]['suffixes'] = []
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
+        data_dict['file_data'][rootname]['filter'] = filter_type
+        data_dict['file_data'][rootname]['pupil'] = pupil_type
+        data_dict['file_data'][rootname]['grating'] = grating_type
         for filename in available_files:
             try:
                 suffix = filename_parser(filename)['suffix']
@@ -2252,11 +2292,23 @@ def thumbnails_query_ajax(rootnames):
                  rootname in list(data_dict['file_data'].keys())]
     visits = [data_dict['file_data'][rootname]['filename_dict']['visit'] for
               rootname in list(data_dict['file_data'].keys())]
+    filters = [data_dict['file_data'][rootname]['filter'] for
+            rootname in list(data_dict['file_data'].keys())]
+    pupils = [data_dict['file_data'][rootname]['pupil'] for
+            rootname in list(data_dict['file_data'].keys())]
+    gratings = [data_dict['file_data'][rootname]['grating'] for
+            rootname in list(data_dict['file_data'].keys())]
 
     dropdown_menus = {'instrument': instruments,
                       'detector': sorted(detectors),
                       'proposal': sorted(proposals),
                       'visit': sorted(visits)}
+    if filters is not None:
+        dropdown_menus['filter'] = sorted(filters)
+    if pupils is not None:
+        dropdown_menus['pupil'] = sorted(pupils)
+    if gratings is not None:
+        dropdown_menus['grating'] = sorted(gratings)
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus

@@ -1352,6 +1352,9 @@ function update_thumbnail_array(data) {
         var viewed = file.viewed;
         var exp_type = file.exp_type;
         var filename_dict = file.filename_dict;
+        var filter_type = file.filter;
+        var pupil_type = file.pupil;
+        var grating_type = file.grating;
 
         // Build div content
         var instrument;
@@ -1364,7 +1367,8 @@ function update_thumbnail_array(data) {
                       '" data-detector="' + filename_dict.detector + '" data-proposal="' + filename_dict.program_id +
                       '" data-file_root="' + rootname + '" data-group_root="' + filename_dict.group_root +
                       '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type +
-                      '" data-visit="' + filename_dict.visit + '">';
+                      '" data-visit="' + filename_dict.visit + '" data-filter="' + filter_type + '" data-pupil="' + pupil_type +
+                      '" data-grating="' + grating_type + '">';
         content += '<div class="thumbnail-group">'
         content += '<a class="thumbnail-link" href="#" data-image-href="/' +
                    instrument + '/' + rootname + '/" data-group-href="/' +
