@@ -2142,7 +2142,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors, proposals, visits, filters, pupils, gratings = [], [], [], [], [],[]
+    detectors, proposals, visits, filters, pupils, gratings = [], [], [], [], [], []
     for rootname in list(data_dict['file_data'].keys()):
         proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
         try:  # Some rootnames cannot parse out detectors
@@ -2293,11 +2293,11 @@ def thumbnails_query_ajax(rootnames):
     visits = [data_dict['file_data'][rootname]['filename_dict']['visit'] for
               rootname in list(data_dict['file_data'].keys())]
     filters = [data_dict['file_data'][rootname]['filter'] for
-            rootname in list(data_dict['file_data'].keys())]
+               rootname in list(data_dict['file_data'].keys())]
     pupils = [data_dict['file_data'][rootname]['pupil'] for
-            rootname in list(data_dict['file_data'].keys())]
+              rootname in list(data_dict['file_data'].keys())]
     gratings = [data_dict['file_data'][rootname]['grating'] for
-            rootname in list(data_dict['file_data'].keys())]
+                rootname in list(data_dict['file_data'].keys())]
 
     dropdown_menus = {'instrument': instruments,
                       'detector': sorted(detectors),
