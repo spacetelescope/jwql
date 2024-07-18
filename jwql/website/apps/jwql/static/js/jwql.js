@@ -1257,7 +1257,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_obs_options(data, inst, prop, observation) {
     // Build div content
-    var content = 'Available observations:';
+    var content = 'Available obs:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs' + observation + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
