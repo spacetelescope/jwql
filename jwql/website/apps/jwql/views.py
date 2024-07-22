@@ -916,7 +916,7 @@ def explore_image(request, inst, file_root, filetype):
     else:
         raise FileNotFoundError(f'WARNING: {full_fits_file} does not exist!')
 
-    form = get_anomaly_form(request, inst, file_root)
+    anomaly_form = get_anomaly_form(request, inst, file_root)
 
     context = {'inst': inst,
                'file_root': file_root,
@@ -925,7 +925,7 @@ def explore_image(request, inst, file_root, filetype):
                'extension_groups': extension_groups,
                'extension_ints': extension_ints,
                'base_url': get_base_url(),
-               'form': form}
+               'anomaly_form': anomaly_form}
 
     return render(request, template, context)
 
@@ -1289,7 +1289,7 @@ def view_image(request, inst, file_root):
                          'Please add them, so that they will appear in a '
                          'consistent order on the webpage.'))
 
-    form = get_anomaly_form(request, inst, file_root)
+    anomaly_form = get_anomaly_form(request, inst, file_root)
 
     prop_id = file_root[2:7]
 
@@ -1339,7 +1339,7 @@ def view_image(request, inst, file_root):
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
-               'form': form,
+               'anomaly_form': anomaly_form,
                'marked_viewed': root_file_info.viewed,
                'expstart_str': expstart_str,
                'basic_info': basic_info,
