@@ -144,6 +144,30 @@
                         <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
                     </form>
                 </div>
+                <div class="comment_form" style="margin-top: 75px;">
+                    <h5>Comment</h5>
+                    <form action="" method="post">
+                        <!--Show any errors from a previous form submission-->
+                        {% if comment_form.errors %}
+                            <fieldset>
+                                {% for field in comment_form %}
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </fieldset>
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        {{ comment_form.comment }}
+                        <!--Show the field forms-->
+                        <button class="btn btn-primary" type="submit" style="float: right;">Save Comment</button>
+                    </form>
+                </div>
+
             </div>
         </div>
 

@@ -56,7 +56,7 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from jwql.edb.engineering_database import is_valid_mnemonic
-from jwql.website.apps.jwql.models import Anomalies
+from jwql.website.apps.jwql.models import Anomalies, RootFileInfo
 
 
 from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT,
@@ -78,6 +78,14 @@ class BaseForm(forms.Form):
     # Submit button
     resolve_submit = SubmitField('Resolve Target')
 
+class RootFileInfoCommentSubmitForm(forms.ModelForm):
+    """Creates a ``Comment Form`` object that allows for text input in a form field.
+        This uses forms.ModelForm which is good for simplifying direct access to
+        Django Model database information
+    """
+    class Meta:
+        model = RootFileInfo
+        fields = ['comment']
 
 class JwqlQueryForm(BaseForm):
     """Form validation for the JWQL Query viewing tool"""

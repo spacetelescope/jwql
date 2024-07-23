@@ -79,7 +79,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     setup()
 
-    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm
+    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm, RootFileInfoCommentSubmitForm
     from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo, Anomalies
     check_config_for_key('auth_mast')
     configs = get_config()
@@ -664,6 +664,48 @@ def get_anomaly_form(request, inst, file_root):
             messages.error(request, "Failed to submit anomaly")
 
     return form
+
+def get_comment_form(request, file_root):
+    """Generate form data for context
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    file_root : str
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
+
+    Returns
+    -------
+    InstrumentCommentSubmitForm object
+        form object to be sent with context to template
+    """
+    # Create a form instance
+    # comment_form = RootFileInfoCommentSubmitForm(request.POST or None, comment=root_file_info.comment, root_name=root_file_info.root_name)
+
+    # # If this is a POST request and the form is filled out, process the form data
+    # if request.method == 'POST':
+    #     updated_comment = dict(request.POST).get('comment_field', [])
+    #     if comment_form.is_valid():
+    #         comment_form.update_comment(updated_comment)
+    #         messages.success(request, f"Comment updated successfully to {updated_comment}")
+    #     else:
+    #         messages.error(request, "Failed to update_comment")
+
+
+
+    # Retrieve the first instance, or create a new one if none exists
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+
+    if request.method == 'POST':
+        comment_form = RootFileInfoCommentSubmitForm(request.POST, instance=root_file_info)
+        if comment_form.is_valid():
+            comment_form.save()
+    else:
+        comment_form = RootFileInfoCommentSubmitForm(instance=root_file_info)
+
+    return comment_form
 
 
 def get_group_anomalies(file_root):

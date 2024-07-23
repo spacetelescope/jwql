@@ -71,6 +71,7 @@ from .data_containers import (
     get_additional_exposure_info,
     get_anomaly_form,
     get_available_suffixes,
+    get_comment_form,
     get_dashboard_components,
     get_edb_components,
     get_explorer_extension_names,
@@ -1290,6 +1291,7 @@ def view_image(request, inst, file_root):
                          'consistent order on the webpage.'))
 
     anomaly_form = get_anomaly_form(request, inst, file_root)
+    comment_form = get_comment_form(request, file_root)
 
     prop_id = file_root[2:7]
 
@@ -1340,6 +1342,7 @@ def view_image(request, inst, file_root):
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
                'anomaly_form': anomaly_form,
+               'comment_form': comment_form,
                'marked_viewed': root_file_info.viewed,
                'expstart_str': expstart_str,
                'basic_info': basic_info,
