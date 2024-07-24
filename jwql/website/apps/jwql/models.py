@@ -132,6 +132,7 @@ class RootFileInfo(models.Model):
     exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     expstart = models.FloatField(help_text='Exposure Start Time', default=0.0)
     comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
+    exp_comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
 
     # Metadata
     class Meta:
