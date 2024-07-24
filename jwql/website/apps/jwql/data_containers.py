@@ -681,21 +681,7 @@ def get_comment_form(request, file_root):
     InstrumentCommentSubmitForm object
         form object to be sent with context to template
     """
-    # Create a form instance
-    # comment_form = RootFileInfoCommentSubmitForm(request.POST or None, comment=root_file_info.comment, root_name=root_file_info.root_name)
 
-    # # If this is a POST request and the form is filled out, process the form data
-    # if request.method == 'POST':
-    #     updated_comment = dict(request.POST).get('comment_field', [])
-    #     if comment_form.is_valid():
-    #         comment_form.update_comment(updated_comment)
-    #         messages.success(request, f"Comment updated successfully to {updated_comment}")
-    #     else:
-    #         messages.error(request, "Failed to update_comment")
-
-
-
-    # Retrieve the first instance, or create a new one if none exists
     root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
     if request.method == 'POST':
