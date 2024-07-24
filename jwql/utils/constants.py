@@ -366,6 +366,7 @@ EXPOSURE_PAGE_SUFFIX_ORDER = [
 
 # Default Model Values
 DEFAULT_MODEL_CHARFIELD = "empty"
+DEFAULT_MODEL_COMMENT = "No Comments Yet"
 
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4

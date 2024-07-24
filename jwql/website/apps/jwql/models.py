@@ -32,6 +32,7 @@ from django.db import models
 
 from jwql.utils.constants import (
     DEFAULT_MODEL_CHARFIELD,
+    DEFAULT_MODEL_COMMENT,
     MAX_LEN_APERTURE,
     MAX_LEN_DETECTOR,
     MAX_LEN_FILTER,
@@ -130,7 +131,7 @@ class RootFileInfo(models.Model):
     pupil = models.CharField(max_length=MAX_LEN_PUPIL, help_text="Pupil", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     expstart = models.FloatField(help_text='Exposure Start Time', default=0.0)
-    comment = models.TextField(help_text="Anomaly Comment Field", default="No Comments Yet", null=False, blank=True)
+    comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
 
     # Metadata
     class Meta:
