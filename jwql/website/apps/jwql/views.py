@@ -918,6 +918,7 @@ def explore_image(request, inst, file_root, filetype):
         raise FileNotFoundError(f'WARNING: {full_fits_file} does not exist!')
 
     anomaly_form = get_anomaly_form(request, inst, file_root)
+    comment_form = get_comment_form(request, file_root)
 
     context = {'inst': inst,
                'file_root': file_root,
@@ -926,7 +927,8 @@ def explore_image(request, inst, file_root, filetype):
                'extension_groups': extension_groups,
                'extension_ints': extension_ints,
                'base_url': get_base_url(),
-               'anomaly_form': anomaly_form}
+               'anomaly_form': anomaly_form,
+               'comment_form': comment_form}
 
     return render(request, template, context)
 
