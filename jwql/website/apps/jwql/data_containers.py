@@ -61,6 +61,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMEN
 from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QueryConfigKeys
 from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import DEFAULT_MODEL_COMMENT
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
@@ -706,7 +707,7 @@ def get_group_anomalies(file_root):
     Returns
     -------
     group_anomaly_dict dict
-        root file name key with string of anomalies
+        root file name key with string of anomalies followed by anomaly comment
     """
     # Check for group root name
     rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root).order_by("root_name")
@@ -715,6 +716,11 @@ def get_group_anomalies(file_root):
         anomalies_list = get_current_flagged_anomalies([rootfileinfo])
         anomalies_string = ', '.join(anomalies_list)
         group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+        if rootfileinfo.comment != DEFAULT_MODEL_COMMENT:
+            anomalies_string += f" -- Comments: {rootfileinfo.comment}"
+        group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+
+
     return group_anomaly_dict
 
 
