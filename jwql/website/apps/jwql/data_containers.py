@@ -27,45 +27,61 @@ Use
 """
 
 import copy
-from collections import OrderedDict
 import glob
 import json
-from operator import getitem
+import logging
 import os
 import re
 import tempfile
-import logging
+from collections import OrderedDict
+from datetime import datetime
+from operator import getitem, itemgetter
 
+import numpy as np
+import pandas as pd
+import pyvo as vo
+import requests
 from astropy.io import fits
 from astropy.time import Time
+from astroquery.mast import Mast
 from bs4 import BeautifulSoup
 from django import setup
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query import QuerySet
-import numpy as np
-from operator import itemgetter
-import pandas as pd
-import pyvo as vo
-import requests
-from datetime import datetime
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
-from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
-from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QueryConfigKeys
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
-from jwql.utils.constants import DEFAULT_MODEL_COMMENT
+from jwql.utils.constants import (
+    DEFAULT_MODEL_COMMENT,
+    EXPOSURE_PAGE_SUFFIX_ORDER,
+    IGNORED_SUFFIXES,
+    INSTRUMENT_SERVICE_MATCH,
+    JWST_INSTRUMENT_NAMES,
+    JWST_INSTRUMENT_NAMES_MIXEDCASE,
+    MAST_QUERY_LIMIT,
+    MONITORS,
+    ON_GITHUB_ACTIONS,
+    ON_READTHEDOCS,
+    REPORT_KEYS_PER_INSTRUMENT,
+    SUFFIXES_TO_ADD_ASSOCIATION,
+    SUFFIXES_WITH_AVERAGED_INTS,
+    THUMBNAIL_FILTER_LOOK,
+    THUMBNAIL_LISTFILE,
+    QueryConfigKeys,
+)
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_rootnames_for_instrument_proposal
-from astroquery.mast import Mast
+from jwql.utils.utils import (
+    check_config_for_key,
+    ensure_dir_exists,
+    filename_parser,
+    filesystem_path,
+    get_config,
+    get_rootnames_for_instrument_proposal,
+)
 
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
@@ -80,8 +96,16 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     setup()
 
-    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm, RootFileInfoCommentSubmitForm, RootFileInfoExposureCommentSubmitForm
-    from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo, Anomalies
+    from jwql.website.apps.jwql.models import Anomalies, Observation, Proposal, RootFileInfo
+
+    from .forms import (
+        InstrumentAnomalySubmitForm,
+        MnemonicExplorationForm,
+        MnemonicQueryForm,
+        MnemonicSearchForm,
+        RootFileInfoCommentSubmitForm,
+        RootFileInfoExposureCommentSubmitForm,
+    )
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
@@ -403,7 +427,7 @@ def get_additional_exposure_info(root_file_infos, image_info):
         filter_value = root_file_info.filter
         pupil_value = root_file_info.pupil
         grating_value = root_file_info.grating
-        exp_comment =  root_file_info.exp_comment
+        exp_comment = root_file_info.exp_comment
 
     # Print N/A if no exposure comment is used
     exp_comment = exp_comment if exp_comment != DEFAULT_MODEL_COMMENT else "N/A"
@@ -673,6 +697,7 @@ def get_anomaly_form(request, inst, file_root):
 
     return form
 
+
 def get_comment_form(request, file_root):
     """Generate form data for comment form
 
@@ -700,6 +725,7 @@ def get_comment_form(request, file_root):
         comment_form = RootFileInfoCommentSubmitForm(instance=root_file_info)
 
     return comment_form
+
 
 def get_exp_comment_form(request, file_root):
     """Generate form data for exposure comment
@@ -760,7 +786,6 @@ def get_group_anomalies(file_root):
         if rootfileinfo.comment != DEFAULT_MODEL_COMMENT:
             anomalies_string += f" -- Comments: {rootfileinfo.comment}"
         group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
-
 
     return group_anomaly_dict
 
