@@ -721,6 +721,8 @@ def get_comment_form(request, file_root):
         comment_form = RootFileInfoCommentSubmitForm(request.POST, instance=root_file_info)
         if comment_form.is_valid():
             comment_form.save()
+        else:
+            messages.error(request, "Failed to update comment form")
     else:
         comment_form = RootFileInfoCommentSubmitForm(instance=root_file_info)
 
@@ -757,7 +759,7 @@ def get_exp_comment_form(request, file_root):
                 rootfileinfo.exp_comment = exp_comment_form.cleaned_data['exp_comment']
                 rootfileinfo.save()
         else:
-            raise forms.ValidationError("Invalid content!")
+            messages.error(request, "Failed to update exposure comment form")
     else:
         exp_comment_form = RootFileInfoExposureCommentSubmitForm(instance=rootfileinfo_set.first())
 
