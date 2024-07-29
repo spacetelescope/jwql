@@ -397,11 +397,16 @@ def get_additional_exposure_info(root_file_infos, image_info):
         filter_value = '/'.join(set([e.filter for e in root_file_infos]))
         pupil_value = '/'.join(set([e.pupil for e in root_file_infos]))
         grating_value = '/'.join(set([e.grating for e in root_file_infos]))
+        exp_comment = root_file_infos.first().exp_comment
     elif isinstance(root_file_infos, RootFileInfo):
         root_file_info = root_file_infos
         filter_value = root_file_info.filter
         pupil_value = root_file_info.pupil
         grating_value = root_file_info.grating
+        exp_comment =  root_file_info.exp_comment
+
+    # Print N/A if no exposure comment is used
+    exp_comment = exp_comment if exp_comment != DEFAULT_MODEL_COMMENT else "N/A"
 
     # Initialize dictionary of file info to show at the top of the page, along
     # with another for info that will be in the collapsible text box.
@@ -428,7 +433,8 @@ def get_additional_exposure_info(root_file_infos, image_info):
                            'TARG_DEC': 'N/A',
                            'CRDS context': 'N/A',
                            'PA_V3': 'N/A',
-                           'EXPSTART': root_file_info.expstart
+                           'EXPSTART': root_file_info.expstart,
+                           'EXP_COMMENT': exp_comment
                            }
     elif isinstance(root_file_infos, RootFileInfo):
         additional_info = {'READPATT': root_file_info.read_patt,
@@ -443,7 +449,8 @@ def get_additional_exposure_info(root_file_infos, image_info):
                            'DEC_REF': 'N/A',
                            'CRDS context': 'N/A',
                            'ROLL_REF': 'N/A',
-                           'EXPSTART': root_file_info.expstart
+                           'EXPSTART': root_file_info.expstart,
+                           'EXP_COMMENT': exp_comment
                            }
 
     # Deal with instrument-specific parameters
