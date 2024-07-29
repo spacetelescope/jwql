@@ -45,7 +45,7 @@ from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
 from bs4 import BeautifulSoup
-from django import setup
+from django import forms, setup
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
@@ -756,6 +756,8 @@ def get_exp_comment_form(request, file_root):
             for rootfileinfo in rootfileinfo_set:
                 rootfileinfo.exp_comment = exp_comment_form.cleaned_data['exp_comment']
                 rootfileinfo.save()
+        else:
+            raise forms.ValidationError("Invalid content!")
     else:
         exp_comment_form = RootFileInfoExposureCommentSubmitForm(instance=rootfileinfo_set.first())
 
