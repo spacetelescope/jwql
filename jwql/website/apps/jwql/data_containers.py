@@ -80,7 +80,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     setup()
 
-    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm, RootFileInfoCommentSubmitForm
+    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm, RootFileInfoCommentSubmitForm, RootFileInfoExposureCommentSubmitForm
     from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo, Anomalies
     check_config_for_key('auth_mast')
     configs = get_config()
@@ -667,19 +667,19 @@ def get_anomaly_form(request, inst, file_root):
     return form
 
 def get_comment_form(request, file_root):
-    """Generate form data for context
+    """Generate form data for comment form
 
     Parameters
     ----------
     request : HttpRequest object
-        Incoming request from the webpage
+        Incoming request
     file_root : str
         FITS filename of selected image in filesystem. May be a
         file or group root name.
 
     Returns
     -------
-    InstrumentCommentSubmitForm object
+    RootFileInfoCommentSubmitForm object
         form object to be sent with context to template
     """
 
@@ -693,6 +693,40 @@ def get_comment_form(request, file_root):
         comment_form = RootFileInfoCommentSubmitForm(instance=root_file_info)
 
     return comment_form
+
+def get_exp_comment_form(request, file_root):
+    """Generate form data for exposure comment
+        This form updates all exposure level comments in each related rootfileimage model.
+        Each model related to this exposure will have the same exposure_comment associated with it.
+        When getting the default comment for this form, just use the first of the set.  When updating
+        the comment, update for every rootfileinfo in the query set.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request
+    file_root : str
+        Partial FITS filename substring of exposure root name.
+
+    Returns
+    -------
+    RootFileInfoExposureCommentSubmitForm object
+        form object to be sent with context to template
+    """
+
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
+
+    if request.method == 'POST':
+        exp_comment_form = RootFileInfoExposureCommentSubmitForm(request.POST, instance=rootfileinfo_set.first())
+        if exp_comment_form.is_valid():
+            # Update the for all images in exposure
+            for rootfileinfo in rootfileinfo_set:
+                rootfileinfo.exp_comment = exp_comment_form.cleaned_data['exp_comment']
+                rootfileinfo.save()
+    else:
+        exp_comment_form = RootFileInfoExposureCommentSubmitForm(instance=rootfileinfo_set.first())
+
+    return exp_comment_form
 
 
 def get_group_anomalies(file_root):

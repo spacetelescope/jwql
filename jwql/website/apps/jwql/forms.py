@@ -87,6 +87,15 @@ class RootFileInfoCommentSubmitForm(forms.ModelForm):
         model = RootFileInfo
         fields = ['comment']
 
+class RootFileInfoExposureCommentSubmitForm(forms.ModelForm):
+    """Creates a ``Comment Form`` object that allows for text input in a form field.
+        This uses forms.ModelForm which is good for simplifying direct access to
+        Django Model database information
+    """
+    class Meta:
+        model = RootFileInfo
+        fields = ['exp_comment']
+
 class JwqlQueryForm(BaseForm):
     """Form validation for the JWQL Query viewing tool"""
 

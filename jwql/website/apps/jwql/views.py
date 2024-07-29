@@ -72,6 +72,7 @@ from .data_containers import (
     get_anomaly_form,
     get_available_suffixes,
     get_comment_form,
+    get_exp_comment_form,
     get_dashboard_components,
     get_edb_components,
     get_explorer_extension_names,
@@ -1180,6 +1181,7 @@ def view_exposure(request, inst, group_root):
     # Get the anomaly submission form
     form = get_anomaly_form(request, inst, group_root)
     group_anomalies = get_group_anomalies(group_root)
+    exposure_comment_form = get_exp_comment_form(request, group_root)
 
     # if we get to this page without any navigation data,
     # previous/next buttons will be hidden
@@ -1248,7 +1250,8 @@ def view_exposure(request, inst, group_root):
                'expstart_str': expstart_str,
                'basic_info': basic_info,
                'additional_info': additional_info,
-               'group_anomalies': group_anomalies}
+               'group_anomalies': group_anomalies,
+               'exposure_comment_form': exposure_comment_form}
 
     return render(request, template, context)
 
