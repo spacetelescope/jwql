@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='rootfileinfo',
             name='exp_comment',
-            field=models.TextField(blank=True, default='', help_text='Anomaly Comment Field'),
+            field=models.TextField(blank=True, default='', help_text='Anomaly Exposure Comment Field'),
         ),
     ]
