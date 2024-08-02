@@ -19,6 +19,12 @@
     background-color: #f2f2f2;
 }
 
+.anomaly_form button {
+    display: block; /* Makes the button a block element so it takes a new line */
+    margin-top: 10px; /* Space between the comment field and the button */
+    margin-left: 0; /* Align button to left, full width of parent div */
+}
+
 .anomaly_choice {
     list-style: none;
   }
