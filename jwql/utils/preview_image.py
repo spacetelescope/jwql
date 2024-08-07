@@ -36,7 +36,7 @@ Use:
 
 import logging
 import os
-import socket
+# import socket
 import warnings
 
 from astropy.io import fits

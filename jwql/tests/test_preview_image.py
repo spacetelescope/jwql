@@ -24,7 +24,7 @@ import glob
 import numpy as np
 import os
 import pytest
-import shutil
+# import shutil
 
 from astropy.io import fits
 from jwst.datamodels import dqflags

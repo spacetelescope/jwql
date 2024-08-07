@@ -22,7 +22,7 @@ Use
 
 import http
 import json
-import os
+# import os
 from urllib import request, error
 
 import pytest

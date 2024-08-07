@@ -43,7 +43,7 @@ Notes
     data that include the datapoint preceding the requested start time
     and the datapoint that follows the requested end time.
 """
-import calendar
+# import calendar
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from numbers import Number

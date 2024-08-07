@@ -25,27 +25,27 @@ Use
         python test_redis_celery.py
 """
 
-from astropy.io import ascii, fits
-from collections import defaultdict
-from collections import OrderedDict
+# from astropy.io import ascii, fits
+# from collections import defaultdict
+# from collections import OrderedDict
 from copy import deepcopy
-import datetime
-import logging
-import numpy as np
+# import datetime
+# import logging
+# import numpy as np
 import os
 from pathlib import Path
 from pysiaf import Siaf
-import pytest
+# import pytest
 from tempfile import TemporaryDirectory
 
-from jwql.instrument_monitors import pipeline_tools
+# from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
-from jwql.utils import crds_tools, instrument_properties, monitor_utils
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+# from jwql.utils import crds_tools, instrument_properties, monitor_utils
+# from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+# from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
+# from jwql.utils.logging_functions import log_info, log_fail
+# from jwql.utils.permissions import set_permissions
+from jwql.utils.utils import copy_files, get_config
 
 
 def get_instrument(file_name):

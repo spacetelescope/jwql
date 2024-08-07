@@ -37,31 +37,31 @@ import logging
 import numpy as np
 import os
 import re
-import shutil
+# import shutil
 
 # Third-Party Imports
 from astropy.io import fits
 from astropy.time import Time
 from jwst.datamodels import dqflags
 import numpy as np
-from pysiaf import Siaf
+# from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.exc import StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError
 from sqlalchemy.sql.expression import and_
 
 # Local imports
-from jwql.database.database_interface import MIRICosmicRayQueryHistory
-from jwql.database.database_interface import MIRICosmicRayStats
-from jwql.database.database_interface import NIRCamCosmicRayQueryHistory
-from jwql.database.database_interface import NIRCamCosmicRayStats
-from jwql.database.database_interface import NIRISSCosmicRayQueryHistory
-from jwql.database.database_interface import NIRISSCosmicRayStats
-from jwql.database.database_interface import NIRSpecCosmicRayQueryHistory
-from jwql.database.database_interface import NIRSpecCosmicRayStats
-from jwql.database.database_interface import FGSCosmicRayQueryHistory
-from jwql.database.database_interface import FGSCosmicRayStats
+# from jwql.database.database_interface import MIRICosmicRayQueryHistory
+# from jwql.database.database_interface import MIRICosmicRayStats
+# from jwql.database.database_interface import NIRCamCosmicRayQueryHistory
+# from jwql.database.database_interface import NIRCamCosmicRayStats
+# from jwql.database.database_interface import NIRISSCosmicRayQueryHistory
+# from jwql.database.database_interface import NIRISSCosmicRayStats
+# from jwql.database.database_interface import NIRSpecCosmicRayQueryHistory
+# from jwql.database.database_interface import NIRSpecCosmicRayStats
+# from jwql.database.database_interface import FGSCosmicRayQueryHistory
+# from jwql.database.database_interface import FGSCosmicRayStats
 from jwql.database.database_interface import session, engine
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
+from jwql.shared_tasks.shared_tasks import only_one, run_parallel_pipeline #, run_pipeline
 from jwql.utils import mast_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging
