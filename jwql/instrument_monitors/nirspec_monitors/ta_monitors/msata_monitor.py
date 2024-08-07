@@ -1304,7 +1304,7 @@ class MSATA:
         """,
         )
         self.date_range.js_on_change("value", callback)
-        mini_view = CDSView(filters=[self.date_filter])
+        mini_view = CDSView(filter=self.date_filter)
 
         # create the bokeh plot
         plot = figure(
@@ -1408,14 +1408,18 @@ class MSATA:
                 return indices;
                 """,
         )
-        self.date_view = CDSView(filters=[self.date_filter])
+        self.date_view = CDSView(filter=self.date_filter)
 
-    def mk_plt_layout(self):
-        """Create the bokeh plot layout"""
-        self.query_results = pd.DataFrame(
-            list(NIRSpecMsataStats.objects.all().values())
-        )
-        self.source = ColumnDataSource(data=self.query_results)
+    def mk_plt_layout(self, plot_data):
+        """Create the bokeh plot layout
+
+        Parameters
+        ----------
+        plot_data : pandas.DateFrame
+            Pandas data frame of data to plot.
+        """
+
+        self.source = ColumnDataSource(data=plot_data)
 
         # add a time array to the data source
         self.add_time_column()
@@ -1815,8 +1819,14 @@ class MSATA:
             # Add MSATA data to stats table.
             self.add_msata_data()
 
-            # Generate plot -- the database is queried in mk_plt_layout().
-            self.mk_plt_layout()
+            # Query results and convert into pandas df.
+            self.query_results = pd.DataFrame(
+                list(NIRSpecMsataStats.objects.all().values())
+            )
+
+            # Generate plot
+            self.mk_plt_layout(self.query_results)
+
             logging.info(
                 "\tNew output plot file will be written as: {}".format(
                     self.output_file_name

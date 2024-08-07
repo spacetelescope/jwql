@@ -118,9 +118,9 @@
                     <h5>Submit Anomaly</h5>
                     <form action="" method="post">
                         <!--Show any errors from a previous form submission-->
-                        {% if form.errors %}
+                        {% if anomaly_form.errors %}
                             <fieldset>
-                                {% for field in form %}
+                                {% for field in anomaly_form %}
                                     {% for error in field.errors %}
                                         <div class="alert alert-danger">
                                             <strong>{{ error|escape }}</strong>
@@ -134,14 +134,16 @@
                         {{ csrf_input }}
 
                         <!--Show the field forms-->
-                        {% for field in form %}
+                        {% for field in anomaly_form %}
                             <ul>
                             {% for subwidget in field.subwidgets %}
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                             </ul>
                         {% endfor %}
-                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                        <h5>Comments</h5>
+                        {{ comment_form.comment }}
+                        <button class="btn btn-primary" type="submit">Submit</button>
                     </form>
                 </div>
             </div>
