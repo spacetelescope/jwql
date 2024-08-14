@@ -208,3 +208,43 @@ class Anomalies(models.Model):
     def __str__(self):
         """Container for all anomalies associated with each RootFileInfo object """
         return self.root_file_info.root_name
+
+
+def get_model_column_names(model_name):
+    """Return all column names for the input ``model_name`` as a list
+
+    Parameters
+    ----------
+    model_name : django.db.models.base.ModelBase
+        e.g. model_name = eval('NIRCamDarkDarkCurrent')
+
+    Returns
+    -------
+    colnames : list
+        List of column names
+    """
+    return [f.name for f in model_name._meta.get_fields()]
+
+
+def get_unique_values_per_column(model_name, column_name):
+    """Return a list of the unique values present in the column ``column_name`` in
+    the ``model_name`` model.
+
+    Parameters
+    ----------
+    model_name : django.db.models.base.ModelBase
+        e.g. model_name = eval('NIRCamDarkDarkCurrent')
+
+    column_name : str
+        Column name to examine
+
+    Returns
+    -------
+    values : list
+        List of unique values in ``column_name``
+    """
+    query_set = model_name.objects.values(column_name).distinct()
+    values = []
+    for row in query_set:
+        values.append(row[column_name])
+    return values
