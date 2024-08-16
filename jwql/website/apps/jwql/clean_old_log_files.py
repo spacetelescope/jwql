@@ -38,12 +38,14 @@ def define_options():
     """
     usage = 'clean_old_log_files.py -t 14'
     parser = argparse.ArgumentParser(usage=usage)
-    parser.add_argument('-t', '--time_limit', type=int, default=14,
+    parser.add_argument('-t', '--time_limit', type=float, default=14,
                         help='Time limit in days. Log files older than this will be deleted.')
+    parser.add_argument('-d', '--dry_run', action="store_true",
+                        help='If True, the log files that would be deleted are printed to the screen')
     return parser
 
 
-def run(time_limit=timedelta(days=14)):
+def run(time_limit=timedelta(days=14), dry_run=False):
     """Look through log directories and delete log files that are older than ``time_limit``.
     Have time_limit default to be 14 days.
 
@@ -51,6 +53,10 @@ def run(time_limit=timedelta(days=14)):
     ------
     time_limit : datetime.timdelta
         Files older than this time limit will be deleted
+
+    dry_run : bool
+        If True, log files will not be deleted. Those that would be deleted are instead
+        printed to the screen
     """
     now = datetime.now()
 
@@ -75,10 +81,13 @@ def run(time_limit=timedelta(days=14)):
                     age = now - last_modified_time
                     if age > time_limit:
                         full_path = os.path.join(log_dir, logtype, item)
-                        os.remove(full_path)
+                        if not dry_run:
+                            os.remove(full_path)
+                        else:
+                            print(f'DELETE: {full_path}')
 
 
 if __name__ == '__main__':
     parser = define_options()
     args = parser.parse_args()
-    run(timedelta(days=args.time_limit))
+    run(time_limit=timedelta(days=args.time_limit), dry_run=args.dry_run)
