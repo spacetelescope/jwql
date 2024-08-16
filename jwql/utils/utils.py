@@ -602,7 +602,7 @@ def filename_parser(filename):
     except AttributeError:
         filename_dict = {'recognized_filename': False}
         logging.exception((f'\nFile; {filename} was not recognized by filename_parser(). Update parser or '
-                         'constants.py if it should be recognized.\n'))
+                           'constants.py if it should be recognized.\n'))
 
     return filename_dict
 

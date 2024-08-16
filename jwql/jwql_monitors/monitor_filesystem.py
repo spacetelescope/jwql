@@ -75,6 +75,7 @@ PREVIEW_IMAGES = SETTINGS['preview_image_filesystem']
 THUMBNAILS = SETTINGS['thumbnail_filesystem']
 LOGS = SETTINGS['log_dir']
 
+
 def files_per_filter():
     """Querying MAST (rather than looping through the filesystem), determine how
     many files use each filter for each instrument. Note that thiw function takes
@@ -94,7 +95,7 @@ def files_per_filter():
         for fname in FILTERS_PER_INSTRUMENT[instrument]:  # note that this does not include pupil wheel-based filters
             obs = Observations.query_criteria(filters=fname, instrument_name=JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument])
             batch_size = 5
-            batches = [obs[i:i+batch_size] for i in range(0, len(obs), batch_size)]
+            batches = [obs[i : i + batch_size] for i in range(0, len(obs), batch_size)]
 
             obs_table = [Observations.get_product_list(batch) for batch in batches]
             products = unique(vstack(obs_table), keys='productFilename')

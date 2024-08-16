@@ -512,32 +512,32 @@ def test_validate_config():
             "host": "",
             "port": ""
         },
-        "django_databases" : {
+        "django_databases": {
             "default": {
-                "ENGINE" : "",
-                "NAME" : "",
-                "USER" : "",
-                "PASSWORD" : "",
-                "HOST" : "",
-                "PORT" : ""
+                "ENGINE": "",
+                "NAME": "",
+                "USER": "",
+                "PASSWORD": "",
+                "HOST": "",
+                "PORT": ""
             },
             "monitors": {
-                "ENGINE" : "",
-                "NAME" : "",
-                "USER" : "",
-                "PASSWORD" : "",
-                "HOST" : "",
-                "PORT" : ""
+                "ENGINE": "",
+                "NAME": "",
+                "USER": "",
+                "PASSWORD": "",
+                "HOST": "",
+                "PORT": ""
             }
         },
-        "django_debug" : "",
+        "django_debug": "",
         "jwql_dir": "",
         "jwql_version": "",
         "server_type": "",
         "log_dir": "",
         "mast_token": "",
         "outputs": "",
-        "working" : "",
+        "working": "",
         "preview_image_filesystem": "",
         "filesystem": "",
         "setup_file": "",
