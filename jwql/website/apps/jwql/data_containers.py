@@ -27,44 +27,61 @@ Use
 """
 
 import copy
-from collections import OrderedDict
 import glob
 import json
-from operator import getitem
+import logging
 import os
 import re
 import tempfile
-import logging
+from collections import OrderedDict
+from datetime import datetime
+from operator import getitem, itemgetter
 
+import numpy as np
+import pandas as pd
+import pyvo as vo
+import requests
 from astropy.io import fits
 from astropy.time import Time
+from astroquery.mast import Mast
 from bs4 import BeautifulSoup
-from django import setup
+from django import forms, setup
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query import QuerySet
-import numpy as np
-from operator import itemgetter
-import pandas as pd
-import pyvo as vo
-import requests
-from datetime import datetime
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
-from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
-from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import REPORT_KEYS_PER_INSTRUMENT
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS, QueryConfigKeys
-from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
+from jwql.utils.constants import (
+    DEFAULT_MODEL_COMMENT,
+    EXPOSURE_PAGE_SUFFIX_ORDER,
+    IGNORED_SUFFIXES,
+    INSTRUMENT_SERVICE_MATCH,
+    JWST_INSTRUMENT_NAMES,
+    JWST_INSTRUMENT_NAMES_MIXEDCASE,
+    MAST_QUERY_LIMIT,
+    MONITORS,
+    ON_GITHUB_ACTIONS,
+    ON_READTHEDOCS,
+    REPORT_KEYS_PER_INSTRUMENT,
+    SUFFIXES_TO_ADD_ASSOCIATION,
+    SUFFIXES_WITH_AVERAGED_INTS,
+    THUMBNAIL_FILTER_LOOK,
+    THUMBNAIL_LISTFILE,
+    QueryConfigKeys,
+)
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_rootnames_for_instrument_proposal
-from astroquery.mast import Mast
+from jwql.utils.utils import (
+    check_config_for_key,
+    ensure_dir_exists,
+    filename_parser,
+    filesystem_path,
+    get_config,
+    get_rootnames_for_instrument_proposal,
+)
 
 # Increase the limit on the number of entries that can be returned by
 # a MAST query.
@@ -79,8 +96,16 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     setup()
 
-    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm, InstrumentAnomalySubmitForm
-    from jwql.website.apps.jwql.models import Observation, Proposal, RootFileInfo, Anomalies
+    from jwql.website.apps.jwql.models import Anomalies, Observation, Proposal, RootFileInfo
+
+    from .forms import (
+        InstrumentAnomalySubmitForm,
+        MnemonicExplorationForm,
+        MnemonicQueryForm,
+        MnemonicSearchForm,
+        RootFileInfoCommentSubmitForm,
+        RootFileInfoExposureCommentSubmitForm,
+    )
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
@@ -396,11 +421,16 @@ def get_additional_exposure_info(root_file_infos, image_info):
         filter_value = '/'.join(set([e.filter for e in root_file_infos]))
         pupil_value = '/'.join(set([e.pupil for e in root_file_infos]))
         grating_value = '/'.join(set([e.grating for e in root_file_infos]))
+        exp_comment = root_file_infos.first().exp_comment
     elif isinstance(root_file_infos, RootFileInfo):
         root_file_info = root_file_infos
         filter_value = root_file_info.filter
         pupil_value = root_file_info.pupil
         grating_value = root_file_info.grating
+        exp_comment = root_file_info.exp_comment
+
+    # Print N/A if no exposure comment is used
+    exp_comment = exp_comment if exp_comment != DEFAULT_MODEL_COMMENT else "N/A"
 
     # Initialize dictionary of file info to show at the top of the page, along
     # with another for info that will be in the collapsible text box.
@@ -427,7 +457,8 @@ def get_additional_exposure_info(root_file_infos, image_info):
                            'TARG_DEC': 'N/A',
                            'CRDS context': 'N/A',
                            'PA_V3': 'N/A',
-                           'EXPSTART': root_file_info.expstart
+                           'EXPSTART': root_file_info.expstart,
+                           'EXP_COMMENT': exp_comment
                            }
     elif isinstance(root_file_infos, RootFileInfo):
         additional_info = {'READPATT': root_file_info.read_patt,
@@ -442,7 +473,8 @@ def get_additional_exposure_info(root_file_infos, image_info):
                            'DEC_REF': 'N/A',
                            'CRDS context': 'N/A',
                            'ROLL_REF': 'N/A',
-                           'EXPSTART': root_file_info.expstart
+                           'EXPSTART': root_file_info.expstart,
+                           'EXP_COMMENT': exp_comment
                            }
 
     # Deal with instrument-specific parameters
@@ -666,6 +698,74 @@ def get_anomaly_form(request, inst, file_root):
     return form
 
 
+def get_comment_form(request, file_root):
+    """Generate form data for comment form
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request
+    file_root : str
+        FITS filename of selected image in filesystem. May be a
+        file or group root name.
+
+    Returns
+    -------
+    RootFileInfoCommentSubmitForm object
+        form object to be sent with context to template
+    """
+
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+
+    if request.method == 'POST':
+        comment_form = RootFileInfoCommentSubmitForm(request.POST, instance=root_file_info)
+        if comment_form.is_valid():
+            comment_form.save()
+        else:
+            messages.error(request, "Failed to update comment form")
+    else:
+        comment_form = RootFileInfoCommentSubmitForm(instance=root_file_info)
+
+    return comment_form
+
+
+def get_exp_comment_form(request, file_root):
+    """Generate form data for exposure comment
+        This form updates all exposure level comments in each related rootfileimage model.
+        Each model related to this exposure will have the same exposure_comment associated with it.
+        When getting the default comment for this form, just use the first of the set.  When updating
+        the comment, update for every rootfileinfo in the query set.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request
+    file_root : str
+        Partial FITS filename substring of exposure root name.
+
+    Returns
+    -------
+    RootFileInfoExposureCommentSubmitForm object
+        form object to be sent with context to template
+    """
+
+    rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root)
+
+    if request.method == 'POST':
+        exp_comment_form = RootFileInfoExposureCommentSubmitForm(request.POST, instance=rootfileinfo_set.first())
+        if exp_comment_form.is_valid():
+            # Update the for all images in exposure
+            for rootfileinfo in rootfileinfo_set:
+                rootfileinfo.exp_comment = exp_comment_form.cleaned_data['exp_comment']
+                rootfileinfo.save()
+        else:
+            messages.error(request, "Failed to update exposure comment form")
+    else:
+        exp_comment_form = RootFileInfoExposureCommentSubmitForm(instance=rootfileinfo_set.first())
+
+    return exp_comment_form
+
+
 def get_group_anomalies(file_root):
     """Generate form data for context
 
@@ -678,7 +778,7 @@ def get_group_anomalies(file_root):
     Returns
     -------
     group_anomaly_dict dict
-        root file name key with string of anomalies
+        root file name key with string of anomalies followed by anomaly comment
     """
     # Check for group root name
     rootfileinfo_set = RootFileInfo.objects.filter(root_name__startswith=file_root).order_by("root_name")
@@ -687,6 +787,10 @@ def get_group_anomalies(file_root):
         anomalies_list = get_current_flagged_anomalies([rootfileinfo])
         anomalies_string = ', '.join(anomalies_list)
         group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+        if rootfileinfo.comment != DEFAULT_MODEL_COMMENT:
+            anomalies_string += f" -- Comments: {rootfileinfo.comment}"
+        group_anomaly_dict[rootfileinfo.root_name] = anomalies_string
+
     return group_anomaly_dict
 
 
@@ -2107,13 +2211,19 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                     exp_type = columns['exp_type'][i]
         exp_types.add(exp_type)
 
-        # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+        # These attributes are stored by rootname in the Model db.  Save them with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
             root_file_info = RootFileInfo.objects.get(root_name=rootname)
             viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
+            filter_type = root_file_info.filter
+            pupil_type = root_file_info.pupil
+            grating_type = root_file_info.grating
         except RootFileInfo.DoesNotExist:
             viewed = THUMBNAIL_FILTER_LOOK[0]
+            filter_type = ""
+            pupil_type = ""
+            grating_type = ""
 
         # Add to list of all exposure groups
         exp_groups.add(filename_dict['group_root'])
@@ -2125,6 +2235,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['viewed'] = viewed
         data_dict['file_data'][rootname]['exp_type'] = exp_type
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
+        data_dict['file_data'][rootname]['filter'] = filter_type
+        data_dict['file_data'][rootname]['pupil'] = pupil_type
+        data_dict['file_data'][rootname]['grating'] = grating_type
 
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
@@ -2137,7 +2250,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors, proposals, visits = [], [], []
+    detectors, proposals, visits, filters, pupils, gratings = [], [], [], [], [], []
     for rootname in list(data_dict['file_data'].keys()):
         proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
         try:  # Some rootnames cannot parse out detectors
@@ -2146,6 +2259,18 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             pass
         try:  # Some rootnames cannot parse out visit
             visits.append(data_dict['file_data'][rootname]['filename_dict']['visit'])
+        except KeyError:
+            pass
+        try:
+            filters.append(data_dict['file_data'][rootname]['filter'])
+        except KeyError:
+            pass
+        try:
+            pupils.append(data_dict['file_data'][rootname]['pupil'])
+        except KeyError:
+            pass
+        try:
+            gratings.append(data_dict['file_data'][rootname]['grating'])
         except KeyError:
             pass
 
@@ -2160,6 +2285,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                           'look': THUMBNAIL_FILTER_LOOK,
                           'exp_type': sorted(exp_types),
                           'visit': sorted(visits)}
+    if filters is not None:
+        dropdown_menus['filter'] = sorted(filters)
+    if pupils is not None:
+        dropdown_menus['pupil'] = sorted(pupils)
+    if gratings is not None:
+        dropdown_menus['grating'] = sorted(gratings)
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -2214,6 +2345,16 @@ def thumbnails_query_ajax(rootnames):
         else:
             continue
 
+        try:
+            root_file_info = RootFileInfo.objects.get(root_name=rootname)
+            filter_type = root_file_info.filter
+            pupil_type = root_file_info.pupil
+            grating_type = root_file_info.grating
+        except RootFileInfo.DoesNotExist:
+            filter_type = ""
+            pupil_type = ""
+            grating_type = ""
+
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
 
@@ -2228,6 +2369,9 @@ def thumbnails_query_ajax(rootnames):
         data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         data_dict['file_data'][rootname]['suffixes'] = []
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
+        data_dict['file_data'][rootname]['filter'] = filter_type
+        data_dict['file_data'][rootname]['pupil'] = pupil_type
+        data_dict['file_data'][rootname]['grating'] = grating_type
         for filename in available_files:
             suffix = filename_parser(filename)['suffix']
             if suffix['recognized_filename']:
@@ -2257,11 +2401,23 @@ def thumbnails_query_ajax(rootnames):
                  rootname in list(data_dict['file_data'].keys())]
     visits = [data_dict['file_data'][rootname]['filename_dict']['visit'] for
               rootname in list(data_dict['file_data'].keys())]
+    filters = [data_dict['file_data'][rootname]['filter'] for
+               rootname in list(data_dict['file_data'].keys())]
+    pupils = [data_dict['file_data'][rootname]['pupil'] for
+              rootname in list(data_dict['file_data'].keys())]
+    gratings = [data_dict['file_data'][rootname]['grating'] for
+                rootname in list(data_dict['file_data'].keys())]
 
     dropdown_menus = {'instrument': instruments,
                       'detector': sorted(detectors),
                       'proposal': sorted(proposals),
                       'visit': sorted(visits)}
+    if filters is not None:
+        dropdown_menus['filter'] = sorted(filters)
+    if pupils is not None:
+        dropdown_menus['pupil'] = sorted(pupils)
+    if gratings is not None:
+        dropdown_menus['grating'] = sorted(gratings)
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus

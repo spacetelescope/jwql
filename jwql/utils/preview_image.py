@@ -490,16 +490,54 @@ class PreviewImage():
                     dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
-                cbar = self.fig.colorbar(cax, ticks=tickvals)
 
                 # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
                 # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
                 warnings.filterwarnings("ignore", message="AutoMinorLocator does not work with logarithmic scale")
-                cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
 
-                cbar.ax.set_yticklabels(tlabelstr)
-                cbar.ax.tick_params(labelsize=maxsize * 5. / 4)
-                cbar.ax.set_ylabel(self.units, labelpad=10, rotation=270)
+                xyratio = xsize / ysize
+                if xyratio < 1.6:
+                    # For apertures that are taller than they are wide, square, or that are wider than
+                    # they are tall but still reasonably close to square, put the colorbar on the right
+                    # side of the image.
+
+                    # Some magic numbers arrived at through testing aspect ratios for all apertures
+                    if xyratio > 0.4:
+                        cb_width = 0.05
+                    else:
+                        cb_width = 0.05 * 0.4 / xyratio
+
+                    upper_x_anchor = 0.02
+                    if xyratio < 0.1:
+                        upper_x_anchor = 0.12
+
+                    cbax = self.fig.add_axes([ax.get_position().x1 + upper_x_anchor,
+                                              ax.get_position().y0,
+                                              cb_width,
+                                              ax.get_position().height
+                                              ])
+                    cbar = self.fig.colorbar(cax, cax=cbax, ticks=tickvals, orientation='vertical')
+                    cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
+                    cbar.ax.set_yticklabels(tlabelstr)
+                    cbar.ax.set_ylabel(self.units, labelpad=7, rotation=270)
+                else:
+                    # For apertures that are significantly wider than they are tall, put the colorbar
+                    # under the image.
+
+                    # Again, some magic numbers controlling the positioning and height of the
+                    # colorbar, based on testing.
+                    lower_y_anchor = 0. - (xyratio / 14.5)
+                    cb_height = 0.07 * (np.log2(xyratio) - 1)
+
+                    cbax = self.fig.add_axes([ax.get_position().x0,
+                                              ax.get_position().y0 + lower_y_anchor,
+                                              ax.get_position().width,
+                                              cb_height])
+                    cbar = self.fig.colorbar(cax, cax=cbax, ticks=tickvals, orientation='horizontal')
+                    cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(n=0))
+                    cbar.ax.set_xticklabels(tlabelstr)
+                    cbar.ax.set_xlabel(self.units, labelpad=7, rotation=0)
+
                 ax.set_xlabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.set_ylabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.tick_params(labelsize=maxsize)
