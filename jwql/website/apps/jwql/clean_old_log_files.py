@@ -86,6 +86,7 @@ def run(time_limit=timedelta(days=14), dry_run=False):
                         else:
                             print(f'DELETE: {full_path}')
 
+
 if __name__ == '__main__':
     parser = define_options()
     args = parser.parse_args()
