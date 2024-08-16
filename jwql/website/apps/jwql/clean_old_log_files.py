@@ -68,8 +68,7 @@ def run(time_limit=timedelta(days=14), dry_run=False):
         # This should cover the dev server as well as local machines
         subdir = 'dev'
 
-    #log_dir = os.path.join(LOG_BASE_DIR, subdir)
-    log_dir = '/ifs/jwst/wit/nircam/hilbert/jwql/test_logs/dev'
+    log_dir = os.path.join(LOG_BASE_DIR, subdir)
     for logtype in os.scandir(log_dir):
         if logtype.is_dir():
             for item in os.scandir(logtype):
