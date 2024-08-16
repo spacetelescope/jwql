@@ -331,12 +331,12 @@ class FileSearchForm(forms.Form):
                         continue
                     else:
                         fileinfo = filename_parser(file)
-                        try:
+                        if fileinfo['recognized_filename']:
                             instrument = fileinfo['instrument']
                             observation = fileinfo['observation']
                             all_instruments.append(instrument)
                             all_observations[instrument].append(observation)
-                        except KeyError:
+                        else:
                             # If the filename is not recognized by filename_parser(), skip it.
                             continue
 
@@ -388,8 +388,8 @@ class FileSearchForm(forms.Form):
             Is the search term formatted like a fileroot?
         """
         parsed = filename_parser(search)
-        if 'instrument' in parsed:
-            self.fileroot_dict = filename_parser(search)
+        if parsed['recognized_filename']:
+            self.fileroot_dict = parsed
             return True
         else:
             return False

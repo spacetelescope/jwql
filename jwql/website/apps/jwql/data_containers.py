@@ -1326,9 +1326,9 @@ def get_image_info(file_root):
         parsed_fn = filename_parser(filename)
 
         # Get suffix information
-        try:
+        if parsed_fn['recognized_filename']:
             suffix = parsed_fn['suffix']
-        except KeyError:
+        else:
             # If the filename parser does not recognize the file, skip it
             continue
 
@@ -2206,12 +2206,12 @@ def thumbnails_query_ajax(rootnames):
             continue
 
         # Parse filename
-        try:
-            filename_dict = filename_parser(rootname)
+        filename_dict = filename_parser(rootname)
 
+        if filename_dict['recognized_filename']:
             # Add to list of all exposure groups
             exp_groups.add(filename_dict['group_root'])
-        except KeyError:
+        else:
             continue
 
         # Get list of available filenames
@@ -2229,11 +2229,12 @@ def thumbnails_query_ajax(rootnames):
         data_dict['file_data'][rootname]['suffixes'] = []
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
         for filename in available_files:
-            try:
-                suffix = filename_parser(filename)['suffix']
+            suffix = filename_parser(filename)['suffix']
+            if suffix['recognized_filename']:
                 data_dict['file_data'][rootname]['suffixes'].append(suffix)
-            except KeyError:
+            else:
                 continue
+
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
 
     # Extract information for sorting with dropdown menus

@@ -138,9 +138,9 @@ def gather_statistics(general_results_dict, instrument_results_dict):
 
                         # Parse out filename information
                         filename_dict = filename_parser(filename)
-                        try:
+                        if filename_dict['recognized_filename']:
                             filename_type = filename_dict['filename_type']
-                        except KeyError:
+                        else:
                             break
 
                         # For MSA files, which do not have traditional suffixes, set the

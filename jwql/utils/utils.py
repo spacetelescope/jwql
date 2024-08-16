@@ -570,6 +570,9 @@ def filename_parser(filename):
         # Convert the regex match to a dictionary
         filename_dict = jwst_file.groupdict()
 
+        # Add an entry indicating that the filename was successfully parsed
+        filename_dict['recognized_filename'] = True
+
         # Add the filename type to that dict
         filename_dict['filename_type'] = name_match
 
@@ -598,7 +601,7 @@ def filename_parser(filename):
     # Raise error if unable to parse the filename
     except AttributeError:
         filename_dict = {'recognized_filename': False}
-        logging.warning((f'\nFile; {filename} was not recognized by filename_parser(). Update parser or '
+        logging.exception((f'\nFile; {filename} was not recognized by filename_parser(). Update parser or '
                          'constants.py if it should be recognized.\n'))
 
     return filename_dict

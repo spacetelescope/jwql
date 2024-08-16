@@ -214,7 +214,7 @@ def check_existence(file_list, outdir):
         file_parts = filename_parser(file_list[0])
 
         # If filename_parser() does not recognize the filename, return False
-        if 'program_id' not in file_parts:
+        if not file_parts['recognized_filename']:
             return False
 
         if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
@@ -637,8 +637,7 @@ def group_filenames(filenames):
 
         # Generate string to be matched with other filenames
         filename_dict = filename_parser(os.path.basename(filename))
-        if 'detector' not in filename_dict:
-            logging.warning('Could not parse filename for {}'.format(filename))
+        if not filename_dict['recognized_filename']:
             break
 
         # If the filename was already involved in a match, then skip
@@ -738,6 +737,7 @@ def process_program(program, overwrite):
         try:
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except KeyError:
+            # In this case, the filename_parser failed to recognize the filename
             identifier = os.path.basename(filename).split('.fits')[0]
         preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)

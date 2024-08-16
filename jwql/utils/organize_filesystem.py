@@ -52,12 +52,12 @@ def organize_filesystem():
             filename_dict = filename_parser(src)
 
             # Build destination path for those filenames that can be parsed
-            try:
+            if filename_dict['recognized_filename']:
                 destination_directory = os.path.join(
                     SETTINGS['filesystem'],
                     'jw{}'.format(filename_dict['program_id']),
                     'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']))
-            except KeyError:
+            else:
                 # Some filenames do not have a program_id/observation/visit structure
                 # Files that are not recognized by filename_parser will also end up here.
                 break
@@ -94,11 +94,11 @@ def revert_filesystem():
             filename_dict = filename_parser(src)
 
             # Build destination path for those filenames that can be parsed
-            try:
+            if filename_dict['recognized_filename']:
                 destination_directory = os.path.join(
                     SETTINGS['old_filesystem'],
                     'jw{}'.format(filename_dict['program_id']))
-            except KeyError:
+            else:
                 # Some filenames do not have a program_id/observation/visit structure
                 # Filenames not recognized by filename_parser() will also end up here.
                 break
