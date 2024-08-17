@@ -154,7 +154,7 @@ class ReadNoisePlotTab():
                                                    ("ngroups", "@ngroups"),
                                                    ("readnoise", "@readnoise")]))
 
-            amp_plot.circle(x='expstarts', y='readnoise', source=source)
+            amp_plot.circle(x='expstarts', y='readnoise', radius=0.01, radius_dimension='y', source=source)
 
             amp_plot.xaxis.axis_label = 'Date'
             amp_plot.yaxis.axis_label = 'Mean Readnoise [DN]'
@@ -204,7 +204,7 @@ class ReadNoisePlotTab():
 
         self.readnoise_histogram.add_tools(HoverTool(tooltips=[("Data (x, y)", "(@x, @y)"), ]))
 
-        self.readnoise_histogram.circle(x='x', y='y', source=source)
+        self.readnoise_histogram.circle(x='x', y='y', radius=0.01, radius_dimension='x', source=source)
 
         self.readnoise_histogram.xaxis.axis_label = 'Readnoise Difference [DN]'
         self.readnoise_histogram.yaxis.axis_label = 'Number of Pixels'
