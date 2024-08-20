@@ -831,7 +831,6 @@ class WATA:
         grid = gridplot([p1, p2, p3, p4, p5, p6], ncols=2, merge_tools=False)
         box_layout = layout(children=[self.date_range, grid])
 
-        # return the needed components for embeding the results in the WATA html template
         self.script, self.div = components(box_layout)
 
     def file_exists_in_database(self, filename):

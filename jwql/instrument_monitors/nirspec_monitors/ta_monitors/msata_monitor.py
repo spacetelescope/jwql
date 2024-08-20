@@ -1452,7 +1452,6 @@ class MSATA:
         )
         box_layout = layout(children=[self.date_range, grid])
 
-        # return the needed components for embedding the results in the MSATA html template
         self.script, self.div = components(box_layout)
 
     def identify_tables(self):
