@@ -216,7 +216,7 @@ def check_existence(file_list, outdir):
         # If filename_parser() does not recognize the filename, return False
         if not file_parts['recognized_filename']:
             logging.warning((f'While running checking_existence() for a preview image for {file_list[0]}, '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
             return False
 
         if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
@@ -266,7 +266,7 @@ def create_dummy_filename(filelist):
         else:
             # If filename_parser() does not recognize the file, skip it
             logging.warning((f'While using {infile} to create a dummy filename in create_dummy_filename(), the '
-                              'filename parser failed.'))
+                             'filename parser failed.'))
             continue
         det_string_list.append(det_string)
         modules.append(det_string[3].upper())
@@ -327,7 +327,7 @@ def create_mosaic(filenames):
         else:
             # If filename_parser() does not recognize the file, skip it.
             logging.warning((f'While running create_mosaic() using {file_list[0]}, '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
             pass
         data_lower_left.append((image.xstart, image.ystart))
 
@@ -674,7 +674,7 @@ def group_filenames(filenames):
         filename_dict = filename_parser(os.path.basename(filename))
         if not filename_dict['recognized_filename']:
             logging.warning((f'While running generate_preview_images.group_filenames() on {filename}, the '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
             break
 
         # If the filename was already involved in a match, then skip
@@ -760,7 +760,7 @@ def process_program(program, overwrite):
                 filtered_filenames.append(filename)
         else:
             logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
     filenames = filtered_filenames
 
     logging.info('Found {} filenames'.format(len(filenames)))
@@ -782,7 +782,7 @@ def process_program(program, overwrite):
             # In this case, the filename_parser failed to recognize the filename
             identifier = os.path.basename(filename).split('.fits')[0]
             logging.warning((f'While running generate_preview_images.process_program() on filtered filename {filename}, the '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
         preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 

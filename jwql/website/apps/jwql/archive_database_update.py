@@ -123,7 +123,7 @@ def get_updates(update_database):
                         rootnames.append(rootname)
                 else:
                     logging.warning((f'While running get_updates() to update the RootfileInfo tables, {rootname}, '
-                              'was not recognized by the filename_parser().'))
+                                     'was not recognized by the filename_parser().'))
                     pass
 
             if len(filenames) > 0:

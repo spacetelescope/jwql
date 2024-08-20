@@ -1435,7 +1435,7 @@ def get_image_info(file_root):
         else:
             # If the filename parser does not recognize the file, skip it
             logging.warning((f'While running get_image_info() on {filename}, the '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
             continue
 
         # For crf or crfints suffixes, we need to also include the association value
@@ -1724,7 +1724,7 @@ def get_proposal_info(filepaths):
                     obsnums.append(obs)
                 else:
                     logging.warning((f'While running get_proposal_info() for a program {proposal}, {fname} '
-                              'was not recognized by the filename_parser().'))
+                                     'was not recognized by the filename_parser().'))
 
             obsnums = sorted(obsnums)
             observations.extend(obsnums)
@@ -2166,7 +2166,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             all_obs.append(file_info['observation'])
         else:
             logging.warning((f'While running thumbnails_ajax() on root {root}, '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
 
     obs_list = sorted(list(set(all_obs)))
 
@@ -2205,7 +2205,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                              'visit_group': rootname[14:16],
                              'group_root': rootname[:26]}
             logging.warning((f'While running thumbnails_ajax() on rootname {rootname}, '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
 
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
@@ -2353,7 +2353,7 @@ def thumbnails_query_ajax(rootnames):
             exp_groups.add(filename_dict['group_root'])
         else:
             logging.warning((f'While running thumbnails_query_ajax() on rootname {rootname}, '
-                              'filename_parser() failed to recognize the file pattern.'))
+                             'filename_parser() failed to recognize the file pattern.'))
             continue
 
         try:
@@ -2390,7 +2390,7 @@ def thumbnails_query_ajax(rootnames):
                 data_dict['file_data'][rootname]['suffixes'].append(suffix)
             else:
                 logging.warning((f'While running thumbnails_query_ajax() on filename {filename}, '
-                              'filename_parser() failed to recognize the file pattern.'))
+                                 'filename_parser() failed to recognize the file pattern.'))
                 continue
 
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)
