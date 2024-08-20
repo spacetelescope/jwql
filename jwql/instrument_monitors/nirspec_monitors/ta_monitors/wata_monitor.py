@@ -820,7 +820,6 @@ class WATA:
         self.setup_date_range()
 
         # set the output html file name and create the plot grid
-        output_file(self.output_file_name)
         p1 = self.plt_status()
         p2 = self.plt_residual_offsets()
         p3 = self.plt_v2offset_time()
@@ -831,11 +830,8 @@ class WATA:
         # make grid
         grid = gridplot([p1, p2, p3, p4, p5, p6], ncols=2, merge_tools=False)
         box_layout = layout(children=[self.date_range, grid])
-        save(box_layout)
 
-        # return the needed components for embeding the results in the WATA html template
-        script, div = components(box_layout)
-        return script, div
+        self.script, self.div = components(box_layout)
 
     def file_exists_in_database(self, filename):
         """Checks if an entry for filename exists in the wata stats
@@ -1052,6 +1048,17 @@ class WATA:
 
         logging.info("\tUpdated the WATA statistics table")
 
+    def plots_for_app(self):
+        """Utility function to access div and script objects for
+        embedding bokeh in JWQL application.
+        """
+        # Query results and convert into pandas df.
+        self.query_results = pd.DataFrame(
+            list(NIRSpecWataStats.objects.all().values())
+        )
+        # Generate plot
+        self.mk_plt_layout(self.query_results)
+
     @log_fail
     @log_info
     def run(self):
@@ -1062,20 +1069,8 @@ class WATA:
         # Identify which database tables to use
         self.identify_tables()
 
-        # Get the output directory and setup a directory to store the data
-        self.output_dir = os.path.join(get_config()["outputs"], "wata_monitor")
-        ensure_dir_exists(self.output_dir)
-        # Set up directories for the copied data
-        ensure_dir_exists(os.path.join(self.output_dir, "data"))
-        self.data_dir = os.path.join(
-            self.output_dir,
-            "data/{}_{}".format(self.instrument.lower(), self.aperture.lower()),
-        )
-        ensure_dir_exists(self.data_dir)
-
         # Locate the record of most recent time the monitor was run
         self.query_start = self.most_recent_search()
-        self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -1149,15 +1144,6 @@ class WATA:
             # Add WATA data to stats table.
             self.add_wata_data()
 
-            # Get Results from database table
-            self.query_results = pd.DataFrame(list(NIRSpecWataStats.objects.all().values()))
-            # Generate plot.
-            self.mk_plt_layout(self.query_results)
-            logging.info(
-                "\tNew output plot file will be written as: {}".format(
-                    self.output_file_name
-                )
-            )
             # Once data is added to database table and plots are made, the
             # monitor has run successfully.
             monitor_run = True
