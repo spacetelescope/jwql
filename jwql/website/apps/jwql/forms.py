@@ -363,10 +363,17 @@ class FileSearchForm(forms.Form):
                     if any(map(filename.__contains__, GUIDER_FILENAME_TYPE)):
                         continue
                     else:
-                        instrument = filename_parser(file)['instrument']
-                        observation = filename_parser(file)['observation']
-                        all_instruments.append(instrument)
-                        all_observations[instrument].append(observation)
+                        fileinfo = filename_parser(file)
+                        if fileinfo['recognized_filename']:
+                            instrument = fileinfo['instrument']
+                            observation = fileinfo['observation']
+                            all_instruments.append(instrument)
+                            all_observations[instrument].append(observation)
+                        else:
+                            # If the filename is not recognized by filename_parser(), skip it.
+                            logging.warning((f'While running FileSearchForm.clean_search() on {file}, '
+                                             'filename_parser() failed to recognize the file pattern.'))
+                            continue
 
                 # sort lists so first observation is available when link is clicked.
                 for instrument in all_instruments:
@@ -415,11 +422,11 @@ class FileSearchForm(forms.Form):
         bool
             Is the search term formatted like a fileroot?
         """
-
-        try:
-            self.fileroot_dict = filename_parser(search)
+        parsed = filename_parser(search)
+        if parsed['recognized_filename']:
+            self.fileroot_dict = parsed
             return True
-        except ValueError:
+        else:
             return False
 
     def redirect_to_files(self):

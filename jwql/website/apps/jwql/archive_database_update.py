@@ -117,9 +117,14 @@ def get_updates(update_database):
             for rootname in all_rootnames:
                 filename_dict = filename_parser(rootname)
 
-                # Weed out file types that are not supported by generate_preview_images
-                if 'stage_3' not in filename_dict['filename_type']:
-                    rootnames.append(rootname)
+                if filename_dict['recognized_filename']:
+                    # Weed out file types that are not supported by generate_preview_images
+                    if 'stage_3' not in filename_dict['filename_type']:
+                        rootnames.append(rootname)
+                else:
+                    logging.warning((f'While running get_updates() to update the RootfileInfo tables, {rootname}, '
+                                     'was not recognized by the filename_parser().'))
+                    pass
 
             if len(filenames) > 0:
 

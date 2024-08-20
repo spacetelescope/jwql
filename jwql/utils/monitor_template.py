@@ -106,11 +106,14 @@ def monitor_template_main():
 
     # Example of locating a dataset in the filesystem
     filesystem = SETTINGS['filesystem']
-    dataset = os.path.join(filesystem,
-                           'public',
-                           'jw{}'.format(filename_dict['program_id']),
-                           'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']),
-                           filename_of_interest)
+    if filename_dict['recognized_filename']:
+        dataset = os.path.join(filesystem,
+                               'public',
+                               'jw{}'.format(filename_dict['program_id']),
+                               'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']),
+                               filename_of_interest)
+    else:
+        raise KeyError(f'Filename {filename_of_interest} not recognized by filename_parser() in monitor_template_main')
 
     # Example of reading in dataset using jwst.datamodels
     im = datamodels.open(dataset)

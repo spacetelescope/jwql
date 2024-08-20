@@ -212,6 +212,13 @@ def check_existence(file_list, outdir):
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
         file_parts = filename_parser(file_list[0])
+
+        # If filename_parser() does not recognize the filename, return False
+        if not file_parts['recognized_filename']:
+            logging.warning((f'While running checking_existence() for a preview image for {file_list[0]}, '
+                             'filename_parser() failed to recognize the file pattern.'))
+            return False
+
         if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
         elif file_parts['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
@@ -253,7 +260,14 @@ def create_dummy_filename(filelist):
     modules = []
     for filename in filelist:
         indir, infile = os.path.split(filename)
-        det_string = filename_parser(infile)['detector']
+        parsed_filename = filename_parser(infile)
+        if parsed_filename['recognized_filename']:
+            det_string = parsed_filename['detector']
+        else:
+            # If filename_parser() does not recognize the file, skip it
+            logging.warning((f'While using {infile} to create a dummy filename in create_dummy_filename(), the '
+                             'filename parser failed.'))
+            continue
         det_string_list.append(det_string)
         modules.append(det_string[3].upper())
 
@@ -307,7 +321,14 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        detector.append(filename_parser(filename)['detector'].upper())
+        file_info = filename_parser(filename)
+        if file_info['recognized_filename']:
+            detector.append(file_info['detector'].upper())
+        else:
+            # If filename_parser() does not recognize the file, skip it.
+            logging.warning((f'While running create_mosaic() using {file_list[0]}, '
+                             'filename_parser() failed to recognize the file pattern.'))
+            pass
         data_lower_left.append((image.xstart, image.ystart))
 
     # Make sure SW and LW data are not being mixed. Create the
@@ -650,10 +671,10 @@ def group_filenames(filenames):
         subgroup = []
 
         # Generate string to be matched with other filenames
-        try:
-            filename_dict = filename_parser(os.path.basename(filename))
-        except ValueError:
-            logging.warning('Could not parse filename for {}'.format(filename))
+        filename_dict = filename_parser(os.path.basename(filename))
+        if not filename_dict['recognized_filename']:
+            logging.warning((f'While running generate_preview_images.group_filenames() on {filename}, the '
+                             'filename_parser() failed to recognize the file pattern.'))
             break
 
         # If the filename was already involved in a match, then skip
@@ -731,7 +752,16 @@ def process_program(program, overwrite):
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
 
     # Remove guiding files, as these are not currently visible in JWQL anyway
-    filenames = [filename for filename in filenames if 'guider_mode' not in filename_parser(filename)]
+    filtered_filenames = []
+    for filename in filenames:
+        parsed = filename_parser(filename)
+        if parsed['recognized_filename']:
+            if 'guider_mode' not in parsed and 'detector' in parsed:
+                filtered_filenames.append(filename)
+        else:
+            logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
+                             'filename_parser() failed to recognize the file pattern.'))
+    filenames = filtered_filenames
 
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
@@ -745,10 +775,14 @@ def process_program(program, overwrite):
         logging.debug(f'Working on {filename}')
 
         # Determine the save location
-        try:
-            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
-        except ValueError:
+        parsed = filename_parser(filename)
+        if parsed['recognized_filename']:
+            identifier = 'jw{}'.format(parsed['program_id'])
+        else:
+            # In this case, the filename_parser failed to recognize the filename
             identifier = os.path.basename(filename).split('.fits')[0]
+            logging.warning((f'While running generate_preview_images.process_program() on filtered filename {filename}, the '
+                             'filename_parser() failed to recognize the file pattern.'))
         preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
