@@ -1431,7 +1431,6 @@ class MSATA:
         self.setup_date_range()
 
         # set the output html file name and create the plot grid
-        output_file(self.output_file_name)
         p1 = self.plt_status()
         p2 = self.plt_residual_offsets()
         p3 = self.plt_res_offsets_corrected()
@@ -1452,11 +1451,8 @@ class MSATA:
             merge_tools=False,
         )
         box_layout = layout(children=[self.date_range, grid])
-        save(box_layout)
 
-        # return the needed components for embedding the results in the MSATA html template
-        script, div = components(box_layout)
-        return script, div
+        self.script, self.div = components(box_layout)
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
@@ -1720,6 +1716,17 @@ class MSATA:
 
         logging.info("\tUpdated the MSATA statistics table")
 
+    def plots_for_app(self):
+        """Utility function to access div and script objects for
+        embedding bokeh in JWQL application.
+        """
+        # Query results and convert into pandas df.
+        self.query_results = pd.DataFrame(
+            list(NIRSpecMsataStats.objects.all().values())
+        )
+        # Generate plot
+        self.mk_plt_layout(self.query_results)
+
     @log_fail
     @log_info
     def run(self):
@@ -1730,20 +1737,8 @@ class MSATA:
         # Identify which database tables to use
         self.identify_tables()
 
-        # Get the output directory and setup a directory to store the data
-        self.output_dir = os.path.join(get_config()["outputs"], "msata_monitor")
-        ensure_dir_exists(self.output_dir)
-        # Set up directory to store the data
-        ensure_dir_exists(os.path.join(self.output_dir, "data"))
-        self.data_dir = os.path.join(
-            self.output_dir,
-            "data/{}_{}".format(self.instrument.lower(), self.aperture.lower()),
-        )
-        ensure_dir_exists(self.data_dir)
-
         # Locate the record of most recent time the monitor was run
         self.query_start = self.most_recent_search()
-        self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -1819,25 +1814,10 @@ class MSATA:
             # Add MSATA data to stats table.
             self.add_msata_data()
 
-            # Query results and convert into pandas df.
-            self.query_results = pd.DataFrame(
-                list(NIRSpecMsataStats.objects.all().values())
-            )
-
-            # Generate plot
-            self.mk_plt_layout(self.query_results)
-
-            logging.info(
-                "\tNew output plot file will be written as: {}".format(
-                    self.output_file_name
-                )
-            )
             # Once data is added to database table and plots are made, the
             # monitor has run successfully.
             monitor_run = True
-            logging.info(
-                "\tOutput html plot file created: {}".format(self.output_file_name)
-            )
+
             msata_files_used4plots = len(self.msata_data["visit_id"])
             logging.info(
                 "\t{} MSATA files were used to make plots.".format(
