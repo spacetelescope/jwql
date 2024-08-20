@@ -60,6 +60,8 @@ def organize_filesystem():
             else:
                 # Some filenames do not have a program_id/observation/visit structure
                 # Files that are not recognized by filename_parser will also end up here.
+                logging.warning((f'While running organize_filesystem(), {src} was not, '
+                                 'recognized by the filename_parser().'))
                 break
 
             # Build complete destination location
@@ -101,6 +103,8 @@ def revert_filesystem():
             else:
                 # Some filenames do not have a program_id/observation/visit structure
                 # Filenames not recognized by filename_parser() will also end up here.
+                logging.warning((f'While running revert_filesystem(), {src} was not, '
+                                 'recognized by the filename_parser().'))
                 break
 
             # Build complete destination location
