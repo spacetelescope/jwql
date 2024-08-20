@@ -673,6 +673,8 @@ def group_filenames(filenames):
         # Generate string to be matched with other filenames
         filename_dict = filename_parser(os.path.basename(filename))
         if not filename_dict['recognized_filename']:
+            logging.warning((f'While running generate_preview_images.group_filenames() on {filename}, the '
+                              'filename_parser() failed to recognize the file pattern.'))
             break
 
         # If the filename was already involved in a match, then skip
@@ -753,8 +755,12 @@ def process_program(program, overwrite):
     filtered_filenames = []
     for filename in filenames:
         parsed = filename_parser(filename)
-        if 'guider_mode' not in parsed and 'detector' in parsed:
-            filtered_filenames.append(filename)
+        if parsed['recognized_filename']:
+            if 'guider_mode' not in parsed and 'detector' in parsed:
+                filtered_filenames.append(filename)
+        else:
+            logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
+                              'filename_parser() failed to recognize the file pattern.'))
     filenames = filtered_filenames
 
     logging.info('Found {} filenames'.format(len(filenames)))
@@ -769,11 +775,14 @@ def process_program(program, overwrite):
         logging.debug(f'Working on {filename}')
 
         # Determine the save location
-        try:
-            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
-        except KeyError:
+        parsed = filename_parser(filename)
+        if parsed['recognized_filename']:
+            identifier = 'jw{}'.format(parsed['program_id'])
+        else:
             # In this case, the filename_parser failed to recognize the filename
             identifier = os.path.basename(filename).split('.fits')[0]
+            logging.warning((f'While running generate_preview_images.process_program() on filtered filename {filename}, the '
+                              'filename_parser() failed to recognize the file pattern.'))
         preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
