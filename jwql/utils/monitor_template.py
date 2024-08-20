@@ -113,7 +113,7 @@ def monitor_template_main():
                                'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']),
                                filename_of_interest)
     else:
-        raise KeyError(f'Filename {filename_of_interest} not recognized by filename_parser()')
+        raise KeyError(f'Filename {filename_of_interest} not recognized by filename_parser() in monitor_template_main')
 
     # Example of reading in dataset using jwst.datamodels
     im = datamodels.open(dataset)

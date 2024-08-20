@@ -1434,6 +1434,8 @@ def get_image_info(file_root):
             suffix = parsed_fn['suffix']
         else:
             # If the filename parser does not recognize the file, skip it
+            logging.warning((f'While running get_image_info() on {filename}, the '
+                              'filename_parser() failed to recognize the file pattern.'))
             continue
 
         # For crf or crfints suffixes, we need to also include the association value
@@ -1716,11 +1718,14 @@ def get_proposal_info(filepaths):
 
             obsnums = []
             for fname in files_for_proposal:
-                try:
-                    obs = filename_parser(fname)['observation']
+                file_info = filename_parser(fname)
+                if file_info['recognized_filename']:
+                    obs = file_info['observation']
                     obsnums.append(obs)
-                except KeyError:
-                    pass
+                else:
+                    logging.warning((f'While running get_proposal_info() for a program {proposal}, {fname} '
+                              'was not recognized by the filename_parser().'))
+
             obsnums = sorted(obsnums)
             observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
@@ -2156,10 +2161,13 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # Wrap in try/except because level 3 rootnames won't have an observation
         # number returned by the filename_parser. That's fine, we're not interested
         # in those files anyway.
-        try:
-            all_obs.append(filename_parser(root)['observation'])
-        except KeyError:
-            pass
+        file_info = filename_parser(root)
+        if file_info['recognized_filename']:
+            all_obs.append(file_info['observation'])
+        else:
+            logging.warning((f'While running thumbnails_ajax() on root {root}, '
+                              'filename_parser() failed to recognize the file pattern.'))
+
     obs_list = sorted(list(set(all_obs)))
 
     # Get the available files for the instrument
@@ -2179,14 +2187,13 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     for rootname in rootnames:
 
         # Parse filename
-        try:
-            filename_dict = filename_parser(rootname)
-
+        filename_dict = filename_parser(rootname)
+        if filename_dict['recognized_filename']:
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' in filename_dict['filename_type']:
                 continue
 
-        except ValueError:
+        else:
             # Temporary workaround for noncompliant files in filesystem
             filename_dict = {'activity': rootname[17:19],
                              'detector': rootname[26:],
@@ -2197,6 +2204,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                              'visit': rootname[10:13],
                              'visit_group': rootname[14:16],
                              'group_root': rootname[:26]}
+            logging.warning((f'While running thumbnails_ajax() on rootname {rootname}, '
+                              'filename_parser() failed to recognize the file pattern.'))
 
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
@@ -2343,6 +2352,8 @@ def thumbnails_query_ajax(rootnames):
             # Add to list of all exposure groups
             exp_groups.add(filename_dict['group_root'])
         else:
+            logging.warning((f'While running thumbnails_query_ajax() on rootname {rootname}, '
+                              'filename_parser() failed to recognize the file pattern.'))
             continue
 
         try:
@@ -2373,10 +2384,13 @@ def thumbnails_query_ajax(rootnames):
         data_dict['file_data'][rootname]['pupil'] = pupil_type
         data_dict['file_data'][rootname]['grating'] = grating_type
         for filename in available_files:
-            suffix = filename_parser(filename)['suffix']
-            if suffix['recognized_filename']:
+            file_info = filename_parser(filename)
+            if file_info['recognized_filename']:
+                suffix = file_info['suffix']
                 data_dict['file_data'][rootname]['suffixes'].append(suffix)
             else:
+                logging.warning((f'While running thumbnails_query_ajax() on filename {filename}, '
+                              'filename_parser() failed to recognize the file pattern.'))
                 continue
 
         data_dict['file_data'][rootname]['thumbnail'] = get_thumbnail_by_rootname(rootname)

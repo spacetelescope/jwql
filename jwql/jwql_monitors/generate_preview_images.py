@@ -215,6 +215,8 @@ def check_existence(file_list, outdir):
 
         # If filename_parser() does not recognize the filename, return False
         if not file_parts['recognized_filename']:
+            logging.warning((f'While running checking_existence() for a preview image for {file_list[0]}, '
+                              'filename_parser() failed to recognize the file pattern.'))
             return False
 
         if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
@@ -258,10 +260,13 @@ def create_dummy_filename(filelist):
     modules = []
     for filename in filelist:
         indir, infile = os.path.split(filename)
-        try:
-            det_string = filename_parser(infile)['detector']
-        except KeyError:
+        parsed_filename = filename_parser(infile)
+        if parsed_filename['recognized_filename']:
+            det_string = parsed_filename['detector']
+        else:
             # If filename_parser() does not recognize the file, skip it
+            logging.warning((f'While using {infile} to create a dummy filename in create_dummy_filename(), the '
+                              'filename parser failed.'))
             continue
         det_string_list.append(det_string)
         modules.append(det_string[3].upper())
@@ -316,10 +321,13 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        try:
-            detector.append(filename_parser(filename)['detector'].upper())
-        except KeyError:
+        file_info = filename_parser(filename)
+        if file_info['recognized_filename']:
+            detector.append(file_info['detector'].upper())
+        else:
             # If filename_parser() does not recognize the file, skip it.
+            logging.warning((f'While running create_mosaic() using {file_list[0]}, '
+                              'filename_parser() failed to recognize the file pattern.'))
             pass
         data_lower_left.append((image.xstart, image.ystart))
 

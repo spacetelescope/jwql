@@ -142,6 +142,8 @@ def gather_statistics(general_results_dict, instrument_results_dict):
                         if filename_dict['recognized_filename']:
                             filename_type = filename_dict['filename_type']
                         else:
+                            logging.warning((f'While running gather_statistics() on the filesystem {filename}, '
+                                             'caused filename_parser() to fail.'))
                             break
 
                         # For MSA files, which do not have traditional suffixes, set the

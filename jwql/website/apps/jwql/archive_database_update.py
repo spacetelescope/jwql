@@ -122,6 +122,8 @@ def get_updates(update_database):
                     if 'stage_3' not in filename_dict['filename_type']:
                         rootnames.append(rootname)
                 else:
+                    logging.warning((f'While running get_updates() to update the RootfileInfo tables, {rootname}, '
+                              'was not recognized by the filename_parser().'))
                     pass
 
             if len(filenames) > 0:

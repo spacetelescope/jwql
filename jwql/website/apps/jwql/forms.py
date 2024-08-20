@@ -371,6 +371,8 @@ class FileSearchForm(forms.Form):
                             all_observations[instrument].append(observation)
                         else:
                             # If the filename is not recognized by filename_parser(), skip it.
+                            logging.warning((f'While running FileSearchForm.clean_search() on {file}, '
+                              'filename_parser() failed to recognize the file pattern.'))
                             continue
 
                 # sort lists so first observation is available when link is clicked.
