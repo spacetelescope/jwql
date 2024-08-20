@@ -1070,17 +1070,6 @@ class WATA:
         # Identify which database tables to use
         self.identify_tables()
 
-        # Get the output directory and setup a directory to store the data
-        self.output_dir = os.path.join(get_config()["outputs"], "wata_monitor")
-        ensure_dir_exists(self.output_dir)
-        # Set up directories for the copied data
-        ensure_dir_exists(os.path.join(self.output_dir, "data"))
-        self.data_dir = os.path.join(
-            self.output_dir,
-            "data/{}_{}".format(self.instrument.lower(), self.aperture.lower()),
-        )
-        ensure_dir_exists(self.data_dir)
-
         # Locate the record of most recent time the monitor was run
         self.query_start = self.most_recent_search()
 
@@ -1155,11 +1144,6 @@ class WATA:
 
             # Add WATA data to stats table.
             self.add_wata_data()
-
-            # Get Results from database table
-            self.query_results = pd.DataFrame(list(NIRSpecWataStats.objects.all().values()))
-            # Generate plot.
-            self.mk_plt_layout(self.query_results)
 
             # Once data is added to database table and plots are made, the
             # monitor has run successfully.
