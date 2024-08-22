@@ -106,7 +106,7 @@ def configure_logging(module):
     """
     Configure the log file with a standard logging format. The format in question is
     set up as follows:
-    
+
     - DEBUG messages are ignored
     - INFO and WARNING messages go to both the log file and sys.stdout
     - ERROR and CRITICAL messages go to both the log file and sys.stderr
@@ -275,7 +275,7 @@ def log_info(func):
 
         # nosec comment added to ignore bandit security check
         try:
-            environment = subprocess.check_output('conda env export', universal_newlines=True, shell=True) # nosec
+            environment = subprocess.check_output('conda env export', universal_newlines=True, shell=True)  # nosec
             logging.info('Environment:')
             for line in environment.split('\n'):
                 logging.info(line)
