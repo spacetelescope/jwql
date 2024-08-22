@@ -57,6 +57,7 @@ import datetime
 import getpass
 import importlib
 import logging
+import logging.config
 import os
 import pwd
 import socket
@@ -76,8 +77,40 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, ensure_dir_exists
 
 
+def filter_maker(level):
+    """
+    This creates a logging filter that takes in an integer describing log level (with
+    DEBUG being the lowest value and CRITICAL the highest), and returns True if and only
+    if the logged message has a lower level than the filter level.
+
+    The filter is needed because the logging system is designed so that it outputs
+    messages of LogLevel *or higher*, because the assumption is you want to know if
+    something happens that's more serious than what you're looking at.
+
+    In this case, though, we're dividing printed-out log messages between the built-in
+    STDOUT and STDERR output streams, and we have assigned ERROR and above to go to
+    STDERR, while INFO and above go to STDOUT. So, by default, anything at ERROR or at
+    CRITICAL would go to *both* STDOUT and STDERR. This function lets you add a filter
+    that returns false for anything with a level above WARNING, so that STDOUT won't
+    duplicate those messages.
+    """
+    level = getattr(logging, level)
+
+    def filter(record):
+        return record.levelno <= level
+
+    return filter
+
+
 def configure_logging(module):
-    """Configure the log file with a standard logging format.
+    """
+    Configure the log file with a standard logging format. The format in question is
+    set up as follows:
+    
+    - DEBUG messages are ignored
+    - INFO and WARNING messages go to both the log file and sys.stdout
+    - ERROR and CRITICAL messages go to both the log file and sys.stderr
+    - existing loggers are disabled before this configuration is applied
 
     Parameters
     ----------
@@ -98,15 +131,14 @@ def configure_logging(module):
     # Determine log file location
     log_file = make_log_file(module)
 
-    # Make sure no other root lhandlers exist before configuring the logger
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    # Get the logging configuration dictionary
+    logging_config = get_config()['logging']
 
-    # Create the log file and set the permissions
-    logging.basicConfig(filename=log_file,
-                        format='%(asctime)s %(levelname)s: %(message)s',
-                        datefmt='%m/%d/%Y %H:%M:%S %p',
-                        level=logging.INFO)
+    # Set the log file to the file that we got above
+    logging_config["handlers"]["file"]["filename"] = log_file
+
+    # Configure the logging system and set permissions for the file
+    logging.config.dictConfig(logging_config)
     print('Log file initialized to {}'.format(log_file))
     set_permissions(log_file)
 
