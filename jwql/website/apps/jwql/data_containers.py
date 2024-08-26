@@ -1720,8 +1720,13 @@ def get_proposal_info(filepaths):
             for fname in files_for_proposal:
                 file_info = filename_parser(fname)
                 if file_info['recognized_filename']:
-                    obs = file_info['observation']
-                    obsnums.append(obs)
+                    # Wrap in a try/except because level 3 files do not have an 'observation' key.
+                    # That's ok. We will ignore those files.
+                    try:
+                        obs = file_info['observation']
+                        obsnums.append(obs)
+                    except KeyError:
+                        pass
                 else:
                     logging.warning((f'While running get_proposal_info() for a program {proposal}, {fname} '
                                      'was not recognized by the filename_parser().'))
@@ -2163,7 +2168,10 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # in those files anyway.
         file_info = filename_parser(root)
         if file_info['recognized_filename']:
-            all_obs.append(file_info['observation'])
+            try:
+                all_obs.append(file_info['observation'])
+            except KeyError:
+                pass
         else:
             logging.warning((f'While running thumbnails_ajax() on root {root}, '
                              'filename_parser() failed to recognize the file pattern.'))
