@@ -27,7 +27,6 @@ from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_L
 from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.logging_functions import configure_logging, get_log_status
 from jwql.utils import mast_utils
-from jwql.utils.utils import filename_parser
 
 
 # Increase the limit on the number of entries that can be returned by

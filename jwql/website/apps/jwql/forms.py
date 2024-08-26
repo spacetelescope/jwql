@@ -44,29 +44,42 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
-from collections import defaultdict
 import datetime
 import glob
-import os
 import logging
+import os
+from collections import defaultdict
 
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from wtforms import StringField, SubmitField
+
 from jwql.edb.engineering_database import is_valid_mnemonic
-from jwql.website.apps.jwql.models import Anomalies
-
-
-from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT,
-                                  EXP_TYPE_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT,
-                                  GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND,
-                                  READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES, SUBARRAYS_PER_INSTRUMENT, PUPILS_PER_INSTRUMENT,
-                                  LOOK_OPTIONS, SORT_OPTIONS, PROPOSAL_CATEGORIES)
-from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
-
-from wtforms import SubmitField, StringField
+from jwql.utils.constants import (
+    ANOMALIES_PER_INSTRUMENT,
+    ANOMALY_CHOICES_PER_INSTRUMENT,
+    APERTURES_PER_INSTRUMENT,
+    DETECTOR_PER_INSTRUMENT,
+    EXP_TYPE_PER_INSTRUMENT,
+    FILTERS_PER_INSTRUMENT,
+    GENERIC_SUFFIX_TYPES,
+    GRATING_PER_INSTRUMENT,
+    GUIDER_FILENAME_TYPE,
+    IGNORED_SUFFIXES,
+    JWST_INSTRUMENT_NAMES_MIXEDCASE,
+    JWST_INSTRUMENT_NAMES_SHORTHAND,
+    LOOK_OPTIONS,
+    PROPOSAL_CATEGORIES,
+    PUPILS_PER_INSTRUMENT,
+    READPATT_PER_INSTRUMENT,
+    SORT_OPTIONS,
+    SUBARRAYS_PER_INSTRUMENT,
+)
+from jwql.utils.utils import filename_parser, get_config, get_rootnames_for_instrument_proposal, query_format
+from jwql.website.apps.jwql.models import Anomalies, RootFileInfo
 
 
 class BaseForm(forms.Form):
@@ -77,6 +90,26 @@ class BaseForm(forms.Form):
 
     # Submit button
     resolve_submit = SubmitField('Resolve Target')
+
+
+class RootFileInfoCommentSubmitForm(forms.ModelForm):
+    """Creates a ``Comment Form`` object that allows for text input in a form field.
+        This uses forms.ModelForm which is good for simplifying direct access to
+        Django Model database information
+    """
+    class Meta:
+        model = RootFileInfo
+        fields = ['comment']
+
+
+class RootFileInfoExposureCommentSubmitForm(forms.ModelForm):
+    """Creates a ``Comment Form`` object that allows for text input in a form field.
+        This uses forms.ModelForm which is good for simplifying direct access to
+        Django Model database information
+    """
+    class Meta:
+        model = RootFileInfo
+        fields = ['exp_comment']
 
 
 class JwqlQueryForm(BaseForm):
@@ -330,10 +363,17 @@ class FileSearchForm(forms.Form):
                     if any(map(filename.__contains__, GUIDER_FILENAME_TYPE)):
                         continue
                     else:
-                        instrument = filename_parser(file)['instrument']
-                        observation = filename_parser(file)['observation']
-                        all_instruments.append(instrument)
-                        all_observations[instrument].append(observation)
+                        fileinfo = filename_parser(file)
+                        if fileinfo['recognized_filename']:
+                            instrument = fileinfo['instrument']
+                            observation = fileinfo['observation']
+                            all_instruments.append(instrument)
+                            all_observations[instrument].append(observation)
+                        else:
+                            # If the filename is not recognized by filename_parser(), skip it.
+                            logging.warning((f'While running FileSearchForm.clean_search() on {file}, '
+                                             'filename_parser() failed to recognize the file pattern.'))
+                            continue
 
                 # sort lists so first observation is available when link is clicked.
                 for instrument in all_instruments:
@@ -382,11 +422,11 @@ class FileSearchForm(forms.Form):
         bool
             Is the search term formatted like a fileroot?
         """
-
-        try:
-            self.fileroot_dict = filename_parser(search)
+        parsed = filename_parser(search)
+        if parsed['recognized_filename']:
+            self.fileroot_dict = parsed
             return True
-        except ValueError:
+        else:
             return False
 
     def redirect_to_files(self):

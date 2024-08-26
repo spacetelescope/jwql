@@ -32,6 +32,7 @@ from django.db import models
 
 from jwql.utils.constants import (
     DEFAULT_MODEL_CHARFIELD,
+    DEFAULT_MODEL_COMMENT,
     MAX_LEN_APERTURE,
     MAX_LEN_DETECTOR,
     MAX_LEN_FILTER,
@@ -130,6 +131,8 @@ class RootFileInfo(models.Model):
     pupil = models.CharField(max_length=MAX_LEN_PUPIL, help_text="Pupil", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     expstart = models.FloatField(help_text='Exposure Start Time', default=0.0)
+    comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
+    exp_comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
 
     # Metadata
     class Meta:
@@ -205,3 +208,43 @@ class Anomalies(models.Model):
     def __str__(self):
         """Container for all anomalies associated with each RootFileInfo object """
         return self.root_file_info.root_name
+
+
+def get_model_column_names(model_name):
+    """Return all column names for the input ``model_name`` as a list
+
+    Parameters
+    ----------
+    model_name : django.db.models.base.ModelBase
+        e.g. model_name = eval('NIRCamDarkDarkCurrent')
+
+    Returns
+    -------
+    colnames : list
+        List of column names
+    """
+    return [f.name for f in model_name._meta.get_fields()]
+
+
+def get_unique_values_per_column(model_name, column_name):
+    """Return a list of the unique values present in the column ``column_name`` in
+    the ``model_name`` model.
+
+    Parameters
+    ----------
+    model_name : django.db.models.base.ModelBase
+        e.g. model_name = eval('NIRCamDarkDarkCurrent')
+
+    column_name : str
+        Column name to examine
+
+    Returns
+    -------
+    values : list
+        List of unique values in ``column_name``
+    """
+    query_set = model_name.objects.values(column_name).distinct()
+    values = []
+    for row in query_set:
+        values.append(row[column_name])
+    return values

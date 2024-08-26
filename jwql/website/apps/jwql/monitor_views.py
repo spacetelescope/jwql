@@ -88,7 +88,7 @@ def background_monitor(request):
 
 
 def bad_pixel_monitor(request, inst):
-    """Generate the dark monitor page for a given instrument
+    """Generate the bad pixel monitor page for a given instrument
 
     Parameters
     ----------
@@ -342,13 +342,12 @@ def msata_monitoring_ajax(request):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # retrieve existing monitor html content
+    # Make plots and extract visualization components
     monitor = msata_monitor.MSATA()
-    div, script1, script2 = monitor.read_existing_html()
+    monitor.plots_for_app()
 
-    context = {'script1': script1,
-               'script2': script2,
-               'div': div}
+    context = {'script': monitor.script,
+               'div': monitor.div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -391,12 +390,11 @@ def wata_monitoring_ajax(request):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # retrieve existing monitor html content
+    # Make plots and extract visualization components
     monitor = wata_monitor.WATA()
-    div, script1, script2 = monitor.read_existing_html()
+    monitor.plots_for_app()
 
-    context = {'script1': script1,
-               'script2': script2,
-               'div': div}
+    context = {'script': monitor.script,
+               'div': monitor.div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})

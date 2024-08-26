@@ -81,7 +81,7 @@ import logging
 import os
 
 from astropy.io import ascii, fits
-from astropy.modeling import models
+from astropy.modeling.models import Gaussian1D
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
@@ -92,21 +92,25 @@ from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, RAPID_READPATTERNS
+from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, ON_GITHUB_ACTIONS, ON_READTHEDOCS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, save_png
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.dark_current import *  # noqa: E402 (module level import not at top of file)
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -230,9 +234,9 @@ class Dark():
                  'obs_end_time': observation_end_time,
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
-                 'entry_date': datetime.datetime.now()}
-        with engine.begin() as connection:
-            connection.execute(self.pixel_table.__table__.insert(), entry)
+                 'entry_date': datetime.datetime.now(datetime.timezone.utc)}
+        entry = self.pixel_table(**entry)
+        entry.save()
 
     def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None,
                                  min_time='', max_time=''):
@@ -412,14 +416,15 @@ class Dark():
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
         logging.info("\t\tRunning database query")
-        db_entries = session.query(self.pixel_table) \
-            .filter(self.pixel_table.type == pixel_type) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
+
+        filters = {"type__iexact": pixel_type,
+                   "detector__iexact": self.detector
+                   }
+        records = self.pixel_table.objects.filter(**filters).all()
 
         already_found = []
-        if len(db_entries) != 0:
-            for _row in db_entries:
+        if records is not None:
+            for _row in records:
                 x_coords = _row.x_coord
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
@@ -442,7 +447,6 @@ class Dark():
 
         logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
 
-        session.close()
         return (new_pixels_x, new_pixels_y)
 
     def exclude_too_few_groups(self, result_list):
@@ -521,29 +525,15 @@ class Dark():
         filename : str
             Name of fits file containing the baseline image
         """
-
-        subq = session.query(self.pixel_table.detector,
-                             func.max(self.pixel_table.entry_date).label('maxdate')
-                             ).group_by(self.pixel_table.detector).subquery('t2')
-
-        query = session.query(self.pixel_table).join(
-            subq,
-            and_(
-                self.pixel_table.detector == self.detector,
-                self.pixel_table.entry_date == subq.c.maxdate
-            )
-        )
-
-        count = query.count()
-        if not count:
-            filename = None
-        else:
-            filename = query.all()[0].baseline_file
+        record = self.pixel_table.objects.filter(detector__iexact=self.detector).order_by("-obs_end_time").first()
+        if record is not None:
+            filename = record.baseline_file
             # Specify the full path
             filename = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
+        else:
+            filename = None
 
-        session.close()
         return filename
 
     def identify_tables(self):
@@ -552,9 +542,9 @@ class Dark():
         """
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
-        self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
+        self.query_table = eval(f'{mixed_case_name}DarkQueryHistory')
+        self.pixel_table = eval(f'{mixed_case_name}DarkPixelStats')
+        self.stats_table = eval(f'{mixed_case_name}DarkDarkCurrent')
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -567,23 +557,18 @@ class Dark():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
-                                                       self.query_table.readpattern == self.readpatt). \
-                filter(self.query_table.run_monitor == True)  # noqa: E348 (comparison to true)
+        filters = {"aperture__iexact": self.aperture,
+                   "readpattern__iexact": self.readpatt,
+                   "run_monitor": True}
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
 
-        dates = np.zeros(0)
-        for instance in query:
-            dates = np.append(dates, instance.end_time_mjd)
-
-        query_count = len(dates)
-        if query_count == 0:
+        if record is None:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.readpatt, query_result)))
         else:
-            query_result = np.max(dates)
+            query_result = record.end_time_mjd
 
-        session.close()
         return query_result
 
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
@@ -895,12 +880,12 @@ class Dark():
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
                              'mean_dark_image_file': os.path.basename(mean_slope_file),
-                             'hist_dark_values': bins[key],
-                             'hist_amplitudes': histogram[key],
-                             'entry_date': datetime.datetime.now()
+                             'hist_dark_values': list(bins[key]),
+                             'hist_amplitudes': list(histogram[key]),
+                             'entry_date': datetime.datetime.now(datetime.timezone.utc)
                              }
-            with engine.begin() as connection:
-                connection.execute(self.stats_table.__table__.insert(), dark_db_entry)
+            entry = self.stats_table(**dark_db_entry)
+            entry.save()
 
     def read_baseline_slope_image(self, filename):
         """Read in a baseline mean slope image and associated standard
@@ -951,7 +936,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['miri', 'nircam']:  # JWST_INSTRUMENT_NAMES:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
             logging.info(f'\n\nWorking on {instrument}')
 
@@ -981,6 +966,7 @@ class Dark():
 
                     # Locate the record of the most recent MAST search
                     self.query_start = self.most_recent_search()
+
                     logging.info(f'\tQuery times: {self.query_start} {self.query_end}')
 
                     # Query MAST using the aperture and the time of the
@@ -1124,11 +1110,10 @@ class Dark():
                                          'end_time_mjd': batch_end_time,
                                          'files_found': len(dark_files),
                                          'run_monitor': monitor_run,
-                                         'entry_date': datetime.datetime.now()}
+                                         'entry_date': datetime.datetime.now(datetime.timezone.utc)}
 
-                            with engine.begin() as connection:
-                                connection.execute(
-                                    self.query_table.__table__.insert(), new_entry)
+                            entry = self.query_table(**new_entry)
+                            entry.save()
                             logging.info('\tUpdated the query history table')
                             logging.info('NEW ENTRY: ')
                             logging.info(new_entry)
@@ -1146,11 +1131,10 @@ class Dark():
                                      'end_time_mjd': self.query_end,
                                      'files_found': len(new_entries),
                                      'run_monitor': monitor_run,
-                                     'entry_date': datetime.datetime.now()}
+                                     'entry_date': datetime.datetime.now(datetime.timezone.utc)}
 
-                        with engine.begin() as connection:
-                            connection.execute(
-                                self.query_table.__table__.insert(), new_entry)
+                        entry = self.query_table(**new_entry)
+                        entry.save()
                         logging.info('\tUpdated the query history table')
                         logging.info('NEW ENTRY: ')
                         logging.info(new_entry)
@@ -1546,7 +1530,7 @@ class Dark():
             amplitude, peak, width = calculations.gaussian1d_fit(bin_centers, hist, initial_params)
             gaussian_params[key] = [amplitude, peak, width]
 
-            gauss_fit_model = models.Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
+            gauss_fit_model = Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
             gauss_fit = gauss_fit_model(bin_centers)
 
             positive = hist > 0

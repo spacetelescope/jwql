@@ -212,6 +212,13 @@ def check_existence(file_list, outdir):
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
         file_parts = filename_parser(file_list[0])
+
+        # If filename_parser() does not recognize the filename, return False
+        if not file_parts['recognized_filename']:
+            logging.warning((f'While running checking_existence() for a preview image for {file_list[0]}, '
+                             'filename_parser() failed to recognize the file pattern.'))
+            return False
+
         if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
         elif file_parts['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
@@ -253,7 +260,14 @@ def create_dummy_filename(filelist):
     modules = []
     for filename in filelist:
         indir, infile = os.path.split(filename)
-        det_string = filename_parser(infile)['detector']
+        parsed_filename = filename_parser(infile)
+        if parsed_filename['recognized_filename']:
+            det_string = parsed_filename['detector']
+        else:
+            # If filename_parser() does not recognize the file, skip it
+            logging.warning((f'While using {infile} to create a dummy filename in create_dummy_filename(), the '
+                             'filename parser failed.'))
+            continue
         det_string_list.append(det_string)
         modules.append(det_string[3].upper())
 
@@ -307,7 +321,14 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        detector.append(filename_parser(filename)['detector'].upper())
+        file_info = filename_parser(filename)
+        if file_info['recognized_filename']:
+            detector.append(file_info['detector'].upper())
+        else:
+            # If filename_parser() does not recognize the file, skip it.
+            logging.warning((f'While running create_mosaic() using {file_list[0]}, '
+                             'filename_parser() failed to recognize the file pattern.'))
+            pass
         data_lower_left.append((image.xstart, image.ystart))
 
     # Make sure SW and LW data are not being mixed. Create the
@@ -438,6 +459,7 @@ def define_options(parser=None, usage=None, conflict_handler='resolve'):
         parser = argparse.ArgumentParser(usage=usage, conflict_handler=conflict_handler)
 
     parser.add_argument('--overwrite', action='store_true', default=None, help='If set, existing preview images will be re-created and overwritten.')
+    parser.add_argument('-p', '--programs', nargs='+', type=int, help='List of program IDs to generate preview images for. If omitted, all programs will be done.')
     return parser
 
 
@@ -540,7 +562,7 @@ def get_base_output_name(filename_dict):
 
 @log_fail
 @log_info
-def generate_preview_images(overwrite):
+def generate_preview_images(overwrite, programs=None):
     """The main function of the ``generate_preview_image`` module.
     See module docstring for further details.
 
@@ -548,12 +570,38 @@ def generate_preview_images(overwrite):
     ----------
     overwrite : bool
         If True, any existing preview images and thumbnails are overwritten
+
+    programs : list
+        List of program ID numbers (e.g. 1068, 01220) for which to generate preview
+        images. If None (the default), preview images are generated for all programs.
     """
+    # Get a list of programs to create preview images for. First, generate a list of all
+    # possible programs. We can compare any user inputs to this list, and if there are no
+    # user inputs, then use this entire list.
+    all_programs = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
+    all_programs.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
+
+    if programs is None:
+        program_list = all_programs
+    else:
+        if not isinstance(programs, list):
+            raise ValueError(f'program_list must be a list. In this call, it is {type(program_list)}')
+        program_list = []
+        for prog in programs:
+            jwprog = f'jw{str(prog).zfill(5)}'
+            if jwprog in all_programs:
+                program_list.append(jwprog)
+            else:
+                logging.info(f'Program {prog} not present in filesystem. Excluding.')
+
+    if len(program_list) > 0:
+        program_list = sorted(program_list, reverse=True)
+    else:
+        no_prog_message = f'Empty list of programs. No preview images to be made.'
+        logging.info(no_prog_message)
+        raise ValueError(no_prog_message)
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
-    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
-    program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
     program_list = [(element, overwrite) for element in program_list]
     results = pool.starmap(process_program, program_list)
@@ -623,10 +671,10 @@ def group_filenames(filenames):
         subgroup = []
 
         # Generate string to be matched with other filenames
-        try:
-            filename_dict = filename_parser(os.path.basename(filename))
-        except ValueError:
-            logging.warning('Could not parse filename for {}'.format(filename))
+        filename_dict = filename_parser(os.path.basename(filename))
+        if not filename_dict['recognized_filename']:
+            logging.warning((f'While running generate_preview_images.group_filenames() on {filename}, the '
+                             'filename_parser() failed to recognize the file pattern.'))
             break
 
         # If the filename was already involved in a match, then skip
@@ -704,7 +752,16 @@ def process_program(program, overwrite):
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
 
     # Remove guiding files, as these are not currently visible in JWQL anyway
-    filenames = [filename for filename in filenames if 'guider_mode' not in filename_parser(filename)]
+    filtered_filenames = []
+    for filename in filenames:
+        parsed = filename_parser(filename)
+        if parsed['recognized_filename']:
+            if 'guider_mode' not in parsed and 'detector' in parsed:
+                filtered_filenames.append(filename)
+        else:
+            logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
+                             'filename_parser() failed to recognize the file pattern.'))
+    filenames = filtered_filenames
 
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
@@ -718,10 +775,14 @@ def process_program(program, overwrite):
         logging.debug(f'Working on {filename}')
 
         # Determine the save location
-        try:
-            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
-        except ValueError:
+        parsed = filename_parser(filename)
+        if parsed['recognized_filename']:
+            identifier = 'jw{}'.format(parsed['program_id'])
+        else:
+            # In this case, the filename_parser failed to recognize the filename
             identifier = os.path.basename(filename).split('.fits')[0]
+            logging.warning((f'While running generate_preview_images.process_program() on filtered filename {filename}, the '
+                             'filename_parser() failed to recognize the file pattern.'))
         preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
@@ -819,7 +880,7 @@ def update_listfile(filename, file_list, filetype):
 
 
 @lock_module
-def protected_code(overwrite):
+def protected_code(overwrite, programs):
     """Protected code ensures only 1 instance of module will run at any given time
 
     Parameters
@@ -830,11 +891,11 @@ def protected_code(overwrite):
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
-    generate_preview_images(overwrite)
+    generate_preview_images(overwrite, programs=programs)
     update_monitor_table(module, start_time, log_file)
 
 
 if __name__ == '__main__':
     parser = define_options()
     args = parser.parse_args()
-    protected_code(args.overwrite)
+    protected_code(args.overwrite, args.programs)

@@ -127,9 +127,6 @@ class ReadNoisePlotTab():
         self.amp_plots = []
         for amp in ['1', '2', '3', '4']:
 
-            amp_plot = figure(title='Amp {}'.format(amp), width=280, height=280, x_axis_type='datetime')
-            amp_plot.xaxis[0].ticker.desired_num_ticks = 4
-
             if self.db.query_results:
                 readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.db.query_results])
             else:
@@ -148,13 +145,23 @@ class ReadNoisePlotTab():
                                       ngroups=ngroups,
                                       readnoise=readnoise_vals))
 
+            min_rn = np.min(readnoise_vals)
+            max_rn = np.max(readnoise_vals)
+            delta_rn = max_rn - min_rn
+            plot_max = max_rn + 0.5 * delta_rn
+            plot_min = min_rn - 0.5 * delta_rn
+            circle_radius = 0.01 * (plot_max - plot_min)
+
+            amp_plot = figure(title='Amp {}'.format(amp), width=280, height=280, x_axis_type='datetime', y_range=(plot_min, plot_max))
+            amp_plot.xaxis[0].ticker.desired_num_ticks = 4
+
             amp_plot.add_tools(HoverTool(tooltips=[("file", "@file"),
                                                    ("time", "@expstarts"),
                                                    ("nints", "@nints"),
                                                    ("ngroups", "@ngroups"),
                                                    ("readnoise", "@readnoise")]))
 
-            amp_plot.circle(x='expstarts', y='readnoise', source=source)
+            amp_plot.circle(x='expstarts', y='readnoise', radius=circle_radius, radius_dimension='y', source=source)
 
             amp_plot.xaxis.axis_label = 'Date'
             amp_plot.yaxis.axis_label = 'Mean Readnoise [DN]'
@@ -204,7 +211,8 @@ class ReadNoisePlotTab():
 
         self.readnoise_histogram.add_tools(HoverTool(tooltips=[("Data (x, y)", "(@x, @y)"), ]))
 
-        self.readnoise_histogram.circle(x='x', y='y', source=source)
+        circle_radius = 0.005 * (hist_xr_end - hist_xr_start)
+        self.readnoise_histogram.circle(x='x', y='y', radius=circle_radius, radius_dimension='x', source=source)
 
         self.readnoise_histogram.xaxis.axis_label = 'Readnoise Difference [DN]'
         self.readnoise_histogram.yaxis.axis_label = 'Number of Pixels'

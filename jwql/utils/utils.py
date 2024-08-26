@@ -31,6 +31,7 @@ import getpass
 import glob
 import itertools
 import json
+import logging
 import pyvo as vo
 import os
 import re
@@ -569,6 +570,9 @@ def filename_parser(filename):
         # Convert the regex match to a dictionary
         filename_dict = jwst_file.groupdict()
 
+        # Add an entry indicating that the filename was successfully parsed
+        filename_dict['recognized_filename'] = True
+
         # Add the filename type to that dict
         filename_dict['filename_type'] = name_match
 
@@ -596,11 +600,9 @@ def filename_parser(filename):
 
     # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/understanding-jwst-data-files/jwst-data-file-naming-conventions'
-        raise ValueError(
-            'Provided file {} does not follow JWST naming conventions.  '
-            'See {} for further information.'.format(filename, jdox_url)
-        )
+        filename_dict = {'recognized_filename': False}
+        logging.exception((f'\nFile; {filename} was not recognized by filename_parser(). Update parser or '
+                           'constants.py if it should be recognized.\n'))
 
     return filename_dict
 
