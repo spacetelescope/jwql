@@ -1,5 +1,27 @@
 ## What's Changed
 
+1.2.11 (2024-08-26)
+===================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Customize colorbar location and size based on aperture size by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1592
+- Add keyword to specify program IDs for preview image creation by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1602
+- Adjust view image and view exposure to allow for larger preview images by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1600
+- filter thumbnails by filter/pupil/grating by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1623
+- Add Image and Exposure level Comments by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1624
+- Update NRS TA Monitor Plotting by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1633
+- Fix readnoise monitor plot y range by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1634
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Update Bokeh `filter` Keyword in NRS TA Monitors by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1620
+- Switch dark monitor to use django models by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1493
+- Fix log cleanup script by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1628
+- Fix missing data in readnoise monitor plots by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1631
+- filename_parser() no longer raises an exception for unrecognized files by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1614
+
+
 1.2.10 (2024-07-10)
 ===================
 
