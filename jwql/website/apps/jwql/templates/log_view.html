@@ -91,7 +91,7 @@
             <script type="text/javascript">
                 const idInputField = document.getElementById('log_select');
                 var logsList = document.getElementById("logs");
-                var allLogFiles = {{ all_logs['all'] }};
+                var allLogFiles = {{ all_logs['all']|safe }};
                 idInputField.addEventListener('input', function () {
                     if (logsList.options.namedItem(this.value) != null) {
                         document.getElementById("log_submit").disabled = false;
@@ -117,11 +117,11 @@
             <script type="text/javascript">
                 const folderInputField = document.getElementById('log_folder');
                 var listOfFolders = document.getElementById("log_folders");
-                var listOfLogNamesByFolder = {{ all_logs['all'] }};
-                var logsByFolder = {{ all_logs['log_folders'] }};
+                var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
+                var logsByFolder = {{ all_logs['log_folders']|safe }};
                 folderInputField.addEventListener('input', function () {
                     if (this.value === "all_logs") {
-                        listOfLogNamesByFolder = {{ all_logs['all'] }};
+                        listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesByFolder = logsByFolder[this.value];
                     }
@@ -132,11 +132,11 @@
             <script type="text/javascript">
                 const dateInputField = document.getElementById('log_date');
                 var listOfDates = document.getElementById("log_dates");
-                var listOfLogNamesByDate = {{ all_logs['all'] }};
-                var logsByDate = {{ all_logs['log_dates'] }};
+                var listOfLogNamesByDate = {{ all_logs['all']|safe }};
+                var logsByDate = {{ all_logs['log_dates']|safe }};
                 dateInputField.addEventListener('input', function () {
                     if (this.value === "all_logs") {
-                        listOfLogNamesBydate = {{ all_logs['all'] }};
+                        listOfLogNamesBydate = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesBydate = logsByDate[this.value];
                     }
@@ -147,11 +147,11 @@
             <script type="text/javascript">
                 const levelInputField = document.getElementById('log_level');
                 var listOfLevels = document.getElementById("log_levels");
-                var listOfLogNamesByLevel = {{ all_logs['all'] }};
-                var logsByLevel = {{ all_logs['log_levels'] }};
+                var listOfLogNamesByLevel = {{ all_logs['all']|safe }};
+                var logsByLevel = {{ all_logs['log_levels']|safe }};
                 levelInputField.addEventListener('input', function () {
                     if (this.value === "all_logs") {
-                        listOfLogNamesByLevel = {{ all_logs['all'] }};
+                        listOfLogNamesByLevel = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesByLevel = logsByLevel[this.value];
                     }
