@@ -24,6 +24,39 @@
             
             <!--LOG SELECT DROPDOWN-->
             <h4>Select JWQL Monitoring Log</h4>
+
+                <div class="col-6 mx-auto text-left mt-5">
+                    <input id="log_folder" type="text" list="log_folders" placeholder="Log Type" class="form-control">
+                    <datalist id="log_folders">
+                        <option id="all_logs" value="All Logs"></option>
+                        {% for log_folder in all_logs['log_folders'].keys() %}
+                            <option id="{{ log_folder }}" value="{{ log_folder }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="col-6 mx-auto text-left mt-5">
+                    <input id="log_date" type="text" list="log_dates" placeholder="Log Date" class="form-control">
+                    <datalist id="log_dates">
+                        <option id="all_logs" value="All Logs"></option>
+                        <option id="last_year" value="Logs from the last year"></option>
+                        <option id="last_month" value="Logs from the last month"></option>
+                        <option id="last_week" value="Logs from the last week"></option>
+                        <option id="last_day" value="Logs from today"></option>
+                    </datalist>
+                </div>
+            
+                <div class="col-6 mx-auto text-left mt-5">
+                    <input id="log_filter" type="text" list="log_filters" placeholder="Log Level" class="form-control">
+                    <datalist id="log_levels">
+                        <option id="all_logs" value="All Logs"></option>
+                        <option id="info_logs" value="Info or higher"></option>
+                        <option id="warning_logs" value="Warning or higher"></option>
+                        <option id="error_logs" value="Error or higher"></option>
+                        <option id="critical_logs" value="Critical or higher"></option>
+                    </datalist>
+                </div>
+            
                 <div class="col-6 mx-auto text-left mt-5">
                     <input id="log_select" type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
@@ -58,12 +91,71 @@
             <script type="text/javascript">
                 const idInputField = document.getElementById('log_select');
                 var logsList = document.getElementById("logs");
+                var allLogFiles = {{ all_logs['all'] }};
                 idInputField.addEventListener('input', function () {
                     if (logsList.options.namedItem(this.value) != null) {
                         document.getElementById("log_submit").disabled = false;
                     } else {
                         document.getElementById("log_submit").disabled = true;
                     }
+                });
+                function setLogList() {
+                    var logList = allLogFiles.filter(value ==> listOfLogNamesByFolder.includes(value));
+                    logList = logList.filter(value ==> listOfLogNamesByDate.includes(value));
+                    logList = logList.filter(value ==> listOfLogNamesByLevel.includes(value));
+                    var optionList = [];
+                    logList.forEach(function (item, index) {
+                        var option = document.createElement('option');
+                        option.value = item;
+                        option.id = item;
+                        optionList.push(option);
+                    });
+                    logsList.replaceChildren(optionList);
+                }
+            </script>
+
+            <script type="text/javascript">
+                const folderInputField = document.getElementById('log_folder');
+                var listOfFolders = document.getElementById("log_folders");
+                var listOfLogNamesByFolder = {{ all_logs['all'] }};
+                var logsByFolder = {{ all_logs['log_folders'] }};
+                folderInputField.addEventListener('input', function () {
+                    if (this.value === "all_logs") {
+                        listOfLogNamesByFolder = {{ all_logs['all'] }};
+                    } else {
+                        listOfLogNamesByFolder = logsByFolder[this.value];
+                    }
+                    setLogList();
+                });
+            </script>
+
+            <script type="text/javascript">
+                const dateInputField = document.getElementById('log_date');
+                var listOfDates = document.getElementById("log_dates");
+                var listOfLogNamesByDate = {{ all_logs['all'] }};
+                var logsByDate = {{ all_logs['log_dates'] }};
+                dateInputField.addEventListener('input', function () {
+                    if (this.value === "all_logs") {
+                        listOfLogNamesBydate = {{ all_logs['all'] }};
+                    } else {
+                        listOfLogNamesBydate = logsByDate[this.value];
+                    }
+                    setLogList();
+                });
+            </script>
+
+            <script type="text/javascript">
+                const levelInputField = document.getElementById('log_level');
+                var listOfLevels = document.getElementById("log_levels");
+                var listOfLogNamesByLevel = {{ all_logs['all'] }};
+                var logsByLevel = {{ all_logs['log_levels'] }};
+                levelInputField.addEventListener('input', function () {
+                    if (this.value === "all_logs") {
+                        listOfLogNamesByLevel = {{ all_logs['all'] }};
+                    } else {
+                        listOfLogNamesByLevel = logsByLevel[this.value];
+                    }
+                    setLogList();
                 });
             </script>
 
