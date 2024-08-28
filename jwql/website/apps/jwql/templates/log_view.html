@@ -50,10 +50,10 @@
                     <input id="log_level" type="text" list="log_filters" placeholder="Log Level" class="form-control">
                     <datalist id="log_levels">
                         <option id="all_logs" value="All Logs"></option>
-                        <option id="info_logs" value="Info or higher"></option>
-                        <option id="warning_logs" value="Warning or higher"></option>
-                        <option id="error_logs" value="Error or higher"></option>
-                        <option id="critical_logs" value="Critical or higher"></option>
+                        <option id="INFO" value="Info or higher"></option>
+                        <option id="WARNING" value="Warning or higher"></option>
+                        <option id="ERROR" value="Error or higher"></option>
+                        <option id="CRITICAL" value="Critical"></option>
                     </datalist>
                 </div>
             
@@ -83,15 +83,16 @@
 
             <script type="text/javascript">
                 var allLogFiles = {{ all_logs['all']|safe }};
-                var listOfFolders = document.getElementById("log_folders");
+                var logFoldersList = document.getElementById("log_folders");
                 var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                 var logsByFolder = {{ all_logs['log_folders']|safe }};
-                var listOfDates = document.getElementById("log_dates");
+                var logDatesList = document.getElementById("log_dates");
                 var listOfLogNamesByDate = {{ all_logs['all']|safe }};
                 var logsByDate = {{ all_logs['log_dates']|safe }};
-                var listOfLevels = document.getElementById("log_levels");
+                var logLevelsList = document.getElementById('log_levels');
                 var listOfLogNamesByLevel = {{ all_logs['all']|safe }};
                 var logsByLevel = {{ all_logs['log_levels']|safe }};
+                var logsList = document.getElementById("logs");
 
                 function GetSelectedTextValue() {
                     var log_value = document.getElementById("log_select").value;
@@ -119,7 +120,6 @@
                 }
 
                 const idInputField = document.getElementById('log_select');
-                var logsList = document.getElementById("logs");
                 idInputField.addEventListener('input', function () {
                     if (logsList.options.namedItem(this.value) !== null) {
                         document.getElementById("log_submit").disabled = false;
@@ -129,7 +129,6 @@
                 });
 
                 const folderInputField = document.getElementById('log_folder');
-                var logFoldersList = document.getElementById("log_folders");
                 folderInputField.addEventListener('input', function () {
                     var currentFolder = logFoldersList.options.namedItem(this.value).value;
                     console.log("Current folder is "+currentFolder);
@@ -143,7 +142,6 @@
                 });
 
                 const dateInputField = document.getElementById('log_date');
-                var logDatesList = document.getElementById("log_dates");
                 dateInputField.addEventListener('input', function () {
                     var currentDate = logDatesList.options.namedItem(this.value).value;
                     console.log("Current date is "+currentDate);
@@ -157,7 +155,6 @@
                 });
 
                 const levelInputField = document.getElementById('log_level');
-                var logLevelsList = document.getElementById('log_levels');
                 levelInputField.addEventListener('input', function () {
                     var currentLevel = logLevelsList.options.namedItem(this.value).value;
                     console.log("Current level is "+currentLevel);
