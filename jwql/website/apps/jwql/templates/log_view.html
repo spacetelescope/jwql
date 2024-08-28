@@ -82,6 +82,17 @@
             {% endif %}
 
             <script type="text/javascript">
+                var allLogFiles = {{ all_logs['all']|safe }};
+                var listOfFolders = document.getElementById("log_folders");
+                var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
+                var logsByFolder = {{ all_logs['log_folders']|safe }};
+                var listOfDates = document.getElementById("log_dates");
+                var listOfLogNamesByDate = {{ all_logs['all']|safe }};
+                var logsByDate = {{ all_logs['log_dates']|safe }};
+                var listOfLevels = document.getElementById("log_levels");
+                var listOfLogNamesByLevel = {{ all_logs['all']|safe }};
+                var logsByLevel = {{ all_logs['log_levels']|safe }};
+
                 function GetSelectedTextValue() {
                     var log_value = document.getElementById("log_select").value;
                     document.getElementById("log_submit").value = log_value;
@@ -103,7 +114,6 @@
 
                 const idInputField = document.getElementById('log_select');
                 var logsList = document.getElementById("logs");
-                var allLogFiles = {{ all_logs['all']|safe }};
                 idInputField.addEventListener('input', function () {
                     if (logsList.options.namedItem(this.value) != null) {
                         document.getElementById("log_submit").disabled = false;
@@ -113,9 +123,6 @@
                 });
 
                 const folderInputField = document.getElementById('log_folder');
-                var listOfFolders = document.getElementById("log_folders");
-                var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
-                var logsByFolder = {{ all_logs['log_folders']|safe }};
                 folderInputField.addEventListener('input', function () {
                     if (this.value === "all_logs") {
                         listOfLogNamesByFolder = {{ all_logs['all']|safe }};
@@ -126,9 +133,6 @@
                 });
 
                 const dateInputField = document.getElementById('log_date');
-                var listOfDates = document.getElementById("log_dates");
-                var listOfLogNamesByDate = {{ all_logs['all']|safe }};
-                var logsByDate = {{ all_logs['log_dates']|safe }};
                 dateInputField.addEventListener('input', function () {
                     if (this.value === "all_logs") {
                         listOfLogNamesBydate = {{ all_logs['all']|safe }};
@@ -139,9 +143,6 @@
                 });
 
                 const levelInputField = document.getElementById('log_level');
-                var listOfLevels = document.getElementById("log_levels");
-                var listOfLogNamesByLevel = {{ all_logs['all']|safe }};
-                var logsByLevel = {{ all_logs['log_levels']|safe }};
                 levelInputField.addEventListener('input', function () {
                     if (this.value === "all_logs") {
                         listOfLogNamesByLevel = {{ all_logs['all']|safe }};
