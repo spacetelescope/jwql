@@ -125,10 +125,11 @@
                 const folderInputField = document.getElementById('log_folder');
                 var logFoldersList = document.getElementById("log_folders");
                 folderInputField.addEventListener('input', function () {
-                    if (logFoldersList.options.namedItem(this.value) === "all_logs") {
+                    var currentFolder = logFoldersList.options.namedItem(this.value);
+                    if (currentFolder === "all_logs") {
                         listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                     } else {
-                        listOfLogNamesByFolder = logsByFolder[this.value];
+                        listOfLogNamesByFolder = logsByFolder[currentFolder];
                     }
                     setLogList();
                 });
@@ -136,10 +137,11 @@
                 const dateInputField = document.getElementById('log_date');
                 var logDatesList = document.getElementById("log_dates");
                 dateInputField.addEventListener('input', function () {
-                    if (logDatesList.options.namedItem(this.value) === "all_logs") {
+                    var currentDate = logDatesList.options.namedItem(this.value);
+                    if (currentDate === "all_logs") {
                         listOfLogNamesBydate = {{ all_logs['all']|safe }};
                     } else {
-                        listOfLogNamesBydate = logsByDate[this.value];
+                        listOfLogNamesBydate = logsByDate[currentDate];
                     }
                     setLogList();
                 });
@@ -147,10 +149,11 @@
                 const levelInputField = document.getElementById('log_level');
                 var logLevelsList = document.getElementById('log_levels');
                 levelInputField.addEventListener('input', function () {
-                    if (logLevelsList.options.namedItem(this.value) === "all_logs") {
+                    var currentLevel = logLevelsList.options.namedItem(this.value);
+                    if (currentLevel === "all_logs") {
                         listOfLogNamesByLevel = {{ all_logs['all']|safe }};
                     } else {
-                        listOfLogNamesByLevel = logsByLevel[this.value];
+                        listOfLogNamesByLevel = logsByLevel[currentLevel];
                     }
                     setLogList();
                 });
