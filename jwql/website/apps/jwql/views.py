@@ -729,6 +729,8 @@ def log_view(request):
     }
     for log_file in log_path.rglob("*.log"):
         log_name = log_file.name
+        if log_name[0] == '.':
+            continue
         log_time = datetime.datetime.strptime(log_name[-20:-4], "%Y-%m-%d-%H-%M")
         log_dictionary[log_name] = str(log_file)
         log_dictionary['all'].append(log_name)
