@@ -60,7 +60,7 @@
                 <div class="col-6 mx-auto text-left mt-5">
                     <input id="log_select" type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
-                        {% for log_name in all_logs %}
+                        {% for log_name in all_logs['all'] %}
                             <option id="{{ log_name }}" value="{{ log_name }}"></option>
                         {% endfor %}
                     </datalist>
@@ -99,12 +99,14 @@
                 }
 
                 function setLogList() {
-                    var logList = allLogFiles.filter(value => listOfLogNamesByFolder.includes(value));
-                    console.log("Logs list is: "+logList);
+                    var logList = allLogFiles;
+                    console.log("Logs list is: "+logList.length+" items: "+logList);
+                    logList = logList.filter(value => listOfLogNamesByFolder.includes(value));
+                    console.log("Logs list is: "+logList.length+" items: "+logList);
                     logList = logList.filter(value => listOfLogNamesByDate.includes(value));
-                    console.log("Logs list is: "+logList);
+                    console.log("Logs list is: "+logList.length+" items: "+logList);
                     logList = logList.filter(value => listOfLogNamesByLevel.includes(value));
-                    console.log("Logs list is: "+logList);
+                    console.log("Logs list is: "+logList.length+" items: "+logList);
                     var optionList = [];
                     logList.forEach(function (item, index) {
                         var option = document.createElement('option');
