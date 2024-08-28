@@ -86,19 +86,7 @@
                     var log_value = document.getElementById("log_select").value;
                     document.getElementById("log_submit").value = log_value;
                 }
-            </script>
 
-            <script type="text/javascript">
-                const idInputField = document.getElementById('log_select');
-                var logsList = document.getElementById("logs");
-                var allLogFiles = {{ all_logs['all']|safe }};
-                idInputField.addEventListener('input', function () {
-                    if (logsList.options.namedItem(this.value) != null) {
-                        document.getElementById("log_submit").disabled = false;
-                    } else {
-                        document.getElementById("log_submit").disabled = true;
-                    }
-                });
                 function setLogList() {
                     var logList = allLogFiles.filter(value ==> listOfLogNamesByFolder.includes(value));
                     logList = logList.filter(value ==> listOfLogNamesByDate.includes(value));
@@ -112,9 +100,18 @@
                     });
                     logsList.replaceChildren(optionList);
                 }
-            </script>
 
-            <script type="text/javascript">
+                const idInputField = document.getElementById('log_select');
+                var logsList = document.getElementById("logs");
+                var allLogFiles = {{ all_logs['all']|safe }};
+                idInputField.addEventListener('input', function () {
+                    if (logsList.options.namedItem(this.value) != null) {
+                        document.getElementById("log_submit").disabled = false;
+                    } else {
+                        document.getElementById("log_submit").disabled = true;
+                    }
+                });
+
                 const folderInputField = document.getElementById('log_folder');
                 var listOfFolders = document.getElementById("log_folders");
                 var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
@@ -127,9 +124,7 @@
                     }
                     setLogList();
                 });
-            </script>
 
-            <script type="text/javascript">
                 const dateInputField = document.getElementById('log_date');
                 var listOfDates = document.getElementById("log_dates");
                 var listOfLogNamesByDate = {{ all_logs['all']|safe }};
@@ -142,9 +137,7 @@
                     }
                     setLogList();
                 });
-            </script>
 
-            <script type="text/javascript">
                 const levelInputField = document.getElementById('log_level');
                 var listOfLevels = document.getElementById("log_levels");
                 var listOfLogNamesByLevel = {{ all_logs['all']|safe }};
