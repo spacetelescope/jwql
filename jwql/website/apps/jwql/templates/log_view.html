@@ -125,42 +125,42 @@
                 const folderInputField = document.getElementById('log_folder');
                 var logFoldersList = document.getElementById("log_folders");
                 folderInputField.addEventListener('input', function () {
-                    var currentFolder = logFoldersList.options.namedItem(this.value);
+                    var currentFolder = logFoldersList.options.namedItem(this.value).value;
                     console.log("Current folder is "+currentFolder);
                     if (currentFolder === "all_logs") {
                         listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesByFolder = logsByFolder[currentFolder];
                     }
-                    console.log("Available log files are"+listOfLogNamesByFolder);
+                    console.log("Available log files are "+listOfLogNamesByFolder);
                     setLogList();
                 });
 
                 const dateInputField = document.getElementById('log_date');
                 var logDatesList = document.getElementById("log_dates");
                 dateInputField.addEventListener('input', function () {
-                    var currentDate = logDatesList.options.namedItem(this.value);
+                    var currentDate = logDatesList.options.namedItem(this.value).value;
                     console.log("Current date is "+currentDate);
                     if (currentDate === "all_logs") {
                         listOfLogNamesBydate = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesBydate = logsByDate[currentDate];
                     }
-                    console.log("Available log files are"+listOfLogNamesByDate);
+                    console.log("Available log files are "+listOfLogNamesByDate);
                     setLogList();
                 });
 
                 const levelInputField = document.getElementById('log_level');
                 var logLevelsList = document.getElementById('log_levels');
                 levelInputField.addEventListener('input', function () {
-                    var currentLevel = logLevelsList.options.namedItem(this.value);
+                    var currentLevel = logLevelsList.options.namedItem(this.value).value;
                     console.log("Current level is "+currentLevel);
                     if (currentLevel === "all_logs") {
                         listOfLogNamesByLevel = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesByLevel = logsByLevel[currentLevel];
                     }
-                    console.log("Available log files are"+listOfLogNamesByLevel);
+                    console.log("Available log files are "+listOfLogNamesByLevel);
                     setLogList();
                 });
             </script>
