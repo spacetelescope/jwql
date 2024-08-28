@@ -112,15 +112,13 @@
                     console.log("Logs list is: "+logList.length+" items: "+logList);
                     logList = logList.filter(value => listOfLogNamesByLevel.includes(value));
                     console.log("Logs list is: "+logList.length+" items: "+logList);
-                    var optionList = [];
+                    logsList.replaceChildren();
                     logList.forEach(function (item, index) {
                         var option = document.createElement('option');
                         option.value = item;
                         option.id = item;
-                        optionList.push(option);
+                        logsList.appendChild(option);
                     });
-                    console.log("New options are: "+optionList);
-                    logsList.replaceChildren(optionList);
                 }
 
                 idInputField.addEventListener('input', function () {
