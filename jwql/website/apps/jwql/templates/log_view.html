@@ -82,6 +82,10 @@
             {% endif %}
 
             <script type="text/javascript">
+                const idInputField = document.getElementById('log_select');
+                const folderInputField = document.getElementById('log_folder');
+                const dateInputField = document.getElementById('log_date');
+                const levelInputField = document.getElementById('log_level');
                 var allLogFiles = {{ all_logs['all']|safe }};
                 var logFoldersList = document.getElementById("log_folders");
                 var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
@@ -119,7 +123,6 @@
                     logsList.replaceChildren(optionList);
                 }
 
-                const idInputField = document.getElementById('log_select');
                 idInputField.addEventListener('input', function () {
                     if (logsList.options.namedItem(this.value) !== null) {
                         document.getElementById("log_submit").disabled = false;
@@ -128,9 +131,8 @@
                     }
                 });
 
-                const folderInputField = document.getElementById('log_folder');
                 folderInputField.addEventListener('input', function () {
-                    var currentFolder = logFoldersList.options.namedItem(this.id).id;
+                    var currentFolder = folderInputField.value;
                     console.log("Current folder is "+currentFolder);
                     if (currentFolder === "all_logs") {
                         listOfLogNamesByFolder = {{ all_logs['all']|safe }};
@@ -141,9 +143,8 @@
                     setLogList();
                 });
 
-                const dateInputField = document.getElementById('log_date');
                 dateInputField.addEventListener('input', function () {
-                    var currentDate = logDatesList.options.namedItem(this.id).id;
+                    var currentDate = dateInputField.value;
                     console.log("Current date is "+currentDate);
                     if (currentDate === "all_logs") {
                         listOfLogNamesBydate = {{ all_logs['all']|safe }};
@@ -154,9 +155,8 @@
                     setLogList();
                 });
 
-                const levelInputField = document.getElementById('log_level');
                 levelInputField.addEventListener('input', function () {
-                    var currentLevel = logLevelsList.options.namedItem(this.id).id;
+                    var currentLevel = levelInputField.value;
                     console.log("Current level is "+currentLevel);
                     if (currentLevel === "all_logs") {
                         listOfLogNamesByLevel = {{ all_logs['all']|safe }};
