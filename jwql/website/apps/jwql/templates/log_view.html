@@ -115,7 +115,7 @@
                 const idInputField = document.getElementById('log_select');
                 var logsList = document.getElementById("logs");
                 idInputField.addEventListener('input', function () {
-                    if (logsList.options.namedItem(this.value) != null) {
+                    if (logsList.options.namedItem(this.value) !== null) {
                         document.getElementById("log_submit").disabled = false;
                     } else {
                         document.getElementById("log_submit").disabled = true;
@@ -123,8 +123,9 @@
                 });
 
                 const folderInputField = document.getElementById('log_folder');
+                var logFoldersList = document.getElementById("log_folders");
                 folderInputField.addEventListener('input', function () {
-                    if (this.value === "all_logs") {
+                    if (logFoldersList.options.namedItem(this.value) === "all_logs") {
                         listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesByFolder = logsByFolder[this.value];
@@ -133,8 +134,9 @@
                 });
 
                 const dateInputField = document.getElementById('log_date');
+                var logDatesList = document.getElementById("log_dates");
                 dateInputField.addEventListener('input', function () {
-                    if (this.value === "all_logs") {
+                    if (logDatesList.options.namedItem(this.value) === "all_logs") {
                         listOfLogNamesBydate = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesBydate = logsByDate[this.value];
@@ -143,8 +145,9 @@
                 });
 
                 const levelInputField = document.getElementById('log_level');
+                var logLevelsList = document.getElementById('log_levels');
                 levelInputField.addEventListener('input', function () {
-                    if (this.value === "all_logs") {
+                    if (logLevelsList.options.namedItem(this.value) === "all_logs") {
                         listOfLogNamesByLevel = {{ all_logs['all']|safe }};
                     } else {
                         listOfLogNamesByLevel = logsByLevel[this.value];
