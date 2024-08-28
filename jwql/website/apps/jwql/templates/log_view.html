@@ -99,9 +99,9 @@
                 }
 
                 function setLogList() {
-                    var logList = allLogFiles.filter(value ==> listOfLogNamesByFolder.includes(value));
-                    logList = logList.filter(value ==> listOfLogNamesByDate.includes(value));
-                    logList = logList.filter(value ==> listOfLogNamesByLevel.includes(value));
+                    var logList = allLogFiles.filter(value => listOfLogNamesByFolder.includes(value));
+                    logList = logList.filter(value => listOfLogNamesByDate.includes(value));
+                    logList = logList.filter(value => listOfLogNamesByLevel.includes(value));
                     var optionList = [];
                     logList.forEach(function (item, index) {
                         var option = document.createElement('option');
