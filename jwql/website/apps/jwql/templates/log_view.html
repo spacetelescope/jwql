@@ -26,6 +26,7 @@
             <h4>Select JWQL Monitoring Log</h4>
 
                 <div class="col-6 mx-auto text-left mt-5">
+                    Filter logs by folder: 
                     <select id="log_folders" onchange="getLogsByFolder()">
                         <option value="all_logs">All Logs</option>
                         {% for log_folder in all_logs['log_folders'].keys() %}
@@ -35,6 +36,7 @@
                 </div>
 
                 <div class="col-6 mx-auto text-left mt-5">
+                    Filter logs by date: 
                     <select id="log_dates" onchange="getLogsByDate()">
                         <option value="all_logs">All Logs</option>
                         <option value="last_year">Last Year</option>
@@ -45,14 +47,14 @@
                 </div>
 
                 <div class="col-6 mx-auto text-left mt-5">
-                    <input id="log_level" type="text" list="log_filters" placeholder="Log Level" class="form-control">
-                    <datalist id="log_levels">
-                        <option id="all_logs" value="All Logs"></option>
-                        <option id="INFO" value="Info or higher"></option>
-                        <option id="WARNING" value="Warning or higher"></option>
-                        <option id="ERROR" value="Error or higher"></option>
-                        <option id="CRITICAL" value="Critical"></option>
-                    </datalist>
+                    Filter logs by level:
+                    <select id="log_levels" onchange="getLogsByLevel()">
+                        <option value="all_logs">All Logs</option>
+                        <option value="INFO">Logs containing INFO and above</option>
+                        <option value="WARNING">Logs containing WARNING and above</option>
+                        <option value="ERROR">Logs containing ERROR and above</option>
+                        <option value="CRITICAL">Logs containing CRITICAL and above</option>
+                    </select>
                 </div>
             
                 <div class="col-6 mx-auto text-left mt-5">
@@ -149,7 +151,7 @@
                     setLogList();
                 }
 
-                levelInputField.addEventListener('input', function () {
+                function getLogsByLevel() {
                     var currentLevel = levelInputField.value;
                     console.log("Current level is "+currentLevel);
                     if (currentLevel === "all_logs") {
@@ -159,7 +161,7 @@
                     }
                     console.log("Available log files are "+listOfLogNamesByLevel);
                     setLogList();
-                });
+                }
             </script>
 
         </form>
