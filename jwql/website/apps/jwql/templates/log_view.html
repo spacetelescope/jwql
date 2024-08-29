@@ -65,6 +65,9 @@
                         {% endfor %}
                     </datalist>
                 </div>
+                <div id="no_items_warning" style="display: none">
+                <p style="font-weight: bold">No logs match the chosen filters</p>
+                </div>
 
             <br>
 
@@ -86,6 +89,7 @@
                 const folderInputField = document.getElementById('log_folders');
                 const dateInputField = document.getElementById('log_dates');
                 const levelInputField = document.getElementById('log_levels');
+                const noResultsWarningDiv = document.getElementById('no_items_warning');
                 var allLogFiles = {{ all_logs['all']|safe }};
                 var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                 var logsByFolder = {{ all_logs['log_folders']|safe }};
@@ -117,6 +121,11 @@
                         option.id = item;
                         logsList.appendChild(option);
                     });
+                    if (logList.length === 0) {
+                        noResultsWarningDiv.style.display = "block";
+                    } else {
+                        noResultsWarningDiv.style.display = "none";
+                    }
                 }
 
                 idInputField.addEventListener('input', function () {
