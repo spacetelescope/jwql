@@ -51,6 +51,7 @@ import operator
 import os
 from pathlib import Path
 import socket
+import yaml
 
 from astropy.time import Time
 from bokeh.embed import components
@@ -714,6 +715,29 @@ def log_view(request):
         log_path /= "test"
     else:
         log_path /= "ops"
+    
+    log_level_file = log_path / "log_info.yaml"
+    if log_level_file.is_file():
+        with open(log_level_file) as f:
+            log_dictionary = yaml.safe_load(f)
+        log_dictionary['log_dates'] = {
+            'last_year': [], 
+            'last_month': [], 
+            'last_week': [], 
+            'last_day': []
+        }
+    else:
+        log_dictionary = {
+            'all': [],
+            'log_folders': {},
+            'log_dates': {
+                'last_year': [], 
+                'last_month': [], 
+                'last_week': [], 
+                'last_day': []
+            },
+            'log_levels': {'INFO': [], 'WARNING': [], 'ERROR': [], 'CRITICAL': []}
+        }
 
     # Make a "now" time and day/week/month/year time interval
     last_day = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -721,23 +745,15 @@ def log_view(request):
     last_month = datetime.datetime.now() - datetime.timedelta(days=30)
     last_year = datetime.datetime.now() - datetime.timedelta(days=365)
 
-    log_dictionary = {
-        'all': [],
-        'log_folders': {},
-        'log_dates': {'last_year': [], 'last_month': [], 'last_week': [], 'last_day': []},
-        'log_levels': {'INFO': [], 'WARNING': [], 'ERROR': [], 'CRITICAL': []}
-    }
     for log_file in log_path.rglob("*.log"):
         log_name = log_file.name
+
+        # Don't include hidden dot-files
         if log_name[0] == '.':
             continue
+
+        # Always want to update date information
         log_time = datetime.datetime.strptime(log_name[-20:-4], "%Y-%m-%d-%H-%M")
-        log_dictionary[log_name] = str(log_file)
-        log_dictionary['all'].append(log_name)
-        log_folder = log_file.parent.name
-        if log_folder not in log_dictionary['log_folders']:
-            log_dictionary['log_folders'][log_folder] = []
-        log_dictionary['log_folders'][log_folder].append(log_name)
         if log_time > last_year:
             log_dictionary['log_dates']['last_year'].append(log_name)
         if log_time > last_month:
@@ -746,22 +762,33 @@ def log_view(request):
             log_dictionary['log_dates']['last_week'].append(log_name)
         if log_time > last_day:
             log_dictionary['log_dates']['last_day'].append(log_name)
-        with open(log_file) as f:
-            log_content = f.read()
-            if 'CRITICAL:' in log_content:
-                log_dictionary['log_levels']['CRITICAL'].append(log_name)
-                log_dictionary['log_levels']['ERROR'].append(log_name)
-                log_dictionary['log_levels']['WARNING'].append(log_name)
-                log_dictionary['log_levels']['INFO'].append(log_name)
-            elif 'ERROR:' in log_content:
-                log_dictionary['log_levels']['ERROR'].append(log_name)
-                log_dictionary['log_levels']['WARNING'].append(log_name)
-                log_dictionary['log_levels']['INFO'].append(log_name)
-            elif 'WARNING:' in log_content:
-                log_dictionary['log_levels']['WARNING'].append(log_name)
-                log_dictionary['log_levels']['INFO'].append(log_name)
-            elif 'INFO:' in log_content:
-                log_dictionary['log_levels']['INFO'].append(log_name)
+
+        if log_name not in log_dictionary['all']:
+            log_dictionary[log_name] = str(log_file)
+            log_dictionary['all'].append(log_name)
+            log_folder = log_file.parent.name
+            if log_folder not in log_dictionary['log_folders']:
+                log_dictionary['log_folders'][log_folder] = []
+            log_dictionary['log_folders'][log_folder].append(log_name)
+            with open(log_file) as f:
+                log_content = f.read()
+                if 'CRITICAL:' in log_content:
+                    log_dictionary['log_levels']['CRITICAL'].append(log_name)
+                    log_dictionary['log_levels']['ERROR'].append(log_name)
+                    log_dictionary['log_levels']['WARNING'].append(log_name)
+                    log_dictionary['log_levels']['INFO'].append(log_name)
+                elif 'ERROR:' in log_content:
+                    log_dictionary['log_levels']['ERROR'].append(log_name)
+                    log_dictionary['log_levels']['WARNING'].append(log_name)
+                    log_dictionary['log_levels']['INFO'].append(log_name)
+                elif 'WARNING:' in log_content:
+                    log_dictionary['log_levels']['WARNING'].append(log_name)
+                    log_dictionary['log_levels']['INFO'].append(log_name)
+                elif 'INFO:' in log_content:
+                    log_dictionary['log_levels']['INFO'].append(log_name)
+
+    with open(log_level_file, 'w') as f:
+        yaml.dump(log_dictionary, f, default_flow_style=False)
 
     if selected_log_name:
         with open(log_dictionary[selected_log_name]) as f:
