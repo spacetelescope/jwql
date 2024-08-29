@@ -35,16 +35,15 @@
                 </div>
 
                 <div class="col-6 mx-auto text-left mt-5">
-                    <input id="log_date" type="text" list="log_dates" placeholder="Log Date" class="form-control">
-                    <datalist id="log_dates">
-                        <option id="all_logs" value="all_logs"></option>
-                        <option id="last_year" value="last_year"></option>
-                        <option id="last_month" value="last_month"></option>
-                        <option id="last_week" value="last_week"></option>
-                        <option id="last_day" value="last_day"></option>
-                    </datalist>
+                    <select id="log_dates" onchange="getLogsByDate()">
+                        <option value="all_logs">All Logs</option>
+                        <option value="last_year">Last Year</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="last_week">Last Week</option>
+                        <option value="last_day">Last Day</option>
+                    </select>
                 </div>
-            
+
                 <div class="col-6 mx-auto text-left mt-5">
                     <input id="log_level" type="text" list="log_filters" placeholder="Log Level" class="form-control">
                     <datalist id="log_levels">
@@ -83,12 +82,11 @@
             <script type="text/javascript">
                 const idInputField = document.getElementById('log_select');
                 const folderInputField = document.getElementById('log_folders');
-                const dateInputField = document.getElementById('log_date');
+                const dateInputField = document.getElementById('log_dates');
                 const levelInputField = document.getElementById('log_level');
                 var allLogFiles = {{ all_logs['all']|safe }};
                 var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                 var logsByFolder = {{ all_logs['log_folders']|safe }};
-                var logDatesList = document.getElementById("log_dates");
                 var listOfLogNamesByDate = {{ all_logs['all']|safe }};
                 var logsByDate = {{ all_logs['log_dates']|safe }};
                 var logLevelsList = document.getElementById('log_levels');
@@ -139,17 +137,17 @@
                     setLogList();
                 }
 
-                dateInputField.addEventListener('input', function () {
+                function getLogsByDate() {
                     var currentDate = dateInputField.value;
                     console.log("Current date is "+currentDate);
                     if (currentDate === "all_logs") {
-                        listOfLogNamesBydate = {{ all_logs['all']|safe }};
+                        listOfLogNamesByDate = {{ all_logs['all']|safe }};
                     } else {
-                        listOfLogNamesBydate = logsByDate[currentDate];
+                        listOfLogNamesByDate = logsByDate[currentDate];
                     }
                     console.log("Available log files are "+listOfLogNamesByDate);
                     setLogList();
-                });
+                }
 
                 levelInputField.addEventListener('input', function () {
                     var currentLevel = levelInputField.value;
