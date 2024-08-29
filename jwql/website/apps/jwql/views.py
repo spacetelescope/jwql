@@ -715,15 +715,15 @@ def log_view(request):
         log_path /= "test"
     else:
         log_path /= "ops"
-    
+
     log_level_file = log_path / "log_info.yaml"
     if log_level_file.is_file():
         with open(log_level_file) as f:
             log_dictionary = yaml.safe_load(f)
         log_dictionary['log_dates'] = {
-            'last_year': [], 
-            'last_month': [], 
-            'last_week': [], 
+            'last_year': [],
+            'last_month': [],
+            'last_week': [],
             'last_day': []
         }
     else:
@@ -731,9 +731,9 @@ def log_view(request):
             'all': [],
             'log_folders': {},
             'log_dates': {
-                'last_year': [], 
-                'last_month': [], 
-                'last_week': [], 
+                'last_year': [],
+                'last_month': [],
+                'last_week': [],
                 'last_day': []
             },
             'log_levels': {'INFO': [], 'WARNING': [], 'ERROR': [], 'CRITICAL': []}
