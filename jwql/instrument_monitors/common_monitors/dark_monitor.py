@@ -656,7 +656,8 @@ class Dark():
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
-                                                 source=sources[pix_type], color=colors[pix_type])
+                                                 source=sources[pix_type], color=colors[pix_type], radius=0.5,
+                                                 radius_dimension='y', radius_units='data')
 
         # Add to the legend
         if numpix > 0:
