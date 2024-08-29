@@ -26,19 +26,18 @@
             <h4>Select JWQL Monitoring Log</h4>
 
                 <div class="col-6 mx-auto text-left mt-5">
-                    <input id="log_folder" type="text" list="log_folders" placeholder="Log Type" class="form-control">
-                    <datalist id="log_folders">
-                        <option id="all_logs" value="All Logs"></option>
+                    <select id="log_folders" onchange="getLogsByFolder()">
+                        <option value="all_logs">All Logs</option>
                         {% for log_folder in all_logs['log_folders'].keys() %}
-                            <option id="{{ log_folder }}" value="{{ log_folder }}"></option>
+                            <option value="{{ log_folder }}">{{ log_folder }}</option>
                         {% endfor %}
-                    </datalist>
+                    </select>
                 </div>
 
                 <div class="col-6 mx-auto text-left mt-5">
                     <input id="log_date" type="text" list="log_dates" placeholder="Log Date" class="form-control">
                     <datalist id="log_dates">
-                        <option id="all_logs" value="all_logs" label="All Logs"></option>
+                        <option id="all_logs" value="all_logs"></option>
                         <option id="last_year" value="last_year"></option>
                         <option id="last_month" value="last_month"></option>
                         <option id="last_week" value="last_week"></option>
@@ -83,11 +82,10 @@
 
             <script type="text/javascript">
                 const idInputField = document.getElementById('log_select');
-                const folderInputField = document.getElementById('log_folder');
+                const folderInputField = document.getElementById('log_folders');
                 const dateInputField = document.getElementById('log_date');
                 const levelInputField = document.getElementById('log_level');
                 var allLogFiles = {{ all_logs['all']|safe }};
-                var logFoldersList = document.getElementById("log_folders");
                 var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
                 var logsByFolder = {{ all_logs['log_folders']|safe }};
                 var logDatesList = document.getElementById("log_dates");
@@ -128,8 +126,8 @@
                         document.getElementById("log_submit").disabled = true;
                     }
                 });
-
-                folderInputField.addEventListener('input', function () {
+                
+                function getLogsByFolder() {
                     var currentFolder = folderInputField.value;
                     console.log("Current folder is "+currentFolder);
                     if (currentFolder === "all_logs") {
@@ -139,7 +137,7 @@
                     }
                     console.log("Available log files are "+listOfLogNamesByFolder);
                     setLogList();
-                });
+                }
 
                 dateInputField.addEventListener('input', function () {
                     var currentDate = dateInputField.value;
