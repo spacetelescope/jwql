@@ -29,7 +29,7 @@
                     Filter logs by folder: 
                     <select id="log_folders" onchange="getLogsByFolder()">
                         <option value="all_logs">All Logs</option>
-                        {% for log_folder in sorted(all_logs['log_folders'].keys()) %}
+                        {% for log_folder in all_logs['log_folders'].keys()|sort %}
                             <option value="{{ log_folder }}">{{ log_folder }}</option>
                         {% endfor %}
                     </select>
@@ -60,7 +60,7 @@
                 <div class="col-6 mx-auto text-left mt-5">
                     <input id="log_select" type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
-                        {% for log_name in sorted(all_logs['all']) %}
+                        {% for log_name in all_logs['all']|sort %}
                             <option id="{{ log_name }}" value="{{ log_name }}"></option>
                         {% endfor %}
                     </datalist>
