@@ -48,8 +48,8 @@ class FGSDarkDarkCurrent(models.Model):
     readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     mean = models.FloatField(default=0., blank=True, null=True)
     stdev = models.FloatField(default=0., blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -80,8 +80,8 @@ class FGSDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(max_length=MAX_LEN_TYPE, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -117,8 +117,8 @@ class MIRIDarkDarkCurrent(models.Model):
     readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     mean = models.FloatField(default=0., blank=True, null=True)
     stdev = models.FloatField(default=0., blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -149,8 +149,8 @@ class MIRIDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(max_length=MAX_LEN_TYPE, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -186,8 +186,8 @@ class NIRCamDarkDarkCurrent(models.Model):
     readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     mean = models.FloatField(default=0., blank=True, null=True)
     stdev = models.FloatField(default=0., blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -218,8 +218,8 @@ class NIRCamDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(max_length=MAX_LEN_TYPE, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -255,8 +255,8 @@ class NIRISSDarkDarkCurrent(models.Model):
     readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     mean = models.FloatField(default=0., blank=True, null=True)
     stdev = models.FloatField(default=0., blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -287,8 +287,8 @@ class NIRISSDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(max_length=MAX_LEN_TYPE, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -324,8 +324,8 @@ class NIRSpecDarkDarkCurrent(models.Model):
     readpattern = models.CharField(max_length=MAX_LEN_READPATTERN, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     mean = models.FloatField(default=0., blank=True, null=True)
     stdev = models.FloatField(default=0., blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
@@ -356,8 +356,8 @@ class NIRSpecDarkPixelStats(models.Model):
     x_coord = ArrayField(models.IntegerField())
     y_coord = ArrayField(models.IntegerField())
     type = models.CharField(max_length=MAX_LEN_TYPE, default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
-    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names",
-                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True))
+    source_files = ArrayField(models.CharField(max_length=MAX_LEN_FILENAME, help_text="source file names"),
+                                               default=DEFAULT_MODEL_CHARFIELD, blank=True, null=True)
     obs_start_time = models.DateTimeField(blank=True, null=True)
     obs_mid_time = models.DateTimeField(blank=True, null=True)
     obs_end_time = models.DateTimeField(blank=True, null=True)
