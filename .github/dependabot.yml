@@ -1,7 +1,17 @@
-
 version: 2
 updates:
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: monthly
+
+  # Maintain dependencies for pip
   - package-ecosystem: "pip"
     directory: "/"
+    target-branch: "main"
     schedule:
-      interval: "monthly"
+      interval: monthly
+    open-pull-requests-limit: 10
