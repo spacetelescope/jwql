@@ -799,7 +799,7 @@ class EdbMnemonic:
             dates = abscissa[index].astype(np.datetime64)
             y_values = list(np.ones(len(index), dtype=int) * i)
             p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
-            p1.circle(dates, y_values, color='blue')
+            p1.circle(dates, y_values, color='blue', radius=5, radius_dimension='y', radius_units='screen')
 
         p1.yaxis.ticker = list(override_dict.keys())
         p1.yaxis.major_label_overrides = override_dict

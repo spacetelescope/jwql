@@ -278,7 +278,7 @@ def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limit
 
     fig = figure(width=400, height=400, x_axis_label='Date', y_axis_label='Voltage',
                  x_axis_type='datetime')
-    fig.circle(times, values, size=4, color='navy', alpha=0.5)
+    fig.circle(times, values, color='navy', alpha=0.5, radius=2, radius_dimension='y', radius_units='screen')
 
     if nominal_value is not None:
         fig.line(times, np.repeat(nominal_value, len(times)), line_dash='dashed')
