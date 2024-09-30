@@ -12,8 +12,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938  # v4.2.0
+      - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3  # v5.2.0
         with:
           python-version: "3.11"
       - run: pip install bandit
@@ -33,9 +33,9 @@ jobs:
       run:
         shell: micromamba-shell {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938  # v4.2.0
       
-      - uses: mamba-org/setup-micromamba@v1
+      - uses: mamba-org/setup-micromamba@f8b8a1e23a26f60a44c853292711bacfd3eac822  # v1.9.0
         with:
           environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
           environment-file: environment.yml
@@ -51,7 +51,7 @@ jobs:
       - run: micromamba env export
 
       - if: runner.os == 'Linux'
-        uses: supercharge/redis-github-action@1.4.0
+        uses: supercharge/redis-github-action@ea9b21c6ecece47bd99595c532e481390ea0f044  # 1.8.0
         with:
           redis-version: 5.0
 
