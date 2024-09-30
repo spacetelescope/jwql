@@ -5,3 +5,11 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+  - package-ecosystem: "github-actions"
+    directory: ".github/workflows" # Location of package manifests
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns:
+          - "*"
