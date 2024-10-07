@@ -2097,7 +2097,8 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
             source = ColumnDataSource(data={'x': val_times, 'y': val_data, 'dep': dependency_val})
 
             ldata = fig.line(x='x', y='y', line_width=1, line_color=Turbo256[color], source=source, legend_label=key)
-            cdata = fig.circle(x='x', y='y', fill_color=Turbo256[color], size=8, source=source, legend_label=key)
+            cdata = fig.circle(x='x', y='y', fill_color=Turbo256[color], source=source, legend_label=key, radius=4,
+                               radius_dimension='y', radius_units='screen')
 
             hover_tool = HoverTool(tooltips=[('Value', '@dep'),
                                              ('Data', '@y{1.11111}'),
