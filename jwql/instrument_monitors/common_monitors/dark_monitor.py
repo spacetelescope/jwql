@@ -81,7 +81,7 @@ import logging
 import os
 
 from astropy.io import ascii, fits
-from astropy.modeling import models
+from astropy.modeling.models import Gaussian1D
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Legend
@@ -92,20 +92,25 @@ from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session, engine
-from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
+from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, ON_GITHUB_ACTIONS, ON_READTHEDOCS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, save_png
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.dark_current import *  # noqa: E402 (module level import not at top of file)
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -135,7 +140,7 @@ class Dark():
     output_dir : str
         Path into which outputs will be placed
 
-    data_dir : str
+    working_dir : str
         Path into which new dark files will be copied to be worked on
 
     query_start : float
@@ -229,11 +234,12 @@ class Dark():
                  'obs_end_time': observation_end_time,
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
-                 'entry_date': datetime.datetime.now()}
-        with engine.begin() as connection:
-            connection.execute(self.pixel_table.__table__.insert(), entry)
+                 'entry_date': datetime.datetime.now(datetime.timezone.utc)}
+        entry = self.pixel_table(**entry)
+        entry.save()
 
-    def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None):
+    def create_mean_slope_figure(self, image, num_files, hotxy=None, deadxy=None, noisyxy=None, baseline_file=None,
+                                 min_time='', max_time=''):
         """Create and save a png containing the mean dark slope image,
         to be displayed in the web app
 
@@ -257,10 +263,17 @@ class Dark():
         baseline_file : str
             Name of fits file containing the mean slope image to which ``image`` was compared
             when looking for new hot/dead/noisy pixels
+
+        min_time : str
+            Earliest observation time, in MJD, used in the creation of ``image``.
+
+        max_time : str
+            Latest observation time, in MJD, used in the creation of ``image``.
+
         """
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.png'.format(self.instrument.lower(),
                                                                        self.aperture.lower(),
-                                                                       self.query_start, self.query_end)
+                                                                       min_time, max_time)
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
 
@@ -274,8 +287,8 @@ class Dark():
             img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
 
             # Create figure
-            start_time = Time(float(self.query_start), format='mjd').tt.datetime.strftime("%m/%d/%Y")
-            end_time = Time(float(self.query_end), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            start_time = Time(float(min_time), format='mjd').tt.datetime.strftime("%m/%d/%Y")
+            end_time = Time(float(max_time), format='mjd').tt.datetime.strftime("%m/%d/%Y")
 
             self.plot = figure(title=f'{self.aperture}: {num_files} files. {start_time} to {end_time}', tools='')
             #                   tools='pan,box_zoom,reset,wheel_zoom,save')
@@ -403,14 +416,15 @@ class Dark():
             raise ValueError('Unrecognized bad pixel type: {}'.format(pixel_type))
 
         logging.info("\t\tRunning database query")
-        db_entries = session.query(self.pixel_table) \
-            .filter(self.pixel_table.type == pixel_type) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
+
+        filters = {"type__iexact": pixel_type,
+                   "detector__iexact": self.detector
+                   }
+        records = self.pixel_table.objects.filter(**filters).all()
 
         already_found = []
-        if len(db_entries) != 0:
-            for _row in db_entries:
+        if records is not None:
+            for _row in records:
                 x_coords = _row.x_coord
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
@@ -432,13 +446,28 @@ class Dark():
                 new_pixels_y.append(y)
 
         logging.info("\t\tKeeping {} {} pixels".format(len(new_pixels_x), pixel_type))
-#             pixel = (x, y)
-#             if pixel not in already_found:
-#                 new_pixels_x.append(x)
-#                 new_pixels_y.append(y)
 
-        session.close()
         return (new_pixels_x, new_pixels_y)
+
+    def exclude_too_few_groups(self, result_list):
+        """Given a list of mast query results, go through and exlclude
+        files that have too few groups to be useful
+
+        Parameters
+        ----------
+        result_list : list
+            List of dictionaries containing a MAST query result
+
+        Returns
+        -------
+        filtered_results : list
+            List of dictionaries with files containing too few groups excluded
+        """
+        filtered_results = []
+        for result in result_list:
+            if result['ngroups'] >= MINIMUM_DARK_CURRENT_GROUPS:
+                filtered_results.append(result)
+        return filtered_results
 
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Create the ratio of the slope image to a baseline slope
@@ -496,29 +525,15 @@ class Dark():
         filename : str
             Name of fits file containing the baseline image
         """
-
-        subq = session.query(self.pixel_table.detector,
-                             func.max(self.pixel_table.entry_date).label('maxdate')
-                             ).group_by(self.pixel_table.detector).subquery('t2')
-
-        query = session.query(self.pixel_table).join(
-            subq,
-            and_(
-                self.pixel_table.detector == self.detector,
-                self.pixel_table.entry_date == subq.c.maxdate
-            )
-        )
-
-        count = query.count()
-        if not count:
-            filename = None
-        else:
-            filename = query.all()[0].baseline_file
+        record = self.pixel_table.objects.filter(detector__iexact=self.detector).order_by("-obs_end_time").first()
+        if record is not None:
+            filename = record.baseline_file
             # Specify the full path
-            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
+            filename = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
+        else:
+            filename = None
 
-        session.close()
         return filename
 
     def identify_tables(self):
@@ -527,9 +542,9 @@ class Dark():
         """
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
-        self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
+        self.query_table = eval(f'{mixed_case_name}DarkQueryHistory')
+        self.pixel_table = eval(f'{mixed_case_name}DarkPixelStats')
+        self.stats_table = eval(f'{mixed_case_name}DarkDarkCurrent')
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -542,23 +557,18 @@ class Dark():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
-                                                       self.query_table.readpattern == self.readpatt). \
-                filter(self.query_table.run_monitor == True)  # noqa: E348 (comparison to true)
+        filters = {"aperture__iexact": self.aperture,
+                   "readpattern__iexact": self.readpatt,
+                   "run_monitor": True}
+        record = self.query_table.objects.filter(**filters).order_by("-end_time_mjd").first()
 
-        dates = np.zeros(0)
-        for instance in query:
-            dates = np.append(dates, instance.end_time_mjd)
-
-        query_count = len(dates)
-        if query_count == 0:
+        if record is None:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.readpatt, query_result)))
         else:
-            query_result = np.max(dates)
+            query_result = record.end_time_mjd
 
-        session.close()
         return query_result
 
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
@@ -646,7 +656,8 @@ class Dark():
 
         # Overplot the bad pixel locations
         badpixplots[pix_type] = self.plot.circle(x=f'pixels_x', y=f'pixels_y',
-                                                 source=sources[pix_type], color=colors[pix_type])
+                                                 source=sources[pix_type], color=colors[pix_type], radius=0.5,
+                                                 radius_dimension='y', radius_units='data')
 
         # Add to the legend
         if numpix > 0:
@@ -675,16 +686,21 @@ class Dark():
         # Basic metadata that will be needed later
         self.get_metadata(file_list[0])
 
+        # For MIRI, save the rateints files. For other instruments save the rate files.
+        if self.instrument == 'miri':
+            output_suffix = 'rateints'
+        else:
+            output_suffix = 'rate'
+
         # Run pipeline steps on files, generating slope files
         pipeline_files = []
         slope_files = []
         for filename in file_list:
+            logging.info(f'\tWorking on file: {filename}')
 
-            logging.info('\tWorking on file: {}'.format(filename))
-
-            rate_file = filename.replace("dark", "rate")
+            rate_file = filename.replace("dark", output_suffix)
             rate_file_name = os.path.basename(rate_file)
-            local_rate_file = os.path.join(self.data_dir, rate_file_name)
+            local_rate_file = os.path.join(self.working_data_dir, rate_file_name)
 
             if os.path.isfile(local_rate_file):
                 logging.info("\t\tFile {} exists, skipping pipeline".format(local_rate_file))
@@ -697,15 +713,16 @@ class Dark():
         step_args = {'dark_current': {'skip': True}}
 
         # Call the pipeline
-        outputs = run_parallel_pipeline(pipeline_files, "dark", ["rate"], self.instrument, step_args=step_args)
+        outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
+
         for filename in file_list:
-            processed_file = filename.replace("_dark", "_rate")
+            processed_file = filename.replace("_dark", f"_{output_suffix}")
             if processed_file not in slope_files and os.path.isfile(processed_file):
                 slope_files.append(processed_file)
                 os.remove(filename)
 
         obs_times = []
-        logging.info('\tSlope images to use in the dark monitor for {}, {}:'.format(self.instrument, self.aperture))
+        logging.info(f'\tSlope images to use in the dark monitor for {self.instrument}, {self.aperture}:')
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
             # Get the observation time for each file
@@ -719,13 +736,23 @@ class Dark():
         mid_time = instrument_properties.mean_time(obs_times)
 
         try:
-
-            # Read in all slope images and place into a list
-            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
+            # Read in all slope images and create a stack of ints (from rateints files)
+            # or mean ints (from rate files)
+            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files, skipped_initial_ints=self.skipped_initial_ints)
+            logging.info(f'Shape of slope image stack: {slope_image_stack.shape}')
 
             # Calculate a mean slope image from the inputs
             slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
-            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
+
+            # Use the min and max observation time of the input files to create the slope file name
+            min_time_str = min_time.strftime('%Y-%m-%dT%H:%m:%S')
+            min_time_mjd = Time(min_time_str, format='isot', scale='utc').mjd
+            min_time_mjd_trunc = "{:.4f}".format(min_time_mjd)
+            max_time_str = max_time.strftime('%Y-%m-%dT%H:%m:%S')
+            max_time_mjd = Time(max_time_str, format='isot', scale='utc').mjd
+            max_time_mjd_trunc = "{:.4f}".format(max_time_mjd)
+            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files,
+                                                         min_time_mjd_trunc, max_time_mjd_trunc)
 
             # Free up memory
             del slope_image_stack
@@ -753,7 +780,15 @@ class Dark():
                     baseline_stdev = deepcopy(stdev_image)
                 else:
                     logging.info('\tBaseline file is {}'.format(baseline_file))
-                    baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
+
+                    if not os.path.isfile(baseline_file):
+                        logging.warning((f'\tBaseline file {baseline_file} does not exist. Setting '
+                                         'the current mean slope image to be the new baseline.'))
+                        baseline_file = mean_slope_file
+                        baseline_mean = deepcopy(slope_image)
+                        baseline_stdev = deepcopy(stdev_image)
+                    else:
+                        baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
                 # Check the hot/dead pixel population for changes
                 logging.info("\tFinding new hot/dead pixels")
@@ -796,10 +831,10 @@ class Dark():
                 logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
                 self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-            logging.info("Creating Mean Slope Image")
             # Create png file of mean slope image. Add bad pixels only for full frame apertures
             self.create_mean_slope_figure(slope_image, len(slope_files), hotxy=new_hot_pix, deadxy=new_dead_pix,
-                                          noisyxy=new_noisy_pixels, baseline_file=baseline_file)
+                                          noisyxy=new_noisy_pixels, baseline_file=baseline_file,
+                                          min_time=min_time_mjd_trunc, max_time=max_time_mjd_trunc)
             logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
             # ----- Calculate image statistics -----
@@ -814,7 +849,7 @@ class Dark():
                 histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
             # Remove the input files in order to save disk space
-            files_to_remove = glob(f'{self.data_dir}/*fits')
+            files_to_remove = glob(f'{self.working_data_dir}/*fits')
             for filename in files_to_remove:
                 os.remove(filename)
 
@@ -825,7 +860,10 @@ class Dark():
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]
         for key in amp_mean.keys():
-            dark_db_entry = {'aperture': self.aperture, 'amplifier': key, 'mean': amp_mean[key],
+            dark_db_entry = {'aperture': self.aperture,
+                             'amplifier': key,
+                             'readpattern': self.readpatt,
+                             'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
                              'source_files': source_files,
                              'obs_start_time': min_time,
@@ -843,12 +881,12 @@ class Dark():
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
                              'mean_dark_image_file': os.path.basename(mean_slope_file),
-                             'hist_dark_values': bins[key],
-                             'hist_amplitudes': histogram[key],
-                             'entry_date': datetime.datetime.now()
+                             'hist_dark_values': list(bins[key]),
+                             'hist_amplitudes': list(histogram[key]),
+                             'entry_date': datetime.datetime.now(datetime.timezone.utc)
                              }
-            with engine.begin() as connection:
-                connection.execute(self.stats_table.__table__.insert(), dark_db_entry)
+            entry = self.stats_table(**dark_db_entry)
+            entry.save()
 
     def read_baseline_slope_image(self, filename):
         """Read in a baseline mean slope image and associated standard
@@ -888,8 +926,8 @@ class Dark():
 
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
-        # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
+        # Get the working directory
+        self.working_dir = os.path.join(get_config()['working'], 'dark_monitor')
 
         # Read in config file that defines the thresholds for the number
         # of dark files that must be present in order for the monitor to run
@@ -901,117 +939,137 @@ class Dark():
         # Loop over all instruments
         for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
+            logging.info(f'\n\nWorking on {instrument}')
 
             # Identify which database tables to use
             self.identify_tables()
 
-            # Get a list of all possible apertures from pysiaf
-            possible_apertures = list(Siaf(instrument).apernames)
-            possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
+            # Run the monitor only on the apertures listed in the threshold file. Skip all others.
+            instrument_entries = limits['Instrument'] == instrument
+            possible_apertures = limits['Aperture'][instrument_entries]
 
             # Get a list of all possible readout patterns associated with the aperture
             possible_readpatts = RAPID_READPATTERNS[instrument]
 
             for aperture in possible_apertures:
                 logging.info('')
-                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                logging.info(f'Working on aperture {aperture} in {instrument}')
 
                 # Find appropriate threshold for the number of new files needed
                 match = aperture == limits['Aperture']
-
-                # If the aperture is not listed in the threshold file, we need
-                # a default
-                if not np.any(match):
-                    file_count_threshold = 30
-                    logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
-                                     'with the default threshold of 30 files.'.format(aperture)))
-                else:
-                    file_count_threshold = limits['Threshold'][match][0]
+                integration_count_threshold = limits['Threshold'][match][0]
+                self.skipped_initial_ints = limits['N_skipped_integs'][match][0]
                 self.aperture = aperture
 
-                # We need a separate search for each readout pattern
                 for readpatt in possible_readpatts:
                     self.readpatt = readpatt
-                    logging.info('\tWorking on readout pattern: {}'.format(self.readpatt))
+                    logging.info(f'\tWorking on readout pattern: {self.readpatt}')
 
                     # Locate the record of the most recent MAST search
                     self.query_start = self.most_recent_search()
-                    logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+
+                    logging.info(f'\tQuery times: {self.query_start} {self.query_end}')
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
-                    new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+                    new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start,
+                                                                 self.query_end, readpatt=self.readpatt)
 
                     # Exclude ASIC tuning data
                     len_new_darks = len(new_entries)
                     new_entries = monitor_utils.exclude_asic_tuning(new_entries)
                     len_no_asic = len(new_entries)
                     num_asic = len_new_darks - len_no_asic
-                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
 
-                    logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
-                                                                                           len(new_entries)))
+                    # Exclude files that don't have enough groups to be useful
+                    new_entries = self.exclude_too_few_groups(new_entries)
+                    len_new_darks = len(new_entries)
 
-                    # Check to see if there are enough new files to meet the
-                    # monitor's signal-to-noise requirements
-                    if len(new_entries) >= file_count_threshold:
-                        logging.info('\tMAST query has returned sufficient new dark files for {}, {}, {} to run the dark monitor.'
-                                     .format(self.instrument, self.aperture, self.readpatt))
+                    logging.info(f'\tAperture: {self.aperture}, Readpattern: {self.readpatt}, new entries: {len(new_entries)}')
 
-                        # Get full paths to the files
-                        new_filenames = []
-                        for file_entry in new_entries:
-                            try:
-                                new_filenames.append(filesystem_path(file_entry['filename']))
-                            except FileNotFoundError:
-                                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                                .format(file_entry['filename']))
+                    # Get full paths to the files
+                    new_filenames = []
+                    for file_entry in new_entries:
+                        try:
+                            new_filenames.append(filesystem_path(file_entry['filename']))
+                        except FileNotFoundError:
+                            logging.warning((f"\t\tUnable to locate {file_entry['filename']} in filesystem. "
+                                             "Not including in processing."))
 
-                        # In some (unusual) cases, there are files in MAST with the correct aperture name
-                        # but incorrect array sizes. Make sure that the new files all have the expected
-                        # aperture size
-                        temp_filenames = []
-                        bad_size_filenames = []
-                        expected_ap = Siaf(instrument)[aperture]
-                        expected_xsize = expected_ap.XSciSize
-                        expected_ysize = expected_ap.YSciSize
-                        for new_file in new_filenames:
-                            with fits.open(new_file) as hdulist:
-                                xsize = hdulist[0].header['SUBSIZE1']
-                                ysize = hdulist[0].header['SUBSIZE2']
-                            if xsize == expected_xsize and ysize == expected_ysize:
-                                temp_filenames.append(new_file)
-                            else:
-                                bad_size_filenames.append(new_file)
-                        if len(temp_filenames) != len(new_filenames):
-                            logging.info('\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
-                            for badfile in bad_size_filenames:
-                                logging.info('\t\t{}'.format(badfile))
-                        new_filenames = deepcopy(temp_filenames)
-
-                        # If it turns out that the monitor doesn't find enough
-                        # of the files returned by the MAST query to meet the threshold,
-                        # then the monitor will not be run
-                        if len(new_filenames) < file_count_threshold:
-                            logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
-                                          "This is less than the required minimum number of files ({}) necessary to run "
-                                          "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
-                            monitor_run = False
+                    # Generate a count of the total number of integrations across the files. This number will
+                    # be compared to the threshold value to determine if the monitor is run.
+                    # Also, in some (unusual) cases, there are files in MAST with the correct aperture name
+                    # but incorrect array sizes. Make sure that the new files all have the expected
+                    # aperture size
+                    total_integrations = 0
+                    integrations = []
+                    starting_times = []
+                    ending_times = []
+                    temp_filenames = []
+                    bad_size_filenames = []
+                    expected_ap = Siaf(instrument)[aperture]
+                    expected_xsize = expected_ap.XSciSize
+                    expected_ysize = expected_ap.YSciSize
+                    for new_file in new_filenames:
+                        with fits.open(new_file) as hdulist:
+                            xsize = hdulist[0].header['SUBSIZE1']
+                            ysize = hdulist[0].header['SUBSIZE2']
+                            nints = hdulist[0].header['NINTS']
+                        # If the array size matches expectataions, or if Siaf doesn't give an expected size, then
+                        # keep the file. Also, make sure there is at leasat one integration, after ignoring any user-input
+                        # number of integrations.
+                        keep_ints = int(nints) - self.skipped_initial_ints
+                        if ((keep_ints > 0) and ((xsize == expected_xsize and ysize == expected_ysize)
+                                                 or expected_xsize is None or expected_ysize is None)):
+                            temp_filenames.append(new_file)
+                            total_integrations += int(nints)
+                            integrations.append(int(nints) - self.skipped_initial_ints)
+                            starting_times.append(hdulist[0].header['EXPSTART'])
+                            ending_times.append(hdulist[0].header['EXPEND'])
                         else:
-                            logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
-                                         .format(len(new_filenames)))
-                            monitor_run = True
+                            bad_size_filenames.append(new_file)
+                            logging.info((f'\t\t{new_file} has unexpected aperture size. Expecting '
+                                          f'{expected_xsize}x{expected_ysize}. Got {xsize}x{ysize}'))
 
-                        if monitor_run:
-                            # Set up directories for the copied data
-                            ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                            self.data_dir = os.path.join(self.output_dir,
-                                                         'data/{}_{}'.format(self.instrument.lower(),
-                                                                             self.aperture.lower()))
-                            ensure_dir_exists(self.data_dir)
+                    if len(temp_filenames) != len(new_filenames):
+                        logging.info(('\t\tSome files returned by MAST have unexpected aperture sizes. These files '
+                                      'will be ignored: '))
+                        for badfile in bad_size_filenames:
+                            logging.info('\t\t\t{}'.format(badfile))
+                    new_filenames = deepcopy(temp_filenames)
 
+                    # Check to see if there are enough new integrations to meet the
+                    # monitor's signal-to-noise requirements
+                    if len(new_filenames) > 0:
+                        logging.info((f'\t\tFilesystem search for new dark integrations for {self.instrument}, {self.aperture}, '
+                                      f'{self.readpatt} has found {total_integrations} integrations spread '
+                                      f'across {len(new_filenames)} files.'))
+                    if total_integrations >= integration_count_threshold:
+                        logging.info(f'\tThis meets the threshold of {integration_count_threshold} integrations.')
+                        monitor_run = True
+
+                        # Set up directories for the copied data
+                        ensure_dir_exists(os.path.join(self.working_dir, 'data'))
+                        self.working_data_dir = os.path.join(self.working_dir,
+                                                             'data/{}_{}'.format(self.instrument.lower(),
+                                                                                 self.aperture.lower()))
+                        ensure_dir_exists(self.working_data_dir)
+
+                        # Split the list of good files into sub-lists based on the integration
+                        # threshold. The monitor will then be run on each sub-list independently,
+                        # in order to produce results with roughly the same signal-to-noise. This
+                        # also prevents the monitor running on a huge chunk of files in the case
+                        # where it hasn't been run in a while and data have piled up in the meantime.
+                        self.split_files_into_sub_lists(new_filenames, starting_times, ending_times,
+                                                        integrations, integration_count_threshold)
+
+                        # Run the monitor once on each list
+                        for new_file_list, batch_start_time, batch_end_time, batch_integrations in zip(self.file_batches,
+                                                                                                       self.start_time_batches,
+                                                                                                       self.end_time_batches,
+                                                                                                       self.integration_batches):
                             # Copy files from filesystem
-                            dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+                            dark_files, not_copied = copy_files(new_file_list, self.working_data_dir)
 
                             # Check that there were no problems with the file copying. If any of the copied
                             # files have different sizes between the MAST filesystem and the JWQL filesystem,
@@ -1020,43 +1078,71 @@ class Dark():
                                 copied_size = os.stat(dark_file).st_size
                                 orig_size = os.stat(filesystem_path(os.path.basename(dark_file))).st_size
                                 if orig_size != copied_size:
-                                    logging.info(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem.")
-                                    logging.info(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
+                                    logging.error(f"\tProblem copying {os.path.basename(dark_file)} from the filesystem!")
+                                    logging.error(f"Size in filesystem: {orig_size}, size of copy: {copied_size}. Skipping file.")
                                     not_copied.append(dark_file)
                                     dark_files.remove(dark_file)
                                     os.remove(dark_file)
 
-                            logging.info('\tNew_filenames: {}'.format(new_filenames))
-                            logging.info('\tData dir: {}'.format(self.data_dir))
-                            logging.info('\tCopied to working dir: {}'.format(dark_files))
+                            logging.info('\tNew_filenames: {}'.format(new_file_list))
+                            logging.info('\tData dir: {}'.format(self.working_data_dir))
+                            logging.info('\tCopied to data dir: {}'.format(dark_files))
                             logging.info('\tNot copied: {}'.format(not_copied))
 
-                            # Run the dark monitor
-                            self.process(dark_files)
+                            # Get the starting and ending time of the files in this monitor run
+                            batch_start_time = np.min(np.array(batch_start_time))
+                            batch_end_time = np.max(np.array(batch_end_time))
+
+                            if len(dark_files) > 0:
+                                # Run the dark monitor
+                                logging.info(f'\tRunning process for {instrument}, {aperture}, {readpatt} with:')
+                                for dkfile in dark_files:
+                                    logging.info(f'\t{dkfile}')
+                                self.process(dark_files)
+                            else:
+                                logging.info('\tNo files remaining to process. Skipping monitor.')
+                                monitor_run = False
+
+                            # Update the query history once for each group of files
+                            new_entry = {'instrument': instrument,
+                                         'aperture': aperture,
+                                         'readpattern': self.readpatt,
+                                         'start_time_mjd': batch_start_time,
+                                         'end_time_mjd': batch_end_time,
+                                         'files_found': len(dark_files),
+                                         'run_monitor': monitor_run,
+                                         'entry_date': datetime.datetime.now(datetime.timezone.utc)}
+
+                            entry = self.query_table(**new_entry)
+                            entry.save()
+                            logging.info('\tUpdated the query history table')
+                            logging.info('NEW ENTRY: ')
+                            logging.info(new_entry)
 
                     else:
-                        logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                     '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                     .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                        logging.info((f'\tThis is below the threshold of {integration_count_threshold} '
+                                      'integrations. Monitor not run.'))
                         monitor_run = False
 
-                    # Update the query history
-                    new_entry = {'instrument': instrument,
-                                 'aperture': aperture,
-                                 'readpattern': self.readpatt,
-                                 'start_time_mjd': self.query_start,
-                                 'end_time_mjd': self.query_end,
-                                 'files_found': len(new_entries),
-                                 'run_monitor': monitor_run,
-                                 'entry_date': datetime.datetime.now()}
-                    with engine.begin() as connection:
-                        connection.execute(
-                            self.query_table.__table__.insert(), new_entry)
-                    logging.info('\tUpdated the query history table')
+                        # Update the query history
+                        new_entry = {'instrument': instrument,
+                                     'aperture': aperture,
+                                     'readpattern': self.readpatt,
+                                     'start_time_mjd': self.query_start,
+                                     'end_time_mjd': self.query_end,
+                                     'files_found': len(new_entries),
+                                     'run_monitor': monitor_run,
+                                     'entry_date': datetime.datetime.now(datetime.timezone.utc)}
+
+                        entry = self.query_table(**new_entry)
+                        entry.save()
+                        logging.info('\tUpdated the query history table')
+                        logging.info('NEW ENTRY: ')
+                        logging.info(new_entry)
 
         logging.info('Dark Monitor completed successfully.')
 
-    def save_mean_slope_image(self, slope_img, stdev_img, files):
+    def save_mean_slope_image(self, slope_img, stdev_img, files, min_time, max_time):
         """Save the mean slope image and associated stdev image to a
         file
 
@@ -1072,6 +1158,12 @@ class Dark():
         files : list
             List of input files used to construct the mean slope image
 
+        min_time : str
+            Earliest observation time, in MJD, corresponding to ``files``.
+
+        max_time : str
+            Latest observation time, in MJD, corresponding to ``files``.
+
         Returns
         -------
         output_filename : str
@@ -1080,7 +1172,7 @@ class Dark():
 
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
-                                                                        self.query_start, self.query_end)
+                                                                        min_time, max_time)
 
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
@@ -1092,6 +1184,8 @@ class Dark():
         primary_hdu.header['APERTURE'] = (self.aperture, 'Aperture name')
         primary_hdu.header['QRY_STRT'] = (self.query_start, 'MAST Query start time (MJD)')
         primary_hdu.header['QRY_END'] = (self.query_end, 'MAST Query end time (MJD)')
+        primary_hdu.header['MIN_TIME'] = (min_time, 'Beginning obs time (MJD)')
+        primary_hdu.header['MAX_TIME'] = (max_time, 'Ending obs time (MJD)')
 
         files_string = 'FILES USED: '
         for filename in files:
@@ -1127,6 +1221,202 @@ class Dark():
         y += self.y0
 
         return (x, y)
+
+    def split_files_into_sub_lists(self, files, start_times, end_times, integration_list, threshold):
+        """Given a list of filenames and a list of the number of integrations
+        within each, split the files into sub-lists, where the files in each
+        list have a total number of integrations that is just over the given
+        threshold value.
+
+        General assumption: Keeping files in different epochs separate is probably more
+        important than rigidly enforcing that the required number of integrations is reached.
+
+        When dividing up the input files into separate lists, we first divide up by
+        epoch, where the start/end of epochs are defined as times where
+        DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME days pass without any new data appearing.
+        Each epoch is then potentially subdivided further based on the threshold number
+        of integrations (not exposures). The splitting does not operate within files.
+        For example, if the threshold is 2 integrations, and a particular file contains 5
+        integrations, then the dark monitor will be called once on that file, working on
+        all 5 integrations.
+
+        At the end of the epoch, if the final group of file(s) do not have enough
+        integrations to reach the threshold, they are ignored since there is no way
+        to know if there are more files in the same epoch that have not yet been taken. So
+        the files are ignored, and the query end time will be adjusted such that these files
+        will be found in the next run of the monitor.
+
+        Dark calibration plans per instrument:
+        NIRCam - for full frame, takes only 2 integrations (150 groups) once per ~30-50 days.
+                 for subarrays, takes 5-10 integrations once per 30-50 days
+            team response -
+        NIRISS - full frame - 2 exps of 5 ints within each 2 week period. No requirement for
+                            the 2 exps to be taken at the same time though. Could be separated
+                            by almost 2 weeks, and be closer to the darks from the previous or
+                            following 2 week period.
+                subarrays - 30 ints in each month-long span
+        MIRI - 2 ints every 2 hours-5 days for a while, then 2 ints every 14-21 days
+            team response - monitor should run on each exp separately. It should also throw out
+                            the first integration of each exp.
+
+        NIRSpec - full frame 5-6 integrations spread over each month
+                  subarray - 12 ints spread over each 2 month period
+        FGS - N/A
+
+        Parameters
+        ----------
+        files : list
+            List of filenames
+
+        integration_list : list
+            List of integers describing how many integrations are in each file
+
+        start_times : list
+            List of MJD dates corresponding to the exposure start time of each file in ``files``
+
+        end_times : list
+            List of MJD dates corresponding to the exposures end time of each file in ``files``
+
+        integration_list : list
+            List of the number of integrations for each file in ``files``
+
+        threshold : int
+            Threshold number of integrations needed to trigger a run of the
+            dark monitor
+        """
+
+        logging.info('\t\tSplitting into sub-lists. Inputs at the beginning: (file, start time, end time, nints, threshold)')
+        for f, st, et, inte in zip(files, start_times, end_times, integration_list):
+            logging.info(f'\t\t {f}, {st}, {et}, {inte}, {threshold}')
+        logging.info('\n')
+
+        # Eventual return parameters
+        self.file_batches = []
+        self.start_time_batches = []
+        self.end_time_batches = []
+        self.integration_batches = []
+
+        # Add the current time onto the end of start_times
+        start_times = np.array(start_times)
+
+        # Get the delta t between each pair of files. Insert 0 as the initial
+        # delta_t, to make the coding easier
+        delta_t = start_times[1:] - start_times[0:-1]  # units are days
+        delta_t = np.insert(delta_t, 0, 0)
+
+        # Divide up the list such that you don't cross large delta t values. We want to measure
+        # dark current during each "epoch" within a calibration proposal
+        dividers = np.where(delta_t >= DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME[self.instrument])[0]
+
+        # Add dividers at the beginning index to make the coding easier
+        dividers = np.insert(dividers, 0, 0)
+
+        # If there is no divider at the end of the list of files, then add one
+        if dividers[-1] < len(delta_t):
+            dividers = np.insert(dividers, len(dividers), len(delta_t))
+
+        logging.info(f'\t\t\tThreshold delta time used to divide epochs: {DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME[self.instrument]} days')
+        logging.info(f'\t\t\tdelta_t between files: {delta_t} days.')
+        logging.info(f'\t\t\tFinal dividers (divide data based on time gaps between files): {dividers}')
+        logging.info('\n')
+
+        # Loop over epochs.
+        # Within each batch, divide up the exposures into multiple batches if the total
+        # number of integrations are above 2*threshold.
+        for i in range(len(dividers) - 1):
+            batch_ints = integration_list[dividers[i]:dividers[i + 1]]
+            batch_files = files[dividers[i]:dividers[i + 1]]
+            batch_start_times = start_times[dividers[i]:dividers[i + 1]]
+            batch_end_times = end_times[dividers[i]:dividers[i + 1]]
+            batch_int_sum = np.sum(batch_ints)
+
+            logging.info(f'\t\t\tLoop over time-based batches. Working on batch {i}')
+            logging.info(f'\t\t\tBatch Files, Batch integrations')
+            for bi, bf in zip(batch_ints, batch_files):
+                logging.info(f'\t\t\t{bf}, {bi}')
+
+            # Calculate the total number of integrations up to each file
+            batch_int_sums = np.array([np.sum(batch_ints[0:jj]) for jj in range(1, len(batch_ints) + 1)])
+
+            base = 0
+            startidx = 0
+            endidx = 0
+            complete = False
+
+            # Divide into sublists
+            while True:
+
+                endidx = np.where(batch_int_sums >= (base + threshold))[0]
+
+                # Check if we reach the end of the file list
+                if len(endidx) == 0:
+                    endidx = len(batch_int_sums) - 1
+                    complete = True
+                else:
+                    endidx = endidx[0]
+                    if endidx == (len(batch_int_sums) - 1):
+                        complete = True
+
+                logging.debug(f'\t\t\tstartidx: {startidx}')
+                logging.debug(f'\t\t\tendidx: {endidx}')
+                logging.debug(f'\t\t\tcomplete: {complete}')
+
+                subgroup_ints = batch_ints[startidx: endidx + 1]
+                subgroup_files = batch_files[startidx: endidx + 1]
+                subgroup_start_times = batch_start_times[startidx: endidx + 1]
+                subgroup_end_times = batch_end_times[startidx: endidx + 1]
+                subgroup_int_sum = np.sum(subgroup_ints)
+
+                logging.debug(f'\t\t\tsubgroup_ints: {subgroup_ints}')
+                logging.debug(f'\t\t\tsubgroup_files: {subgroup_files}')
+                logging.debug(f'\t\t\tsubgroup_int_sum: {subgroup_int_sum}')
+
+                # Add to output lists. The exception is if we are in the
+                # final subgroup of the final epoch. In that case, we don't know
+                # if more data are coming soon that may be able to be combined. So
+                # in that case, we ignore the files for this run of the monitor.
+                if (i == len(dividers) - 2) and endidx == len(batch_files) - 1:
+                    # Here we are in the final subgroup of the final epoch, where we
+                    # do not necessarily know if there will be future data to combine
+                    # with these data
+                    logging.debug(f'\t\t\tShould be final epoch and final subgroup. epoch number: {i}')
+
+                    if np.sum(subgroup_ints) >= threshold:
+                        logging.debug('\t\t\tADDED - final subgroup of final epoch')
+                        self.file_batches.append(subgroup_files)
+                        self.start_time_batches.append(subgroup_start_times)
+                        self.end_time_batches.append(subgroup_end_times)
+                        self.integration_batches.append(subgroup_ints)
+                    else:
+                        # Here the final subgroup does not have enough integrations to reach the threshold
+                        # and we're not sure if the epoch is complete, so we skip these files and save them
+                        # for a future dark monitor run
+                        logging.info('\t\t\tSkipping final subgroup. Not clear if the epoch is complete')
+                        pass
+
+                else:
+                    self.file_batches.append(subgroup_files)
+                    self.start_time_batches.append(subgroup_start_times)
+                    self.end_time_batches.append(subgroup_end_times)
+                    self.integration_batches.append(subgroup_ints)
+
+                if not complete:
+                    startidx = deepcopy(endidx + 1)
+                    base = batch_int_sums[endidx]
+                else:
+                    # If we reach the end of the list before the expected number of
+                    # subgroups, then we quit.
+                    break
+
+            logging.info(f'\n\t\t\tEpoch number: {i}')
+            logging.info('\t\t\tFiles, integrations in file batch:')
+            for bi, bf in zip(batch_ints, batch_files):
+                logging.info(f'\t\t\t{bf}, {bi}')
+            logging.info(f'\n\t\t\tSplit into separate subgroups for processing:')
+            logging.info('\t\t\tFiles and number of integrations in each subgroup:')
+            for fb, ib in zip(self.file_batches, self.integration_batches):
+                logging.info(f'\t\t\t{fb}, {ib}')
+            logging.info(f'\t\t\tDONE WITH SUBGROUPS\n\n\n\n')
 
     def stats_by_amp(self, image, amps):
         """Calculate statistics in the input image for each amplifier as
@@ -1203,7 +1493,7 @@ class Dark():
                     maxx = copy(mxx)
                 if mxy > maxy:
                     maxy = copy(mxy)
-            amps['5'] = [(0, maxx, 1), (0, maxy, 1)]
+            amps['5'] = [(4, maxx, 1), (4, maxy, 1)]
             logging.info(('\tFull frame exposure detected. Adding the full frame to the list '
                           'of amplifiers upon which to calculate statistics.'))
 
@@ -1241,7 +1531,7 @@ class Dark():
             amplitude, peak, width = calculations.gaussian1d_fit(bin_centers, hist, initial_params)
             gaussian_params[key] = [amplitude, peak, width]
 
-            gauss_fit_model = models.Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
+            gauss_fit_model = Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
             gauss_fit = gauss_fit_model(bin_centers)
 
             positive = hist > 0

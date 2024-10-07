@@ -310,10 +310,46 @@ function determine_page_title_obs(instrument, proposal, observation) {
     }
 }
 
+
+/**
+ * Populate a user provided html table from a dictionary
+ * @param {Object} dictionary - Python style dictionary
+ * @param {String} table_name - The table name in that will be updated
+ * @param {Integer} nr_paired_columns - How many paired columns per row.  One "paired column" is 2 columns (1 key, 1 value)
+ */
+function make_table_from_dict(dictionary, table_name, nr_paired_columns) {
+    var tableBody = document.getElementById(table_name);
+    // Extract keys and values from the dictionary
+    var keys = Object.keys(dictionary);
+    var values = Object.values(dictionary);
+
+    // Determine the maximum length of keys and values
+    //var maxLength = Math.max(keys.length, values.length);
+    var maxLength = keys.length
+
+    // Populate the table dynamically
+    // Create a row with dynamic amount of paired_columns (Key Column with Value Column)
+    var table_index = 0
+    for (var i = 0; i < maxLength; i+=nr_paired_columns) {
+        var row = document.createElement("tr");
+        var row = tableBody.insertRow(i/nr_paired_columns)
+        // Fill cells in as pairs
+        for (var columnx = 0; columnx < nr_paired_columns*2; columnx+=2){
+            var key_cell = row.insertCell(columnx)
+            var value_cell = row.insertCell(columnx + 1)
+            key_cell.textContent = i < keys.length ? keys[table_index]+':' : "";
+            value_cell.textContent = i < keys.length ? values[table_index] : "";
+            table_index++
+        }
+        tableBody.appendChild(row);
+    }
+    return tableBody;
+}
+
 /**
  * adds/removes disabled_section class and clears value
- * @param {string} element_id 
- * @param {boolean} set_disable 
+ * @param {string} element_id
+ * @param {boolean} set_disable
  */
  function set_disabled_section (element_id, set_disable) {
 
@@ -331,7 +367,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  *                              values are the number of groups for that suffix
  */
 function explore_image_update_enable_options(integrations, groups) {
-    
+
     // Check nr of integrations and groups of currently selected extension
     var ext_name = get_radio_button_value("extension");
 
@@ -343,7 +379,7 @@ function explore_image_update_enable_options(integrations, groups) {
     groups = groups.replace(/&#39;/g, '"');
     groups = groups.replace(/'/g, '"');
     groups = JSON.parse(groups)[ext_name];
-    
+
     // Zero base our calculations
     integrations -= 1
     groups -=1
@@ -353,15 +389,15 @@ function explore_image_update_enable_options(integrations, groups) {
     document.getElementById("integration2").max = integrations;
     document.getElementById("group1").max = groups;
     document.getElementById("group2").max = groups;
-    
-    
+
+
     // If multiple integrations or groups.  Allow difference calculations
     //          enable calculate_difference box
     //          enable subtrahend boxes
     if (integrations > 0 || groups > 0) {
         set_disabled_section("calcDifferenceForm", false);
         calc_difference = document.getElementById("calcDifference").checked;
-        
+
     } else {
         document.getElementById("calcDifference").checked.value = false;
         set_disabled_section("calcDifferenceForm", true);
@@ -384,7 +420,7 @@ function explore_image_update_enable_options(integrations, groups) {
     set_disabled_section("groupInput1", (groups < 1));
     set_disabled_section("integrationInput2", (!calc_difference || integrations < 1));
     set_disabled_section("groupInput2", (!calc_difference || groups < 1));
-    
+
 }
 
 
@@ -811,7 +847,7 @@ function sort_by_thumbnails(sort_type, base_url) {
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
 
-    // Sort the thumbnails accordingly.  
+    // Sort the thumbnails accordingly.
     // Note: Because thumbnails will sort relating to their current order (when the exp_start is the same between thumbnails), we need to do multiple sorts to guarantee consistency.
 
     var thumbs = $('div#thumbnail-array>div')
@@ -838,9 +874,9 @@ function sort_by_thumbnails(sort_type, base_url) {
 
 
 /**
- * Toggle a viewed button when pressed.  
+ * Toggle a viewed button when pressed.
  * Ajax call to update RootFileInfo model with toggled value
- * 
+ *
  * @param {String} file_root - The rootname of the file corresponding to the thumbnail
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
@@ -850,7 +886,7 @@ function toggle_viewed(file_root, base_url) {
     var elem = document.getElementById("viewed");
     update_viewed_button(elem.value == "New" ? true : false);
     elem.disabled=true;
-    
+
     // Ajax Call to update RootFileInfo model with "viewed" info
     $.ajax({
         url: base_url + '/ajax/viewed/' + file_root,
@@ -1006,8 +1042,7 @@ function update_msata_page(base_url) {
 
             // Build div content
             var content = data["div"];
-            content += data["script1"];
-            content += data["script2"];
+            content += data["script"];
 
             /* Add the content to the div
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
@@ -1039,8 +1074,7 @@ function update_wata_page(base_url) {
 
             // Build div content
             var content = data["div"];
-            content += data["script1"];
-            content += data["script2"];
+            content += data["script"];
 
             /* Add the content to the div
             *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
@@ -1221,7 +1255,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_obs_options(data, inst, prop, observation) {
     // Build div content
-    var content = 'Available observations:';
+    var content = 'Available obs:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs' + observation + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -1309,13 +1343,16 @@ function update_thumbnail_array(data) {
     var thumbnail_content = "";
     var image_updates = [];
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
-        
+
         // Parse out useful variables
         var rootname = Object.keys(data.file_data)[i];
         var file = data.file_data[rootname];
         var viewed = file.viewed;
         var exp_type = file.exp_type;
         var filename_dict = file.filename_dict;
+        var filter_type = file.filter;
+        var pupil_type = file.pupil;
+        var grating_type = file.grating;
 
         // Build div content
         var instrument;
@@ -1327,7 +1364,9 @@ function update_thumbnail_array(data) {
         var content = '<div class="thumbnail" data-instrument="' + instrument +
                       '" data-detector="' + filename_dict.detector + '" data-proposal="' + filename_dict.program_id +
                       '" data-file_root="' + rootname + '" data-group_root="' + filename_dict.group_root +
-                      '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type + '">';
+                      '" data-exp_start="' + file.expstart + '" data-look="' + viewed + '" data-exp_type="' + exp_type +
+                      '" data-visit="' + filename_dict.visit + '" data-filter="' + filter_type + '" data-pupil="' + pupil_type +
+                      '" data-grating="' + grating_type + '">';
         content += '<div class="thumbnail-group">'
         content += '<a class="thumbnail-link" href="#" data-image-href="/' +
                    instrument + '/' + rootname + '/" data-group-href="/' +
@@ -1360,76 +1399,6 @@ function update_thumbnail_array(data) {
     $("#thumbnail-array")[0].innerHTML = thumbnail_content;
     insert_thumbnail_images(image_updates);
 }
-
-/**
- * Read and submit the form for archive date ranges.
- * @param {String} inst - The instrument of interest (e.g. "FGS")
- * @param {String} base_url - The base URL for gathering data from the AJAX view.
- */
-function submit_date_range_form(inst, base_url, group) {
-
-    var start_date = document.getElementById("start_date_range").value;
-    var stop_date = document.getElementById("stop_date_range").value;
-
-    if (!start_date) {
-        alert("You must enter a Start Date/Time");
-    }  else if (!stop_date) {
-        alert("You must enter a Stop Date/Time");
-    } else if (start_date >= stop_date) {
-        alert("Start Time must be earlier than Stop Time");
-    } else {
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("thumbnail-array").style.display = "none";
-        document.getElementById("no_thumbnails_msg").style.display = "none";
-        $.ajax({
-            url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
-            success: function(data){
-                var show_thumbs = true;
-                var num_thumbnails = Object.keys(data.file_data).length;
-                // verify we want to continue with results
-                if (num_thumbnails > 1000) {
-                    show_thumbs = false;
-                    alert("Returning " + num_thumbnails + " images reduce your date/time range for page to load correctly");
-                }
-                if (show_thumbs) {
-                    // Handle DIV updates
-                    // Clear our existing array
-                    $("#thumbnail-array")[0].innerHTML = "";
-                    if (num_thumbnails > 0) {
-                        update_show_count(num_thumbnails, 'activities');
-                        update_thumbnail_array(data);
-                        update_filter_options(data, base_url, 'thumbnail');
-                        update_group_options(data, base_url);
-                        update_sort_options(data, base_url);
-
-                        // Do initial sort and group to match sort button display
-                        group_by_thumbnails(group, base_url);
-                        sort_by_thumbnails(data.thumbnail_sort, base_url);
-
-                        // Replace loading screen with the proposal array div
-                        document.getElementById("loading").style.display = "none";
-                        document.getElementById("thumbnail-array").style.display = "block";
-                        document.getElementById("no_thumbnails_msg").style.display = "none";
-                    } else {
-                        show_thumbs = false;
-                    }
-                } 
-                if (!show_thumbs) {
-                    document.getElementById("loading").style.display = "none";
-                    document.getElementById("no_thumbnails_msg").style.display = "inline-block";
-                }
-
-            },
-            error : function(response) {
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("thumbnail-array").style.display = "none";
-                document.getElementById("no_thumbnails_msg").style.display = "inline-block";
-    
-            }
-        });
-    }
-}
-
 
 /**
  * Updates various components on the thumbnails page
@@ -1544,3 +1513,15 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 }
+
+/**
+ * Create a collapsible table
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    var collapsibleBtn = document.querySelector('.collapsible-btn');
+    var collapsibleContent = document.querySelector('.collapsible-content');
+
+    collapsibleBtn.addEventListener('click', function () {
+        collapsibleContent.classList.toggle('show');
+    });
+});

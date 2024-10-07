@@ -129,6 +129,11 @@ def amplifier_info(filename, omit_reference_pixels=True):
                 except KeyError:
                     raise KeyError('DQ extension not found.')
 
+        # If the file contains multiple frames (e.g. rateints file)
+        # keep just the first
+        if len(data_quality.shape) == 3:
+            data_quality = data_quality[0, :, :]
+
         # Reference pixels should be flagged in the DQ array with the
         # REFERENCE_PIXEL flag. Find the science pixels by looping for
         # pixels that don't have that bit set.
@@ -263,7 +268,7 @@ def get_obstime(filename):
         time = h[0].header['TIME-OBS']
     year, month, day = [int(element) for element in date.split('-')]
     hour, minute, second = [float(element) for element in time.split(':')]
-    return datetime.datetime(year, month, day, int(hour), int(minute), int(second))
+    return datetime.datetime(year, month, day, int(hour), int(minute), int(second), tzinfo=datetime.timezone.utc)
 
 
 def mean_time(times):

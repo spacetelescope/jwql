@@ -43,6 +43,7 @@ from astropy.io import fits
 import numpy as np
 
 from jwql.utils import permissions
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import get_config
 
 # Use the 'Agg' backend to avoid invoking $DISPLAY
@@ -52,16 +53,8 @@ import matplotlib.pyplot as plt  # noqa
 import matplotlib.colors as colors  # noqa
 from matplotlib.ticker import AutoMinorLocator  # noqa
 
-# Only import jwst if not running from readthedocs
-# Determine if the code is being run as part of a Readthedocs build
-ON_READTHEDOCS = False
-if 'READTHEDOCS' in os.environ:
-    ON_READTHEDOCS = os.environ['READTHEDOCS']
-
 if not ON_READTHEDOCS:
     from jwst.datamodels import dqflags
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     CONFIGS = get_config()
@@ -497,16 +490,54 @@ class PreviewImage():
                     dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
-                cbar = self.fig.colorbar(cax, ticks=tickvals)
 
                 # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
                 # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
                 warnings.filterwarnings("ignore", message="AutoMinorLocator does not work with logarithmic scale")
-                cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
 
-                cbar.ax.set_yticklabels(tlabelstr)
-                cbar.ax.tick_params(labelsize=maxsize * 5. / 4)
-                cbar.ax.set_ylabel(self.units, labelpad=10, rotation=270)
+                xyratio = xsize / ysize
+                if xyratio < 1.6:
+                    # For apertures that are taller than they are wide, square, or that are wider than
+                    # they are tall but still reasonably close to square, put the colorbar on the right
+                    # side of the image.
+
+                    # Some magic numbers arrived at through testing aspect ratios for all apertures
+                    if xyratio > 0.4:
+                        cb_width = 0.05
+                    else:
+                        cb_width = 0.05 * 0.4 / xyratio
+
+                    upper_x_anchor = 0.02
+                    if xyratio < 0.1:
+                        upper_x_anchor = 0.12
+
+                    cbax = self.fig.add_axes([ax.get_position().x1 + upper_x_anchor,
+                                              ax.get_position().y0,
+                                              cb_width,
+                                              ax.get_position().height
+                                              ])
+                    cbar = self.fig.colorbar(cax, cax=cbax, ticks=tickvals, orientation='vertical')
+                    cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
+                    cbar.ax.set_yticklabels(tlabelstr)
+                    cbar.ax.set_ylabel(self.units, labelpad=7, rotation=270)
+                else:
+                    # For apertures that are significantly wider than they are tall, put the colorbar
+                    # under the image.
+
+                    # Again, some magic numbers controlling the positioning and height of the
+                    # colorbar, based on testing.
+                    lower_y_anchor = 0. - (xyratio / 14.5)
+                    cb_height = 0.07 * (np.log2(xyratio) - 1)
+
+                    cbax = self.fig.add_axes([ax.get_position().x0,
+                                              ax.get_position().y0 + lower_y_anchor,
+                                              ax.get_position().width,
+                                              cb_height])
+                    cbar = self.fig.colorbar(cax, cax=cbax, ticks=tickvals, orientation='horizontal')
+                    cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(n=0))
+                    cbar.ax.set_xticklabels(tlabelstr)
+                    cbar.ax.set_xlabel(self.units, labelpad=7, rotation=0)
+
                 ax.set_xlabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.set_ylabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.tick_params(labelsize=maxsize)
@@ -762,6 +793,7 @@ def expand_for_i2d(array, xdim, ydim):
         return new_array_x
     else:
         return array
+
 
 def nan_to_zero(image):
     """Set any pixels with a value of NaN to zero

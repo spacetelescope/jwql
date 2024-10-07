@@ -8,16 +8,53 @@
 
 {% block content %}
 
-    <main role="main" class="container">
+    <main role="main" class="image_views">
     	<!-- Show exposure group name -->
     	<h3>Exposure {{ group_root }}</h3>
 
-    	<!-- Specify the attributes of what is currently being shown -->
-    	<div class="d-flex flex-row">
-    		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
-    		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
-    		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
+        <!-- Specify the attributes of what is currently being shown -->
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
+            <div class="APT_parameters">Observation: <a id="obs_id"></a></div>
+            <div class="APT_parameters">Visit: <a id="visit_id"></a></div>
+            <div class="APT_parameters"> <a></a></div>
             <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed_group("{{group_root}}", "{{base_url}}");'>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Visit Status: {{ basic_info.visit_status }}</div>
+            <div class="APT_parameters">Category: {{ basic_info.category }}</div>
+            <div class="APT_parameters">Exp Type: <a>{{ basic_info.exp_type }}</a></div>
+            <div class="APT_parameters">Subarray: {{ basic_info.subarray }}</div>
+            <div class="APT_parameters">Viewed: {{ marked_viewed }}</div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Filter: {{ basic_info.filter }}</div>
+            {% if 'pupil' in basic_info %}
+                <div class="APT_parameters">Pupil: {{ basic_info.pupil }}</div>
+            {% endif %}
+            {% if 'grating' in basic_info %}
+                <div class="APT_parameters">Grating: {{ basic_info.grating }}</div>
+            {% endif %}
+            <div class="APT_parameters">Exp Start: {{ expstart_str }}</div>
+        </div>
+
+
+        <div class="collapsible">
+            <button class="collapsible-btn btn-primary">More Exposure Info +</button>
+            <div class="collapsible-content">
+
+                <table id="dynamic-table" class="split-dictionary">
+                    <tbody id="table-body" class="alternate-rows">
+                        <!-- Table body will be populated dynamically with JavaScript -->
+                        <script>
+                        // Line below needed to put dictionary into the proper format
+                        py_dict = {{ additional_info | safe }};
+                        make_table_from_dict(py_dict, "table-body", 2)
+                        </script>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
             <!-- Display the navigation buttons -->
             <div class="previous-next-buttons">
@@ -180,7 +217,20 @@
 
         <div class="row">
             <!-- Display the anomaly form -->
-            <div class="col-xl-3 text-left">
+            <div class="text-left" style="width:50%">
+                <h5>Anomalies Within Group</h5>
+                <table id="anomaly-spread-table" class="split-dictionary">
+                    <tbody id="anomaly-table" class="alternate-rows">
+                        <!-- Table body will be populated dynamically with JavaScript -->
+                        <script>
+                            // Line below needed to put dictionary into the proper format
+                            py_dict = {{ group_anomalies | safe }};
+                            make_table_from_dict(py_dict, "anomaly-table", 1) // SEND IN ID TO UPDATE
+                            </script>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-left">
                 <!--Load the file search form from the view-->
                 <div class="anomaly_form">
                     <h5>Submit Anomaly for Group</h5>
@@ -209,7 +259,9 @@
                             {% endfor %}
                             </ul>
                         {% endfor %}
-                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                        <h5>Exposure Comments</h5>
+                        {{ exposure_comment_form.exp_comment }}
+                        <button class="btn btn-primary" type="submit">Submit</button>
                     </form>
                 </div>
             </div>
@@ -228,7 +280,7 @@
         {% elif 'uncal' in suffixes %}
             <script>change_all_filetypes('uncal', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}', "{{ detectors|join(',') }}");</script>
         {% elif suffixes|length == 1 %}
-            <script>change_all_filetypes('{{suffixes.0}}', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}, "{{ detectors|join(',') }}";</script>
+            <script>change_all_filetypes('{{suffixes.0}}', '{{group_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}', "{{ detectors|join(',') }}");</script>
         {% else %}
             <a>Unable to show image for: {{suffixes}}</a>
         {% endif %}

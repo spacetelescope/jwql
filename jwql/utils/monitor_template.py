@@ -106,11 +106,14 @@ def monitor_template_main():
 
     # Example of locating a dataset in the filesystem
     filesystem = SETTINGS['filesystem']
-    dataset = os.path.join(filesystem,
-                           'public',
-                           'jw{}'.format(filename_dict['program_id']),
-                           'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']),
-                           filename_of_interest)
+    if filename_dict['recognized_filename']:
+        dataset = os.path.join(filesystem,
+                               'public',
+                               'jw{}'.format(filename_dict['program_id']),
+                               'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']),
+                               filename_of_interest)
+    else:
+        raise KeyError(f'Filename {filename_of_interest} not recognized by filename_parser() in monitor_template_main')
 
     # Example of reading in dataset using jwst.datamodels
     im = datamodels.open(dataset)
@@ -130,6 +133,7 @@ def monitor_template_main():
     plt.sizing_mode = 'stretch_both'  # Necessary for responsive sizing on web app
     script, div = components(plt)
 
+    working_data_dir = SETTINGS['working']
     plot_output_dir = SETTINGS['outputs']
     div_outfile = os.path.join(plot_output_dir, 'monitor_name',
                                filename_of_interest + "_component.html")

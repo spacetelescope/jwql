@@ -73,6 +73,29 @@
             <form class='form-horizontal' id='searchform' method='post'>
                 <hr class="col-md-12">
                 <div class='instrument-form-group' id='instrument_form_group'>
+                    <div style="display: flex" id="DATERANGE">
+                        <div class="col-md-3">
+                            <span class="help-block">Date Range</span>
+                            <div class="form-control" id='date_range'>
+                                <input type="text" name="date_range" style="cursor: pointer; padding: 5px 10px; width: 100%"/>
+                                <script>
+                                $(function() {
+                                    $('input[name="date_range"]').daterangepicker({
+                                        timePicker: true,
+                                        timePicker24Hour: true,
+                                        showDropdowns: true,
+                                        minDate: "2021/12/05",
+                                        startDate: "2021/12/05",
+                                        endDate: moment().startOf('hour'),
+                                        locale: {
+                                        format: 'YYYY/MM/DD hh:mmA'
+                                        }
+                                    });
+                                });
+                                </script>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Initial INSTRUMENT Checkbox -->
                     <div style="display: flex" id="GENERAL">
                         <div class="col-md-2">
@@ -188,6 +211,18 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span class="help-block">FGS Subarrays</span>
+                            <div class="form-control" id='fgs_subarray'>
+                                {% for field in form.fgs_subarray %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
                     </div>
 
                     <!-- MIRI Fields -->
@@ -523,11 +558,24 @@
                                 <div class="input-group-addon" style='width:60px'></div>
                             </div>
                         </section>
+
+                        <section class="col-md">
+                            <span class="help-block">NIRSpec Subarrays</span>
+                            <div class="form-control" id='nirspec_subarray'>
+                                {% for field in form.nirspec_subarray %}
+                                <div class="row-2">
+                                    {{ field }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+
                     </div>
                     <hr class="col-md-12">
                     <div class='form-group'>
-                        <input type="submit" value="Submit" class="btn btn-primary" name="jwstqueryform" />
-                        <input type="reset" value="Clear Form" class="btn btn-primary mx-4" name="jwstqueryform" onclick="hide_all();" />
+                        <input type="submit" value="Submit" class="btn btn-primary" name="submit_jwstqueryform" />
+                        <input type="submit" value="Download" class="btn btn-primary" name="download_jwstqueryform" />
+                        <input type="reset" value="Clear Form" class="btn btn-primary mx-4" name="reset_jwstqueryform" onclick="hide_all();" />
                     </div>
                 </div>
             </form>

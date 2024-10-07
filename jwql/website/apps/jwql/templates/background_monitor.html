@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+<title>{{ inst }} Background Monitor - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+<main role="main" class="container">
+
+	<h1>{{ inst }} Background Monitor</h1>
+	<hr>
+
+	<head>
+	<style>
+
+	/* Style the tab */
+	.tabs {
+		overflow: hidden;
+		border: 1px solid #ccc;
+		background-color: #f1f1f1;
+	}
+
+	/* Style the buttons inside the tab */
+	.tabs button {
+		float: left;
+		border: none;
+		outline: none;
+		cursor: pointer;
+		padding: 14px 16px;
+		transition: 0.3s;
+		font-size: 17px;
+	}
+
+	/* Change background color of buttons on hover */
+	.tabs button:hover {
+		background-color: #ddd;
+	}
+	
+	/* Change background color of active tabs */
+	.active-tab {
+        background-color: #ddd;
+    }
+
+	/* Style the tab content */
+	.tab-content {
+		display: none;
+		padding: 6px 12px;
+		border: 1px solid #ccc;
+		border-top: none;
+	}
+
+	/* Style the active tab content */
+	.active-content {
+		display: block;
+		padding: 6px 12px;
+		border: 1px solid #ccc;
+		border-top: none;
+	}
+	</style>
+	</head>
+
+	<body>
+
+	<div class="tabs">
+		<button class="tab active-tab" onclick="displayPlots('Background')">Background</button>
+		<button class="tab" onclick="displayPlots('BackgroundRMS')">Background RMS</button>
+		<button class="tab" onclick="displayPlots('BackgroundModel')">Background vs Model</button>
+	</div>
+
+	<div id="Background" class="tab-content active-content">
+		<div width=100% id="bkg">
+			{% for plot in bkg_plots %}
+				<img src={{ plot | safe }} width="100%">
+				<br><br><hr>
+			{% endfor %}
+		</div>
+	</div>
+
+	<div id="BackgroundRMS" class="tab-content">
+		<div width=100% id="bkg_rms">
+			{% for plot in bkg_rms_plots %}
+				<img src={{ plot | safe }} width="100%">
+				<br><br><hr>
+			{% endfor %}
+		</div>
+	</div>
+
+	<div id="BackgroundModel" class="tab-content">
+		<div width=100% id="bkg">
+			{% for plot in bkg_model_plots %}
+				<img src={{ plot | safe }} width="100%">
+				<br><br><hr>
+			{% endfor %}
+		</div>
+	</div>
+
+	<script>
+		function displayPlots(tabId) {
+			// Hide all tab contents
+			var tabContents = document.getElementsByClassName('tab-content');
+			for (var i = 0; i < tabContents.length; i++) {
+				tabContents[i].style.display = 'none';
+			}
+	
+			// Remove 'active-tab' class from all tabs
+			var tabs = document.getElementsByClassName('tab');
+			for (var i = 0; i < tabs.length; i++) {
+				tabs[i].classList.remove('active-tab');
+			}
+	
+			// Show the selected tab content and mark the tab as active
+			document.getElementById(tabId).style.display = 'block';
+			document.querySelector('[onclick="displayPlots(\'' + tabId + '\')"]').classList.add('active-tab');
+		}
+	</script>
+
+	</body>
+
+</main>
+
+{% endblock %}

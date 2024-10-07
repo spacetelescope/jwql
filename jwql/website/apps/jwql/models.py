@@ -30,6 +30,23 @@ References
 
 from django.db import models
 
+from jwql.utils.constants import (
+    DEFAULT_MODEL_CHARFIELD,
+    DEFAULT_MODEL_COMMENT,
+    MAX_LEN_APERTURE,
+    MAX_LEN_DETECTOR,
+    MAX_LEN_FILTER,
+    MAX_LEN_GRATING,
+    MAX_LEN_INSTRUMENT,
+    MAX_LEN_OBS,
+    MAX_LEN_PATH,
+    MAX_LEN_PROPOSAL,
+    MAX_LEN_PUPIL,
+    MAX_LEN_READPATTERN,
+    MAX_LEN_SUBARRAY,
+    MAX_LEN_TYPE,
+    MAX_LEN_USER,
+)
 
 INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('MIRI', 'MIRI'),
@@ -42,7 +59,7 @@ class Archive(models.Model):
     """A class defining the model used to hold information needed for the archive pages."""
 
     # Fields
-    instrument = models.CharField(max_length=7, help_text="Instrument name", primary_key=True)
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, help_text="Instrument name", primary_key=True)
 
     # …
     # Metadata
@@ -59,9 +76,9 @@ class Proposal(models.Model):
     """A class defining the model used to hold information about a given proposal"""
     # Fields
     prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
-    thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail', default='')
+    thumbnail_path = models.CharField(max_length=MAX_LEN_PATH, help_text='Path to the proposal thumbnail', default=DEFAULT_MODEL_CHARFIELD)
     archive = models.ForeignKey(Archive, blank=False, null=False, on_delete=models.CASCADE)
-    category = models.CharField(max_length=10, help_text="Category Type", default='')
+    category = models.CharField(max_length=10, help_text="Category Type", default=DEFAULT_MODEL_CHARFIELD)
 
     # Metadata
     class Meta:
@@ -78,7 +95,7 @@ class Proposal(models.Model):
 class Observation(models.Model):
     """A class defining the model used to hold information about an observation from a given proposal"""
     # Fields
-    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
+    obsnum = models.CharField(max_length=MAX_LEN_OBS, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal', default=0)
     obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD', default=0.)
     obsend = models.FloatField(help_text='Time of the end of the observation in MJD', default=0.)
@@ -99,21 +116,23 @@ class Observation(models.Model):
 
 class RootFileInfo(models.Model):
     """ All info stored with root file for ease of sorting """
-    instrument = models.CharField(max_length=7, help_text="Instrument name")
+    instrument = models.CharField(max_length=MAX_LEN_INSTRUMENT, help_text="Instrument name")
     obsnum = models.ForeignKey(Observation, blank=False, null=False, on_delete=models.CASCADE)
-    proposal = models.CharField(max_length=5, help_text="5-digit proposal ID string")
+    proposal = models.CharField(max_length=MAX_LEN_PROPOSAL, help_text="5-digit proposal ID string")
     root_name = models.TextField(primary_key=True, max_length=300)
     viewed = models.BooleanField(default=False)
-    filter = models.CharField(max_length=7, help_text="Instrument name", default='', null=True, blank=True)
-    aperture = models.CharField(max_length=40, help_text="Aperture", default='', null=True, blank=True)
-    detector = models.CharField(max_length=40, help_text="Detector", default='', null=True, blank=True)
-    read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=0)
-    read_patt = models.CharField(max_length=40, help_text="Read Pattern", default='', null=True, blank=True)
-    grating = models.CharField(max_length=40, help_text="Grating", default='', null=True, blank=True)
-    subarray = models.CharField(max_length=40, help_text="Subarray", default='', null=True, blank=True)
-    pupil = models.CharField(max_length=40, help_text="Pupil", default='', null=True, blank=True)
-    exp_type = models.CharField(max_length=40, help_text="Exposure Type", default='', null=True, blank=True)
+    filter = models.CharField(max_length=MAX_LEN_FILTER, help_text="Instrument name", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    aperture = models.CharField(max_length=MAX_LEN_APERTURE, help_text="Aperture", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    detector = models.CharField(max_length=MAX_LEN_DETECTOR, help_text="Detector", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    read_patt_num = models.IntegerField(help_text='Read Pattern Number', default=1)
+    read_patt = models.CharField(max_length=MAX_LEN_READPATTERN, help_text="Read Pattern", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    grating = models.CharField(max_length=MAX_LEN_GRATING, help_text="Grating", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    subarray = models.CharField(max_length=MAX_LEN_SUBARRAY, help_text="Subarray", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    pupil = models.CharField(max_length=MAX_LEN_PUPIL, help_text="Pupil", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
+    exp_type = models.CharField(max_length=MAX_LEN_TYPE, help_text="Exposure Type", default=DEFAULT_MODEL_CHARFIELD, null=True, blank=True)
     expstart = models.FloatField(help_text='Exposure Start Time', default=0.0)
+    comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
+    exp_comment = models.TextField(help_text="Anomaly Comment Field", default=DEFAULT_MODEL_COMMENT, null=False, blank=True)
 
     # Metadata
     class Meta:
@@ -134,7 +153,7 @@ class Anomalies(models.Model):
         primary_key=True,
     )
     flag_date = models.DateTimeField(help_text="flag date", null=True, blank=True)
-    user = models.CharField(max_length=50, help_text="user", default='', null=True, blank=True)
+    user = models.CharField(max_length=MAX_LEN_USER, help_text="user", default='', null=True, blank=True)
     cosmic_ray_shower = models.BooleanField(default=False)
     diffraction_spike = models.BooleanField(default=False)
     excessive_saturation = models.BooleanField(default=False)
@@ -143,15 +162,15 @@ class Anomalies(models.Model):
     crosstalk = models.BooleanField(default=False)
     data_transfer_error = models.BooleanField(default=False)
     ghost = models.BooleanField(default=False)
-    snowball = models.BooleanField(default=False)
+    unusual_snowballs = models.BooleanField(default=False)
     column_pull_up = models.BooleanField(default=False)
     column_pull_down = models.BooleanField(default=False)
-    dominant_msa_leakage = models.BooleanField(default=False)
+    noticeable_msa_leakage = models.BooleanField(default=False)
     dragons_breath = models.BooleanField(default=False)
     mrs_glow = models.BooleanField(default=False)
     mrs_zipper = models.BooleanField(default=False)
     internal_reflection = models.BooleanField(default=False)
-    optical_short = models.BooleanField(default=False)
+    new_short = models.BooleanField(default=False)
     row_pull_up = models.BooleanField(default=False)
     row_pull_down = models.BooleanField(default=False)
     lrs_contamination = models.BooleanField(default=False)
@@ -162,6 +181,12 @@ class Anomalies(models.Model):
     tilt_event = models.BooleanField(default=False)
     light_saber = models.BooleanField(default=False)
     other = models.BooleanField(default=False)
+    unusual_cosmic_rays = models.BooleanField(default=False)
+    needs_discussion = models.BooleanField(default=False)
+    transient_short = models.BooleanField(default=False)
+    subsequently_masked_short = models.BooleanField(default=False)
+    monitored_short = models.BooleanField(default=False)
+    bright_object_not_a_short = models.BooleanField(default=False)
 
     def get_marked_anomalies(self):
         """Return all boolean field names (anomalies) currently set"""
@@ -170,7 +195,7 @@ class Anomalies(models.Model):
             if isinstance(value, bool) and value:
                 true_anomalies.append(field)
         return true_anomalies
-    
+
     @classmethod
     def get_all_anomalies(cls):
         """Return list of all anomalies (assumed as any field with default of False)"""
@@ -183,3 +208,43 @@ class Anomalies(models.Model):
     def __str__(self):
         """Container for all anomalies associated with each RootFileInfo object """
         return self.root_file_info.root_name
+
+
+def get_model_column_names(model_name):
+    """Return all column names for the input ``model_name`` as a list
+
+    Parameters
+    ----------
+    model_name : django.db.models.base.ModelBase
+        e.g. model_name = eval('NIRCamDarkDarkCurrent')
+
+    Returns
+    -------
+    colnames : list
+        List of column names
+    """
+    return [f.name for f in model_name._meta.get_fields()]
+
+
+def get_unique_values_per_column(model_name, column_name):
+    """Return a list of the unique values present in the column ``column_name`` in
+    the ``model_name`` model.
+
+    Parameters
+    ----------
+    model_name : django.db.models.base.ModelBase
+        e.g. model_name = eval('NIRCamDarkDarkCurrent')
+
+    column_name : str
+        Column name to examine
+
+    Returns
+    -------
+    values : list
+        List of unique values in ``column_name``
+    """
+    query_set = model_name.objects.values(column_name).distinct()
+    values = []
+    for row in query_set:
+        values.append(row[column_name])
+    return values

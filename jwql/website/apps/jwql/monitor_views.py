@@ -30,25 +30,65 @@ Dependencies
 
 import os
 
+from astropy.time import Time
 from bokeh.resources import CDN, INLINE
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.templatetags.static import static
 import json
+import pandas as pd
 
 from . import bokeh_containers
 from jwql.website.apps.jwql import bokeh_containers
+from jwql.website.apps.jwql.monitor_models.claw import NIRCamClawStats
+from jwql.website.apps.jwql.monitor_pages.monitor_readnoise_bokeh import ReadNoiseFigure
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, get_base_url
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import msata_monitor
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import wata_monitor
 from jwql.utils import monitor_utils
 
+
 CONFIG = get_config()
 FILESYSTEM_DIR = os.path.join(CONFIG['jwql_dir'], 'filesystem')
 
 
+def background_monitor(request):
+    """Generate the NIRCam background monitor page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "background_monitor.html"
+
+    # Get the background trending filters to display
+    output_dir_bkg = static(os.path.join("outputs", "claw_monitor", "backgrounds"))
+    fltrs = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F277W', 'F356W', 'F444W']
+    bkg_plots = [os.path.join(output_dir_bkg, '{}_backgrounds.png'.format(fltr)) for fltr in fltrs]
+    bkg_rms_plots = [os.path.join(output_dir_bkg, '{}_backgrounds_rms.png'.format(fltr)) for fltr in fltrs]
+    bkg_model_plots = [os.path.join(output_dir_bkg, '{}_backgrounds_vs_models.png'.format(fltr)) for fltr in fltrs]
+
+    context = {
+        'inst': 'NIRCam',
+        'bkg_plots': bkg_plots,
+        'bkg_rms_plots': bkg_rms_plots,
+        'bkg_model_plots': bkg_model_plots
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
 def bad_pixel_monitor(request, inst):
-    """Generate the dark monitor page for a given instrument
+    """Generate the bad pixel monitor page for a given instrument
 
     Parameters
     ----------
@@ -67,7 +107,7 @@ def bad_pixel_monitor(request, inst):
 
     context = {
         'inst': inst,
-        }
+    }
 
     return render(request, template, context)
 
@@ -94,6 +134,38 @@ def bias_monitor(request, inst):
 
     context = {
         'inst': inst,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+def claw_monitor(request):
+    """Generate the NIRCam claw monitor page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "claw_monitor.html"
+
+    # Get all recent claw stack images from the last 10 days
+    query = NIRCamClawStats.objects.filter(expstart_mjd__gte=(Time.now().mjd - 10))
+    query = query.order_by('-expstart_mjd').all().values('skyflat_filename')
+    recent_files = list(pd.unique(pd.DataFrame.from_records(query)['skyflat_filename']))
+    output_dir_claws = static(os.path.join("outputs", "claw_monitor", "claw_stacks"))
+    claw_stacks = [os.path.join(output_dir_claws, filename) for filename in recent_files]
+
+    context = {
+        'inst': 'NIRCam',
+        'claw_stacks': claw_stacks
     }
 
     # Return a HTTP response with the template and dictionary of variables
@@ -219,7 +291,7 @@ def readnoise_monitor(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get the html and JS needed to render the readnoise tab plots
-    tabs_components = bokeh_containers.readnoise_monitor_tabs(inst)
+    tabs_components = ReadNoiseFigure(inst).tab_components
 
     template = "readnoise_monitor.html"
 
@@ -270,13 +342,12 @@ def msata_monitoring_ajax(request):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # retrieve existing monitor html content
+    # Make plots and extract visualization components
     monitor = msata_monitor.MSATA()
-    div, script1, script2 = monitor.read_existing_html()
+    monitor.plots_for_app()
 
-    context = {'script1': script1,
-               'script2': script2,
-               'div': div}
+    context = {'script': monitor.script,
+               'div': monitor.div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -319,12 +390,11 @@ def wata_monitoring_ajax(request):
     JsonResponse object
         Outgoing response sent to the webpage
     """
-    # retrieve existing monitor html content
+    # Make plots and extract visualization components
     monitor = wata_monitor.WATA()
-    div, script1, script2 = monitor.read_existing_html()
+    monitor.plots_for_app()
 
-    context = {'script1': script1,
-               'script2': script2,
-               'div': div}
+    context = {'script': monitor.script,
+               'div': monitor.div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})

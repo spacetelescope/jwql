@@ -1,3 +1,247 @@
+## What's Changed
+
+1.2.11 (2024-08-26)
+===================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Customize colorbar location and size based on aperture size by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1592
+- Add keyword to specify program IDs for preview image creation by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1602
+- Adjust view image and view exposure to allow for larger preview images by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1600
+- filter thumbnails by filter/pupil/grating by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1623
+- Add Image and Exposure level Comments by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1624
+- Update NRS TA Monitor Plotting by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1633
+- Fix readnoise monitor plot y range by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1634
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Update Bokeh `filter` Keyword in NRS TA Monitors by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1620
+- Switch dark monitor to use django models by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1493
+- Fix log cleanup script by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1628
+- Fix missing data in readnoise monitor plots by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1631
+- filename_parser() no longer raises an exception for unrecognized files by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1614
+
+
+1.2.10 (2024-07-10)
+===================
+
+Duplicate of 1.2.9, caused by changes to versioning conflicts with pypi. 
+
+
+1.2.9 (2024-07-10)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Add Download CSV button to query page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1561
+- show file anomalies on exposure group page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1564
+- create generic error page to handle exceptions in views. by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1549
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- final model define for faking by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1544
+- Update Redis Package Names in Environment Files by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1546
+- [SCSB-145] require Python 3.10 by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1515
+- debug false by default by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1550
+- Update NIRSpec TA Monitors to use Django DB Models by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1499
+- Update NIRSpec TA Models by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1565
+- Remove codecov.yml by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1588
+- Remove filename parser test over filesystem by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1586
+- Update remote to upstream in pull_jwql_branch.sh by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1591
+- Add Dependencies for Servers in `pyproject.toml` by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1568
+- fix release upload step condition to match workflow trigger by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1593
+- fix environment freeze workflow not picking up tag by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1594
+- fix version matching pattern by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1595
+- updating freeze matrix to include linux, mac and python 3.12 by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1596
+- Remove P750L from list of NIRSpec filters by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1598
+- [build] fix `runs-on:` and update build filename for easier parsing by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1599
+- upload to PyPI on release by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1601
+- Updating jwst_reffiles version number by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1606
+- Remove old presentations from repo by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1607
+- Num results fix by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1608
+- Add Environment Update Script by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1609
+- Add new NIRISS AMI-related suffixes by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1613
+
+
+1.2.8 (2024-04-18)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- final model define for faking by @BradleySappington
+
+
+1.2.7 (2024-04-18)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Import monitor models by @bhilbert4
+
+
+1.2.6 (2024-04-15)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Update NIRCam Background Monitor plots to handle new Claw Monitor columns by @bsunnquist
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- add default to read_patt_num by @BradleySappington
+- migration work for next RC by @BradleySappington
+- Fix database empty fields by @BradleySappington
+
+
+1.2.5 (2024-03-19)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Fix Bokeh `file_html` Call by @mfixstsci
+- Update Bad Pix Exclude Line by @mfixstsci
+- Interactive preview image - updates for Bokeh 3 by @bhilbert4
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Allow creation of pngs from 3D and 4D arrays by @bhilbert4
+- Add max length to charfield by @BradleySappington
+- Header fix by @BradleySappington
+
+
+1.2.4 (2024-03-11)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Fix Broken Dashboard - ReImplement Anomaly Dash @BradleySappington
+- Add more info to image- and exposure-level pages @bhilbert4
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- create pull_jwql_branch.sh by @BradleySappington
+- Claw monitor migrate by @york-stsci
+- Update readnoise monitor to use django database models by @york-stsci
+- Migration to django management by @york-stsci
+- Get subarray lists from datamodels schema by @bhilbert4
+- Retrieve program number and category efficiently by @bhilbert4
+
+
+1.2.3 (2024-01-26)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Update Anomaly Names by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1435
+- Bug fix for multiple query anomalies by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1442
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Moving monitor outputs used by the server to central storage by @york-stsci in https://github.com/spacetelescope/jwql/pull/1397
+- Update Path for Claw and Background Monitor by @mfix in https://github.com/spacetelescope/jwql/pull/1444
+
+1.2.2 (2024-01-11)
+==================
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Increase MAST query limit by @ bhilbert4 in https://github.com/spacetelescope/jwql/pull/1427
+- Hotfix: Crashing archive_database_update @ BradleySappington in https://github.com/spacetelescope/jwql/pull/1425
+
+
+1.2.1 (2023-12-20)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Visit Filter on query and archive thumbnails pages by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1412
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- NIRCam Claw Monitor by @bsunnquist in https://github.com/spacetelescope/jwql/pull/1152
+- Stop storing absolute paths in the database by @york-stsci in https://github.com/spacetelescope/jwql/pull/1394
+
+
+1.2.0 (2023-11-21)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+- Hover over proposal thumbnails by @shanosborne in https://github.com/spacetelescope/jwql/pull/927
+- Not found images replaced with default image by @BradleySappington in https://github.com/spacetelescope/jwql/pull/949
+- Remove second set of colorbar tick labels from preview images by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/963
+- Split program page by obsnum by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/948
+- Interactive preview images by @BradleySappington in https://github.com/spacetelescope/jwql/pull/965
+- Alert user to non-existant proposal number by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/994
+- Fix bad thumbnails by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/997
+- Explore by group type by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1000
+- Default scaling params for preview images where all pix are NaN by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1006
+- Explore int grp difference by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1020
+- Add inst select home search by @mengesser in https://github.com/spacetelescope/jwql/pull/1010
+- Allow proposal thumbnails to come from dark thumbnails by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1001
+- Adding Next and Previous Buttons by @mfixstsci in https://github.com/spacetelescope/jwql/pull/978
+- Build archive page from database by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1030
+- Select anomaly name formatting by @rcooper295 in https://github.com/spacetelescope/jwql/pull/1053
+- Implement "Viewed" Button and Filtering by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1049
+- fixes for no data found on server by @penaguerrero in https://github.com/spacetelescope/jwql/pull/1042
+- Filter archive page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1065
+- Exposure page: Default to show rate img, keep order of radio buttons constant by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1111
+- Filter type by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1092
+- Sort obs date by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1113
+- added scattered light, light saber anomalies for niriss by @rcooper295 in https://github.com/spacetelescope/jwql/pull/1133
+- Add new NIRCam anomalies by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1136
+- Add Logging View by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1080
+- Remove bokeh templating from Dark monitor by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1153
+- Fix API view for filenames per proposal and preview images by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1046
+- Create archive page asynchronously by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1203
+- Adding sort by category by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1155
+- Improve bad pixel monitor plots by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1202
+- List viewed/new status by instrument by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1197
+- Display all detectors by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1213
+- Remove bokeh templating from Bias Monitor by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1230
+- Reformat query page functionality by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1240
+- Add download links to image pages by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1283
+- Improve explore image by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1282
+- Remove Bokeh Templating from Readnoise Monitor by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1238
+- Move Date Range selection to Query Page by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1396
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Make Readnoise Monitor less memory-intensive  by @bsunnquist in https://github.com/spacetelescope/jwql/pull/922
+- Speed up MAST queries by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/942
+- Lock python by @BradleySappington in https://github.com/spacetelescope/jwql/pull/955
+- Reduce memory usage by the dark monitor by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/908
+- Fix clipping logic in preview image scaling by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1011
+- Cosmic ray monitor (via mengesser:develop) by @bourque in https://github.com/spacetelescope/jwql/pull/700
+- nirspec TA monitors: wata and msata by @penaguerrero in https://github.com/spacetelescope/jwql/pull/888
+- allow per-instrument database table reset by @york-stsci in https://github.com/spacetelescope/jwql/pull/1031
+- Celery monitors by @york-stsci in https://github.com/spacetelescope/jwql/pull/921
+- Raise the upper limit on number of returned Mast entries by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1048
+- Added chunked iteration to CR monitor by @york-stsci in https://github.com/spacetelescope/jwql/pull/1066
+- Created a clone_tables script by @york-stsci in https://github.com/spacetelescope/jwql/pull/1059
+- Add EDB telemetry monitor by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/832
+- Tweaks to mnemonics queried by the EDB monitor by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1115
+- Fix failing MIRI dark montior by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1129
+- Unit test cleanup by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1167
+- Catch missing obs in navigation data by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1206
+- Update preview image generator to handle new NaN pixels by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1212
+- drop support for Python 3.8 by @zacharyburnett in https://github.com/spacetelescope/jwql/pull/1249
+- Adding Python 3.10 Support to Testing Matrix by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1257
+- Remove mast monitor by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1256
+- Improve general JWQL queries by @melanieclarke in https://github.com/spacetelescope/jwql/pull/1281
+- Prepare models for external postgres db by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1287
+- Pipeline skip already run steps by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1262
+- Include migrations in source control by @BradleySappington in https://github.com/spacetelescope/jwql/pull/1364
+- Add step_args to calwebb_detector1_save_jump by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1358
+
+--Full Changelog--: https://github.com/spacetelescope/jwql/compare/1.1.0...1.2.0
+
 Unreleased
 ==========
 

@@ -31,6 +31,7 @@ import getpass
 import glob
 import itertools
 import json
+import logging
 import pyvo as vo
 import os
 import re
@@ -53,11 +54,8 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
     FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
     FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
     FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
-    JWST_INSTRUMENT_NAMES_SHORTHAND
-
+    JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def _validate_config(config_file_dict):
@@ -81,7 +79,7 @@ def _validate_config(config_file_dict):
             "admin_account": {"type": "string"},
             "auth_mast": {"type": "string"},
             "connection_string": {"type": "string"},
-            "database": {
+            "databases": {
                 "type": "object",
                 "properties": {
                     "engine": {"type": "string"},
@@ -93,12 +91,42 @@ def _validate_config(config_file_dict):
                 },
                 "required": ['engine', 'name', 'user', 'password', 'host', 'port']
             },
-
+            "django_databases": {
+                "type": "object",
+                "properties": {
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    },
+                    "monitors": {
+                        "type": "object",
+                        "properties": {
+                            "ENGINE": {"type": "string"},
+                            "NAME": {"type": "string"},
+                            "USER": {"type": "string"},
+                            "PASSWORD": {"type": "string"},
+                            "HOST": {"type": "string"},
+                            "PORT": {"type": "string"}
+                        },
+                        "required": ['ENGINE', 'NAME', 'USER', 'PASSWORD', 'HOST', 'PORT']
+                    }
+                },
+                "required": ["default", "monitors"]
+            },
             "jwql_dir": {"type": "string"},
             "jwql_version": {"type": "string"},
             "server_type": {"type": "string"},
             "log_dir": {"type": "string"},
             "mast_token": {"type": "string"},
+            "working": {"type": "string"},
             "outputs": {"type": "string"},
             "preview_image_filesystem": {"type": "string"},
             "filesystem": {"type": "string"},
@@ -109,11 +137,11 @@ def _validate_config(config_file_dict):
             "cores": {"type": "string"}
         },
         # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
-                     "preview_image_filesystem", "thumbnail_filesystem",
-                     "outputs", "jwql_dir", "admin_account", "log_dir",
-                     "test_dir", "test_data", "setup_file", "auth_mast",
-                     "mast_token"]
+        "required": ["connection_string", "databases", "django_databases",
+                     "filesystem", "preview_image_filesystem",
+                     "thumbnail_filesystem", "outputs", "jwql_dir",
+                     "admin_account", "log_dir", "test_dir", "test_data",
+                     "setup_file", "auth_mast", "mast_token", "working"]
     }
 
     # Test that the provided config file dict matches the schema
@@ -146,6 +174,22 @@ def create_png_from_fits(filename, outdir):
     """
     if os.path.isfile(filename):
         image = fits.getdata(filename)
+
+        # If the input file is a rateints/calints file, it will have 3 dimensions.
+        # If it is a file containing all groups, prior to ramp-fitting, it will have
+        # 4 dimensions. In this case, grab the appropriate 2D image to work with. For
+        # a 3D case, get the first integration. For a 4D case, get the last group
+        # (which will have the highest SNR).
+        ndim = len(image.shape)
+        if ndim == 2:
+            pass
+        elif ndim == 3:
+            image = image[0, :, :]
+        elif ndim == 4:
+            image = image[0, -1, :, :]
+        else:
+            raise ValueError(f'File {filename} has an unsupported number of dimensions: {ndim}.')
+
         ny, nx = image.shape
         img_mn, img_med, img_dev = sigma_clipped_stats(image[4: ny - 4, 4: nx - 4])
 
@@ -487,7 +531,8 @@ def filename_parser(filename):
         time_series,
         time_series_2c,
         guider,
-        guider_segment]
+        guider_segment
+    ]
 
     filename_type_names = [
         'stage_1_and_2',
@@ -525,6 +570,9 @@ def filename_parser(filename):
         # Convert the regex match to a dictionary
         filename_dict = jwst_file.groupdict()
 
+        # Add an entry indicating that the filename was successfully parsed
+        filename_dict['recognized_filename'] = True
+
         # Add the filename type to that dict
         filename_dict['filename_type'] = name_match
 
@@ -552,11 +600,9 @@ def filename_parser(filename):
 
     # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/understanding-jwst-data-files/jwst-data-file-naming-conventions'
-        raise ValueError(
-            'Provided file {} does not follow JWST naming conventions.  '
-            'See {} for further information.'.format(filename, jdox_url)
-        )
+        filename_dict = {'recognized_filename': False}
+        logging.exception((f'\nFile; {filename} was not recognized by filename_parser(). Update parser or '
+                           'constants.py if it should be recognized.\n'))
 
     return filename_dict
 
@@ -609,7 +655,7 @@ def filesystem_path(filename, check_existence=True, search=None):
         elif os.path.isfile(full_path_proprietary):
             full_path = full_path_proprietary
         else:
-            raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
+            raise FileNotFoundError('{} is not in the expected location: {}'.format(filename, full_path))
 
     return full_path
 

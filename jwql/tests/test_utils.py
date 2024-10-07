@@ -26,11 +26,8 @@ from bokeh.models import LinearColorMapper
 from bokeh.plotting import figure
 import numpy as np
 
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, save_png, _validate_config
-
-
-# Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 FILENAME_PARSER_TEST_DATA = [
@@ -45,6 +42,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '001',
       'parallel_seq_id': '1',
       'program_id': '90002',
+      'recognized_filename': True,
       'suffix': 'rateints',
       'visit': '001',
       'visit_group': '02',
@@ -61,6 +59,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '001',
       'parallel_seq_id': '1',
       'program_id': '00327',
+      'recognized_filename': True,
       'suffix': 'rate',
       'visit': '001',
       'visit_group': '02',
@@ -77,6 +76,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '001',
       'parallel_seq_id': '1',
       'program_id': '00327',
+      'recognized_filename': True,
       'visit': '001',
       'visit_group': '02',
       'file_root': 'jw00327001001_02101_00002_nrca1',
@@ -88,6 +88,7 @@ FILENAME_PARSER_TEST_DATA = [
          'instrument': 'nirspec',
          'observation': '008',
          'program_id': '01118',
+         'recognized_filename': True,
          'visit': '001',
          'detector': 'Unknown',
          'file_root': 'jw01118008001_01_msa',
@@ -104,6 +105,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '002',
       'parallel_seq_id': '1',
       'program_id': '94015',
+      'recognized_filename': True,
       'suffix': 'crf',
       'visit': '002',
       'visit_group': '02',
@@ -121,6 +123,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '001',
       'parallel_seq_id': '1',
       'program_id': '90001',
+      'recognized_filename': True,
       'visit': '003',
       'visit_group': '02',
       'file_root': 'jw90001001003_02101_00001_nis',
@@ -133,6 +136,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'suffix': 'i2d',
       'target_id': 't001',
       'detector': 'Unknown',
@@ -146,6 +150,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'suffix': 'i2d',
       'target_id': 't001',
       'detector': 'Unknown',
@@ -159,6 +164,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'source_id': 's00001',
       'suffix': 'i2d',
       'detector': 'Unknown',
@@ -173,6 +179,7 @@ FILENAME_PARSER_TEST_DATA = [
       'epoch': '1',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'suffix': 'i2d',
       'target_id': 't001',
       'detector': 'Unknown',
@@ -187,6 +194,7 @@ FILENAME_PARSER_TEST_DATA = [
       'epoch': '1',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'source_id': 's00001',
       'suffix': 'i2d',
       'detector': 'Unknown',
@@ -200,6 +208,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'target_id': 't001',
       'detector': 'Unknown',
       'file_root': 'jw80600-o009_t001_miri_f1130w',
@@ -212,6 +221,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'miri',
       'optical_elements': 'f1130w',
       'program_id': '80600',
+      'recognized_filename': True,
       'source_id': 's00001',
       'detector': 'Unknown',
       'file_root': 'jw80600-o009_s00001_miri_f1130w',
@@ -227,6 +237,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '003',
       'parallel_seq_id': '1',
       'program_id': '00733',
+      'recognized_filename': True,
       'segment': '001',
       'suffix': 'rate',
       'visit': '001',
@@ -245,6 +256,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '003',
       'parallel_seq_id': '1',
       'program_id': '00733',
+      'recognized_filename': True,
       'segment': '001',
       'suffix': 'crfints',
       'visit': '001',
@@ -262,6 +274,7 @@ FILENAME_PARSER_TEST_DATA = [
       'observation': '003',
       'parallel_seq_id': '1',
       'program_id': '00733',
+      'recognized_filename': True,
       'segment': '001',
       'visit': '001',
       'visit_group': '02',
@@ -277,6 +290,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '011',
       'program_id': '00729',
+      'recognized_filename': True,
       'suffix': 'image_cal',
       'visit': '001',
       'detector': 'Unknown',
@@ -292,6 +306,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '011',
       'program_id': '00729',
+      'recognized_filename': True,
       'suffix': 'image_cal',
       'visit': '001',
       'detector': 'Unknown',
@@ -307,6 +322,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '001',
       'program_id': '00327',
+      'recognized_filename': True,
       'visit': '001',
       'detector': 'Unknown',
       'file_root': 'jw00327001001_gs-id_2',
@@ -321,6 +337,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '001',
       'program_id': '00327',
+      'recognized_filename': True,
       'visit': '001',
       'detector': 'Unknown',
       'file_root': 'jw00327001001_gs-id_12',
@@ -335,6 +352,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '048',
       'program_id': '86600',
+      'recognized_filename': True,
       'suffix': 'stream',
       'visit': '001',
       'detector': 'Unknown',
@@ -350,6 +368,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '011',
       'program_id': '00729',
+      'recognized_filename': True,
       'visit': '001',
       'detector': 'Unknown',
       'file_root': 'jw00729011001_gs-acq2_2019155024808',
@@ -364,6 +383,7 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '005',
       'program_id': '01118',
+      'recognized_filename': True,
       'segment': '002',
       'suffix': 'uncal',
       'visit': '001',
@@ -374,6 +394,7 @@ FILENAME_PARSER_TEST_DATA = [
     # Test msa file
     ('jw02560013001_01_msa.fits',
      {'program_id': '02560',
+      'recognized_filename': True,
       'observation': '013',
       'visit': '001',
       'filename_type': 'stage_2_msa',
@@ -433,43 +454,15 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_filename_parser_whole_filesystem():
-    """Test the filename_parser on all files currently in the filesystem."""
-    # Get all files
-    filesystem_dir = get_config()['filesystem']
-    all_files = []
-    for dir_name, _, file_list in os.walk(filesystem_dir):
-        for file in file_list:
-            if 'public' in file or 'proprietary' in file:
-                if file.endswith('.fits'):
-                    all_files.append(os.path.join(dir_name, file))
-
-    # Run the filename_parser on all files
-    bad_filenames = []
-    for filepath in all_files:
-        try:
-            filename_parser(filepath)
-        except ValueError:
-            bad_filenames.append(os.path.basename(filepath))
-
-    # Determine if the test failed
-    fail = bad_filenames != []
-    failure_msg = '{} files could not be successfully parsed: \n - {}'.\
-        format(len(bad_filenames), '\n - '.join(bad_filenames))
-
-    # Check which ones failed
-    assert not fail, failure_msg
-
-
 def test_filename_parser_non_jwst():
     """Attempt to generate a file parameter dictionary from a file
     that is not formatted in the JWST naming convention. Ensure the
     appropriate error is raised.
     """
-    with pytest.raises(ValueError):
-        filename = 'not_a_jwst_file.fits'
-        filename_parser(filename)
+    filename = 'not_a_jwst_file.fits'
+    filename_dict = filename_parser(filename)
+    assert 'recognized_filename' in filename_dict
+    assert filename_dict['recognized_filename'] is False
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -511,7 +504,7 @@ def test_validate_config():
         "admin_account": "",
         "auth_mast": "",
         "connection_string": "",
-        "database": {
+        "databases": {
             "engine": "",
             "name": "",
             "user": "",
@@ -519,12 +512,32 @@ def test_validate_config():
             "host": "",
             "port": ""
         },
+        "django_databases": {
+            "default": {
+                "ENGINE": "",
+                "NAME": "",
+                "USER": "",
+                "PASSWORD": "",
+                "HOST": "",
+                "PORT": ""
+            },
+            "monitors": {
+                "ENGINE": "",
+                "NAME": "",
+                "USER": "",
+                "PASSWORD": "",
+                "HOST": "",
+                "PORT": ""
+            }
+        },
+        "django_debug": "",
         "jwql_dir": "",
         "jwql_version": "",
         "server_type": "",
         "log_dir": "",
         "mast_token": "",
         "outputs": "",
+        "working": "",
         "preview_image_filesystem": "",
         "filesystem": "",
         "setup_file": "",

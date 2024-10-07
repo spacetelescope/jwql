@@ -27,6 +27,11 @@
 		<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-{{ bokeh_version }}.min.js"></script>
 		<script src="{{ static('js/jwql.js') }}?{% now 'U' %}"></script>
 
+		<!-- Needed for Daterange on Query Page -->
+		<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
 		{% block preamble %}
         {% endblock %}
 
@@ -116,7 +121,6 @@
 								<!-- <a class="dropdown-item disabled-dropdown" href='#'>Unlooked Images</a> -->
 								<!-- <a class="dropdown-item disabled-dropdown" href="#">Image Anomalies</a> -->
 								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
-								<a class="dropdown-item" href={{ url('jwql:archive_date_range', args=[inst_key]) }}>Date Range Images</a>
 								<div class="dropdown-divider"></div>
 								<a class='dropdown-heading mx-3'>Monitors</a>
 									{% for monitor_name, monitor_url in inst_tools %}

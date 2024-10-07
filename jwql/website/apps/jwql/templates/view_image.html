@@ -8,20 +8,55 @@
 
 {% block content %}
 
-    <main role="main" class="container">
+    <main role="main" class="image_views">
     	<!-- Show image group name -->
     	<h3>{{ file_root }}</h3>
 
     	<!-- Specify the attributes of what is currently being shown -->
-    	<div class="d-flex flex-row">
+        <div class="d-flex flex-row">
     		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>
             <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{file_root}}", "{{base_url}}");'>
-    	</div>
-    	FITS Filename: <a id="fits_filename"></a><br>
-    	JPG Filename: <a id="jpg_filename"></a><br><br>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Visit Status: {{ basic_info.visit_status }}</div>
+            <div class="APT_parameters">Category: {{ basic_info.category }}</div>
+            <div class="APT_parameters">Exp Type: <a>{{ basic_info.exp_type }}</a></div>
+            <div class="APT_parameters">Subarray: {{ basic_info.subarray }}</div>
+            <div class="APT_parameters">Viewed: {{ marked_viewed }}</div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="APT_parameters">Filter: {{ basic_info.filter }}</div>
+            {% if 'pupil' in basic_info %}
+            <div class="APT_parameters">Pupil: {{ basic_info.pupil }}</div>
+            {% endif %}
+            {% if 'grating' in basic_info %}
+                <div class="APT_parameters">Grating: {{ basic_info.grating }}</div>
+            {% endif %}
+            <div class="APT_parameters">Exp Start: {{ expstart_str }}</div>
+        </div>
+
+        <div class="collapsible">
+            <button class="collapsible-btn btn-primary">More Exposure Info +</button>
+            <div class="collapsible-content">
+
+                <table id="dynamic-table" class="split-dictionary">
+                    <tbody id="table-body" class="alternate-rows">
+                        <!-- Table body will be populated dynamically with JavaScript -->
+                        <script>
+                        // Line below needed to put dictionary into the proper format
+                        py_dict = {{ additional_info | safe }};
+                        make_table_from_dict(py_dict, "table-body", 2)
+                        </script>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <br>
+    	FITS Filename: <a id="fits_filename"></a> &emsp; JPG Filename: <a id="jpg_filename"></a><br><br>
 
     	<!-- Allow the user to change the file type that is being displayed -->
     	<a id="view_file_type" data-current-suffix="">View File Type:</a>
@@ -44,12 +79,13 @@
         </p>
 
         <div class="row">
+
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
     		    	<img class="image_preview_viewer" id="image_viewer"
                          onerror="image_error(this, true);"
-                         title="Preview image for {{ file_root }}">
+                         title="Preview image for {{ file_root }}" width=1000rem height=auto>
     		    </span>
 
                 <div class="int_changer">
@@ -82,9 +118,9 @@
                     <h5>Submit Anomaly</h5>
                     <form action="" method="post">
                         <!--Show any errors from a previous form submission-->
-                        {% if form.errors %}
+                        {% if anomaly_form.errors %}
                             <fieldset>
-                                {% for field in form %}
+                                {% for field in anomaly_form %}
                                     {% for error in field.errors %}
                                         <div class="alert alert-danger">
                                             <strong>{{ error|escape }}</strong>
@@ -98,14 +134,16 @@
                         {{ csrf_input }}
 
                         <!--Show the field forms-->
-                        {% for field in form %}
+                        {% for field in anomaly_form %}
                             <ul>
                             {% for subwidget in field.subwidgets %}
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                             </ul>
                         {% endfor %}
-                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                        <h5>Comments</h5>
+                        {{ comment_form.comment }}
+                        <button class="btn btn-primary" type="submit">Submit</button>
                     </form>
                 </div>
             </div>

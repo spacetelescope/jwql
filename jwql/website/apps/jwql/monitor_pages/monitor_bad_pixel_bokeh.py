@@ -24,7 +24,8 @@ from astropy.time import Time
 from bokeh.embed import components, file_html
 from bokeh.io import show
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Panel, Tabs, Text, Title
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Legend, LinearColorMapper, Text, Title
+from bokeh.models.layouts import Tabs, TabPanel
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 import datetime
@@ -97,7 +98,16 @@ class BadPixelPlots():
         lines_to_remove = ["<!DOCTYPE html>",
                            '<html lang="en">',
                            '  </body>',
-                           '</html>']
+                           '</html>',
+                           '    <style>',
+                           '      html, body {',
+                           '        box-sizing: border-box;',
+                           '        display: flow-root;',
+                           '        height: 100%;',
+                           '        margin: 0;',
+                           '        padding: 0;',
+                           '      }',
+                           '    </style>']
 
         # Our Django-related lines that need to be at the top of the file
         hstring = """href="{{'/jwqldb/%s_bad_pixel_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Go to JWQLDB page</a>"""
@@ -149,7 +159,7 @@ class BadPixelPlots():
             plot_layout = badpix_monitor_plot_layout(all_plots)
 
             # Create a tab for each type of plot
-            detector_panels.append(Panel(child=plot_layout, title=detector))
+            detector_panels.append(TabPanel(child=plot_layout, title=detector))
 
         # Build tabs
         tabs = Tabs(tabs=detector_panels)
@@ -161,7 +171,8 @@ class BadPixelPlots():
         template_dir = os.path.join(os.path.dirname(__file__), '../templates')
         template_file = os.path.join(template_dir, 'bad_pixel_monitor_savefile_basic.html')
         temp_vars = {'inst': self.instrument, 'plot_script': script, 'plot_div': div}
-        self._html = file_html(tabs, CDN, f'{self.instrument} bad pix monitor', template_file, temp_vars)
+        self._html = file_html(tabs, CDN, title=f'{self.instrument} bad pix monitor',
+                               template=template_file, template_variables=temp_vars)
 
         # Modify the html such that our Django-related lines are kept in place,
         # which will allow the page to keep the same formatting and styling as
@@ -667,12 +678,12 @@ class BadPixTrendPlot():
         self.plot.tools.append(hover_tool)
 
         # Make the x axis tick labels look nice
-        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                          seconds=["%d %b %H:%M:%S.%3N"],
-                                                          hours=["%d %b %H:%M"],
-                                                          days=["%d %b %H:%M"],
-                                                          months=["%d %b %Y %H:%M"],
-                                                          years=["%d %b %Y"]
+        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds="%d %b %H:%M:%S.%3N",
+                                                          seconds="%d %b %H:%M:%S.%3N",
+                                                          hours="%d %b %H:%M",
+                                                          days="%d %b %H:%M",
+                                                          months="%d %b %Y %H:%M",
+                                                          years="%d %b %Y"
                                                           )
         self.plot.xaxis.major_label_orientation = np.pi / 4
 

@@ -22,11 +22,10 @@ import os
 from astroquery.mast import Mast
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ON_GITHUB_ACTIONS
 from jwql.utils import mast_utils as mu
 from jwql.utils.utils import get_config
 
-# Temporary until JWST operations: switch to test string for MAST request URL
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
@@ -34,8 +33,10 @@ if not ON_GITHUB_ACTIONS:
 def test_astroquery_mast():
     """Test if the astroquery.mast service can complete a request"""
     service = 'Mast.Caom.Filtered'
-    params = {'columns': 'COUNT_BIG(*)', 'filters': [], 'pagesize': 1,
-              'page': 1}
+    params = {'columns': 'COUNT_BIG(*)',
+              'filters': [{"paramName": "obs_collection",
+                           "values": ["JWST"]}, ],
+              'pagesize': 1, 'page': 1}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
 

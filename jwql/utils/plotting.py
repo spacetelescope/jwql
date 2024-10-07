@@ -70,7 +70,7 @@ def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
 
     # Make the figure
     hover = HoverTool(tooltips=[('count', '@counts')])
-    plt = figure(x_range=FactorRange(*x), plot_height=250, tools=[hover],
+    plt = figure(x_range=FactorRange(*x), height=250, tools=[hover],
                  **kwargs)
     plt.vbar(x='x', top='counts', width=0.9, source=source, line_color="white",
              fill_color=factor_cmap('x', palette=Category20c[colors],

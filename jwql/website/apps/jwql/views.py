@@ -44,15 +44,16 @@ Dependencies
 
 import csv
 import datetime
-import json
 import glob
+import json
 import logging
-import os
 import operator
+import os
 import socket
 
-from bokeh.layouts import layout
+from astropy.time import Time
 from bokeh.embed import components
+from bokeh.layouts import layout
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -60,34 +61,36 @@ from sqlalchemy import inspect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, QUERY_CONFIG_TEMPLATE, URL_DICT, QueryConfigKeys
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, QUERY_CONFIG_TEMPLATE, QUERY_CONFIG_KEYS
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
-from .data_containers import build_table
-from .data_containers import get_acknowledgements
-from .data_containers import get_available_suffixes
-from .data_containers import get_anomaly_form
-from .data_containers import get_dashboard_components
-from .data_containers import get_edb_components
-from .data_containers import get_explorer_extension_names
-from .data_containers import get_header_info
-from .data_containers import get_image_info
-from .data_containers import get_instrument_looks
-from .data_containers import get_rootnames_from_query
-from .data_containers import get_thumbnail_by_rootname
-from .data_containers import random_404_page
-from .data_containers import text_scrape
-from .data_containers import thumbnails_ajax
-from .data_containers import thumbnails_query_ajax
-from .data_containers import thumbnails_date_range_ajax
-from .forms import JwqlQueryForm
-from .forms import FileSearchForm
+from .data_containers import (
+    build_table,
+    get_acknowledgements,
+    get_additional_exposure_info,
+    get_anomaly_form,
+    get_available_suffixes,
+    get_comment_form,
+    get_exp_comment_form,
+    get_dashboard_components,
+    get_edb_components,
+    get_explorer_extension_names,
+    get_group_anomalies,
+    get_header_info,
+    get_image_info,
+    get_instrument_looks,
+    get_rootnames_from_query,
+    random_404_page,
+    text_scrape,
+    thumbnails_ajax,
+    thumbnails_query_ajax,
+)
+from .forms import FileSearchForm, JwqlQueryForm
+
 if not os.environ.get("READTHEDOCS"):
-    from .models import Observation, RootFileInfo
+    from .models import RootFileInfo
 from astropy.io import fits
-from astropy.time import Time
-import astropy.units as u
 
 
 def jwql_query(request):
@@ -111,7 +114,8 @@ def jwql_query(request):
                 query_configs[instrument]['pupils'] = [query_unformat(i) for i in form.cleaned_data['{}_pupil'.format(instrument)]]
                 query_configs[instrument]['anomalies'] = [query_unformat(i) for i in form.cleaned_data['{}_anomalies'.format(instrument)]]
 
-            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_subarrays, all_pupils, all_anomalies = {}, {}, {}, {}, {}, {}, {}, {}, {}
+            all_filters, all_apers, all_detectors, all_exptypes = {}, {}, {}, {}
+            all_readpatts, all_gratings, all_subarrays, all_pupils, all_anomalies = {}, {}, {}, {}, {}
             for instrument in query_configs:
                 all_filters[instrument] = query_configs[instrument]['filters']
                 all_apers[instrument] = query_configs[instrument]['apertures']
@@ -124,23 +128,31 @@ def jwql_query(request):
                 all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
             parameters = QUERY_CONFIG_TEMPLATE.copy()
-            parameters[QUERY_CONFIG_KEYS.INSTRUMENTS] = form.cleaned_data['instrument']
-            parameters[QUERY_CONFIG_KEYS.LOOK_STATUS] = form.cleaned_data['look_status']
-            parameters[QUERY_CONFIG_KEYS.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
-            parameters[QUERY_CONFIG_KEYS.SORT_TYPE] = form.cleaned_data['sort_type']
-            parameters[QUERY_CONFIG_KEYS.ANOMALIES] = all_anomalies
-            parameters[QUERY_CONFIG_KEYS.APERTURES] = all_apers
-            parameters[QUERY_CONFIG_KEYS.FILTERS] = all_filters
-            parameters[QUERY_CONFIG_KEYS.DETECTORS] = all_detectors
-            parameters[QUERY_CONFIG_KEYS.EXP_TYPES] = all_exptypes
-            parameters[QUERY_CONFIG_KEYS.READ_PATTS] = all_readpatts
-            parameters[QUERY_CONFIG_KEYS.GRATINGS] = all_gratings
-            parameters[QUERY_CONFIG_KEYS.SUBARRAYS] = all_subarrays
-            parameters[QUERY_CONFIG_KEYS.PUPILS] = all_pupils
+            parameters[QueryConfigKeys.INSTRUMENTS] = form.cleaned_data['instrument']
+            parameters[QueryConfigKeys.LOOK_STATUS] = form.cleaned_data['look_status']
+            parameters[QueryConfigKeys.DATE_RANGE] = form.cleaned_data['date_range']
+            parameters[QueryConfigKeys.PROPOSAL_CATEGORY] = form.cleaned_data['proposal_category']
+            parameters[QueryConfigKeys.SORT_TYPE] = form.cleaned_data['sort_type']
+            parameters[QueryConfigKeys.NUM_PER_PAGE] = form.cleaned_data['num_per_page']
+            parameters[QueryConfigKeys.ANOMALIES] = all_anomalies
+            parameters[QueryConfigKeys.APERTURES] = all_apers
+            parameters[QueryConfigKeys.FILTERS] = all_filters
+            parameters[QueryConfigKeys.DETECTORS] = all_detectors
+            parameters[QueryConfigKeys.EXP_TYPES] = all_exptypes
+            parameters[QueryConfigKeys.READ_PATTS] = all_readpatts
+            parameters[QueryConfigKeys.GRATINGS] = all_gratings
+            parameters[QueryConfigKeys.SUBARRAYS] = all_subarrays
+            parameters[QueryConfigKeys.PUPILS] = all_pupils
 
             # save the query config settings to a session
             request.session['query_config'] = parameters
-            return redirect('/query_submit')
+            # Check if the download button value exists in the POST message (meaning Download was pressed)
+            download_button_value = request.POST.get('download_jwstqueryform', None)
+            if(download_button_value):
+                return redirect('/query_download')
+            else:
+                # submit was pressed go to the query_submit page
+                return redirect('/query_submit')
 
     context = {'form': form,
                'inst': ''}
@@ -219,110 +231,6 @@ def save_page_navigation_data_ajax(request):
 
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-
-
-def archive_date_range(request, inst):
-    """Generate the page for date range images
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    template = 'archive_date_range.html'
-    sort_type = request.session.get('image_sort', 'Recent')
-    group_type = request.session.get('image_group', 'Exposure')
-    context = {'inst': inst,
-               'base_url': get_base_url(),
-               'sort': sort_type,
-               'group': group_type}
-
-    return render(request, template, context)
-
-
-def archive_date_range_ajax(request, inst, start_date, stop_date):
-    """Generate the page listing all archived images within the inclusive date range for all proposals
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-    start_date : str
-        Start date for date range
-    stop_date : str
-        stop date for date range
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    # Calculate start date/time in MJD format to begin our range
-    inclusive_start_time = Time(start_date)
-
-    # Add a minute to the stop time and mark it 'exclusive' for code clarity,
-    # doing this to get all seconds selected minute
-    exclusive_stop_time = Time(stop_date) + (1 * u.minute)
-
-    # Get a queryset of all observations STARTING WITHIN our date range
-    begin_after_start = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsstart__gte=inclusive_start_time.mjd)
-    all_entries_beginning_in_range = begin_after_start.filter(
-        obsstart__lt=exclusive_stop_time.mjd)
-
-    # Get a queryset of all observations ENDING WITHIN our date range
-    end_after_start = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsend__gte=inclusive_start_time.mjd)
-    all_entries_ending_in_range = end_after_start.filter(
-        obsend__lt=exclusive_stop_time.mjd)
-
-    # Get a queryset of all observations SPANNING
-    # (starting before and ending after) our date range.
-    # Bump our window out a few days to catch hypothetical
-    # observations that last over 24 hours.
-    # The larger the window the more time the query takes so keeping it tight.
-    two_days_before_start_time = Time(start_date) - (2 * u.day)
-    two_days_after_end_time = Time(stop_date) + (3 * u.day)
-    end_after_stop = Observation.objects.filter(
-        proposal__archive__instrument=inst,
-        obsend__gte=two_days_after_end_time.mjd)
-    all_entries_spanning_range = end_after_stop.filter(
-        obsstart__lt=two_days_before_start_time.mjd)
-
-    obs_beginning = [observation for observation in all_entries_beginning_in_range]
-    obs_ending = [observation for observation in all_entries_ending_in_range]
-    obs_spanning = [observation for observation in all_entries_spanning_range]
-
-    # Create a single list of all pertinent observations
-    all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
-    # Get all thumbnails that occurred within the time frame for these observations
-    data = thumbnails_date_range_ajax(
-        inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
-    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
-    data['thumbnail_group'] = request.session.get("image_group", "Exposure")
-
-    # Create Dictionary of Rootnames with expstart
-    save_page_navigation_data(request, data)
-    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def archived_proposals(request, inst):
@@ -481,12 +389,12 @@ def archive_thumbnails_query_ajax(request):
     filtered_rootnames = get_rootnames_from_query(parameters)
 
     paginator = Paginator(filtered_rootnames,
-                          parameters[QUERY_CONFIG_KEYS.NUM_PER_PAGE])
+                          parameters[QueryConfigKeys.NUM_PER_PAGE])
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
     data = thumbnails_query_ajax(page_obj.object_list)
-    data['thumbnail_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+    data['thumbnail_sort'] = parameters[QueryConfigKeys.SORT_TYPE]
     data['thumbnail_group'] = request.session.get("image_group", "Exposure")
 
     # add top level parameters for summarizing
@@ -510,7 +418,7 @@ def archive_thumbnails_query_ajax(request):
     data['total_pages'] = paginator.num_pages
     data['total_files'] = paginator.count
 
-    request.session['image_sort'] = parameters[QUERY_CONFIG_KEYS.SORT_TYPE]
+    request.session['image_sort'] = parameters[QueryConfigKeys.SORT_TYPE]
     save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
@@ -873,6 +781,36 @@ def query_submit(request):
     return render(request, template, context)
 
 
+def query_download(request):
+    """Download query results in csv format
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage.
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage (csv file to be downloaded)
+    """
+    parameters = request.session.get("query_config", QUERY_CONFIG_TEMPLATE.copy())
+    filtered_rootnames = get_rootnames_from_query(parameters)
+
+    today = datetime.datetime.now().strftime('%Y%m%d_%H:%M')
+    filename = f'jwql_query_{today}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    header_row = ["Index", "Name"]
+    writer = csv.writer(response)
+    writer.writerow(header_row)
+    for index, rootname in enumerate(filtered_rootnames):
+        writer.writerow([index, rootname])
+
+    return response
+
+
 def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
 
@@ -980,7 +918,8 @@ def explore_image(request, inst, file_root, filetype):
     else:
         raise FileNotFoundError(f'WARNING: {full_fits_file} does not exist!')
 
-    form = get_anomaly_form(request, inst, file_root)
+    anomaly_form = get_anomaly_form(request, inst, file_root)
+    comment_form = get_comment_form(request, file_root)
 
     context = {'inst': inst,
                'file_root': file_root,
@@ -989,12 +928,14 @@ def explore_image(request, inst, file_root, filetype):
                'extension_groups': extension_groups,
                'extension_ints': extension_ints,
                'base_url': get_base_url(),
-               'form': form}
+               'anomaly_form': anomaly_form,
+               'comment_form': comment_form}
 
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
+def explore_image_ajax(request, inst, file_root, filetype, line_plots='false', low_lim=None, high_lim=None,
+                       ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -1239,6 +1180,8 @@ def view_exposure(request, inst, group_root):
 
     # Get the anomaly submission form
     form = get_anomaly_form(request, inst, group_root)
+    group_anomalies = get_group_anomalies(group_root)
+    exposure_comment_form = get_exp_comment_form(request, group_root)
 
     # if we get to this page without any navigation data,
     # previous/next buttons will be hidden
@@ -1272,7 +1215,23 @@ def view_exposure(request, inst, group_root):
 
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.filter(root_name__startswith=group_root)
+    if len(root_file_info) == 0:
+        return generate_error_view(request, inst, f"No groups starting with {group_root} currently in JWQL database.")
     viewed = all([rf.viewed for rf in root_file_info])
+
+    # Convert expstart from MJD to a date
+    expstart_str = Time(root_file_info[0].expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
+
+    # Create one dict of info to show at the top of the page, and another dict of info
+    # to show in the collapsible text box.
+    try:
+        basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+    except FileNotFoundError as e:
+        return generate_error_view(request, inst,
+                                   "Looks like at least one of your files has not yet been ingested into the JWQL database.  \
+                                   If this is a newer observation, please wait a few hours and try again.  \
+                                   If this observation is over a day old please contact JWQL support.",
+                                   exception_message=f"Received Error: '{e}'")
 
     # Build the context
     context = {'base_url': get_base_url(),
@@ -1287,7 +1246,12 @@ def view_exposure(request, inst, group_root):
                'total_ints': image_info['total_ints'],
                'detectors': sorted(image_info['detectors']),
                'form': form,
-               'marked_viewed': viewed}
+               'marked_viewed': viewed,
+               'expstart_str': expstart_str,
+               'basic_info': basic_info,
+               'additional_info': additional_info,
+               'group_anomalies': group_anomalies,
+               'exposure_comment_form': exposure_comment_form}
 
     return render(request, template, context)
 
@@ -1331,7 +1295,8 @@ def view_image(request, inst, file_root):
                          'Please add them, so that they will appear in a '
                          'consistent order on the webpage.'))
 
-    form = get_anomaly_form(request, inst, file_root)
+    anomaly_form = get_anomaly_form(request, inst, file_root)
+    comment_form = get_comment_form(request, file_root)
 
     prop_id = file_root[2:7]
 
@@ -1363,6 +1328,13 @@ def view_image(request, inst, file_root):
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
+    # Convert expstart from MJD to a date
+    expstart_str = Time(root_file_info.expstart, format='mjd').to_datetime().strftime('%d %b %Y %H:%M')
+
+    # Create one dict of info to show at the top of the page, and another dict of info
+    # to show in the collapsible text box.
+    basic_info, additional_info = get_additional_exposure_info(root_file_info, image_info)
+
     # Build the context
     context = {'base_url': get_base_url(),
                'file_root_list': file_root_list,
@@ -1374,7 +1346,35 @@ def view_image(request, inst, file_root):
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
-               'form': form,
-               'marked_viewed': root_file_info.viewed}
+               'anomaly_form': anomaly_form,
+               'comment_form': comment_form,
+               'marked_viewed': root_file_info.viewed,
+               'expstart_str': expstart_str,
+               'basic_info': basic_info,
+               'additional_info': additional_info}
 
+    return render(request, template, context)
+
+
+def generate_error_view(request, inst, error_message, exception_message=""):
+    """Generate the error view page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    error_message : str
+        Custom Error Message to be seen in error_view.html
+    exception_message: str
+        if an exception caused this to be generated, pass the exception message along for display
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'error_view.html'
+    context = {'base_url': get_base_url(), 'inst': inst, 'error_message': error_message, 'exception_message': exception_message}
     return render(request, template, context)
