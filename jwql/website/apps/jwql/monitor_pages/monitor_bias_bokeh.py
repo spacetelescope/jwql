@@ -37,7 +37,6 @@ import pandas as pd
 from PIL import Image
 from sqlalchemy import func
 
-from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import get_unique_values_per_column, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats, session
 from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
@@ -303,7 +302,7 @@ class BiasMonitorPlots():
         """
         # Insert into our html template and save
         temp_vars = {'inst': self.instrument, 'plot_script': self.script, 'plot_div': self.div}
-        html_lines = file_html(self.tabs, CDN, title=f'{self.instrument} bias monitor', 
+        html_lines = file_html(self.tabs, CDN, title=f'{self.instrument} bias monitor',
                                template=self.html_file, template_variables=temp_vars)
 
         lines = html_lines.split('\n')
