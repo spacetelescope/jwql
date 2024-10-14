@@ -41,7 +41,11 @@ jobs:
           init-shell: none
           generate-run-shell: true
       - id: version
-        run: echo version=$(dunamai from any --strict --pattern "default-unprefixed" --style semver) >> $GITHUB_OUTPUT
+        name: retrieve package version with dunamai
+        run: |
+          micromamba install -y dunamai
+          echo version=$(dunamai from any --strict --pattern "default-unprefixed" --style semver) >> $GITHUB_OUTPUT
+          micromamba remove -y dunamai
       - run: pip install .
       - run: pip list
       - id: filename
