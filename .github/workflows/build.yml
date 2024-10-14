@@ -40,12 +40,10 @@ jobs:
             conda
           init-shell: none
           generate-run-shell: true
+      - id: version
+        run: echo version=$(dunamai from any --strict --pattern "default-unprefixed" --style semver) >> $GITHUB_OUTPUT
       - run: pip install .
       - run: pip list
-      - id: version
-        uses: mtkennerly/dunamai-action@v1
-        with:
-          args: --strict --pattern "default-unprefixed" --style semver
       - id: filename
         run: echo "filename=jwql_${{ steps.version.outputs.version }}_conda_${{ runner.os }}_${{ runner.arch }}_py${{ matrix.python-version }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
