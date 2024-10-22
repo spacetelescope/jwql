@@ -43,9 +43,8 @@ jobs:
       - run: pip install .
       - run: pip list
       - id: version
-        uses: mtkennerly/dunamai-action@v1
-        with:
-          args: --strict --pattern "default-unprefixed" --style semver
+        name: retrieve package version
+        run: echo version=$(python -c "import jwql; print(jwql.__version__)") >> $GITHUB_OUTPUT
       - id: filename
         run: echo "filename=jwql_${{ steps.version.outputs.version }}_conda_${{ runner.os }}_${{ runner.arch }}_py${{ matrix.python-version }}.yml" >> $GITHUB_OUTPUT
       - run: conda env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
