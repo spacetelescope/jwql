@@ -2144,7 +2144,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     ----------
     inst : str
         Name of JWST instrument
-    proposal : str (optional)
+    proposal : str
         Number of APT proposal to filter
     obs_num : str (optional)
         Observation number
@@ -2193,6 +2193,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
     for rootname in rootnames:
+        # Skip over unsupported filenames
+        # e.g. jw02279-o001_s000... are spec2 products for WFSS with one file per source
+        # Any filename with a dash after the proposal number is either this spec2 product
+        # or a level 3 product
+        if f'jw{proposal}-' in rootname:
+            continue
 
         # Parse filename
         filename_dict = filename_parser(rootname)
@@ -2200,20 +2206,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' in filename_dict['filename_type']:
                 continue
-
         else:
-            # Temporary workaround for noncompliant files in filesystem
-            filename_dict = {'activity': rootname[17:19],
-                             'detector': rootname[26:],
-                             'exposure_id': rootname[20:25],
-                             'observation': rootname[7:10],
-                             'parallel_seq_id': rootname[16],
-                             'program_id': rootname[2:7],
-                             'visit': rootname[10:13],
-                             'visit_group': rootname[14:16],
-                             'group_root': rootname[:26]}
-            logging.warning((f'While running thumbnails_ajax() on rootname {rootname}, '
-                             'filename_parser() failed to recognize the file pattern.'))
+            # Skip over files not recognized by the filename_parser
+            continue
 
         # Get list of available filenames and exposure start times. All files with a given
         # rootname will have the same exposure start time, so just keep the first.
