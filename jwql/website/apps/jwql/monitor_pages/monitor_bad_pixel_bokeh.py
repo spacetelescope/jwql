@@ -32,19 +32,21 @@ import datetime
 import numpy as np
 from sqlalchemy import and_, func
 
-from jwql.database.database_interface import get_unique_values_per_column, session
-from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
-from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
-from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
-from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
-from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.utils.constants import BAD_PIXEL_MONITOR_MAX_POINTS_TO_PLOT, BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES
 from jwql.utils.constants import DETECTOR_PER_INSTRUMENT, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import filesystem_path, get_config, read_png, save_png
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = get_config()['outputs']
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+    from jwql.website.apps.jwql.monitor_models.bad_pixel import *
 
 
 class BadPixelPlots():
@@ -273,40 +275,33 @@ class BadPixelData():
             self.get_trending_data(badtype)
 
     def get_most_recent_entry(self):
-        """Get all nedded data from the database tables.
+        """For the given detector, get the latest entry for each bad pixel type
         """
-        # For the given detector, get the latest entry for each bad pixel type
-        subq = (session
-                .query(self.pixel_table.type, func.max(self.pixel_table.entry_date).label("max_created"))
-                .filter(self.pixel_table.detector == self.detector)
-                .group_by(self.pixel_table.type)
-                .subquery()
-                )
 
-        query = (session.query(self.pixel_table)
-                 .join(subq, self.pixel_table.entry_date == subq.c.max_created)
-                 )
+        bad_pixel_types = self.pixel_table.objects.values('type').distinct()
 
-        latest_entries_by_type = query.all()
-        session.close()
+        for bad_type in bad_pixel_types:
+            bad_filters = {'detector__iexact': self.detector, 
+                           'type': bad_type}
 
-        # Organize the results
-        for row in latest_entries_by_type:
-            self.new_bad_pix[row.type] = (row.x_coord, row.y_coord)
-            self.background_file[row.type] = row.source_files[0]
-            self.obs_start_time[row.type] = row.obs_start_time
-            self.obs_end_time[row.type] = row.obs_end_time
-            self.num_files[row.type] = len(row.source_files)
-            self.baseline_file[row.type] = row.baseline_file
+            record = (self.pixel_table.objects
+                        .filter(**bad_filters)
+                        .order_by("-obs_end_time").first())
 
-        # If no data is retrieved from the database at all, add a dummy generic entry
-        if len(self.new_bad_pix.keys()) == 0:
-            self.new_bad_pix[self.badtypes[0]] = ([], [])
-            self.background_file[self.badtypes[0]] = ''
-            self.obs_start_time[self.badtypes[0]] = datetime.datetime.today()
-            self.obs_end_time[self.badtypes[0]] = datetime.datetime.today()
-            self.num_files[self.badtypes[0]] = 0
-            self.baseline_file[self.badtypes[0]] = ''
+            if record is None:
+                self.new_bad_pix[bad_type] = ([], [])
+                self.background_file[bad_type] = ''
+                self.obs_start_time[bad_type] = datetime.datetime.today()
+                self.obs_end_time[bad_type] = datetime.datetime.today()
+                self.num_files[bad_type] = 0
+                self.baseline_file[bad_type] = ''
+            else:
+                self.new_bad_pix[bad_type] = (record.x_coord, record.y)
+                self.background_file[bad_type] = record.source_file
+                self.obs_start_time[bad_type] = record.obs_start_time
+                self.obs_end_time[bad_type] = record.obs_end_time
+                self.num_files[bad_type] = len(record.source_files)
+                self.baseline_file[bad_type] = record.baseline_file
 
     def get_trending_data(self, badpix_type):
         """Retrieve and organize the data needed to produce the trending plot.
@@ -316,21 +311,20 @@ class BadPixelData():
         badpix_type : str
             The type of bad pixel to query for, e.g. 'dead'
         """
-        # Query database for all data in the table with a matching detector and bad pixel type
-        all_entries_by_type = session.query(self.pixel_table.type, self.pixel_table.detector, func.array_length(self.pixel_table.x_coord, 1),
-                                            self.pixel_table.obs_mid_time) \
-            .filter(and_(self.pixel_table.detector == self.detector, self.pixel_table.type == badpix_type)) \
-            .all()
+        filters = {"type": badpix_type,
+                   "detector": self.detector}
 
-        # Organize the results
+        all_entries_by_type = self.pixel_table.objects.filter(**filters).all()
+
         num_pix = []
         times = []
+
         for i, row in enumerate(all_entries_by_type):
             if i == 0:
-                badtype = row[0]
-                detector = row[1]
-            num_pix.append(row[2])
-            times.append(row[3])
+                badtype = row.type
+                detector = row.detector
+            num_pix.append(len(row.x_coord))
+            times.append(row.obs_mid_time)
 
         # If there was no data in the database, create an empty entry
         if len(num_pix) == 0:
@@ -339,9 +333,7 @@ class BadPixelData():
             num_pix = [0]
             times = [datetime.datetime.today()]
 
-        # Add results to self.trending_data
-        self.trending_data[badpix_type] = (detector, num_pix, times)
-        session.close()
+        self.trending_data[badtype] = (detector, num_pix, times)
 
 
 class NewBadPixPlot():
