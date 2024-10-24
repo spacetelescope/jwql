@@ -97,12 +97,12 @@ class InteractivePreviewImg:
         if self.contrast is None:
             self.contrast = 0.25
         if isinstance(group, list):
-            if len(group) > 2:
+            if len(group) != 2:
                 raise ValueError(
                     'group must be an integer or 2-element list')
         self.group = group
         if isinstance(integ, list):
-            if len(integ) > 2:
+            if len(integ) != 2:
                 raise ValueError(
                     'integ must be an integer or 2-element list')
         self.integ = integ
