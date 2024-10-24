@@ -49,21 +49,26 @@ from bokeh.plotting import figure, output_file, save
 import numpy as np
 from sqlalchemy.exc import DataError
 
-from jwql.database.database_interface import engine
-from jwql.database.database_interface import session
-from jwql.database.database_interface import FilesystemCharacteristics
-from jwql.database.database_interface import FilesystemGeneral
-from jwql.database.database_interface import FilesystemInstrument
-from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.constants import FILESYSTEM_MONITOR_SUBDIRS, FILE_SUFFIX_TYPES, FILTERS_PER_INSTRUMENT, INSTRUMENT_SERVICE_MATCH
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ON_GITHUB_ACTIONS, ON_READTHEDOCS
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.protect_module import lock_module
 from jwql.website.apps.jwql.data_containers import get_instrument_proposals
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    # Need to set up django apps before we can access the models
+    import django  # noqa: E402 (module level import not at top of file)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
+    django.setup()
+
+    # Import * is okay here because this module specifically only contains database models
+    # for this monitor
+    from jwql.website.apps.jwql.monitor_models.common import *  # noqa: E402 (module level import not at top of file)
 
 SETTINGS = get_config()
 FILESYSTEM = SETTINGS['filesystem']
@@ -430,9 +435,9 @@ def update_central_store_database(central_storage_dict):
         new_record['size'] = central_storage_dict[area]['size']
         new_record['used'] = central_storage_dict[area]['used']
         new_record['available'] = central_storage_dict[area]['available']
-        with engine.begin() as connection:
-            connection.execute(CentralStore.__table__.insert(), new_record)
-    session.close()
+
+        entry = CentralStorage(**new_record)
+        entry.save()
 
 
 def update_characteristics_database(char_info):
@@ -458,11 +463,9 @@ def update_characteristics_database(char_info):
         new_record['instrument'] = instrument
         new_record['filter_pupil'] = optics
         new_record['obs_per_filter_pupil'] = values
-        with engine.begin() as connection:
-            connection.execute(
-                FilesystemCharacteristics.__table__.insert(), new_record)
 
-    session.close()
+        entry = FilesystemCharacteristics(**new_record)
+        entry.save()
 
 
 def update_database(general_results_dict, instrument_results_dict, central_storage_dict):
@@ -478,8 +481,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
     """
     logging.info('\tUpdating the database')
 
-    with engine.begin() as connection:
-        connection.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
+    fs_general_entry = FilesystemGeneral(**general_results_dict)
+    fs_general_entry.save()
 
     # Add data to filesystem_instrument table
     for instrument in JWST_INSTRUMENT_NAMES:
@@ -493,13 +496,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
 
             # Protect against updated enum options that have not been propagated to
             # the table definition
-            try:
-                with engine.begin() as connection:
-                    connection.execute(FilesystemInstrument.__table__.insert(), new_record)
-            except DataError as e:
-                logging.error(e)
-
-    session.close()
+            fs_instrument_entry = FilesystemInstrument(**new_record)
+            fs_instrument_entry.save()
 
 
 @lock_module
