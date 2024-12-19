@@ -359,6 +359,9 @@ if __name__ == '__main__':
     pipe_type = args.pipe
     outputs = args.outputs
     step_args = args.step_args
+    # ***** FUTURE FIX *****
+    # This needs to be removed once it's possible to do multi-core pipelines again
+    args.max_cores = "none"
 
     status_file = os.path.join(working_path, short_name + "_status.txt")
     with open(status_file, 'w') as out_file:

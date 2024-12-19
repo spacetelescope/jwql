@@ -1,5 +1,23 @@
 ## What's Changed
 
+1.3.0 (2024-12-19)
+==================
+
+Web Application
+~~~~~~~~~~~~~~~
+* Exclude source-specific WFSS files from observation page by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1651
+* Switch URL for prog info scraping to use the OPO site by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1662
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Added logging configuration to config file, and use it when opening logging by @york-stsci in https://github.com/spacetelescope/jwql/pull/1635
+* Fix bad parens in dark monitor model definitions by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1644
+* Add radius keyword to bokeh.figure.circle calls by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1643
+* Remove bokeh templating code by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1647
+* Update Bad Pixel Monitor to use Django DB Models by @mfixstsci in https://github.com/spacetelescope/jwql/pull/1497
+* Update Bias Monitor to use Django DB Models by @bsunnquist in https://github.com/spacetelescope/jwql/pull/1503
+
+
 1.2.11 (2024-08-26)
 ===================
 

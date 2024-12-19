@@ -47,5 +47,50 @@
     "cores" : "",
     "redis_host": "",
     "redis_port": "",
-    "transfer_dir": ""
+    "transfer_dir": "",
+    "logging": {
+        "version": 1,
+        "disable_existing_loggers": true,
+        "formatters": {
+            "simple": {
+                "format": "%(asctime)s %(levelname)s: %(message)s",
+                "datefmt": "%m/%d/%Y %H:%M:%S %p"
+            }
+        },
+        "filters": {
+            "warnings_and_below": {
+                "()" : "jwql.utils.logging_functions.filter_maker",
+                "level": "WARNING"
+            }
+        },
+        "handlers": {
+            "stdout": {
+                "class": "logging.StreamHandler",
+                "level": "INFO",
+                "formatter": "simple",
+                "stream": "ext://sys.stdout",
+                "filters": ["warnings_and_below"]
+            },
+            "stderr": {
+                "class": "logging.StreamHandler",
+                "level": "ERROR",
+                "formatter": "simple",
+                "stream": "ext://sys.stderr"
+            },
+            "file": {
+                "class": "logging.FileHandler",
+                "formatter": "simple",
+                "filename": "app.log",
+                "mode": "a"
+            }
+        },
+        "root": {
+            "level": "DEBUG",
+            "handlers": [
+                "stderr",
+                "stdout",
+                "file"
+            ]
+        }
+    }
 }

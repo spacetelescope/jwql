@@ -225,9 +225,9 @@ class GeneralDashboard:
                                               y_axis_label='Disk Space (TB)')
 
             plots[data['shortname']].line(x='date', y='available', source=source, legend_label='Available', line_dash='dashed', line_color='#C85108', line_width=3)
-            plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', size=10)
+            plots[data['shortname']].circle(x='date', y='available', source=source,color='#C85108', radius=5, radius_dimension='y', radius_units='screen')
             plots[data['shortname']].line(x='date', y='used', source=source, legend_label='Used', line_dash='dashed', line_color='#355C7D', line_width=3)
-            plots[data['shortname']].circle(x='date', y='used', source=source, color='#355C7D', size=10)
+            plots[data['shortname']].circle(x='date', y='used', source=source, color='#355C7D', radius=5, radius_dimension='y', radius_units='screen')
 
             plots[data['shortname']].xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
                                                                              days="%d %B %Y",
@@ -289,7 +289,7 @@ class GeneralDashboard:
                 # Plot the results
                 source = ColumnDataSource(results)
                 plot.line(x='date', y='used', source=source, line_color=color, line_dash='dashed', legend_label=area, line_width=3)
-                plot.circle(x='date', y='used', source=source, color=color, size=10)
+                plot.circle(x='date', y='used', source=source, color=color, radius=5, radius_dimension='y', radius_units='screen')
 
                 hover_tool = HoverTool(tooltips=[('Used:', f'@used TB'),
                                                  ('Date:', '@date{%d %b %Y}')
@@ -331,7 +331,7 @@ class GeneralDashboard:
             # Plot the results
             legend_str = 'File volume'
             cen_store_plot.line(x='date', y='used', source=cen_store_source, legend_label=legend_str, line_dash='dashed', line_color='#355C7D', line_width=3)
-            cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', size=10)
+            cen_store_plot.circle(x='date', y='used', source=cen_store_source, color='#355C7D', radius=5, radius_dimension='y', radius_units='screen')
             cen_store_plot.xaxis.formatter = DatetimeTickFormatter(hours="%H:%M %d %B %Y",
                                                                    days="%d %B %Y",
                                                                    months="%d %B %Y",
