@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "asdf>=3.1.0,<4",
-    "astropy>=6.0,<7",
+    "astropy>=6.0,<8",
     "astroquery>=0.4.7,<0.5.0",
     "beautifulsoup4>=4.12.3,<5",
     "bokeh>=3.4.0,<4",
