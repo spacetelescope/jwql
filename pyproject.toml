@@ -47,6 +47,7 @@ dependencies = [
     "torchvision>=0.17.2,<0.20.2",
     "wtforms>=3.1.2,<4",
 ]
+license-files = ["LICENSE"]
 dynamic = [
     "version",
 ]
@@ -65,10 +66,6 @@ docs = [
     "stsci_rtd_theme",
     "sphinx_automodapi",
 ]
-
-[project.license]
-file = "LICENSE"
-content-type = "text/plain"
 
 [build-system]
 requires = [
