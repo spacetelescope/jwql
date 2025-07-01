@@ -1526,7 +1526,7 @@ def get_instrument_proposals(instrument):
     inst_proposals : list
         List of proposals for the given instrument
     """
-    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_service = vo.dal.TAPService("https://mast.stsci.edu/vo-tap/api/v0.1/caom")
     tap_results = tap_service.search(f"""select distinct prpID from CaomObservation where collection='JWST'
                                      and maxLevel>0 and insName like '{instrument.lower()}%'""")
     prop_table = tap_results.to_table()
@@ -1673,7 +1673,7 @@ def get_proposals_by_category(instrument):
     category_sorted_dict : dict
         Dictionary with program number as the key and program category as the value
     """
-    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_service = vo.dal.TAPService("https://mast.stsci.edu/vo-tap/api/v0.1/caom")
     tap_results = tap_service.search(f"""select distinct prpID,prpProject from CaomObservation where collection='JWST'
                                      and maxLevel>0 and insName like '{instrument.lower()}%'""")
     # Put the results into an astropy Table
@@ -1760,7 +1760,7 @@ def get_rootnames_for_proposal(proposal):
     rootnames : list
         List of rootnames for the given instrument and proposal number
     """
-    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_service = vo.dal.TAPService("https://mast.stsci.edu/vo-tap/api/v0.1/caom")
     tap_results = tap_service.search(f"""select observationID from dbo.CaomObservation where
                                      collection='JWST' and maxLevel=2 and prpID='{int(proposal)}'""")
     prop_table = tap_results.to_table()
