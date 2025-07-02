@@ -700,7 +700,7 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
     rootnames : list
         List of rootnames for the given instrument and proposal number
     """
-    tap_service = vo.dal.TAPService("https://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_service = vo.dal.TAPService("https://mast.stsci.edu/vo-tap/api/v0.1/caom")
     tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}%' and prpID='{int(proposal)}'")
     prop_table = tap_results.to_table()
     rootnames = prop_table['observationID'].data
@@ -849,3 +849,28 @@ def grouper(iterable, chunksize):
         if not chunk:
             return
         yield chunk
+
+def filter_maker(level):
+    """
+    This creates a logging filter that takes in an integer describing log level (with
+    DEBUG being the lowest value and CRITICAL the highest), and returns True if and only
+    if the logged message has a lower level than the filter level.
+
+    The filter is needed because the logging system is designed so that it outputs
+    messages of LogLevel *or higher*, because the assumption is you want to know if
+    something happens that's more serious than what you're looking at.
+
+    In this case, though, we're dividing printed-out log messages between the built-in
+    STDOUT and STDERR output streams, and we have assigned ERROR and above to go to
+    STDERR, while INFO and above go to STDOUT. So, by default, anything at ERROR or at
+    CRITICAL would go to *both* STDOUT and STDERR. This function lets you add a filter
+    that returns false for anything with a level above WARNING, so that STDOUT won't
+    duplicate those messages.
+    """
+    level = getattr(logging, level)
+
+    def filter(record):
+        return record.levelno <= level
+
+    return filter
+
