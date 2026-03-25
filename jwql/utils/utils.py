@@ -27,6 +27,7 @@ References
     - JWST TR JWST-STScI-004800, SM-12
  """
 
+import datetime
 import getpass
 import glob
 import itertools
@@ -40,6 +41,7 @@ import http
 import jsonschema
 
 from astropy.io import fits
+from astropy.time import Time
 from astropy.stats import sigma_clipped_stats
 from bokeh.io import export_png
 from bokeh.models import LinearColorMapper, LogColorMapper
@@ -848,6 +850,24 @@ def get_base_url():
         base_url = 'http://127.0.0.1:8000'
 
     return base_url
+
+
+def current_date_in_mjd():
+    """Return the current time in MJD
+
+    Returns
+    -------
+    mjd_value : float
+        Current date/time in MJD
+    """
+    current_utc_datetime = datetime.datetime.now(datetime.UTC)
+
+    # Create an Astropy Time object from the standard datetime object
+    t = Time(current_utc_datetime)
+
+    # Convert the Astropy Time object to Modified Julian Date (MJD) format
+    mjd_value = t.mjd
+    return mjd_value
 
 
 def get_rootnames_for_instrument_proposal(instrument, proposal):
