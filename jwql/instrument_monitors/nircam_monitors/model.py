@@ -296,6 +296,7 @@ def evaluate(model, loader, device):
 
 def get_files_from_db():
     """Pull Anomaly's and normal file paths from the JWQL database."""
+    """To see specific files used in training refer to ML Onboarding Notes"""
 
     # pull all files with Dragon's Breath anomaly
     results = (
