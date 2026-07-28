@@ -1,10 +1,16 @@
 name: build
 
 on:
-  release:
-    types: [ released ]
   pull_request:
+  release:
+    types: [released]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
 
 defaults:
   run:
@@ -12,26 +18,59 @@ defaults:
 
 jobs:
   build:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
-    with:
-      upload_to_pypi: ${{ (github.event_name == 'release') && (github.event.action == 'released') }}
-    secrets:
-      pypi_token: ${{ secrets.PYPI_PASSWORD_STSCI_MAINTAINER }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3"
+          pip-install: build
+      - run: python -m build --sdist --wheel
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: ./dist/
+  publish:
+    if: (github.event_name == 'release') && (github.event.action == 'released')
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+    # To add required reviewers before deployment,
+    # edit the protection rules in GitHub Settings:
+    # Settings > Environments > pypi > Add required reviewers
+    environment:
+      name: pypi
+      url: https://pypi.org/p/jwql
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: dist*
+          path: dist/
+          merge-multiple: true
+      - uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-path: "dist/*"
+      # To upload to PyPI without a token, add this workflow file as a Trusted Publisher in the project settings on the PyPI website
+      - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
   freeze:
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: 
-          [ "ubuntu-latest", "macos-latest" ]
-        python-version:
-          [ "3.12", "3.13", "3.14" ]
+        runs-on: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.12", "3.13", "3.14"]
       fail-fast: false
-    name: freeze versions (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.runs-on }}
+    name: freeze versions (Python ${{ matrix.python-version }}, ${{ matrix.runs-on }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - uses: mamba-org/setup-micromamba@7f29b8b80078b1b601dfa018b0f7425c587c63bb # v2.0.6
+      - uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9 # v3.1.0
         with:
           environment-name: jwql-${{ runner.os }}-py${{ matrix.python-version }}
           environment-file: environment.yml
@@ -49,13 +88,11 @@ jobs:
         run: echo "filename=jwql_${{ steps.version.outputs.version }}_conda_${{ runner.os }}_${{ runner.arch }}_py${{ matrix.python-version }}.yml" >> $GITHUB_OUTPUT
       - run: micromamba env export --no-build | grep -v "name:" | grep -v "prefix:" > ${{ steps.filename.outputs.filename }}
       - run: cat ${{ steps.filename.outputs.filename }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.filename.outputs.filename }}
           path: ${{ steps.filename.outputs.filename }}
       - if: (github.event_name == 'release' && github.event.action == 'released')
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2.11.5
         with:
           file: ${{ steps.filename.outputs.filename }}
-            
-
