@@ -47,6 +47,7 @@ dependencies = [
     "sqlalchemy>=2.0.29,<3",
     "wtforms>=3.1.2,<4",
 ]
+license-files = ["LICENSE"]
 dynamic = [
     "version",
 ]
@@ -69,10 +70,6 @@ wisp = [
     "torch>=2.2.2,<2.5.2",
     "torchvision>=0.17.2,<0.20.2",
 ]
-
-[project.license]
-file = "LICENSE"
-content-type = "text/plain"
 
 [build-system]
 requires = [
