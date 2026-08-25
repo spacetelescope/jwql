@@ -1004,7 +1004,7 @@ SUFFIXES_OF_ECSV_FILES = ['whtlt', 'phot']
 # Filename suffixes that need to include the association value in the suffix in
 # order to identify the preview image file. This should only be crf and crfints,
 # since those are essentially level 2 files that are output by the level 3 pipeline.
-SUFFIXES_TO_ADD_ASSOCIATION = ["crf", "crfints"]
+SUFFIXES_TO_ADD_ASSOCIATION = ["crf", "crfints", "psfalign", "psfsub"]
 
 # Filename suffixes where data have been averaged over integrations
 SUFFIXES_WITH_AVERAGED_INTS = ["rate", "cal", "crf", "i2d", "bsub", "x1d"]
