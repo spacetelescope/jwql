@@ -570,7 +570,7 @@ def get_available_suffixes(all_suffixes, return_untracked=True):
     suffixes = []
     untracked_suffixes = set(all_suffixes)
     for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
-        if 'crf' not in poss_suffix:
+        if (('crf' not in poss_suffix) and ('psf' not in poss_suffix)):
             if (poss_suffix in all_suffixes and poss_suffix not in suffixes):
                 suffixes.append(poss_suffix)
                 untracked_suffixes.remove(poss_suffix)
