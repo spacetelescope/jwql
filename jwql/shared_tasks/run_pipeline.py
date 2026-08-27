@@ -25,6 +25,7 @@ from jwst.jump import JumpStep
 from jwst.lastframe import LastFrameStep
 from jwst.linearity import LinearityStep
 from jwst.persistence import PersistenceStep
+from jwst.picture_frame import PictureFrameStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
