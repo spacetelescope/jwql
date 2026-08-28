@@ -711,7 +711,11 @@ class Dark():
 
         # Specify that we want to skip the dark current correction step
         step_args = {'dark_current': {'skip': True},
-                     'persistence': {'skip': True}}
+                     'persistence': {'skip': True},
+                     'clean_flicker_noise': {'skip': True},
+                     'charge_migration': {'skip': True},
+                     'picture_frame': {'skip': True}
+                     }
 
         # Call the pipeline
         outputs = run_parallel_pipeline(pipeline_files, "dark", [output_suffix], self.instrument, step_args=step_args)
