@@ -24,13 +24,49 @@
             
             <!--LOG SELECT DROPDOWN-->
             <h4>Select JWQL Monitoring Log</h4>
+
+                <div class="col-6 mx-auto text-left mt-5">
+                    Filter logs by folder: 
+                    <select id="log_folders" onchange="getLogsByFolder()">
+                        <option value="all_logs">All Logs</option>
+                        {% for log_folder in all_logs['log_folders'].keys()|sort %}
+                            <option value="{{ log_folder }}">{{ log_folder }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-6 mx-auto text-left mt-5">
+                    Filter logs by date: 
+                    <select id="log_dates" onchange="getLogsByDate()">
+                        <option value="all_logs">All Logs</option>
+                        <option value="last_year">Last Year</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="last_week">Last Week</option>
+                        <option value="last_day">Last Day</option>
+                    </select>
+                </div>
+
+                <div class="col-6 mx-auto text-left mt-5">
+                    Filter logs by level:
+                    <select id="log_levels" onchange="getLogsByLevel()">
+                        <option value="all_logs">All Logs</option>
+                        <option value="INFO">Logs containing INFO and above</option>
+                        <option value="WARNING">Logs containing WARNING and above</option>
+                        <option value="ERROR">Logs containing ERROR and above</option>
+                        <option value="CRITICAL">Logs containing CRITICAL and above</option>
+                    </select>
+                </div>
+            
                 <div class="col-6 mx-auto text-left mt-5">
                     <input id="log_select" type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
-                        {% for log_name in all_logs %}
+                        {% for log_name in all_logs['all']|sort %}
                             <option id="{{ log_name }}" value="{{ log_name }}"></option>
                         {% endfor %}
                     </datalist>
+                </div>
+                <div id="no_items_warning" style="display: none">
+                <p style="font-weight: bold">No logs match the chosen filters</p>
                 </div>
 
             <br>
@@ -49,22 +85,92 @@
             {% endif %}
 
             <script type="text/javascript">
+                const idInputField = document.getElementById('log_select');
+                const folderInputField = document.getElementById('log_folders');
+                const dateInputField = document.getElementById('log_dates');
+                const levelInputField = document.getElementById('log_levels');
+                const noResultsWarningDiv = document.getElementById('no_items_warning');
+                var allLogFiles = {{ all_logs['all']|safe }};
+                var listOfLogNamesByFolder = {{ all_logs['all']|safe }};
+                var logsByFolder = {{ all_logs['log_folders']|safe }};
+                var listOfLogNamesByDate = {{ all_logs['all']|safe }};
+                var logsByDate = {{ all_logs['log_dates']|safe }};
+                var logLevelsList = document.getElementById('log_levels');
+                var listOfLogNamesByLevel = {{ all_logs['all']|safe }};
+                var logsByLevel = {{ all_logs['log_levels']|safe }};
+                var logsList = document.getElementById("logs");
+
                 function GetSelectedTextValue() {
                     var log_value = document.getElementById("log_select").value;
                     document.getElementById("log_submit").value = log_value;
                 }
-            </script>
 
-            <script type="text/javascript">
-                const idInputField = document.getElementById('log_select');
-                var logsList = document.getElementById("logs");
+                function setLogList() {
+                    var logList = allLogFiles;
+                    console.log("Logs list is: "+logList.length+" items");
+                    logList = logList.filter(value => listOfLogNamesByFolder.includes(value));
+                    console.log("Logs list is: "+logList.length+" items");
+                    logList = logList.filter(value => listOfLogNamesByDate.includes(value));
+                    console.log("Logs list is: "+logList.length+" items");
+                    logList = logList.filter(value => listOfLogNamesByLevel.includes(value));
+                    console.log("Logs list is: "+logList.length+" items");
+                    logsList.replaceChildren();
+                    logList.forEach(function (item, index) {
+                        var option = document.createElement('option');
+                        option.value = item;
+                        option.id = item;
+                        logsList.appendChild(option);
+                    });
+                    if (logList.length === 0) {
+                        noResultsWarningDiv.style.display = "block";
+                    } else {
+                        noResultsWarningDiv.style.display = "none";
+                    }
+                }
+
                 idInputField.addEventListener('input', function () {
-                    if (logsList.options.namedItem(this.value) != null) {
+                    if (logsList.options.namedItem(this.value) !== null) {
                         document.getElementById("log_submit").disabled = false;
                     } else {
                         document.getElementById("log_submit").disabled = true;
                     }
                 });
+                
+                function getLogsByFolder() {
+                    var currentFolder = folderInputField.value;
+                    console.log("Current folder is "+currentFolder);
+                    if (currentFolder === "all_logs") {
+                        listOfLogNamesByFolder = {{ all_logs['all']|safe }};
+                    } else {
+                        listOfLogNamesByFolder = logsByFolder[currentFolder];
+                    }
+                    console.log("Available log files are "+listOfLogNamesByFolder);
+                    setLogList();
+                }
+
+                function getLogsByDate() {
+                    var currentDate = dateInputField.value;
+                    console.log("Current date is "+currentDate);
+                    if (currentDate === "all_logs") {
+                        listOfLogNamesByDate = {{ all_logs['all']|safe }};
+                    } else {
+                        listOfLogNamesByDate = logsByDate[currentDate];
+                    }
+                    console.log("Available log files are "+listOfLogNamesByDate);
+                    setLogList();
+                }
+
+                function getLogsByLevel() {
+                    var currentLevel = levelInputField.value;
+                    console.log("Current level is "+currentLevel);
+                    if (currentLevel === "all_logs") {
+                        listOfLogNamesByLevel = {{ all_logs['all']|safe }};
+                    } else {
+                        listOfLogNamesByLevel = logsByLevel[currentLevel];
+                    }
+                    console.log("Available log files are "+listOfLogNamesByLevel);
+                    setLogList();
+                }
             </script>
 
         </form>
