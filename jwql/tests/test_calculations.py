@@ -77,7 +77,7 @@ def test_mean_image():
             cube[i, :, :] = 5.
 
     # Insert a few signal values that will be removed by sigma clipping.
-    # Make sure you "remove" and equal number of 4's and 5's from each
+    # Make sure you "remove" an equal number of 4's and 5's from each
     # pixel in order to keep the mean at 4.5 and dev at 0.5
     cube[0, 0, 0] = 55.
     cube[1, 0, 0] = -78.
