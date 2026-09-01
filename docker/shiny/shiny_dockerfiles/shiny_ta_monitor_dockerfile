@@ -1,0 +1,34 @@
+# syntax=docker/dockerfile:1
+
+# Get python version
+ARG python_version
+
+# Create Container
+FROM python:${python_version}-alpine AS base
+
+# Install necessary base software
+RUN apk update
+RUN echo "http://dl-8.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+RUN apk --no-cache --update-cache add gcc gfortran build-base wget freetype-dev libpng-dev openblas-dev git hdf5-dev
+RUN apk --no-cache --update-cache add nano curl firefox geckodriver firefox-esr
+
+RUN pip install shiny
+RUN pip install matplotlib
+RUN pip install astropy
+RUN pip install astroquery
+RUN pip install numpy
+RUN pip install pandas
+
+EXPOSE 8000
+
+ENV SHINY_LOG_STDERR=1
+ENV SHINY_EMBED=1
+
+ADD shiny_apps /shiny_apps
+
+WORKDIR /shiny_apps
+
+ADD ./shiny_entry_points/* .
+RUN chmod +x shiny*run.sh
+
+CMD ["tail", "-f", "/dev/null"]

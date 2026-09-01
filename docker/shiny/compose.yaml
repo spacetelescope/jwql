@@ -1,0 +1,21 @@
+services:
+  shiny-ta-monitor:
+    build:
+      context: .
+      dockerfile: ./shiny_dockerfiles/shiny_ta_monitor_dockerfile
+      args:
+        - python_version=3.13
+    entrypoint: ./shiny_ta_monitor_run.sh
+    ports:
+      - "4444:8000"
+    restart: unless-stopped
+
+#   web:
+#     image: nginx:alpine
+#     container_name: nginx-https-test
+#     ports:
+#       - "4444:443"
+#     volumes:
+#       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+#       - ./ssl:/etc/nginx/ssl:ro
+#     restart: unless-stopped
