@@ -381,7 +381,7 @@ class FileSearchForm(forms.Form):
 
                 if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
-                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:],
+                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, int(proposal_string),
                                                      all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
                         mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # noqa
