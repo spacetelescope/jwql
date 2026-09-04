@@ -440,6 +440,7 @@ def define_options(parser=None, usage=None, conflict_handler='resolve'):
     parser.add_argument('--overwrite', action='store_true', default=None, help='If set, existing preview images will be re-created and overwritten.')
     parser.add_argument('-p', '--programs', nargs='+', type=int, help='List of program IDs to generate preview images for. If omitted, all programs will be done.')
     parser.add_argument('--level3_only', action='store_true', help='Create preview images for level 3 files only.')
+    parser.add_argument('--suffixes', nargs='+', type=str, help='List of file suffixes (e.g. "rate", "i2d") to create preview images for. If omitted, all suffixes will be done.')
     return parser
 
 
@@ -542,7 +543,7 @@ def get_base_output_name(filename_dict):
 
 @log_fail
 @log_info
-def generate_preview_images(overwrite, programs=None, level3_only=False):
+def generate_preview_images(overwrite, programs=None, level3_only=False, suffixes=None):
     """The main function of the ``generate_preview_image`` module.
     See module docstring for further details.
 
@@ -557,6 +558,10 @@ def generate_preview_images(overwrite, programs=None, level3_only=False):
 
     level3_only : bool
         If True, create preview images only for level 3 files
+
+    suffixes : list
+        List of suffixes (e.g. rate, i2d) for which to generate preview images. IF None,
+        (the default), preview images are generated for all suffixes.
     """
     # Get a list of programs to create preview images for. First, generate a list of all
     # possible programs. We can compare any user inputs to this list, and if there are no
@@ -590,7 +595,7 @@ def generate_preview_images(overwrite, programs=None, level3_only=False):
 
     # Process programs in parallel
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
-    program_list = [(element, overwrite, level3_only) for element in program_list]
+    program_list = [(element, overwrite, level3_only, suffixes) for element in program_list]
     results = pool.starmap(process_program, program_list)
     pool.close()
     pool.join()
@@ -764,7 +769,7 @@ def preview_img_from_file(fname, file_info, preview_output_directory, thumbnail_
             return (None, None)
 
 
-def process_program(program, overwrite, level3_only):
+def process_program(program, overwrite, level3_only, suffixes):
     """Generate preview images and thumbnails for the given program.
 
     Parameters
@@ -778,6 +783,8 @@ def process_program(program, overwrite, level3_only):
         whether the images already exist.
     level3_only : bool
         If True, create preview images for level 3 files only
+    suffixes : list
+        List of suffixes (rate, i2d) for which to create preview images
 
     Returns
     -------
@@ -824,6 +831,11 @@ def process_program(program, overwrite, level3_only):
             logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
                              'filename_parser() failed to recognize the file pattern.'))
     filenames = filtered_filenames
+
+    # If a list of suffixes is provided, keep only those files
+    if suffixes is not None:
+        pattern = re.compile(r'_(' + '|'.join(suffixes) + r')\.fits$')
+        filenames = [f for f in filenames if pattern.search(f)]
 
     # Sort in order to help keep track of thumbnail production for level 3 files
     # By sorting in reverse, we'll preferentially make thumbnails for x1d files if present,
@@ -924,7 +936,7 @@ def process_program(program, overwrite, level3_only):
 
 
 @lock_module
-def protected_code(overwrite, programs, level3_only):
+def protected_code(overwrite, programs, level3_only, suffixes):
     """Protected code ensures only 1 instance of module will run at any given time
 
     Parameters
@@ -937,15 +949,18 @@ def protected_code(overwrite, programs, level3_only):
 
     level3_only : bool
         Create preview images for level 3 files only
+
+    suffixes : list
+        List of suffixes to run
     """
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
-    generate_preview_images(overwrite, programs=programs, level3_only=level3_only)
+    generate_preview_images(overwrite, programs=programs, level3_only=level3_only, suffixes=suffixes)
     update_monitor_table(module, start_time, log_file)
 
 
 if __name__ == '__main__':
     parser = define_options()
     args = parser.parse_args()
-    protected_code(args.overwrite, args.programs, args.level3_only)
+    protected_code(args.overwrite, args.programs, args.level3_only, args.suffixes)
