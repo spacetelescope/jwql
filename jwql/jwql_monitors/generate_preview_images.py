@@ -849,6 +849,7 @@ def process_program(program, overwrite, level3_only, suffixes):
     # Put cal.fits and rate.fits files at the beginning of the list, in order to avoid a bug
     # where if the rateints preview image is created first, check_existence will skip the
     # rate file.
+    filenames.sort(key=lambda f: not f.endswith('x1d.fits'))
     filenames.sort(key=lambda f: not f.endswith('cal.fits'))
     filenames.sort(key=lambda f: not f.endswith('rate.fits'))
 
