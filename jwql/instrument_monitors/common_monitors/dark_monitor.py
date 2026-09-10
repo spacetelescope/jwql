@@ -95,8 +95,8 @@ from sqlalchemy.sql.expression import and_
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME, DARK_MONITOR_MAX_BADPOINTS_TO_PLOT
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ALLSLITS_DIMENSIONS, ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME,
+from jwql.utils.constants import DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, ON_GITHUB_ACTIONS, ON_READTHEDOCS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -1034,9 +1034,16 @@ class Dark():
                     ending_times = []
                     temp_filenames = []
                     bad_size_filenames = []
-                    expected_ap = Siaf(instrument)[aperture]
-                    expected_xsize = expected_ap.XSciSize
-                    expected_ysize = expected_ap.YSciSize
+
+                    # NIRSpec's ALLSLITS is a subarray rather than an aperture, and therefore Siaf does
+                    # not contain information on it. If we have ALLSLITS data, set the expected size manually.
+                    if aperture.upper() != 'ALLSLITS':
+                        expected_ap = Siaf(instrument)[aperture]
+                        expected_xsize = expected_ap.XSciSize
+                        expected_ysize = expected_ap.YSciSize
+                    else:
+                        expected_xsize = ALLSLITS_DIMENSIONS[0]
+                        expected_ysize = ALLSLITS_DIMENSIONS[1]
                     for new_file in new_filenames:
                         with fits.open(new_file) as hdulist:
                             xsize = hdulist[0].header['SUBSIZE1']

@@ -139,10 +139,19 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
     # single list.
     query_results = []
     for template_name in dark_template:
-
-        # Create dictionary of parameters to add
-        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name, }
+        # The NIRSpec ALLSLITS subarray is useful for monitoring the dark behavior,
+        # but is actually a subarray rather than an aperture. ALLSLITS data can have
+        # any of several aperture values, but these are not useful for filtering
+        # data, as the ALLSLITS subarray value is what indicates that that particular
+        # part of the detector has been used. So here we deal with this special case,
+        # where we query for the subarray keyword if the input aperture is ALLSLITS.
+        if aperture.upper() != 'ALLSLITS':
+            # Create dictionary of parameters to add
+            parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                          "apername": aperture, "exp_type": template_name, }
+        else:
+            parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                          "subarray": aperture, "exp_type": template_name}
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt
