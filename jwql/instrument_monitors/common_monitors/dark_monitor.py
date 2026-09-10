@@ -95,7 +95,7 @@ from sqlalchemy.sql.expression import and_
 from jwql.instrument_monitors import pipeline_tools
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, mast_utils, monitor_utils
-from jwql.utils.constants import ALLSLITS_DIMENSIONS, ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME,
+from jwql.utils.constants import ALLSLITS_DIMENSIONS, ASIC_TEMPLATES, DARK_MONITOR_BETWEEN_EPOCH_THRESHOLD_TIME
 from jwql.utils.constants import DARK_MONITOR_MAX_BADPOINTS_TO_PLOT, JWST_INSTRUMENT_NAMES, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_DATAPRODUCTS, MINIMUM_DARK_CURRENT_GROUPS, ON_GITHUB_ACTIONS, ON_READTHEDOCS, RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
@@ -246,7 +246,7 @@ class Dark():
         Parameters
         ----------
         image : numpy.ndarray
-            2D array of the dark slop image
+            2D array of the dark slope image
 
         num_files : int
             Number of individual exposures that went into creating the mean slope image
@@ -781,9 +781,14 @@ class Dark():
             new_hot_pix = None
             new_dead_pix = None
             new_noisy_pixels = None
-            aperture_type = Siaf(self.instrument)[self.aperture].AperType
+
+            # Since we are no longer tracking bad pixels with this monitor, set the aperture_type
+            # for all files to 'SUBARRAY', so that we skip over the code that tries to compare the
+            # bad pixel population to that from the previous file.
+            aperture_type = 'SUBARRAY'
             if aperture_type == 'FULLSCA':
                 baseline_file = self.get_baseline_filename()
+                baseline_file = None
                 if baseline_file is None:
                     logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
                                      'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
