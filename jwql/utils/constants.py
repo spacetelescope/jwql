@@ -32,6 +32,9 @@ import asdf
 import inflection
 import os
 
+# Expected dimensions of data taken using NIRSpec's ALLSLITS subarray
+ALLSLITS_DIMENSIONS = (2048, 256)
+
 # Each amplifier is represented by 2 tuples, the first for x coordinates
 # and the second for y coordinates. Within each tuple are value for
 # starting, ending, and step size. Step size is needed for MIRI, where

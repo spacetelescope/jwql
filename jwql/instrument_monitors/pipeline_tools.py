@@ -22,8 +22,11 @@ import os
 
 from astropy.io import fits
 from jwst import datamodels
+from jwst.charge_migration import ChargeMigrationStep
+from jwst.clean_flicker_noise import CleanFlickerNoiseStep
 from jwst.dq_init import DQInitStep
 from jwst.dark_current import DarkCurrentStep
+from jwst.emicorr import EmiCorrStep
 from jwst.firstframe import FirstFrameStep
 from jwst.gain_scale import GainScaleStep
 from jwst.group_scale import GroupScaleStep
@@ -32,6 +35,7 @@ from jwst.jump import JumpStep
 from jwst.lastframe import LastFrameStep
 from jwst.linearity import LinearityStep
 from jwst.persistence import PersistenceStep
+from jwst.picture_frame import PictureFrameStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
@@ -48,13 +52,19 @@ PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': '
                  'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias', 'S_RESET': 'reset',
                  'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearity',
                  'S_FRSTFR': 'firstframe', 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd',
-                 'S_JUMP': 'jump', 'S_RAMP': 'rate', 'S_GANSCL': 'gain_scale', 'S_IPC': 'ipc'}
+                 'S_JUMP': 'jump', 'S_RAMP': 'rate', 'S_GANSCL': 'gain_scale', 'S_IPC': 'ipc',
+                 'S_CHGMIG': 'charge_migration', 'S_CLNFNS': 'clean_flicker_noise', 'S_EMICOR': 'emicorr',
+                 'S_PCTFRM': 'picture_frame'}
 
-PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
+PIPELINE_STEP_MAPPING = {'charge_migration': ChargeMigrationStep,
+                         'clean_flicker_noise': CleanFlickerNoiseStep,
+                         'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
+                         'emicorr': EmiCorrStep,
                          'firstframe': FirstFrameStep, 'gain_scale': GainScaleStep,
                          'group_scale': GroupScaleStep, 'ipc': IPCStep, 'jump': JumpStep,
                          'lastframe': LastFrameStep, 'linearity': LinearityStep,
-                         'persistence': PersistenceStep, 'rate': RampFitStep,
+                         'persistence': PersistenceStep, 'picture_frame': PictureFrameStep,
+                         'rate': RampFitStep,
                          'refpix': RefPixStep, 'reset': ResetStep, 'rscd': RscdStep,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
 
