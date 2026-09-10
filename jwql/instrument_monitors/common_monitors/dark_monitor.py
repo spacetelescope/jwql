@@ -1037,7 +1037,7 @@ class Dark():
 
                     # NIRSpec's ALLSLITS is a subarray rather than an aperture, and therefore Siaf does
                     # not contain information on it. If we have ALLSLITS data, set the expected size manually.
-                    if aperture.upper() != 'ALLSLITS':
+                    if 'ALLSLITS' not in aperture.upper():
                         expected_ap = Siaf(instrument)[aperture]
                         expected_xsize = expected_ap.XSciSize
                         expected_ysize = expected_ap.YSciSize

@@ -145,13 +145,14 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
         # data, as the ALLSLITS subarray value is what indicates that that particular
         # part of the detector has been used. So here we deal with this special case,
         # where we query for the subarray keyword if the input aperture is ALLSLITS.
-        if aperture.upper() != 'ALLSLITS':
+        if 'ALLSLITS' not in aperture.upper():
             # Create dictionary of parameters to add
             parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
                           "apername": aperture, "exp_type": template_name, }
         else:
+            detector, subarray = aperture.upper().split('_')
             parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                          "subarray": aperture, "exp_type": template_name}
+                          "subarray": subarray, "exp_type": template_name, "detector": detector}
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt
