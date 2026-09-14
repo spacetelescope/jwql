@@ -419,7 +419,7 @@ def standard_monitor_plot_layout(instrument, plots):
     # Next create lists of subarrays. Keep the subarrays in the order in which
     # they exist in pyiaf, in order to make the page a little more readable.
     # The dark monitor also populates aperture names using pysiaf.
-    subarrs = [p for p in plots.keys() if p not in FULL_FRAME_APERTURES[instrument.upper()]]
+    subarrs = sorted([p for p in plots.keys() if p not in FULL_FRAME_APERTURES[instrument.upper()]])
     siaf = pysiaf.Siaf(instrument.lower())
     all_apertures = np.array(list(siaf.apernames))
 
@@ -428,14 +428,37 @@ def standard_monitor_plot_layout(instrument, plots):
         subarr_plot_idx = np.where(all_apertures == key)[0]
         if len(subarr_plot_idx) > 0:
             indexes.append(subarr_plot_idx[0])
-    to_sort = np.argsort(indexes)
+        else:
+            # For apertures not in SIAF (e.g. NRS1_ALLSLITS)
+            # put the aperture at the end of the list. Temporarily
+            # do this by using negative indexes.
+            if len(indexes) > 0:
+                minidx = np.min(np.array(indexes))
+            else:
+                minidx = 0
+            if minidx >= 0:
+                indexes.append(-1)
+            else:
+                indexes.append(minidx - 1)
+    # Once the loop over all subarrays is done, set any apertures
+    # with negative indexes such that they are at the end of the list
+    idxarr = np.array(indexes)
+    endidx = np.where(idxarr < 0)[0]
+    idxarr[endidx] = np.abs(idxarr[endidx]) + np.max(idxarr)
+
+    # Sort apertures to be in the same order as they appear in SIAF. Motivation here
+    # is to keep together similar apertures on multiple detectors (e.g. NRCXX_SUB160)
+    to_sort = np.argsort(idxarr)
     sorted_keys = np.array(subarrs)[to_sort]
 
     # Place 4 subarray plots in each row. Generate a nested
     # list where each sublist contains the plots to place in
     # a given row
-    subarr_plots_per_row = 4
-    first_col = np.arange(0, len(sorted_keys), 4)
+    if instrument.lower() == 'nircam':
+        subarr_plots_per_row = 4
+    else:
+        subarr_plots_per_row = 2
+    first_col = np.arange(0, len(sorted_keys), subarr_plots_per_row)
 
     subarr_lists = []
     for idx in first_col:
