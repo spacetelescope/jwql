@@ -10,18 +10,18 @@ EXP_TYPE_MAPPING = {
 }
 
 def _obs_list_from_astroquery(instrument, mode=""):
-    from astroquery.mast import Missions
+    from astroquery.mast import MastMissions
     mission = MastMissions(mission='jwst')
     exp_type = f"{EXP_TYPE_MAPPING[instrument.lower()]}{mode.upper()}*"
     columns = ['fileSetName', 'program', 'observtn', 'visit_id', 'exp_type', 'subarray']
-    mode_sci = mission.query_criteria(**criteria, select_cols=columns)
+    mode_sci = mission.query_criteria(exp_type=exp_type, select_cols=columns)
     visits = set(mode_sci['visit_id'])
-    ta_exposures = missions.query_criteria(exp_type='MIR_TACQ', select_cols=columns)
+    ta_exposures = mission.query_criteria(exp_type='MIR_TACQ', select_cols=columns)
     ta_list = ta_exposures[[v in visits for v in ta_exposures['visit_id']]]
     return ta_list
 
 def _download_obs_from_astroquery(obs_list, current_obs, download_dir):
-    from astroquery.mast import Missions
+    from astroquery.mast import MastMissions
     mission = MastMissions(mission='jwst')
     obs_row = obs_list[obs_list['fileSetName'] == current_obs]
     data_products = mission.get_unique_product_list(obs_row)
