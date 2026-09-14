@@ -13,8 +13,11 @@ import time
 import traceback
 
 from jwst import datamodels
+from jwst.charge_migration import ChargeMigrationStep
+from jwst.clean_flicker_noise import CleanFlickerNoiseStep
 from jwst.dq_init import DQInitStep
 from jwst.dark_current import DarkCurrentStep
+from jwst.emicorr import EmiCorrStep
 from jwst.firstframe import FirstFrameStep
 from jwst.group_scale import GroupScaleStep
 from jwst.ipc import IPCStep
@@ -22,6 +25,7 @@ from jwst.jump import JumpStep
 from jwst.lastframe import LastFrameStep
 from jwst.linearity import LinearityStep
 from jwst.persistence import PersistenceStep
+from jwst.picture_frame import PictureFrameStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
