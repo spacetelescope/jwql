@@ -20,6 +20,13 @@ def _obs_list_from_astroquery(instrument, mode=""):
     ta_list = ta_exposures[[v in visits for v in ta_exposures['visit_id']]]
     return ta_list
 
+def _obs_list_from_jwql():
+    pass
+
+def _obs_list_from_filesystem():
+    pass
+
+
 def _download_obs_from_astroquery(obs_list, current_obs, download_dir):
     from astroquery.mast import MastMissions
     mission = MastMissions(mission='jwst')
@@ -29,13 +36,24 @@ def _download_obs_from_astroquery(obs_list, current_obs, download_dir):
         data_products, extension="fits", flat=True, download_dir=download_dir
     )
 
+
 def _uncal_acq_from_astroquery(data_dir, current_obs):
-    pass
+    data_path = Path(data_dir)
+    data_files = list(data_path.glob(f"{current_obs}*uncal.fits"))
+    if len(data_files) > 0:
+        return data_files[0]
+    return None
 
-def _obs_list_from_jwql():
-    pass
 
-def _obs_list_from_filesystem():
+def _cal_acq_from_astroquery(data_dir, current_obs):
+    data_path = Path(data_dir)
+    data_files = list(data_path.glob(f"{current_obs}*_cal.fits"))
+    if len(data_files) > 0:
+        return data_files[0]
+    return None
+
+
+def _check_acq_from_astroquery(data_dir, current_obs):
     pass
 
 class TADataSupplier():
