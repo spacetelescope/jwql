@@ -187,14 +187,14 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     return xdim, ydim, module_lowerlefts
 
 
-def check_existence(file_list, outdir):
+def check_existence(filename, outdir):
     """Given a list of fits files, determine if a preview image has
     already been created in ``outdir``.
 
     Parameters
     ----------
-    file_list : list
-        List of fits filenames from which preview image will be
+    filename : str
+        fits filename from which preview image will be
         generated
 
     outdir : str
@@ -205,33 +205,8 @@ def check_existence(file_list, outdir):
     exists : bool
         ``True`` if preview image exists, ``False`` if it does not
     """
-
-    # If file_list contains only a single file, then we need to search
-    # for a preview image name that contains the detector name
-    if len(file_list) == 1:
-        filename = os.path.split(file_list[0])[1]
-        search_string = filename.split('.fits')[0] + '*jpg'
-    else:
-        # If file_list contains multiple files, then we need to search
-        # for the appropriately named jpg of the mosaic, which depends
-        # on the specific detectors in the file_list
-        file_parts = filename_parser(file_list[0])
-
-        # If filename_parser() does not recognize the filename, return False
-        if not file_parts['recognized_filename']:
-            logging.warning((f'While running checking_existence() for a preview image for {file_list[0]}, '
-                             'filename_parser() failed to recognize the file pattern.'))
-            return False
-
-        if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
-            mosaic_str = "NRC_SW*_MOSAIC_"
-        elif file_parts['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
-            mosaic_str = "NRC_LW*_MOSAIC_"
-        search_string = 'jw{}{}{}_{}{}{}_{}_{}{}*.jpg'.format(
-                        file_parts['program_id'], file_parts['observation'],
-                        file_parts['visit'], file_parts['visit_group'],
-                        file_parts['parallel_seq_id'], file_parts['activity'],
-                        file_parts['exposure_id'], mosaic_str, file_parts['suffix'])
+    filename = os.path.split(filename)[1]
+    search_string = filename.split('.fits')[0] + '*jpg'
 
     current_files = glob.glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
@@ -465,6 +440,7 @@ def define_options(parser=None, usage=None, conflict_handler='resolve'):
     parser.add_argument('--overwrite', action='store_true', default=None, help='If set, existing preview images will be re-created and overwritten.')
     parser.add_argument('-p', '--programs', nargs='+', type=int, help='List of program IDs to generate preview images for. If omitted, all programs will be done.')
     parser.add_argument('--level3_only', action='store_true', help='Create preview images for level 3 files only.')
+    parser.add_argument('--suffixes', nargs='+', type=str, help='List of file suffixes (e.g. "rate", "i2d") to create preview images for. If omitted, all suffixes will be done.')
     return parser
 
 
@@ -567,7 +543,7 @@ def get_base_output_name(filename_dict):
 
 @log_fail
 @log_info
-def generate_preview_images(overwrite, programs=None, level3_only=False):
+def generate_preview_images(overwrite, programs=None, level3_only=False, suffixes=None):
     """The main function of the ``generate_preview_image`` module.
     See module docstring for further details.
 
@@ -582,6 +558,10 @@ def generate_preview_images(overwrite, programs=None, level3_only=False):
 
     level3_only : bool
         If True, create preview images only for level 3 files
+
+    suffixes : list
+        List of suffixes (e.g. rate, i2d) for which to generate preview images. IF None,
+        (the default), preview images are generated for all suffixes.
     """
     # Get a list of programs to create preview images for. First, generate a list of all
     # possible programs. We can compare any user inputs to this list, and if there are no
@@ -615,7 +595,7 @@ def generate_preview_images(overwrite, programs=None, level3_only=False):
 
     # Process programs in parallel
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
-    program_list = [(element, overwrite, level3_only) for element in program_list]
+    program_list = [(element, overwrite, level3_only, suffixes) for element in program_list]
     results = pool.starmap(process_program, program_list)
     pool.close()
     pool.join()
@@ -789,7 +769,7 @@ def preview_img_from_file(fname, file_info, preview_output_directory, thumbnail_
             return (None, None)
 
 
-def process_program(program, overwrite, level3_only):
+def process_program(program, overwrite, level3_only, suffixes):
     """Generate preview images and thumbnails for the given program.
 
     Parameters
@@ -803,6 +783,8 @@ def process_program(program, overwrite, level3_only):
         whether the images already exist.
     level3_only : bool
         If True, create preview images for level 3 files only
+    suffixes : list
+        List of suffixes (rate, i2d) for which to create preview images
 
     Returns
     -------
@@ -850,6 +832,11 @@ def process_program(program, overwrite, level3_only):
                              'filename_parser() failed to recognize the file pattern.'))
     filenames = filtered_filenames
 
+    # If a list of suffixes is provided, keep only those files
+    if suffixes is not None:
+        pattern = re.compile(r'_(' + '|'.join(suffixes) + r')\.fits$')
+        filenames = [f for f in filenames if pattern.search(f)]
+
     # Sort in order to help keep track of thumbnail production for level 3 files
     # By sorting in reverse, we'll preferentially make thumbnails for x1d files if present,
     # which seems like a nice way to distinguish from level 2 thumbanils.
@@ -858,6 +845,13 @@ def process_program(program, overwrite, level3_only):
     # Move segm.fits files to the end of the list, because we don't really want thumbnails from
     # these, unless there are no other suffixes available for a given rootname
     filenames.sort(key=lambda f: f.endswith('_segm.fits'))
+
+    # Put cal.fits and rate.fits files at the beginning of the list, in order to avoid a bug
+    # where if the rateints preview image is created first, check_existence will skip the
+    # rate file.
+    filenames.sort(key=lambda f: not f.endswith('x1d.fits'))
+    filenames.sort(key=lambda f: not f.endswith('cal.fits'))
+    filenames.sort(key=lambda f: not f.endswith('rate.fits'))
 
     # Dictionary to track whether a thumbnail has been created for a level 3 rootname
     # Keys are rootnames, values are booleans describing whether a thumbail image has been made
@@ -887,7 +881,7 @@ def process_program(program, overwrite, level3_only):
         if not overwrite:
             # If overwrite is False, we create preview images only for files that
             # don't have them yet.
-            file_exists = check_existence([filename], preview_output_directory)
+            file_exists = check_existence(filename, preview_output_directory)
 
             if file_exists:
                 logging.debug("\tJPG already exists for {}, skipping.".format(filename))
@@ -943,7 +937,7 @@ def process_program(program, overwrite, level3_only):
 
 
 @lock_module
-def protected_code(overwrite, programs, level3_only):
+def protected_code(overwrite, programs, level3_only, suffixes):
     """Protected code ensures only 1 instance of module will run at any given time
 
     Parameters
@@ -956,15 +950,18 @@ def protected_code(overwrite, programs, level3_only):
 
     level3_only : bool
         Create preview images for level 3 files only
+
+    suffixes : list
+        List of suffixes to run
     """
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
-    generate_preview_images(overwrite, programs=programs, level3_only=level3_only)
+    generate_preview_images(overwrite, programs=programs, level3_only=level3_only, suffixes=suffixes)
     update_monitor_table(module, start_time, log_file)
 
 
 if __name__ == '__main__':
     parser = define_options()
     args = parser.parse_args()
-    protected_code(args.overwrite, args.programs, args.level3_only)
+    protected_code(args.overwrite, args.programs, args.level3_only, args.suffixes)
