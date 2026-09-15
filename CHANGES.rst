@@ -1,5 +1,14 @@
 ## What's Changed
 
+2.0.3 (2026-09-15)
+====================
+
+* Bug leading to missing rate prev images by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1796
+* Fix links to multiple instruments to use full program number by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1794
+* Allow coron "psf" suffix files to be seen by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1787
+* Add charge migration, clean flicker noise, and emicorr to pipeline steps by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1788
+* Set maxtasksperchild to 1 for prev image generator by @bhilbert4 in https://github.com/spacetelescope/jwql/pull/1797
+
 2.0.2 (2026-08-05)
 ====================
 
