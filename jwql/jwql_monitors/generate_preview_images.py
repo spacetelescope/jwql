@@ -594,7 +594,7 @@ def generate_preview_images(overwrite, programs=None, level3_only=False, suffixe
         raise ValueError(no_prog_message)
 
     # Process programs in parallel
-    pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
+    pool = multiprocessing.Pool(processes=int(SETTINGS['cores']), maxtasksperchild=1)
     program_list = [(element, overwrite, level3_only, suffixes) for element in program_list]
     results = pool.starmap(process_program, program_list)
     pool.close()
