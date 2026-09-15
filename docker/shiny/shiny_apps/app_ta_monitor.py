@@ -1,5 +1,6 @@
 from shiny import App, reactive, render, ui
 
+from datetime import datetime, timedelta
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -13,6 +14,9 @@ import os
 from urllib.parse import parse_qs, urlparse
 
 from support_ta_monitor_data import TADataSupplier
+
+from log_msg_extraction import get_ictm_event_log, extract_oss_event_msgs_for_visit
+
 
 running_standalone = str(os.environ.get("SHINY_EMBED", 0)) == "0"
 
@@ -214,12 +218,27 @@ def server(input, output, session):
             return fig
     @render.text
     def text_lrs_oss_log():
-        query_string = session.clientdata.url_search()
-        parsed_params = parse_qs(urlparse(query_string).query)
-        instrument = parsed_params.get("inst", ["unspecified"])[0]
-        exposure = input.miri_exposure_select()
-        scroll_text = f"Getting data for instrument {instrument}.\n"
-        scroll_text += f"Selected exposure is {exposure}.\n"
-        return scroll_text
+        selected_exposure = input.miri_exposure_select()
+        data_source().select_obs(selected_exposure)
+        uncal_file = data_source().get_obs_uncal()
+        if uncal_file is not None:
+            with fits.open(uncal_file) as fits_file:
+                uncal_hdr = fits_file[0].header
+
+            # Take an hour off of time to capture 
+            startdate = datetime.fromisoformat(uncal_hdr["DATE-BEG"]) - timedelta(days=1)
+            enddate = datetime.fromisoformat(uncal_hdr["DATE-END"])
+            visit_id = uncal_hdr["VISIT_ID"]
+
+            eventlog = get_ictm_event_log(
+                        mast_api_token=None,
+                        verbose=False,
+                        startdate=startdate,
+                        enddate=enddate,
+                    )
+
+            msgs = extract_oss_event_msgs_for_visit(eventlog, visit_id)
+
+            return " ".join(msgs)
 
 app = App(app_ui, server, debug=False)
