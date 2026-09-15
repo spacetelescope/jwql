@@ -22,16 +22,7 @@ logging.info(f"Running Standalone: {running_standalone}")
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"  # Optional: also bolds axis title
 
-# Uncal data
-# Two groups, 4 integrations
-rng = np.random.default_rng()
-uncal_data = rng.random((2, 4, 1024, 1032))
-n_groups, n_ints, _, _ = uncal_data.shape
-
 data_source = reactive.value(None)
-
-# Calibrated data
-cal_data = rng.random((1024, 1032))
 
 def build_nav_panel(panel_name, panel_ui):
     return ui.nav_panel(panel_name, panel_ui)
@@ -47,7 +38,7 @@ def build_navset_ui(menu_list):
 miri_lrs_ui = ui.div(
     ui.h4("MIRI LRS"),
     ui.input_selectize(
-        "miri_lrs_fileset_select",
+        "miri_exposure_select",
         "Select MIRI LRS TA Exposure",
         choices=[],
         selected=None,
@@ -69,7 +60,7 @@ miri_lrs_ui = ui.div(
                         "group_slicer",
                         "Uncal Groups:",
                         min=1,
-                        max=n_groups,
+                        max=1,
                         value=1,
                         step=1,
                     ),
@@ -77,7 +68,7 @@ miri_lrs_ui = ui.div(
                         "integ_slicer",
                         "Uncal Integrations:",
                         min=1,
-                        max=n_ints,
+                        max=1,
                         value=1,
                         step=1,
                     ),
@@ -161,7 +152,7 @@ def server(input, output, session):
         # currently selected tab
         data_source.set(TADataSupplier("MIRI"))
         ui.update_selectize(
-            "miri_lrs_fileset_select",
+            "miri_exposure_select",
             choices = data_source().obs_list
         )
         if running_standalone:
@@ -175,37 +166,60 @@ def server(input, output, session):
             return build_navset_ui([instrument_ui[x] for x in sorted(instrument_ui.keys())])
     @render.plot
     def plot_lrs_uncal_image():
-        selected_data = uncal_data[
-            input.group_slicer() - 1, input.integ_slicer() - 1, :, :
-        ]
-        fig = plt.imshow(selected_data, aspect='auto')
-        plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
-        plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
-        cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
-        cbar.set_label("Counts", fontsize=11, fontweight="bold")
-        return fig
+        selected_exposure = input.miri_exposure_select()
+        data_source().select_obs(selected_exposure)
+        uncal_file = data_source().get_obs_uncal()
+        if uncal_file is not None:
+            with fits.open(uncal_file) as fits_file:
+                uncal_data = fits_file['SCI'].data
+            print(uncal_data.shape)
+            ui.update_slider("group_slicer", min=1, max=uncal_data.shape[0])
+            ui.update_slider("integ_slicer", min=1, max=uncal_data.shape[1])
+            selected_data = uncal_data[
+                input.group_slicer() - 1, input.integ_slicer() - 1, :, :
+            ]
+            fig = plt.imshow(selected_data, aspect='auto')
+            plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
+            plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
+            cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
+            cbar.set_label("Counts", fontsize=11, fontweight="bold")
+            return fig
     @render.plot
     def plot_lrs_cal_image():
-        fig = plt.imshow(cal_data, aspect='auto')
-        plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
-        plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
-        cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
-        cbar.set_label("Counts", fontsize=11, fontweight="bold")
-        return fig
+        selected_exposure = input.miri_exposure_select()
+        data_source().select_obs(selected_exposure)
+        cal_file = data_source().get_obs_cal()
+        if cal_file is not None:
+            with fits.open(cal_file) as fits_file:
+                cal_data = fits_file['SCI'].data
+            fig = plt.imshow(cal_data, aspect='auto')
+            plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
+            plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
+            cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
+            cbar.set_label("Counts", fontsize=11, fontweight="bold")
+            return fig
     @render.plot
     def plot_lrs_verification_image():
-        fig = plt.imshow(cal_data, aspect='auto')
-        plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
-        plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
-        cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
-        cbar.set_label("Counts", fontsize=11, fontweight="bold")
-        return fig
+        selected_exposure = input.miri_exposure_select()
+        data_source().select_obs(selected_exposure)
+        cal_file = data_source().get_obs_cal()
+        if cal_file is not None:
+            with fits.open(cal_file) as fits_file:
+                cal_data = fits_file['SCI'].data
+            fig = plt.imshow(cal_data, aspect='auto')
+            plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
+            plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
+            cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
+            cbar.set_label("Counts", fontsize=11, fontweight="bold")
+            return fig
     @render.text
     def text_lrs_oss_log():
         query_string = session.clientdata.url_search()
         parsed_params = parse_qs(urlparse(query_string).query)
         instrument = parsed_params.get("inst", ["unspecified"])[0]
-        scroll_text = f"Getting data for instrument {instrument} from {parsed_params}"
+        exposure = input.miri_exposure_select()
+        scroll_text = f"Getting data for instrument {instrument}.\n"
+        scroll_text += f"Selected exposure is {exposure}.\n"
         return scroll_text
 
 app = App(app_ui, server, debug=False)

@@ -32,22 +32,28 @@ def _download_obs_from_astroquery(obs_list, current_obs, download_dir):
     mission = MastMissions(mission='jwst')
     obs_row = obs_list[obs_list['fileSetName'] == current_obs]
     data_products = mission.get_unique_product_list(obs_row)
-    manifest = mission.download_products(
-        data_products, extension="fits", flat=True, download_dir=download_dir
-    )
+    for row in data_products:
+        print(row['uri'])
+        if row['uri'][-8:] == "cal.fits":
+            result = mission.download_file(row['uri'], local_path=download_dir)
+            print(result)
 
 
 def _uncal_acq_from_astroquery(data_dir, current_obs):
+    print(f"Retrieving uncalibrated data with {data_dir} {current_obs}")
     data_path = Path(data_dir)
     data_files = list(data_path.glob(f"{current_obs}*uncal.fits"))
+    print(data_files)
     if len(data_files) > 0:
         return data_files[0]
     return None
 
 
 def _cal_acq_from_astroquery(data_dir, current_obs):
+    print(f"Retrieving calibrated data with {data_dir} {current_obs}")
     data_path = Path(data_dir)
     data_files = list(data_path.glob(f"{current_obs}*_cal.fits"))
+    print(data_files)
     if len(data_files) > 0:
         return data_files[0]
     return None
@@ -71,22 +77,24 @@ class TADataSupplier():
     @property
     def obs_list(self):
         if hasattr(self, "_data_table"):
-            return self._data_table["obs_id"].tolist()
+            return self._data_table["fileSetName"].tolist()
         if self.data_source == "astroquery":
             self._data_table = _obs_list_from_astroquery(self.instrument, self.mode)
         return self._data_table["fileSetName"].tolist()
 
     def select_obs(self, obs_name):
-        if obs_name in self.obs_list:
+        if obs_name in self.obs_list and self.current_obs != obs_name:
             self.current_obs = obs_name
             if self.data_source == "astroquery":
                 _download_obs_from_astroquery(self._data_table, self.current_obs, self.data_dir)
 
     def get_obs_uncal(self):
-        pass
+        if self.data_source == "astroquery":
+            return _uncal_acq_from_astroquery(self.data_dir, self.current_obs)
 
     def get_obs_cal(self):
-        pass
+        if self.data_source == "astroquery":
+            return _cal_acq_from_astroquery(self.data_dir, self.current_obs)
 
     def get_obs_verification(self):
         pass
