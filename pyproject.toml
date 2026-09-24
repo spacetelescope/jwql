@@ -67,7 +67,7 @@ docs = [
 ]
 wisp = [
     "torch>=2.2.2,<2.5.2",
-    "torchvision>=0.17.2,<0.20.2",
+    "torchvision>=0.17.2,<0.25.1",
 ]
 
 [project.license]
