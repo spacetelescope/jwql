@@ -38,6 +38,42 @@ if not ON_GITHUB_ACTIONS:
 Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
 
 
+def get_program_obs_nums(instrument, program):
+    """For a given program number, return a list of the observations
+    within that program
+
+    Parameters
+    ----------
+    instrument : str
+        Name of JWST instrument
+
+    program : str or int
+        Program number
+
+    Returns
+    -------
+    obs : list
+        List of observation numbers
+    """
+    server = "https://mast.stsci.edu"
+    JwstObs = Mast()
+    JwstObs._portal_api_connection.MAST_REQUEST_URL = server + "/portal_jwst/Mashup/Mashup.asmx/invoke"
+    JwstObs._portal_api_connection.MAST_DOWNLOAD_URL = server + "/jwst/api/v0.1/download/file"
+    JwstObs._portal_api_connection.COLUMNS_CONFIG_URL = server + "/portal_jwst/Mashup/Mashup.asmx/columnsconfig"
+    JwstObs._portal_api_connection.MAST_BUNDLE_URL = server + "/jwst/api/v0.1/download/bundle"
+    service = f'Mast.Jwst.Filtered.{instrument.title()}'
+    FIELDS = ['program', 'observtn']
+    params = {"columns":",".join(FIELDS),
+              "filters":[
+                         {"paramName":"program","values":[program]}
+                         ]
+              }
+    t = JwstObs.service_request(service, params)
+    obs = set(t['observtn'])
+    obs = sorted([str(e).zfill(3) for e in obs])
+    return obs
+
+
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                          add_filters=None, add_requests=None,
                          caom=False, return_data=False):
