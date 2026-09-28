@@ -74,6 +74,7 @@ from jwql.utils.constants import (
 )
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.logging_functions import configure_logging
+from jwql.utils.mast_queries import get_program_obs_nums
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import (
     check_config_for_key,
@@ -2389,33 +2390,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     log_file = configure_logging("django", include_time=False)
     logging.debug(f"Collecting thumbnails for {inst} {proposal} {obs_num}")
     # generate the list of all obs of the proposal here, so that the list can be
-    # properly packaged up and sent to the js scripts. but to do this, we need to call
-    # get_rootnames_for_instrument_proposal, which is largely repeating the work done by
-    # get_filenames_by_instrument above. can we use just get_rootnames? we would have to
-    # filter results by obs_num after the call and after obs_list is created.
-    # But we need the filename list below...hmmm...so maybe we need to do both
-    all_rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
-    logging.debug(f"Associated roots are {all_rootnames}")
-    all_obs = []
-    for root in all_rootnames:
-        logging.debug(f"Collecting info for {root}")
-        try:
-            # Wrap in try/except because level 3 rootnames won't have an observation
-            # number returned by the filename_parser. That's fine, we're not interested
-            # in those files anyway.
-            file_info = filename_parser(root)
-            if file_info['recognized_filename']:
-                try:
-                    all_obs.append(file_info['observation'])
-                except KeyError:
-                    pass
-            else:
-                logging.warning((f'While running thumbnails_ajax() on root {root}, '
-                                 'filename_parser() failed to recognize the file pattern.'))
-        except Exception as e:
-            logging.warning(f"{root} failed filename parser with {e}")
-
-    obs_list = sorted(list(set(all_obs)))
+    # properly packaged up and sent to the js scripts.
+    obs_list = get_program_obs_nums(inst, proposal)
 
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(

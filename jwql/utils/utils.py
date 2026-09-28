@@ -48,7 +48,6 @@ import numpy as np
 from PIL import Image
 from selenium import webdriver
 
-from jwst.utils.mast_queries import get_file_obs_nums
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
     FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
@@ -56,6 +55,7 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
     FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SOURCE_ID_LONG_LEN, FILE_SUFFIX_TYPES, \
     FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
     JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS, STSCI_VO_URL
+from jwql.utils.mast_queries import get_file_obs_nums
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
