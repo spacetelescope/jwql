@@ -63,12 +63,6 @@ def test_filtered_instrument_keywords():
     assert kw[0] != kw[1] != kw[2] != kw[3] != kw[4]
 
 
-def test_get_program_obs_nums():
-    prog_list = [1068, '1068', '01068']
-    for prog in prog_list:
-        assert get_program_obs_nums('nircam', prog) == ['001', '002', '003', '004', '005', '006', '007']
-
-
 def test_instrument_inventory_filtering():
     """Test to see that the instrument inventory can be filtered"""
     filt = 'GR150R'

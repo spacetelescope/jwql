@@ -48,6 +48,7 @@ import numpy as np
 from PIL import Image
 from selenium import webdriver
 
+from jwst.utils.mast_queries import get_file_obs_nums
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
     FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
@@ -742,18 +743,10 @@ def filename_parser(filename):
             if filename[7:9] == '-o':
                 filename_dict['observation'] = filename[9:12]
             else:
-                # import here to avoid circular import
-                # Should we instead create a mast_queries.py file and move functions there to avoid circular imports?
-                from jwql.website.apps.jwql.data_containers import mast_query_filenames_by_instrument
-                l3_info = mast_query_filenames_by_instrument(filename_dict['instrument'],
-                                                             filename_dict['program_id'],
-                                                             other_columns=['observtn'])
+                obs = get_file_obs_nums(filename_dict['instrument'], filename)
 
-                obs = [e['observtn'] for e in l3_info['data'] if root_name in e['filename']]
                 # We don't support having multiple observations associated with a single level 3 file
-                if len(obs) > 0:
-                    obs = obs[0]
-                filename_dict['observation'] = str(obs).zfill(3)
+                filename_dict['observation'] = str(obs[0]).zfill(3)
 
     # Raise error if unable to parse the filename
     except AttributeError:

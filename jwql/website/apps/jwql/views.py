@@ -64,7 +64,7 @@ from sqlalchemy import inspect
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWQLDB_EXCLUDED, JWST_INSTRUMENT_NAMES_MIXEDCASE, QUERY_CONFIG_TEMPLATE, SUFFIXES_OF_ECSV_FILES, URL_DICT, QueryConfigKeys
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.mast_utils import get_program_obs_nums
+from jwql.utils.mast_queries import get_program_obs_nums
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
