@@ -85,7 +85,6 @@ from .data_containers import (
     get_header_info_ecsv,
     get_image_info,
     get_instrument_looks,
-    get_instrument_proposals,
     get_rootnames_from_query,
     import_all_models,
     random_404_page,
