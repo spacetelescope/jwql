@@ -20,6 +20,7 @@ from support_ta_monitor_data import TADataSupplier
 from support_ta_monitor_logs import get_ictm_event_log
 from support_ta_monitor_logs import extract_oss_event_msgs_for_visit
 from support_ta_monitor_logs import check_log_and_note_issues
+from support_ta_monitor_plots import TAPlot
 
 running_standalone = str(os.environ.get("SHINY_EMBED", 0)) == "0"
 
@@ -37,6 +38,7 @@ CANONICAL_NAMES = {
 }
 
 data_source = reactive.value(None)
+figure_source = reactive.value(None)
 current_instrument = reactive.value("")
 current_mode = reactive.value("")
 uncal_image = reactive.value("")
@@ -77,21 +79,41 @@ def miri_tab_ui():
                 ui.output_ui("miri_uncal"),
                 ui.layout_sidebar(
                     ui.sidebar(
-                        ui.input_slider(
-                            "group_slicer",
-                            "Uncal Groups:",
-                            min=1,
-                            max=1,
-                            value=1,
-                            step=1,
+                        ui.div(
+                            {"class": "d-flex align-items-center gap-3 mb-3"},
+                            ui.input_action_button(
+                                "prev_integ",
+                                "◀️",
+                                style="padding: 0; height: auto; min-width: 0; line-height: normal; border: none; background: transparent;",
+                            ),
+                            ui.input_slider(
+                                "integ_slicer",
+                                "Integration:",
+                                min=1,
+                                max=1,
+                                value=1,
+                                step=1,
+                            ),
+                            ui.input_action_button(
+                                "next_integ",
+                                "▶️",
+                                style="padding: 0; height: auto; min-width: 0; line-height: normal; border: none; background: transparent;",
+                            ),
                         ),
-                        ui.input_slider(
-                            "integ_slicer",
-                            "Uncal Integrations:",
-                            min=1,
-                            max=1,
-                            value=1,
-                            step=1,
+                        ui.input_checkbox(
+                            "uncal_plot",
+                            "Show Annotations",
+                            True
+                        ),
+                        ui.input_checkbox(
+                            "uncal_flagged",
+                            "Show Flagged Pixels",
+                            False
+                        ),
+                        ui.input_checkbox(
+                            "uncal_zoom",
+                            "Zoom Image",
+                            True
                         ),
                         open="closed",
                     ),
@@ -105,8 +127,13 @@ def miri_tab_ui():
                 ui.layout_sidebar(
                     ui.sidebar(
                         ui.input_checkbox(
-                            "check_miri_show_calibrated_crosses",
-                            "Show TA checks",
+                            "cal_plot",
+                            "Show Annotations",
+                            True
+                        ),
+                        ui.input_checkbox(
+                            "cal_zoom",
+                            "Zoom Image",
                             True
                         ),
                         open="closed",
@@ -123,8 +150,13 @@ def miri_tab_ui():
                 ui.layout_sidebar(
                     ui.sidebar(
                         ui.input_checkbox(
-                            "check_miri_show_verification_crosses",
-                            "Show TA checks",
+                            "check_plot",
+                            "Show Annotations",
+                            True
+                        ),
+                        ui.input_checkbox(
+                            "check_zoom",
+                            "Zoom Image",
                             True
                         ),
                         open="closed",
@@ -151,29 +183,50 @@ def miri_tab_ui():
 @module.server
 def miri_tab_server(input, output, session):
     oss_messages = reactive.value([])
+    dq_data = reactive.value(None)
+    current_integrations = reactive.value(1)
+    @reactive.effect
+    @reactive.event(input.prev_integ)
+    def _():
+        if input.integ_slicer() > 1:
+            ui.update_slider("integ_slicer", value=(input.integ_slicer() - 1))
+    @reactive.effect
+    @reactive.event(input.next_integ)
+    def _():
+        if input.integ_slicer() < current_integrations():
+            ui.update_slider("integ_slicer", value=(input.integ_slicer() + 1))
     @render.ui
     def miri_uncal():
         return ui.card_header(f"TA Image (uncalibrated) {uncal_image()}"),
     @render.plot
-    def plot_miri_uncal_image():
+    async def plot_miri_uncal_image():
+        acq_integ = input.integ_slicer() - 1
+        show_plot = input.uncal_plot()
+        zoom_plot = input.uncal_zoom()
+        dq_frame = dq_data()
+        show_flagged = input.uncal_flagged()
         selected_exposure = input.exposure_select()
         data_source().select_obs(selected_exposure)
-        uncal_file = data_source().get_obs_uncal()
-        if uncal_file is not None:
-            uncal_image.set(Path(uncal_file).stem)
-            with fits.open(uncal_file) as fits_file:
-                uncal_data = fits_file['SCI'].data
-            ui.update_slider("group_slicer", min=1, max=uncal_data.shape[0])
-            ui.update_slider("integ_slicer", min=1, max=uncal_data.shape[1])
-            selected_data = uncal_data[
-                input.group_slicer() - 1, input.integ_slicer() - 1, :, :
-            ]
-            fig = plt.imshow(selected_data, aspect='auto', norm='log')
-            plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
-            plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
-            cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
-            cbar.set_label("Counts", fontsize=11, fontweight="bold")
-        else:
+        uncal_obs = await sync_to_async(data_source().get_obs_uncal)()
+        fig = None
+        if uncal_obs is not None:
+            with fits.open(uncal_obs) as fits_file:
+                current_integrations.set(fits_file['SCI'].data.shape[1])
+                slider_value = min(input.integ_slicer(), current_integrations())
+                ui.update_slider(
+                    "integ_slicer",
+                    min=1,
+                    max=current_integrations(),
+                    value=slider_value
+                )
+            fig = data_source().get_plot_uncal(
+                acq_integ,
+                show_plot,
+                dq_frame,
+                show_flagged,
+                zoom_plot
+            )
+        if fig is None:
             fig = plt.figure()
             fig.text(0.5, 0.5, 'No File Available', fontsize=18, ha='center', va='center')
         return fig
@@ -181,19 +234,16 @@ def miri_tab_server(input, output, session):
     def miri_cal():
         return ui.card_header(f"TA Image (calibrated) {cal_image()}"),
     @render.plot
-    def plot_miri_cal_image():
+    async def plot_miri_cal_image():
+        show_plot = input.cal_plot()
+        zoom_plot = input.cal_zoom()
         selected_exposure = input.exposure_select()
         data_source().select_obs(selected_exposure)
-        cal_file = data_source().get_obs_cal()
+        cal_file = await sync_to_async(data_source().get_obs_cal)()
         if cal_file is not None:
-            cal_image.set(Path(cal_file).stem)
             with fits.open(cal_file) as fits_file:
-                cal_data = fits_file['SCI'].data
-            fig = plt.imshow(cal_data, aspect='auto', norm='log')
-            plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
-            plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
-            cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
-            cbar.set_label("Counts", fontsize=11, fontweight="bold")
+                dq_data.set(fits_file['DQ'].data)
+            fig = data_source().get_plot_cal(show_plot, zoom_plot)
         else:
             fig = plt.figure()
             fig.text(0.5, 0.5, 'No File Available', fontsize=18, ha='center', va='center')
@@ -203,19 +253,13 @@ def miri_tab_server(input, output, session):
         return ui.card_header(f"TA Image (check) {check_image()}"),
     @render.plot
     async def plot_miri_verification_image():
+        show_plot = input.check_plot()
+        zoom_plot = input.check_zoom()
         selected_exposure = input.exposure_select()
-        exp_data = data_source()
-        exp_data.select_obs(selected_exposure)
-        check_file = await sync_to_async(exp_data.get_obs_verification)()
+        data_source().select_obs(selected_exposure)
+        check_file = await sync_to_async(data_source().get_obs_check)()
         if check_file is not None:
-            check_image.set(Path(check_file).stem)
-            with fits.open(check_file) as fits_file:
-                check_data = fits_file['SCI'].data
-            fig = plt.imshow(check_data, aspect='auto', norm='log')
-            plt.xlabel("x (pixels)", fontsize=11, fontweight="bold")
-            plt.ylabel("y (pixels)", fontsize=11, fontweight="bold")
-            cbar = plt.colorbar(fig, orientation="vertical", fraction=0.046, pad=0.04)
-            cbar.set_label("Counts", fontsize=11, fontweight="bold")
+            fig = data_source().get_plot_check(show_plot, zoom_plot)
         else:
             fig = plt.figure()
             fig.text(0.5, 0.5, 'No File Available', fontsize=18, ha='center', va='center')

@@ -221,6 +221,25 @@ def get_ictm_event_log(
     else:
         return lines
 
+
+def extract_oss_TA_centroids(eventlog, selected_visit_id):
+    """ Return the TA centroid values from OSS
+    Note, pretty sure these values from OSS are 1-based pixel coordinates - to be confirmed!
+
+    returns (X,Y) tuple
+    """
+
+    msgs = extract_oss_event_msgs_for_visit(eventlog, selected_visit_id,
+                                            ta_only=True,
+                                            verbose=False, return_text=True)
+    for m in msgs:
+        if m.split('\t')[1].startswith("detector coord"):
+            xy = ([float(p.strip('(),')) for p in m.split()[-2:]])
+            return tuple(xy)
+    else:
+        raise RuntimeError("Could not parse TA centroid coordinates in that visit log")
+
+
 def check_log_and_note_issues(msg):
     """ 
     Check messages to detect issues we should flag for the user to be aware of

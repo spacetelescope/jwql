@@ -6,6 +6,10 @@ from pathlib import Path
 import shutil
 import tempfile
 
+from jwql.utils.utils import filesystem_path, filename_parser
+
+from support_ta_monitor_plots import TAPlot
+
 
 EXP_TYPE_MAPPING = {
     "miri": "MIR_",
@@ -154,7 +158,6 @@ def _check_acq_from_jwql(instrument, current_obs):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
     django.setup()
     from jwql.website.apps.jwql.models import RootFileInfo
-    from jwql.utils.utils import filesystem_path
     logging.info(f"Looking for check image with instrument {instrument} for {current_obs}")
     try:
         obs_path = filesystem_path(f"{current_obs}_uncal.fits")
@@ -185,8 +188,8 @@ def _check_acq_from_jwql(instrument, current_obs):
             check_visit = fits_file[0].header["VISIT"].strip()
         logging.info(f"Checking {result_name}")
         logging.info(f"\tProgram {program} vs {check_program}")
-        logging.info(f"\Visit {visit} vs {check_visit}")
-        logging.info(f"\Observation {observation} vs {check_observation}")
+        logging.info(f"\tVisit {visit} vs {check_visit}")
+        logging.info(f"\tObservation {observation} vs {check_observation}")
         if check_program == program:
             if check_visit == visit:
                 if check_observation == observation:
@@ -200,7 +203,11 @@ class TADataSupplier():
         self.mode = mode.lower()
         self.data_source = os.environ.get("SHINY_TA_DATA_SOURCE", "astroquery")
         self.current_obs = None
+        self.current_visit = None
         self.data_dir = tempfile.mkdtemp()
+        self.uncal_path = None
+        self.cal_path = None
+        self.check_path = None
 
     def __del__(self):
         if Path(self.data_dir).is_dir():
@@ -219,23 +226,106 @@ class TADataSupplier():
     def select_obs(self, obs_name):
         if obs_name in self.get_obs_list() and self.current_obs != obs_name:
             self.current_obs = obs_name
+            self._uncal_plot = None
+            self._cal_plot = None
+            self._check_plot = None
             if self.data_source == "astroquery":
                 _download_obs_from_astroquery(self._data_table, self.current_obs, self.data_dir)
 
     def get_obs_uncal(self):
         if self.data_source == "astroquery":
-            return _uncal_acq_from_astroquery(self.data_dir, self.current_obs)
+            self.uncal_path = _uncal_acq_from_astroquery(self.data_dir, self.current_obs)
         elif self.data_source == "jwql":
-            return _uncal_acq_from_jwql(self.current_obs)
+            self.uncal_path = _uncal_acq_from_jwql(self.current_obs)
+        return self.uncal_path
 
-    def get_obs_cal(self):
-        if self.data_source == "astroquery":
-            return _cal_acq_from_astroquery(self.data_dir, self.current_obs)
-        elif self.data_source == "jwql":
-            return _cal_acq_from_jwql(self.current_obs)
+    def get_plot_uncal(self, integration, annotate_plot, dq_data, flagged, zoom):
+        if self.uncal_path is not None:
+            if hasattr(self, "_uncal_plot") and self._uncal_plot is not None:
+                return self._uncal_plot.get_plot(
+                    integration=integration,
+                    plot=annotate_plot,
+                    dq_data=dq_data,
+                    flagged=flagged,
+                    zoom=zoom
+                )
+            else:
+                file_info = filename_parser(self.uncal_path)
+                logging.info(file_info)
+                visit_id = file_info["program_id"] + file_info["observation"] + file_info["visit"]
+                self._uncal_plot = TAPlot(
+                    visit_id,
+                    self.uncal_path,
+                    inst=self.instrument,
+                )
+                logging.info(f"Created plot {self._uncal_plot}")
+                return self._uncal_plot.get_plot(
+                    integration=integration,
+                    plot=annotate_plot,
+                    dq_data=dq_data,
+                    flagged=flagged,
+                    zoom=zoom
+                )
+        return None
 
-    def get_obs_verification(self):
+    def get_obs_cal(self, annotate_plot=True, annotate_text=True):
         if self.data_source == "astroquery":
-            return _check_acq_from_astroquery(self.instrument, self._data_table, self.data_dir, self.current_obs)
+            self.cal_path = _cal_acq_from_astroquery(self.data_dir, self.current_obs)
         elif self.data_source == "jwql":
-            return _check_acq_from_jwql(self.instrument, self.current_obs)
+            self.cal_path = _cal_acq_from_jwql(self.current_obs)
+        return self.cal_path
+
+    def get_plot_cal(self, annotate_plot, zoom):
+        if self.cal_path is not None:
+            if hasattr(self, "_cal_plot") and self._cal_plot is not None:
+                return self._cal_plot.get_plot(
+                    plot=annotate_plot,
+                    zoom=zoom
+                )
+            else:
+                file_info = filename_parser(self.cal_path)
+                logging.info(file_info)
+                visit_id = file_info["program_id"] + file_info["observation"] + file_info["visit"]
+                self._cal_plot = TAPlot(
+                    visit_id,
+                    self.cal_path,
+                    inst=self.instrument,
+                )
+                logging.info(f"Created plot {self._cal_plot}")
+                return self._cal_plot.get_plot(
+                    plot=annotate_plot,
+                    zoom=zoom
+                )
+        return None
+
+    def get_obs_check(self, annotate_plot=True, annotate_text=True):
+        if self.data_source == "astroquery":
+            self.check_path = _check_acq_from_astroquery(self.instrument, self._data_table, self.data_dir, self.current_obs)
+        elif self.data_source == "jwql":
+            self.check_path = _check_acq_from_jwql(self.instrument, self.current_obs)
+        return self.check_path
+
+    def get_plot_check(self, annotate_plot, zoom):
+        if self.check_path is not None:
+            if hasattr(self, "_check_plot") and self._check_plot is not None:
+                return self._check_plot.get_plot(
+                    plot=annotate_plot,
+                    zoom=zoom
+                )
+            else:
+                file_info = filename_parser(self.check_path)
+                logging.info(file_info)
+                visit_id = file_info["program_id"] + file_info["observation"] + file_info["visit"]
+                self._check_plot = TAPlot(
+                    visit_id,
+                    self.check_path,
+                    inst=self.instrument,
+                    check_image=True
+                )
+                logging.info(f"Created plot {self._check_plot}")
+                return self._check_plot.get_plot(
+                    plot=annotate_plot,
+                    zoom=zoom
+                )
+        return None
+

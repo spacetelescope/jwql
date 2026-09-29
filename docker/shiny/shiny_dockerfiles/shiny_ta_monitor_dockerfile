@@ -29,6 +29,8 @@ ENV SHINY_LOG_STDERR=1
 ENV SHINY_EMBED=1
 
 RUN pip install shiny
+RUN pip install tqdm
+RUN pip install stpsf
 
 # Install JWQL
 WORKDIR /jwql
