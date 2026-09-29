@@ -64,6 +64,7 @@ from sqlalchemy import inspect
 from jwql.utils import monitor_utils
 from jwql.utils.constants import JWQLDB_EXCLUDED, JWST_INSTRUMENT_NAMES_MIXEDCASE, QUERY_CONFIG_TEMPLATE, SUFFIXES_OF_ECSV_FILES, URL_DICT, QueryConfigKeys
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
+from jwql.utils.mast_queries import get_program_obs_nums
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
@@ -365,15 +366,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation=None
     # Get a list of all observation numbers for the proposal
     # This will be used to create buttons for observation-specific
     # pages
-    rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
-    all_obs = []
-    for root in rootnames:
-        try:
-            all_obs.append(filename_parser(root)['observation'])
-        except KeyError:
-            pass
-
-    obs_list = sorted(list(set(all_obs)))
+    obs_list = get_program_obs_nums(inst, proposal)
 
     sort_type = request.session.get('image_sort', 'Recent')
     group_type = request.session.get('image_group', 'Exposure')
