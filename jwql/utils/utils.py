@@ -55,7 +55,7 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
     FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SOURCE_ID_LONG_LEN, FILE_SUFFIX_TYPES, \
     FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
     JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS, STSCI_VO_URL
-from jwql.utils.mast_queries import get_file_obs_nums
+from jwql.utils.mast_queries import get_level2b_or_3_file_obs_nums
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
@@ -743,7 +743,9 @@ def filename_parser(filename):
             if filename[7:9] == '-o':
                 filename_dict['observation'] = filename[9:12]
             else:
-                obs = get_file_obs_nums(filename_dict['instrument'], filename)
+                # Note that this function only works for level 3 and level 2b files,
+                # which is why we use it inside the if 'stage3' statement
+                obs = get_level2b_or_3_file_obs_nums(filename_dict['instrument'], filename)
 
                 # We don't support having multiple observations associated with a single level 3 file
                 filename_dict['observation'] = str(obs[0]).zfill(3)

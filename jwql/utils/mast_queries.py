@@ -63,9 +63,11 @@ def get_program_obs_nums(instrument, program):
     return obs
 
 
-def get_file_obs_nums(instrument, filename):
+def get_level2b_or_3_file_obs_nums(instrument, filename):
     """Get the observation numbers associated with a given file. Handle a case where level
-    3 files may have more than one observation associated with them
+    3 files may have more than one observation associated with them. Note that this function
+    only works for level 2b and 3 files. e.g. it works for *_cal.fits, *_crf.fits, *_i2d.fits,
+    and *_s3d.fits, but does not work for *_uncal.fits or *_rate.fits files.
 
     Parameters
     ----------
@@ -91,7 +93,7 @@ def get_file_obs_nums(instrument, filename):
     FIELDS = ['observtn']
     params = {"columns":",".join(FIELDS),
               "filters":[
-                         {"paramName":"filename","values":[filename]}
+                         {"paramName":"filename","values":[filename]},
                          ]
               }
 
