@@ -25,7 +25,7 @@ from astroquery.mast import Mast
 from jwql.utils import mast_queries as mq
 
 
-file_test_data = [('nircam', 'jw01068001001_02102_00003_nrcb3_rate.fits'), (['001']),
+file_test_data = [('nircam', 'jw01068001001_02102_00003_nrcb3_rate.fits', ['001']),
                   ('nircam', 'jw01068-o001_t005_nircam_clear-f356w-sub160_i2d.fits', ['001']),
                   ('MIRI', 'jw12772001001_03104_00003_mirifulong_s3d.fits', ['001']),
                   ('Miri', 'jw12772-o001_t001_miri_ch3-long_x1d.fits', ['001'])
