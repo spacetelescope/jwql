@@ -87,13 +87,24 @@ def get_file_obs_nums(instrument, filename):
     JwstObs._portal_api_connection.COLUMNS_CONFIG_URL = server + "/portal_jwst/Mashup/Mashup.asmx/columnsconfig"
     JwstObs._portal_api_connection.MAST_BUNDLE_URL = server + "/jwst/api/v0.1/download/bundle"
     service = f'Mast.Jwst.Filtered.{instrument.title()}'
+
     FIELDS = ['observtn']
     params = {"columns":",".join(FIELDS),
               "filters":[
                          {"paramName":"filename","values":[filename]}
                          ]
               }
+
+    # If only a file root is given, then we need to query using "freeText"
+    # and a wildcard. Note that this can be significantly slower than querying
+    # with a full filename.
+    if "%" not in filename and not filename.endswith(".fits"):
+        filename = filename + "%"
+        params = {"columns": "observtn",
+              "filters": [
+                  {"paramName": "filename", "values": [], "freeText": filename}
+              ]}
+
     t = JwstObs.service_request(service, params)
     obs = set(t['observtn'])
-    obs = sorted([str(e).zfill(3) for e in obs])
-    return obs
+    return sorted(str(e).zfill(3) for e in obs)
