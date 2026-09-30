@@ -6,6 +6,9 @@ from requests import Session
 import astropy
 import numpy as np
 
+from support_ta_monitor_mast import query_visit_time
+from support_ta_monitor_utils import get_visitid
+
 
 def get_visitid(visitstr):
     """Common util function to handle several various kinds of visit specification"""
@@ -220,6 +223,115 @@ def get_ictm_event_log(
         return parse_eventlog_to_table(lines, label="Message")
     else:
         return lines
+
+
+def eventtable_extract_visit(event_table, selected_visit_id, verbose=False):
+    """Find just the log message rows for a given visit"""
+    visit_id = get_visitid(selected_visit_id)  # handle either input format
+
+    vmessages = [m.startswith(f'VISIT {visit_id}') for m in event_table['Message']]
+
+    if verbose:
+        print(event_table[vmessages])
+
+    line_indices = np.where(vmessages)[0]
+    if len(line_indices) == 0:
+        raise RuntimeError(f"No messages were found for visit {visit_id} within the search time period.")
+    elif len(line_indices) == 2:
+        istart, istop = line_indices
+        return event_table[istart:istop+1]
+    else: # visit ongoing, has not ended as of end of available log
+        istart = line_indices[0]
+        return event_table[istart:]
+
+
+def get_oss_log_messages(visitid=None, start_time=None, end_time=None):
+    """ Retrieve OSS event log messages during a given visit or time interval
+
+    See also get_ictm_event_log. This function instead uses the EngDB interface included in the JWST pipeline.
+    Returns an astropy Table with the EngDB message, message ID, and message source.
+
+    Parameters
+    ----------
+    visitid : str
+        Visit ID string, like 'V01234001001'
+
+    Returns astropy Table containing the timestamps and message values
+    """
+    if start_time is None and end_time is None:
+        visitid = get_visitid(visitid)  # Handle either allowed format of visit ID
+
+        #----- When was that visit? -----
+        start_time, end_time = query_visit_time(visitid)
+        if start_time is None:
+            raise RuntimeError(f"Cannot find start time for visit {visitid}. That visit may not have happened yet.")
+    else:
+        start_time = astropy.time.Time(start_time)
+        end_time = astropy.time.Time(end_time)
+
+    #----- Retrieve relevant messages from the ICTM event log stream -----
+    from jwst.lib.engdb_tools import ENGDB_Service
+    service = ENGDB_Service()  # By default, will use the public MAST service.
+
+    # There are multiple mnemonics we care about,
+    # in particular the EVENT_MSG has the text, and the MSG_ID and MSG_SRC give metadata on the source
+    # Retrieve all of these and organize into a table for convenience.
+
+    msg_times, messages = service.get_values("ICTM_EVENT_MSG", start_time.isot, end_time.isot, include_obstime=True, zip_results=False)
+    msg_times_2, msg_ids = service.get_values("ICTM_EVENT_MSG_ID", start_time.isot, end_time.isot, include_obstime=True, zip_results=False)
+    msg_times_3, msg_srcs = service.get_values("ICTM_EVENT_MSG_SRC", start_time.isot, end_time.isot, include_obstime=True, zip_results=False)
+
+    #----- Arrange those 3 sets of results into a single Table -----
+    # Ideally we should have gotten the same number of rows in all 3 queries above\
+    # These -should- all have matching counts and time stamps... but for some reason this is not always the case. Hmm.
+    # So check here and if necessary handle the case of an inconsistency.
+
+    if len(messages) == len(msg_ids) and len(messages) == len(msg_srcs):
+        #print("consistent number of rows returned")
+        msg_table = astropy.table.Table([msg_times, messages, msg_ids, msg_srcs],
+                                       names = ['TIME', "EVENT_MSG", "EVENT_MSG_ID", "EVENT_MSG_SRC"])
+    else:
+        print("INconsistent number of EVENT_MSG and EVENT_MSG_ID records returned; matching based on telemetry time stamps ")
+        # This occurs for instance in visit V07344017001, a NIRCam WFSC visit.
+
+        msg_table = astropy.table.Table([msg_times[0:1], messages[0:1], msg_ids[0:1], msg_srcs[0:1]],
+                           names = ['TIME', "EVENT_MSG", "EVENT_MSG_ID", "EVENT_MSG_SRC"])
+        # match up the rows that do have consistent timestamps
+        # When there's not a match, look 1 row before or after to see if we can find a match
+        n = min(len(msg_times), len(msg_times_2), len(msg_times_3))
+        index_offset = 0  # We will use this to track offsets between mnemonic time series
+        for i in range(1, n):
+            # Compare time stamps between EVENT_MSG and EVENT_MSG_ID mnemonic time series
+            if msg_times[i] - msg_times_2[i+index_offset] == 0*u.second:
+                # times match, no need to adjust
+                pass
+            else:
+                if msg_times[i] == msg_times_2[i+index_offset-1]:
+                    #print('found extra EVENT_MSG relative to EVENT_MSG_ID')
+                    index_offset -= 1
+                elif msg_times[i] == msg_times_2[i+index_offset+1]:
+                    #print('found skipped EVENT_MSG relative to EVENT_MSG_ID')
+                    index_offset += 1
+                else:
+                    raise RuntimeError("Inconsistent number of telemetry records returned, with bigger gaps than this function can currently sort out.")
+            msg_table.add_row([msg_times[i], messages[i], msg_ids[i+index_offset], msg_srcs[i+index_offset]])
+
+    return msg_table
+
+
+def filter_oss_log_messages_by_id(msg_table, msg_id):
+    """Select a subset of event log messages matching a specified EVENT_MSG_ID
+
+    Parameters
+    ----------
+    msg_table : astropy.Table
+        table returned from get_oss_log_messages()
+    msg_id : int
+        Value to select from the EVENT_MSG_ID field in that table.
+
+    Returns a subset of rows from the event message table
+    """
+    return msg_table[msg_table['EVENT_MSG_ID'] == msg_id]
 
 
 def extract_oss_TA_centroids(eventlog, selected_visit_id):
