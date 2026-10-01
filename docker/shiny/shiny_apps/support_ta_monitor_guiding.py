@@ -110,7 +110,7 @@ def find_relevant_guiding_file(sci_filename, verbose=True):
         products_to_fetch = [fn for fn in products if fn.startswith(products[wmatch][0:33])]
         if verbose:
             logging.debug("\tThat GS data is divided into multiple segment files:")
-            for product in products_to_fetch):
+            for product in products_to_fetch:
                 logging.debug(f"\t{product}")
     else:
         products_to_fetch = [products[wmatch],]

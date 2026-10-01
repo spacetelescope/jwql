@@ -1,5 +1,6 @@
 import numpy as np
 import astropy
+import logging
 
 import pysiaf
 import astropy.time, astropy.units as u, astropy.table

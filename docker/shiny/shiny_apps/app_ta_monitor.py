@@ -56,6 +56,25 @@ def build_menu_ui(name, ui_list):
 def build_navset_ui(menu_list, id="toplevel"):
     return ui.navset_tab(*menu_list, id=id)
 
+def show_loading_dialog(message):
+    return ui.modal(
+        ui.div(
+            # Spinner animation and centered layout
+            ui.div(
+                class_="spinner-border text-primary m-3", 
+                role="status", 
+                style="width: 3rem; height: 3rem;"
+            ),
+            ui.h4(f"{message}", class_="mt-2"),
+            class_="d-flex flex-column align-items-center justify-content-center text-center"
+        ),
+        title=None,          # Removes standard header line
+        footer=None,         # Removes footer completely
+        easy_close=False,    # Blocks users from clicking out of the modal
+        size="s"             # Compact modal size
+    )
+
+
 @module.ui
 def miri_tab_ui():
     miri_ui = ui.div(
@@ -493,6 +512,7 @@ def server(input, output, session):
         mode = input.nav_toplevel()
         instrument = current_instrument()
         if instrument is not None and mode is not None:
+            ui.modal_show(show_loading_dialog(f"Loading {mode} Exposure List"))
             mode = mode.lower()
             logging.info(f"nav_toplevel: Instrument and mode are {instrument}, {mode}")
             if data_source() is None or data_source().instrument != instrument or data_source().mode != mode:
@@ -502,8 +522,8 @@ def server(input, output, session):
             obs_list = await sync_to_async(data_source().get_obs_list)()
             obs_list = [""] + obs_list
             set_exposure_options(instrument, mode, obs_list)
+            ui.modal_remove()
         logging.info("nav_toplevel_end")
-            
 
     @reactive.effect
     def _():

@@ -1,6 +1,7 @@
 import functools
 import astropy, astropy.units as u
 import jwst.datamodels
+import logging
 
 def get_visitid(visitstr):
     """ Common util function to handle several various kinds of visit specification"""
