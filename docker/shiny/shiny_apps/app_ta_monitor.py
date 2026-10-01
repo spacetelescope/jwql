@@ -205,36 +205,6 @@ def miri_tab_server(input, output, session):
     dq_data = reactive.value(None)
     current_integrations = reactive.value(1)
     current_exposure = reactive.value("")
-    uncal_integrations = reactive.value({})
-    cache_building = reactive.value(False)
-
-    @reactive.extended_task
-    async def populate_uncal_integrations(n_int, annotations, zoom, dq, flagged, data):
-        if dq is None:
-            logging.info("populate_uncal_integrations refusing to build cache with no DQ")
-            return
-        cache_building.set(True)
-        logging.info("populate_uncal_integrations started")
-        integrations = {}
-        integrations["show_plot"] = annotations
-        integrations["zoom_plot"] = zoom
-        integrations["dq_frame"] = dq
-        integrations["show_flagged"] = flagged
-        logging.info("populate_uncal_integrations getting data source")
-        logging.info("populate_uncal_integrations starting loop")
-        for acq_integ in range(n_int):
-            logging.info(f"populate_uncal_integrations: integration {acq_integ}")
-            plot_figure = await sync_to_async(data.get_plot_uncal)(
-                acq_integ,
-                annotations,
-                dq,
-                flagged,
-                zoom
-            )
-            integrations[acq_integ] = plot_figure
-        uncal_integrations.set(integrations)
-        cache_building.set(False)
-        logging.info("populate_uncal_integrations finished")
 
     @reactive.effect
     async def _():
@@ -283,7 +253,6 @@ def miri_tab_server(input, output, session):
     async def plot_miri_uncal_image():
         """Plot the MIRI uncalibrated frame"""
         logging.info("plot_miri_uncal_start")
-        nonlocal cache_building
         selected_exposure = current_exposure()
         acq_integ = input.integ_slicer() - 1
         show_plot = input.uncal_plot()
@@ -293,16 +262,6 @@ def miri_tab_server(input, output, session):
         uncal_obs = await sync_to_async(data_source().get_obs_uncal)()
         fig = None
         if uncal_obs is not None:
-            with reactive.isolate():
-                i_cache = uncal_integrations()
-                cache_in_progress = cache_building()
-            if acq_integ in i_cache:
-                if show_plot == i_cache["show_plot"]:
-                    if show_flagged == i_cache["show_flagged"]:
-                        if zoom_plot == i_cache["zoom_plot"]:
-                            logging.info("plot_miri_uncal_cache_hit")
-                            return i_cache[acq_integ]
-            uncal_integrations.set({})
             with fits.open(uncal_obs) as fits_file:
                 n_integrations = fits_file['SCI'].data.shape[1]
                 current_integrations.set(n_integrations)
@@ -320,15 +279,6 @@ def miri_tab_server(input, output, session):
                 show_flagged,
                 zoom_plot
             )
-            if not cache_in_progress:
-                populate_uncal_integrations.invoke(
-                    n_integrations,
-                    show_plot,
-                    zoom_plot,
-                    dq_frame,
-                    show_flagged,
-                    data_source()
-                )
         if fig is None:
             fig = plt.figure()
             fig.text(0.5, 0.5, 'No File Available', fontsize=18, ha='center', va='center')
