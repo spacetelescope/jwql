@@ -12,8 +12,6 @@ from astroquery.mast import Observations
 import requests
 
 import logging
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 from tqdm import tqdm
 
@@ -84,12 +82,12 @@ def jwst_keywords_query(instrument, columns=None, all_columns=False, verbose=Fal
     parameters = {'columns': '*' if all_columns else columns,
                   'filters': set_params(keywords)}
     if verbose:
-        print("MAST query parameters:")
-        print(parameters)
+        logging.debug("MAST query parameters:")
+        logging.debug(parameters)
 
     responsetable = Mast.service_request(service, parameters)
     if verbose:
-        print(f"Query returned {len(responsetable)} rows")
+        logging.debug(f"Query returned {len(responsetable)} rows")
     if 'bstrtime' in columns:
         responsetable.sort(keys='bstrtime')
 
@@ -159,7 +157,7 @@ def query_visit_time(visitid, verbose=False):
     #  Scan through the table for a row matching that visit id
     for vid, vstart, vend, inst in visit_times:
         if verbose:
-            print(vid, visitid, vid==visitid, inst)
+            logging.debug(f"{vid} {visitid} {vid==visitid} {inst}")
         if vid==visitid:
             # Return times as astropy Time objects
             t0 = astropy.time.Time(vstart, format='mjd')
@@ -177,7 +175,7 @@ def get_visit_exposure_times(visitid, extra_columns=""):
     inst = visit_which_instrument(visitid)
 
     if inst is None:
-        print(f"warning, no science data in MAST for visit {visitid}")
+        logging.debug(f"warning, no science data in MAST for visit {visitid}")
         return None
 
     # Set some extra keywords per instrument
@@ -247,7 +245,7 @@ def query_program_visit_times(program,  verbose=False):
         warnings.simplefilter('ignore')  # Because we expect at least some of these may have a warning about no results found
         for inst in instruments:
             if verbose:
-                print(f"querying for visits using {inst}")
+                logging.debug(f"querying for visits using {inst}")
             visit_times += _query_program_visit_times_by_inst(program, inst)
 
     # Format outputs
@@ -350,8 +348,8 @@ def _query_program_visit_times_by_inst(program, instrument, verbose=False):
                   'filters': set_params(keywords)}
 
     if verbose:
-        print("MAST query parameters:")
-        print(parameters)
+        logging.debug("MAST query parameters:")
+        logging.debug(parameters)
 
     responsetable = Mast.service_request(service, parameters)
     if 'bstrtime' in collist:
@@ -430,7 +428,7 @@ def retrieve_files(filenames, out_dir='.', verbose=True):
 
         if os.path.isfile(outfile):
             if verbose:
-                print("ALREADY DOWNLOADED: ", outfile)
+                logging.debug("ALREADY DOWNLOADED: ", outfile)
             outputs.append(outfile)
             continue
 
@@ -446,10 +444,10 @@ def retrieve_files(filenames, out_dir='.', verbose=True):
 
         if not os.path.isfile(outfile):
             if verbose:
-                print("ERROR: " + outfile + " failed to download.")
+                logging.debug("ERROR: " + outfile + " failed to download.")
         else:
             if verbose:
-                print("COMPLETE: ", outfile)
+                logging.debug("COMPLETE: ", outfile)
             outputs.append(outfile)
     return outputs
 
@@ -506,7 +504,7 @@ def get_mast_filename(filename, outputdir='.',
     if (not overwrite) and os.path.exists(outfile):
         if exists_ok:
             if verbose:
-                print(" ALREADY DOWNLOADED: "+outfile)
+                logging.debug(" ALREADY DOWNLOADED: "+outfile)
             return
         else:
             raise ValueError(f"{outfile} exists, not overwritten")
@@ -531,9 +529,9 @@ def get_mast_filename(filename, outputdir='.',
     if progress:
         progress_bar.close()
         if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-            print("ERROR, something went wrong")
+            logging.debug("ERROR, something went wrong")
     if verbose:
-        print(" DOWNLOAD SUCCESSFUL: "+outfile)
+        logging.debug(f" DOWNLOAD SUCCESSFUL: {outfile}")
     return fd
 
 
@@ -612,7 +610,7 @@ def report_jwst_highcontrast_observations(targname, verbose=True):
         if k not in obsinfo:
             continue
         if verbose:
-            print(k)
+            logging.debug(k)
         program_keys = list(obsinfo[k].keys())
         program_keys.sort()
         text = ""
@@ -667,6 +665,6 @@ def report_jwst_highcontrast_observations(targname, verbose=True):
            for prog in program_keys:
                 text += ", ".join(g for g in obsinfo[k][prog]) + f" ({prog})\n"
         if verbose:
-            print("\t" + text)
+            logging.debug(f"\t{text}")
         result_table[0][k] = text
     return result_table

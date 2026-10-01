@@ -12,6 +12,7 @@ import functools
 import warnings
 from urllib.request import urlopen
 from io import BytesIO
+import logging
 
 
 import matplotlib, matplotlib.pyplot as plt
@@ -75,10 +76,10 @@ def find_relevant_guiding_file(sci_filename, verbose=True):
 
 
     if verbose:
-        print(f"For science data file: {sci_filename}")
-        print("Found guiding telemetry files:")
+        logging.debug(f"For science data file: {sci_filename}")
+        logging.debug("Found guiding telemetry files:")
         for p in products:
-            print("   ", p)
+            logging.debug(f"\t{p}")
 
     # Some guide files are split into multiple segments, which we have to deal with.
     guide_timestamp_parts = [fn.split('_')[2] for fn in products]
@@ -93,25 +94,24 @@ def find_relevant_guiding_file(sci_filename, verbose=True):
 
     delta_times = np.array(guide_timestamps-obs_end_time, float)
     # want to find the minimum delta which is at least positive
-    #print(delta_times)
     delta_times[delta_times<0] = np.nan
-    #print(delta_times)
 
     wmatch = np.argmin(np.abs(delta_times))
     wmatch = np.where(delta_times ==np.nanmin(delta_times))[0][0]
     delta_min = (guide_timestamps-obs_end_time)[wmatch]
 
     if verbose:
-        print("Based on science DATE-END keyword and guiding timestamps, the matching GS file is: ")
-        print("   ", products[wmatch])
-        print(f"    t_end = {obs_end_time}\t delta = {delta_min}")
+        logging.debug("Based on science DATE-END keyword and guiding timestamps, the matching GS file is: ")
+        logging.debug(f"\t{products[wmatch]}")
+        logging.debug(f"\tt_end = {obs_end_time}\t delta = {delta_min}")
 
     if is_segmented[wmatch]:
         # We ought to fetch all the segmented GS files for that guide period
         products_to_fetch = [fn for fn in products if fn.startswith(products[wmatch][0:33])]
         if verbose:
-            print("   That GS data is divided into multiple segment files:")
-            print("   ".join(products_to_fetch))
+            logging.debug("\tThat GS data is divided into multiple segment files:")
+            for product in products_to_fetch):
+                logging.debug(f"\t{product}")
     else:
         products_to_fetch = [products[wmatch],]
 
@@ -162,7 +162,7 @@ def find_visit_guiding_files(visitid, guidemode='FINEGUIDE', verbose=True, autod
         }
 
     if verbose:
-        print(params)
+        logging.debug(params)
     # Run the web service query. This uses the specialized, lower-level webservice for the
     # guidestar queries: https://mast.stsci.edu/api/v0/_services.html#MastScienceInstrumentKeywordsGuideStar
 
@@ -180,14 +180,14 @@ def find_visit_guiding_files(visitid, guidemode='FINEGUIDE', verbose=True, autod
         #products = list(set([x.replace('_cal','_uncal') for x in fn]))
         products.sort()
     else:
-        print("Query returned no guiding files")
+        logging.info("Query returned no guiding files")
         return None
 
     if verbose:
-        print(f"For visit: {visitid}")
-        print("Found guiding telemetry files:")
+        logging.debug(f"For visit: {visitid}")
+        logging.debug("Found guiding telemetry files:")
         for p in products:
-            print("   ", p)
+            logging.debug(f"\t{p}")
 
     if autodownload:
         outfiles = mast.mast_retrieve_files(products)
@@ -265,8 +265,6 @@ def find_all_visit_guiding_files(visitid, verbose=False, exclude_stacked=True, a
     # Run the web service query. This uses the specialized, lower-level webservice for the
     # guidestar queries: https://mast.stsci.edu/api/v0/_services.html#MastScienceInstrumentKeywordsGuideStar
 
-    #if verbose:
-    #    print(params)
     service = 'Mast.Jwst.Filtered.GuideStar'
     t = Mast.service_request(service, params)
 
@@ -283,7 +281,7 @@ def find_all_visit_guiding_files(visitid, verbose=False, exclude_stacked=True, a
 
     else:
         if verbose:
-            print("Query returned no guiding files")
+            logging.debug("Query returned no guiding files")
         return None
 
     # TODO clean up this next block of code, now that it's a table below
@@ -297,10 +295,10 @@ def find_all_visit_guiding_files(visitid, verbose=False, exclude_stacked=True, a
         filenames = products
 
     if verbose:
-        print(f"For visit: {visitid}")
-        print("Found guiding telemetry files:")
+        logging.debug(f"For visit: {visitid}")
+        logging.debug("Found guiding telemetry files:")
         for p in products:
-            print("   ", p)
+            logging.debug(f"\t{p}")
 
     guiding_file_table = astropy.table.Table([filenames, times_start, times_end], names = ['Filename', 'Time Start', 'Time End'])
 
@@ -371,7 +369,7 @@ def guiding_performance_plot(sci_filename=None, visitid=None, verbose=True, save
                     dither_times.append(astropy.time.Time(pointing_table_more.columns['time'][0], format='mjd') )
                     last_gs_fn_middle = fn_middle
                     if verbose:
-                        print(f"Dither before {gs_fn} at {dither_times[-1].iso}")
+                        logging.debug(f"Dither before {gs_fn} at {dither_times[-1].iso}")
                 # We have to compute means per guide file, since it's not meaningful to combine across dithers
                 #  But, for multiple contiguous segments, seg002 and onwards, use the same xmean as computed on
                 #  the first segment, for consistency and to avoid spurious discontinuities.
@@ -443,7 +441,7 @@ def guiding_performance_plot(sci_filename=None, visitid=None, verbose=True, save
 
     axes[2].plot(ctimes.plot_date, mask, label='GOOD Centroids', color='C1')
     frac_good = mask.sum() / len(mask)
-    print(f'Fraction of good centroids: {frac_good}')
+    logging.debug(f'Fraction of good centroids: {frac_good}')
     if frac_good < 0.95:
         axes[2].text(0.5, 0.9, f"WARNING, {(1-frac_good)*100:.2f}% of guider centroids were BAD during this.",
                      color='red', fontweight='bold', transform=axes[2].transAxes, horizontalalignment='center')
@@ -473,7 +471,7 @@ def guiding_performance_plot(sci_filename=None, visitid=None, verbose=True, save
             if row['date_beg_mjd'].plot_date in already_plotted_exptimes:
                 continue
             if verbose:
-                print(f"Exposure {row['filename']} began at {row['date_beg_mjd'].iso}")
+                logging.debug(f"Exposure {row['filename']} began at {row['date_beg_mjd'].iso}")
 
             for ax in axes:
                 ax.axvspan(row['date_beg_mjd'].plot_date, row['date_end_mjd'].plot_date, color='green', alpha=0.15)
@@ -506,7 +504,7 @@ def guiding_performance_plot(sci_filename=None, visitid=None, verbose=True, save
     if save:
         plt.savefig(outname)
         if verbose:
-            print(f' ==> {outname}')
+            logging.debug(f' ==> {outname}')
 
 
 
@@ -555,7 +553,7 @@ def guiding_dithers_plot(visitid, verbose=True, save=False, alpha=0.2,
                     dither_times.append(astropy.time.Time(pointing_table_more.columns['time'][0], format='mjd') )
                     last_gs_fn_middle = fn_middle
                     if verbose:
-                        print(f"Dither before {gs_fn} at {dither_times[-1].iso}")
+                        logging.debug(f"Dither before {gs_fn} at {dither_times[-1].iso}")
                 # # We have to compute means per segment, since it's not meaningful to combine across dithers
                 # mask = centroid_table_more.columns['bad_centroid_dq_flag'] == 'GOOD'
                 # xmean = np.nanmean(centroid_table_more[mask]['guide_star_position_x'])
@@ -606,8 +604,8 @@ def guiding_dithers_plot(visitid, verbose=True, save=False, alpha=0.2,
         xstd = np.nanstd(centroid_table[mask][during_exposure]['guide_star_position_x'])
         ystd = np.nanstd(centroid_table[mask][during_exposure]['guide_star_position_y'])
         if prior_xavg is not None:
-            print(f'\t\t\tdither offset, measured as:\t∆X: {xavg-prior_xavg:.4f}\t\t∆Y: {yavg-prior_yavg:.4f} arcsec')
-        print(f'{row["filename"]}:\t X: {xavg:.4f} ± {xstd:.4f}\t Y: {yavg:.4f} ± {ystd:.4f} arcsec')
+            logging.debug(f'\t\t\tdither offset, measured as:\t∆X: {xavg-prior_xavg:.4f}\t\t∆Y: {yavg-prior_yavg:.4f} arcsec')
+        logging.debug(f'{row["filename"]}:\t X: {xavg:.4f} ± {xstd:.4f}\t Y: {yavg:.4f} ± {ystd:.4f} arcsec')
 
         prior_xavg = xavg
         prior_yavg = yavg
@@ -649,7 +647,7 @@ def guiding_dithers_plot(visitid, verbose=True, save=False, alpha=0.2,
         outname = f'guiding_dithers_{visitid}.pdf'
         plt.savefig(outname)
         if verbose:
-            print(f' ==> {outname}')
+            logging.debug(f' ==> {outname}')
 
 
 
@@ -744,7 +742,6 @@ def guiding_performance_jitterball(sci_filename, visitid=None, gs_filename=None,
     ymean = ypos.mean()
 
     rpos = np.sqrt(xpos**2+ypos**2)
-    #print(np.std(rpos))
 
     xoffsets = (xpos-xmean)*1000
     yoffsets = (ypos-ymean)*1000
@@ -807,7 +804,7 @@ def guiding_performance_jitterball(sci_filename, visitid=None, gs_filename=None,
         outname = f'guidingjitterball_{gs_fn_base}.pdf'
         plt.savefig(outname)
         if verbose:
-            print(f' ==> {outname}')
+            logging.debug(f' ==> {outname}')
 
 
 
@@ -928,9 +925,9 @@ def display_one_id_image(filename, destripe = True, smooth=True, ax=None,
 
         visfilename = f'V{model.meta.observation.visit_id}.vst'
         if os.path.exists(visfilename):
-            if count==0: print(f'Found visit file {visfilename}')
+            if count==0: logging.debug(f'Found visit file {visfilename}')
             vis = get_visit_contents(visfilename)
-            if count==0: print("Retrieving and plotting guide star info from visit file")
+            if count==0: logging.debug("Retrieving and plotting guide star info from visit file")
 
             gsinfo = vis.guide_activities[model.meta.guidestar.gs_order - 1]
 
@@ -1040,7 +1037,7 @@ def display_one_guider_image(filename,  ax=None, use_dq=False,
 
     vmax = np.nanmax(im)
     if not vmax > 0:
-        print(f"Error, vmax is {vmax}. Overriding to 1e3")
+        logging.debug(f"Error, vmax is {vmax}. Overriding to 1e3")
         vmax=1e3
     norm = matplotlib.colors.AsinhNorm(vmin = median-sigma, vmax=vmax, linear_width=vmax/1e3)
 
@@ -1085,12 +1082,12 @@ def show_all_gs_images(filenames, guidemode='ID', orientation='raw'):
         'raw' for FGS detector raw coordinates, like OSS on board, or 'sci' for science frame on the ground
     """
 
-    print(f"Found a total of {len(filenames)} {guidemode} images for that observation.")
+    logging.debug(f"Found a total of {len(filenames)} {guidemode} images for that observation.")
 
     ncols= min(3, len(filenames))
     nrows = int(np.ceil(len(filenames)/3))
 
-    print(f'Loading and plotting {guidemode} images...')
+    logging.debug(f'Loading and plotting {guidemode} images...')
     fig, axes = plt.subplots(figsize=(16,6*nrows), nrows=nrows, ncols=ncols,
                             gridspec_kw={'wspace': 0.1,
                                          'left': 0.05,
@@ -1137,8 +1134,8 @@ def retrieve_and_display_id_images(sci_filename=None, progid=None, obs=None, vis
                                                       progid=progid, obs=obs, visit=visit)
 
     if filenames[0].endswith('uncal.fits'):
-        print("Warning, can only find _uncal.fits images in MAST. Guide data not yet processed through pipeline fully. Please try again later")
-        print(filenames)
+        logging.debug("Warning, can only find _uncal.fits images in MAST. Guide data not yet processed through pipeline fully. Please try again later")
+        logging.debug(filenames)
         return
 
     show_all_gs_images(filenames)
@@ -1149,7 +1146,7 @@ def retrieve_and_display_id_images(sci_filename=None, progid=None, obs=None, vis
     if save:
         outname = f'V{visit_id}_ID_images.pdf'
         plt.savefig(outname, dpi=save_dpi, transparent=True)
-        print(f"Output saved to {outname}")
+        logging.debug(f"Output saved to {outname}")
 
 
 def retrieve_and_display_guider_images(visitid=None, progid=None, obs=None, visit=1, guidemode='ACQ1', save=True, save_dpi=150):
@@ -1173,13 +1170,13 @@ def retrieve_and_display_guider_images(visitid=None, progid=None, obs=None, visi
     filenames = find_visit_guiding_files(visitid=visitid, guidemode=guidemode,)
 
     if filenames is None or len(filenames)==0:
-        print(f"Warning, could not find any image files for {guidemode} for that observation")
+        logging.debug(f"Warning, could not find any image files for {guidemode} for that observation")
         return
 
     if filenames[0].endswith('uncal.fits'):
-        print("Warning, can only find _uncal.fits images in MAST. Guide data not yet processed through pipeline fully. Please try again later")
+        logging.debug("Warning, can only find _uncal.fits images in MAST. Guide data not yet processed through pipeline fully. Please try again later")
         for fn in filenames:
-            print("\t"+fn)
+            logging.debug(f"\t{fn}")
         return
 
 
@@ -1191,7 +1188,7 @@ def retrieve_and_display_guider_images(visitid=None, progid=None, obs=None, visi
     if save:
         outname = f'V{visit_id}_{guidemode}_images.pdf'
         plt.savefig(outname, dpi=save_dpi, transparent=True)
-        print(f"Output saved to {outname}")
+        logging.debug(f"Output saved to {outname}")
 
 
 def visit_guider_images(visitid, ):
@@ -1203,7 +1200,7 @@ def visit_guider_images(visitid, ):
     for guidemode in ['ACQ1', 'ACQ2', 'TRACK']:
         retrieve_and_display_guider_images(visitid=visitid, guidemode=guidemode)
 
-    print(f"Outputs saved to {visitid}_*_images.pdf")
+    logging.debug(f"Outputs saved to {visitid}_*_images.pdf")
 
 
 def which_guider_used(visitid, guidemode = 'FINEGUIDE'):
@@ -1339,20 +1336,20 @@ def visit_guiding_timeline(visitid):
 
         # Print any OSS log messages that occurred before this image
         while(fgs_log_table[i_time]['Time'].iso < time):
-            print(f"{fgs_log_table[i_time]['Time'].iso}    OSS: {fgs_log_table[i_time]['Message']}")
+            logging.debug(f"{fgs_log_table[i_time]['Time'].iso}    OSS: {fgs_log_table[i_time]['Message']}")
             i_time += 1
 
-        print(f"{time.iso}\t\t{msg:35s}\t{fn:50s}")
+        logging.debug(f"{time.iso}\t\t{msg:35s}\t{fn:50s}")
 
         if detected_dither:
-            print(f"{guiding_file_table[i]['Time End'].iso}\t\t--Stop FG, for Dither move--")
+            logging.debug(f"{guiding_file_table[i]['Time End'].iso}\t\t--Stop FG, for Dither move--")
             detected_dither = False
 
         prev_step=this_step
 
     # Print any remaining messages at the end
     while(i_time < len(fgs_log_table)):
-        print(f"{fgs_log_table[i_time]['Time'].iso}\t   OSS: { fgs_log_table[i_time]['Message']}")
+        logging.debug(f"{fgs_log_table[i_time]['Time'].iso}\t   OSS: { fgs_log_table[i_time]['Message']}")
         i_time += 1
 
 
@@ -1381,7 +1378,7 @@ def visit_guiding_sequence(visitid, verbose=True, include_performance=True):
     visitid = utils.get_visitid(visitid)  # handle either input format
 
     # Retrieve guider exposure filenames and times
-    print(f"Retrieving guiding files for {visitid}")
+    logging.debug(f"Retrieving guiding files for {visitid}")
     guiding_file_table = find_all_visit_guiding_files(visitid, autodownload=True)
 
     if (guiding_file_table is None) or len(guiding_file_table) == 0:
@@ -1396,7 +1393,7 @@ def visit_guiding_sequence(visitid, verbose=True, include_performance=True):
     else:
         exposure_table.sort(['date_beg_mjd', 'filename'])
         which_si = _which_si_from_filenames(exposure_table['filename'])
-    print("That visit used "+which_si)
+    logging.debug(f"That visit used {which_si}")
 
     # Retrieve the OSS log messages for that visit
     # visitstart = astropy.io.fits.getheader(filenames[0])['VSTSTART']  # use actual visit start time from header
@@ -1557,17 +1554,15 @@ def visit_guiding_sequence(visitid, verbose=True, include_performance=True):
             # Do this after the sci image listing
             if this_step.startswith('gs-fg'):
 
-                print(fn)
+                logging.debug(fn)
                 # For some reason this is not working as intended. Problematic t_start /t_end metadata on some files??
                 if  len(already_plotted_exptimes_start) >0:
                     jitter_t_beg = min(list(already_plotted_exptimes_start))
                     jitter_t_end = max(list(already_plotted_exptimes_end))
-                    # print(f'setting jitterball times for {fn} from sci exp: {jitter_t_beg.mjd}, {jitter_t_end}')
                     jit_title = "LOS measurements during those science exposures"
                 else:
                     jitter_t_beg = time
                     jitter_t_end = time_end
-                    #print(f'setting jitterball times from entire FG file: {jitter_t_beg}, {jitter_t_end}')
                     jit_title = "LOS measurements during this entire fine guide"
                 guiding_performance_jitterball(None, gs_filename=fn, visitid=visitid, t_beg=jitter_t_beg, t_end=jitter_t_end, ax=axes[1,1])
                 axes[1,1].set_title(jit_title)
@@ -1585,7 +1580,7 @@ def visit_guiding_sequence(visitid, verbose=True, include_performance=True):
             # guiding_performance_dithers_plot(visitid=visitid)
             # pdf.savefig(plt.gcf())
 
-    print("Output to " + outname)
+    logging.debug("Output to " + outname)
 
 
 def retrieve_visit_dither_sams(visitid):

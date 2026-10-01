@@ -137,7 +137,7 @@ def which_instrument_ta(msg_table, verbose=True):
 
     ta_inst = ta_detector[0:3]
     if verbose:
-        print(f"TA aperture: {ta_detector}, therefore TA is using {ta_inst}")
+        logging.debug(f"TA aperture: {ta_detector}, therefore TA is using {ta_inst}")
 
     return ta_inst
 
@@ -186,7 +186,7 @@ def convert_sam_FGSideal_to_Vframe(delta_xy, which_guider, verbose=False):
     delta_v2v3 = np.array([delta_v2, delta_v3])
 
     if verbose:
-        print(f"""    in {which_guider} Ideal frame: {delta_xy}
+        logging.debug(f"""    in {which_guider} Ideal frame: {delta_xy}
     rotate by {ap.V3IdlYAngle} deg to the V frame, with aperture parity {ap.VIdlParity}
     in V2V3 frame: {delta_v2v3}""")
 
@@ -234,7 +234,7 @@ def get_miri_offset_between_coron_ta_regions(visitid, verbose=False):
     # Which two TA apertures were used? Like ['MIRIM_TA1550_UR', 'MIRIM_TA1550_CUR']
     ta_apertures_used = retrieve_miri_coron_ta_apertures_used(visitid)
     if verbose:
-        print("MIRI coron TA used apertures "+ ", ".join(ta_apertures_used))
+        logging.debug(f"MIRI coron TA used apertures {", ".join(ta_apertures_used)}")
 
     # Compute the vector offset between those
     ta_rois = [pysiaf.Siaf('MIRI').apertures[apname] for apname in ta_apertures_used]
@@ -275,7 +275,7 @@ def parse_ta_log_messages_by_instrument(msg_table, which_guider, visitid, verbos
 
         if len(ta_sams) == 0:
             # TA must have failed
-            print(f"No TA SAMs found for visit {visitid}; TA must have failed.")
+            logging.debug(f"No TA SAMs found for visit {visitid}; TA must have failed.")
             net_ta_correction = np.nan, np.nan
         elif len(ta_sams) == 1:
             ta_type = 'MIRI TA, undithered'
@@ -306,15 +306,15 @@ def parse_ta_log_messages_by_instrument(msg_table, which_guider, visitid, verbos
 
 
         if verbose:
-            print(f"TA type: {ta_type}")
-            print(f"MIRI TA used  {len(ta_sams)} TA sams")
+            logging.debug(f"TA type: {ta_type}")
+            logging.debug(f"MIRI TA used  {len(ta_sams)} TA sams")
             for i in range(len(ta_sams)):
-                print("\t" + ta_sams[i])
+                logging.debug(f"\t{ta_sams[i]}")
             if ta_type in ['MIRI TA, LRS Slitless', 'MIRI TA, coronagraphic']:
-                print("The first SAM above is from the TA_BLOCK region to TA region; we ignore that SAM for this calculation.")
+                logging.debug("The first SAM above is from the TA_BLOCK region to TA region; we ignore that SAM for this calculation.")
             if ta_v2v3_offset is not None:
-                print(f"Note the second SAM above includes the coron offset between TA subregions, which we should subtract out:")
-                print(-ta_v2v3_offset, " in V2,V3")
+                logging.debug(f"Note the second SAM above includes the coron offset between TA subregions, which we should subtract out:")
+                logging.debug(f"{-ta_v2v3_offset} in V2,V3")
 
 
     elif ta_inst == 'NRC':
@@ -350,13 +350,13 @@ def parse_ta_log_messages_by_instrument(msg_table, which_guider, visitid, verbos
             net_ta_correction -= offset_xy
 
         if verbose:
-            print(f"TA type: {ta_type}")
-            print(f"NRC TA used {len(dither_sams)} dithers, {len(ta_sam)} TA sams, {len(coron_offset)} coron wedge offset correction")
+            logging.debug(f"TA type: {ta_type}")
+            logging.debug(f"NRC TA used {len(dither_sams)} dithers, {len(ta_sam)} TA sams, {len(coron_offset)} coron wedge offset correction")
             for i in range(len(dither_sams)):
-                print("\t" + dither_sams[i])
-            print("\t" + ta_sam[0])
+                logging.debug(f"\tdither_sams[i]")
+            logging.debug(f"\t{ta_sam[0]}")
             if len(coron_offset):
-                print("\t" + coron_offset[0])
+                logging.debug(f"\t{coron_offset[0]}")
 
     elif ta_inst == 'NIS':
         # NIRISS TA always has 3 exposures separated by 2 dithers:
@@ -376,21 +376,21 @@ def parse_ta_log_messages_by_instrument(msg_table, which_guider, visitid, verbos
         if ta_failure:
             net_ta_correction = np.asarray([0.0, 0.0])
             if verbose:
-                print("TA failure. No TA correction applied.")
+                logging.debug("TA failure. No TA correction applied.")
         else:
             if len(dither_sams) !=2 or len(ta_sam) !=1:
                 # TA didn't fail, but we're having trouble parsing the messages
                 raise RuntimeError(f"Did not find expected SAM messages for TA type = NIRISS. Expected 2 dither SAMss, found {len(dither_sams)}; expected 1 TA SAM, found {len(ta_sam)} ")
 
-            print(dither_sams)
-            print(ta_sam)
+            logging.debug(dither_sams)
+            logging.debug(ta_sam)
             net_ta_correction = get_net_sam(np.hstack([dither_sams, ta_sam]))
 
             if verbose:
-                print('NIS TA always uses 2 dithers, then final TA SAM:')
-                print("\t" + dither_sams[0])
-                print("\t" + dither_sams[1])
-                print("\t" + ta_sam[0])
+                logging.debug('NIS TA always uses 2 dithers, then final TA SAM:')
+                logging.debug("\t" + dither_sams[0])
+                logging.debug("\t" + dither_sams[1])
+                logging.debug("\t" + ta_sam[0])
 
     elif ta_inst == 'NRS':
         # NIRSpec can have either (1) BOTA/WATA TA without dithers, or (2) MSATA, with 1 dither:
@@ -424,29 +424,29 @@ def parse_ta_log_messages_by_instrument(msg_table, which_guider, visitid, verbos
 
 
         if verbose:
-            print(f"TA type: {ta_type}")
-            print(f"NRS TA used {len(dither_sams)} dithers, {len(ta_sam)} TA sam")
+            logging.debug(f"TA type: {ta_type}")
+            logging.debug(f"NRS TA used {len(dither_sams)} dithers, {len(ta_sam)} TA sam")
             if len(dither_sams):
-                print(f'    NIRSpec half-facet dither SAM. Hard coded to (∆V2, ∆V3) = {ta_v2v3_offset}')
+                logging.debug(f'    NIRSpec half-facet dither SAM. Hard coded to (∆V2, ∆V3) = {ta_v2v3_offset}')
 
-            print("    " + ta_sam[0])
+            logging.debug("    " + ta_sam[0])
 
     if verbose:
-        print("NET TA CORRECTION:", net_ta_correction, f"arcsecs in {which_guider} ideal frame")
+        logging.debug(f"NET TA CORRECTION:{net_ta_correction} arcsecs in {which_guider} ideal frame")
 
     ta_correction_v2v3 = convert_sam_FGSideal_to_Vframe(net_ta_correction, which_guider, verbose=verbose)
 
     if verbose:
-        print("TA CORRECTION:    ", ta_correction_v2v3, f"arcsecs in V2V3 frame")
+        logging.debug(f"TA CORRECTION:    {ta_correction_v2v3}arcsecs in V2V3 frame")
 
     if ta_v2v3_offset is not None:
         ta_correction_v2v3 += ta_v2v3_offset
         if verbose:
-            print(f"Taking into account the additional offset in V2V3 from {ta_v2v3_offset_source}")
-            print("TA CORRECTION:    ", ta_correction_v2v3, f"arcsecs in V2V3 frame")
+            logging.debug(f"Taking into account the additional offset in V2V3 from {ta_v2v3_offset_source}")
+            logging.debug(f"TA CORRECTION:    {ta_correction_v2v3}arcsecs in V2V3 frame")
 
     if verbose:
-        print("TA DELTA ROLL:", ta_delta_roll, "arcseconds")
+        logging.debug("TA DELTA ROLL:", ta_delta_roll, "arcseconds")
 
     return ta_correction_v2v3, ta_delta_roll
 
@@ -462,6 +462,6 @@ def get_ta_correction_for_visit(visitid, verbose=True, msg_table=None):
 
     which_guider = guiding_analyses.which_guider_used(visitid)
     if verbose:
-        print(f"Visit {visitid} used guider {which_guider}")
+        logging.debug(f"Visit {visitid} used guider {which_guider}")
 
     return parse_ta_log_messages_by_instrument(msg_table, which_guider, visitid, verbose=verbose)

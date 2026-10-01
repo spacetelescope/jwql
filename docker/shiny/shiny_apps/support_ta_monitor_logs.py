@@ -2,6 +2,7 @@ from csv import reader
 from datetime import datetime, timedelta, timezone
 import os
 from requests import Session
+import logging
 
 import astropy
 import numpy as np
@@ -30,7 +31,6 @@ def get_visitid(visitstr):
 def extract_oss_event_msgs_for_visit(
     eventlog, selected_visit_id, ta_only=False, verbose=False, return_text=True
 ):
-    # parse response (ignoring header line) and print new event messages
     vid = ""
     in_selected_visit = False
     in_ta = False
@@ -38,13 +38,13 @@ def extract_oss_event_msgs_for_visit(
 
     messages = []
     if verbose:
-        print(f"\tSearching for visit: {selected_visit_id}")
+        logging.debug(f"\tSearching for visit: {selected_visit_id}")
     for row in eventlog:
         msg, time = row["Message"], row["Time"]
 
         if in_selected_visit and ((not ta_only) or in_ta):
             if verbose:
-                print(time[0:22], "\t", msg)
+                logging.debug(f"{time[0:22]}\tmsg")
             if return_text:
                 messages.append(time[0:22] + "\t" + msg)
 
@@ -55,10 +55,10 @@ def extract_oss_event_msgs_for_visit(
 
                 if vid == selected_visit_id:
                     if verbose:
-                        print(f"VISIT {selected_visit_id} START FOUND at {vstart}")
+                        logging.debug(f"VISIT {selected_visit_id} START FOUND at {vstart}")
                     in_selected_visit = True
                     if ta_only and verbose:
-                        print("Only displaying TARGET ACQUISITION RESULTS:")
+                        logging.debug("Only displaying TARGET ACQUISITION RESULTS:")
 
             elif msg[-5:] == "ENDED" and in_selected_visit:
                 assert vid == msg.split()[1]
@@ -66,7 +66,7 @@ def extract_oss_event_msgs_for_visit(
 
                 vend = "T".join(time.split())[:-3]
                 if verbose:
-                    print(f"VISIT {selected_visit_id} END FOUND at {vend}")
+                    logging.debug(f"VISIT {selected_visit_id} END FOUND at {vend}")
 
                 in_selected_visit = False
         elif msg[:31] == f"Script terminated: {vid}":
@@ -170,7 +170,7 @@ def get_mnemonic(
     url = f"{base}/{filename}"
 
     if verbose:
-        print(f"Retrieving {url}")
+        logging.debug(f"Retrieving {url}")
     response = session.get(url)
     if response.status_code == 401:
         exit(
@@ -232,7 +232,7 @@ def eventtable_extract_visit(event_table, selected_visit_id, verbose=False):
     vmessages = [m.startswith(f'VISIT {visit_id}') for m in event_table['Message']]
 
     if verbose:
-        print(event_table[vmessages])
+        logging.debug(event_table[vmessages])
 
     line_indices = np.where(vmessages)[0]
     if len(line_indices) == 0:
@@ -287,11 +287,10 @@ def get_oss_log_messages(visitid=None, start_time=None, end_time=None):
     # So check here and if necessary handle the case of an inconsistency.
 
     if len(messages) == len(msg_ids) and len(messages) == len(msg_srcs):
-        #print("consistent number of rows returned")
         msg_table = astropy.table.Table([msg_times, messages, msg_ids, msg_srcs],
                                        names = ['TIME', "EVENT_MSG", "EVENT_MSG_ID", "EVENT_MSG_SRC"])
     else:
-        print("INconsistent number of EVENT_MSG and EVENT_MSG_ID records returned; matching based on telemetry time stamps ")
+        logging.debug("INconsistent number of EVENT_MSG and EVENT_MSG_ID records returned; matching based on telemetry time stamps ")
         # This occurs for instance in visit V07344017001, a NIRCam WFSC visit.
 
         msg_table = astropy.table.Table([msg_times[0:1], messages[0:1], msg_ids[0:1], msg_srcs[0:1]],
@@ -307,10 +306,8 @@ def get_oss_log_messages(visitid=None, start_time=None, end_time=None):
                 pass
             else:
                 if msg_times[i] == msg_times_2[i+index_offset-1]:
-                    #print('found extra EVENT_MSG relative to EVENT_MSG_ID')
                     index_offset -= 1
                 elif msg_times[i] == msg_times_2[i+index_offset+1]:
-                    #print('found skipped EVENT_MSG relative to EVENT_MSG_ID')
                     index_offset += 1
                 else:
                     raise RuntimeError("Inconsistent number of telemetry records returned, with bigger gaps than this function can currently sort out.")
@@ -358,7 +355,6 @@ def check_log_and_note_issues(msg):
     """
     # check for visit guide failures
     if 'FGS fixed target guide star acquisition failed on all attempts, exit FGSVERMAIN' in msg:
-        #print(f"FGS ID+Acq failed on all attempts for {vid}")
         note = "SKIPPED. FGS ID failed all attempts"
     elif 'FGS guide star reacquisition failed' in msg:
         note = 'FAILED part way through: FGS guide star reacquisition failed.'

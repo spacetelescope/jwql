@@ -104,7 +104,7 @@ def _get_ta_reference_point(inst, hdul, filename):
             elif hdul[0].header['APERNAME'] == 'MIRIM_SLIT':
                 # This case is tricky. TACONFIRM image in slit type aperture, which doesn't have Det or Sci coords defined
                 # It's made even more complex by filter-dependent MIRI offsets
-                print("TODO need to get more authoritative intended target position for MIRIM TA CONFIRM")
+                logging.debug("TODO need to get more authoritative intended target position for MIRIM TA CONFIRM")
                 xref, yref = 317, 301
             elif hdul[0].header['APERNAME'].endswith('_UR') or  hdul[0].header['APERNAME'].endswith('_CUR'):
                 # Coronagraphic TA, pointed using special TA subarrays but read out using the full coronagraphic subarray
@@ -118,7 +118,7 @@ def _get_ta_reference_point(inst, hdul, filename):
 
         except TypeError: # LRS slit type doesn't have X/YSciRef
             xref = yref = 0
-            print('ERROR DEBUG THIS')
+            logging.debug('ERROR DEBUG THIS')
     elif inst.upper() == 'NIRSPEC':
         # What is the location of the reference point?
         # For NIRSpec this slightly tricker since the aperture only has V2V3 ref defined, and
@@ -294,7 +294,7 @@ class TAPlot:
 
         do_plot = kwargs.get("plot", True)
 
-        fig, ax = plt.subplots(1, 2, figsize=(16, 8))
+        fig, ax = plt.subplots(1, 2)
         ax[0].title.set_visible(False)
         ax[1].title.set_visible(False)
         ax[1].axis('off')
@@ -352,14 +352,14 @@ class TAPlot:
 
         for _ in range(2):
             if np.any(np.isnan(im_obs_clean)):
-                logging.info('iterating to interpolate over more NaNs')
+                logging.debug('iterating to interpolate over more NaNs')
                 im_obs_clean = astropy.convolution.interpolate_replace_nans(
                     im_obs_clean, kernel=kernel)
             else:
                 break
         else:
             if np.any(np.isnan(im_obs_clean)):
-                logging.info("Masking remaining NaNs to image median")
+                logging.debug("Masking remaining NaNs to image median")
                 im_obs_clean[np.isnan(im_obs_clean)] = np.nanmedian(im_obs_clean)
 
         return im_obs_clean
@@ -398,7 +398,7 @@ class TAPlot:
                 )
 
                 if self.inst == "NIRISS":
-                    logging.info("transposing X & Y, due to NIRISS detector coordinate frame")
+                    logging.debug("transposing X & Y, due to NIRISS detector coordinate frame")
                     oss_cen = oss_cen[::-1]
 
                 oss_cen_sci = ta_aperture.det_to_sci(*oss_cen)
@@ -426,12 +426,12 @@ class TAPlot:
                 )
 
                 msg = f"OSS centroid on board:  {oss_cen}  (full det coord frame, 1-based)"
-                logging.info(msg)
+                logging.debug(msg)
                 msg = f"OSS centroid converted: {oss_cen_sci_pythonic}  (sci frame in {ta_aperture.AperName}, 0-based)"
-                logging.info(msg)
+                logging.debug(msg)
                 if oss_cen_full_sci is not None:
                     msg = f"OSS centroid converted: {oss_cen_full_sci}  (sci frame in {full_ap.AperName}, 0-based)"
-                    logging.info(msg)
+                    logging.debug(msg)
 
             except RuntimeError:
                 logging.info("Could not parse TA coordinates from log. TA may have failed?")
@@ -469,7 +469,7 @@ class TAPlot:
         """
         try:
             oss_sam, oss_sam_dpa = get_ta_correction_for_visit(self.visitid)
-            logging.info(f"OSS SAM: (∆V2, ∆V3) = {oss_sam}  ∆V3PA = {oss_sam_dpa}")
+            logging.debug(f"OSS SAM: (∆V2, ∆V3) = {oss_sam}  ∆V3PA = {oss_sam_dpa}")
         except RuntimeError:
             logging.info("Could not get coords from OSS log. TA may have failed?")
             oss_sam, oss_sam_dpa = None, None
@@ -492,8 +492,8 @@ class TAPlot:
         wcs_text = (f'Expected from WCS: {targ_coords_pix[0]:.2f},'
                     f' {targ_coords_pix[1]:.2f}')
 
-        logging.info(f"Target coords: {targ_coords}")
-        logging.info(f"               {targ_coords.to_string('hmsdms', sep=':')}")
+        logging.debug(f"Target coords: {targ_coords}")
+        logging.debug(f"               {targ_coords.to_string('hmsdms', sep=':')}")
 
         return model, targ_coords, targ_coords_pix, wcs_text
 
@@ -536,14 +536,10 @@ class TAPlot:
             border_mask[:] = 0
             border_mask[imin:imax, imin:imax] = 1
 
-        logging.info(f"Observation: {im_obs_clean.shape}")
-        logging.info(f"Background: {border_mask.shape}")
-        logging.info(f"Combined: {(im_obs_clean * border_mask).shape}")
-
         cen = stpsf.fwcentroid.fwcentroid(im_obs_clean * border_mask)
 
         if self.inst == 'MIRI':
-            logging.info('Need to update plotting code for subarray calc  in full frame image')
+            logging.debug('Need to update plotting code for subarray calc  in full frame image')
 
         return cen
 
@@ -586,10 +582,10 @@ class TAPlot:
             wcs_offset_radec = (dra.to(u.arcsec).value, ddec.to(u.arcsec).value)
             self.wcs_offset_radec = wcs_offset_radec
 
-            logging.info(f"WCS offset =  {wcs_offset_pix} pix  (WCS - OSS)")
-            logging.info(f'TARG_COORDS: {targ_coords}')
-            logging.info(f'TA_CEN_COORDS: {ta_cen_coords}')
-            logging.info(f"DRA, DDEC: {dra} {ddec}")
+            logging.debug(f"WCS offset =  {wcs_offset_pix} pix  (WCS - OSS)")
+            logging.debug(f'TARG_COORDS: {targ_coords}')
+            logging.debug(f'TA_CEN_COORDS: {ta_cen_coords}')
+            logging.debug(f"DRA, DDEC: {dra} {ddec}")
 
         return wcs_offset_pix, wcs_offset_radec
 
@@ -661,12 +657,12 @@ class TAPlot:
 
         # --- Delta-position ---
         if not self.check_image:
-            logging.info(f"Comparing to OSS on-board centroid for TA image")
+            logging.debug(f"Comparing to OSS on-board centroid for TA image")
             deltapos = (oss_cen_sci_pythonic[0] - xref,
                         oss_cen_sci_pythonic[1] - yref)
             deltapos_type = 'OSS - Intended'
         else:
-            logging.info(f"Comparing to local STPSF centroid for TA image")
+            logging.debug(f"Comparing to local STPSF centroid for TA image")
             deltapos = (cen[1] - xref, cen[0] - yref)
             deltapos_type = 'fwcentroid - Intended'
 
@@ -680,7 +676,7 @@ class TAPlot:
                 oss_cen_sci_pythonic, model,
                 oss_sam)
 
-        logging.info(f"Star coords from WCS: {targ_coords_pix}")
+        logging.debug(f"Star coords from WCS: {targ_coords_pix}")
 
     def _annotate_plot(self):
         image_text = (f"Pixel coordinates (0-based):\n")
