@@ -52,6 +52,8 @@ def _miri_box_limits(hdul):
         xlim = (294, 294 + boxsize)
         ylim = (269, 269 + boxsize)
 
+    dat_region = hdul['SCI'].data[ylim[0]:ylim[1], xlim[0]:xlim[1]]
+
     non_nan_y = []
     for row in range(dat_region.shape[0]):
         if not np.all(np.isnan(dat_region[row,:])):
