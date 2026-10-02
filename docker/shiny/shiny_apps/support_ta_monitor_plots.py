@@ -52,25 +52,27 @@ def _miri_box_limits(hdul):
         xlim = (294, 294 + boxsize)
         ylim = (269, 269 + boxsize)
 
-    dat_region = hdul['SCI'].data[ylim[0]:ylim[1], xlim[0]:xlim[1]]
-
-    non_nan_y = []
-    for row in range(dat_region.shape[0]):
-        if not np.all(np.isnan(dat_region[row,:])):
-            non_nan_y.append(row)
-
-    non_nan_x = []
-    for row in range(dat_region.shape[1]):
-        if not np.all(np.isnan(dat_region[:,row])):
-            non_nan_x.append(row)
-
-    x_lim_low = max(xlim[0], min(non_nan_x))
-    x_lim_high = min(xlim[1], max(non_nan_x))
-
-    y_lim_low = max(ylim[0], min(non_nan_y))
-    y_lim_high = min(ylim[1], max(non_nan_y))
-
-    xlim, ylim = (x_lim_low, x_lim_high), (y_lim_low, y_lim_high)
+#     if xlim[1] is not None:
+#         dat_region = hdul['SCI'].data[xlim[0]:xlim[1], ylim[0]:ylim[1]]
+# 
+#         non_nan_y = []
+#         for row in range(dat_region.shape[0]):
+#             if not np.all(np.isnan(dat_region[row,:])):
+#                 non_nan_y.append(row)
+# 
+#         non_nan_x = []
+#         for row in range(dat_region.shape[1]):
+#             if not np.all(np.isnan(dat_region[:,row])):
+#                 non_nan_x.append(row)
+# 
+#         if (len(non_nan_x) > 1) and (len(non_nan_y) > 1):
+#             x_lim_low = min(non_nan_x) + xlim[0]
+#             x_lim_high = max(non_nan_x) + xlim[1]
+# 
+#             y_lim_low = min(non_nan_y) + ylim[0]
+#             y_lim_high = max(non_nan_y) + ylim[1]
+# 
+#             xlim, ylim = (x_lim_low, x_lim_high), (y_lim_low, y_lim_high)
 
     return xlim, ylim
 
@@ -775,6 +777,6 @@ class TAPlot:
         plot_text += f"Analysis on {now.isot[0:16]}.\nFile from MAST SDP {sdp_ver}"
         if "CAL_VER" in self.hdul[0].header:
             plot_text + f", pipeline {self.hdul[0].header['CAL_VER']}"
-        ax[1].text(0.05, 0., plot_text, color='black', fontsize='small')
+        ax[1].text(0.05, 0., plot_text, color='black', fontsize='x-small')
 
         plt.tight_layout()

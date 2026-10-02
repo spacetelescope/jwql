@@ -71,7 +71,7 @@ def show_loading_dialog(message):
         title=None,          # Removes standard header line
         footer=None,         # Removes footer completely
         easy_close=False,    # Blocks users from clicking out of the modal
-        size="s"             # Compact modal size
+        size="m"             # Compact modal size
     )
 
 
@@ -98,20 +98,20 @@ def miri_tab_ui():
                 ui.output_ui("miri_uncal"),
                 ui.div(
                     ui.input_action_button(
-                        "prev_integ",
+                        "prev_group",
                         "◀️",
                         style="padding: 0; height: auto; min-width: 0; line-height: normal; border: none; background: transparent;",
                     ),
                     ui.input_slider(
-                        "integ_slicer",
-                        "Integration:",
+                        "group_slicer",
+                        "Group:",
                         min=1,
                         max=1,
                         value=1,
                         step=1,
                     ),
                     ui.input_action_button(
-                        "next_integ",
+                        "next_group",
                         "▶️",
                         style="padding: 0; height: auto; min-width: 0; line-height: normal; border: none; background: transparent;",
                     ),
@@ -203,7 +203,7 @@ def miri_tab_ui():
 def miri_tab_server(input, output, session):
     oss_messages = reactive.value([])
     dq_data = reactive.value(None)
-    current_integrations = reactive.value(1)
+    current_groups = reactive.value(1)
     current_exposure = reactive.value("")
 
     @reactive.effect
@@ -224,23 +224,23 @@ def miri_tab_server(input, output, session):
             current_exposure.set(new_exposure)
 
     @reactive.effect
-    @reactive.event(input.prev_integ)
+    @reactive.event(input.prev_group)
     def _():
-        """Reactive effect for user clicking the "previous integration" button"""
-        logging.info("previous_integration_button_start")
-        if input.integ_slicer() > 1:
-            ui.update_slider("integ_slicer", value=(input.integ_slicer() - 1))
-        logging.info("previous_integration_button_end")
+        """Reactive effect for user clicking the "previous group" button"""
+        logging.info("previous_group_button_start")
+        if input.group_slicer() > 1:
+            ui.update_slider("group_slicer", value=(input.group_slicer() - 1))
+        logging.info("previous_group_button_end")
 
     @reactive.effect
-    @reactive.event(input.next_integ)
+    @reactive.event(input.next_group)
     def _():
-        """Reactive effect for user clicking the "next integration" button"""
-        nonlocal current_integrations
-        logging.info("next_integration_button_start")
-        if input.integ_slicer() < current_integrations():
-            ui.update_slider("integ_slicer", value=(input.integ_slicer() + 1))
-        logging.info("next_integration_button_end")
+        """Reactive effect for user clicking the "next group" button"""
+        nonlocal current_groups
+        logging.info("next_group_button_start")
+        if input.group_slicer() < current_groups():
+            ui.update_slider("group_slicer", value=(input.group_slicer() + 1))
+        logging.info("next_group_button_end")
 
     @render.ui
     async def miri_uncal():
@@ -256,7 +256,7 @@ def miri_tab_server(input, output, session):
         """Plot the MIRI uncalibrated frame"""
         logging.info("plot_miri_uncal_start")
         selected_exposure = current_exposure()
-        acq_integ = input.integ_slicer() - 1
+        acq_group = input.group_slicer() - 1
         show_plot = input.uncal_plot()
         zoom_plot = input.uncal_zoom()
         dq_frame = dq_data()
@@ -265,17 +265,17 @@ def miri_tab_server(input, output, session):
         fig = None
         if uncal_obs is not None:
             with fits.open(uncal_obs) as fits_file:
-                n_integrations = fits_file['SCI'].data.shape[1]
-                current_integrations.set(n_integrations)
-                slider_value = min(input.integ_slicer(), current_integrations())
+                n_groups = fits_file['SCI'].data.shape[1]
+                current_groups.set(n_groups)
+                slider_value = min(input.group_slicer(), current_groups())
                 ui.update_slider(
-                    "integ_slicer",
+                    "group_slicer",
                     min=1,
-                    max=current_integrations(),
+                    max=current_groups(),
                     value=slider_value
                 )
             fig = data_source().get_plot_uncal(
-                acq_integ,
+                acq_group,
                 show_plot,
                 dq_frame,
                 show_flagged,
