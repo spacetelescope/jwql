@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from support_throttle import throttle
 from support_ta_monitor_data import TADataSupplier
 from support_ta_monitor_logs import get_ictm_event_log
 from support_ta_monitor_logs import extract_oss_event_msgs_for_visit
@@ -205,6 +206,7 @@ def miri_tab_server(input, output, session):
     dq_data = reactive.value(None)
     current_groups = reactive.value(1)
     current_exposure = reactive.value("")
+    throttled_group = reactive.value(1)
 
     @reactive.effect
     async def _():
@@ -222,6 +224,13 @@ def miri_tab_server(input, output, session):
             await sync_to_async(data_source().select_obs)(new_exposure)
             ui.modal_remove()
             current_exposure.set(new_exposure)
+
+    @reactive.effect
+    @throttle(0.5)
+    def _():
+        """Reactive effect for throttling slider updates"""
+        current_group = input.group_slicer()
+        throttled_group.set(current_group)
 
     @reactive.effect
     @reactive.event(input.prev_group)
@@ -256,7 +265,7 @@ def miri_tab_server(input, output, session):
         """Plot the MIRI uncalibrated frame"""
         logging.info("plot_miri_uncal_start")
         selected_exposure = current_exposure()
-        acq_group = input.group_slicer() - 1
+        acq_group = throttled_group() - 1
         show_plot = input.uncal_plot()
         zoom_plot = input.uncal_zoom()
         dq_frame = dq_data()
