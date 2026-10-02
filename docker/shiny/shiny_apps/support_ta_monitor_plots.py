@@ -51,6 +51,25 @@ def _miri_box_limits(hdul):
     elif apname =='MIRIM_SLIT':
         xlim = (294, 294 + boxsize)
         ylim = (269, 269 + boxsize)
+
+    non_nan_y = []
+    for row in range(dat_region.shape[0]):
+        if not np.all(np.isnan(dat_region[row,:])):
+            non_nan_y.append(row)
+
+    non_nan_x = []
+    for row in range(dat_region.shape[1]):
+        if not np.all(np.isnan(dat_region[:,row])):
+            non_nan_x.append(row)
+
+    x_lim_low = max(xlim[0], min(non_nan_x))
+    x_lim_high = min(xlim[1], max(non_nan_x))
+
+    y_lim_low = max(ylim[0], min(non_nan_y))
+    y_lim_high = min(ylim[1], max(non_nan_y))
+
+    xlim, ylim = (x_lim_low, x_lim_high), (y_lim_low, y_lim_high)
+
     return xlim, ylim
 
 
