@@ -1,0 +1,44 @@
+services:
+  shiny-ta-monitor:
+    build:
+      context: .
+      additional_contexts:
+        jwql_config_path: $JWQL_CONFIG_DIR
+      dockerfile: ./shiny_dockerfiles/shiny_ta_monitor_dockerfile
+      args:
+        - group_id=1031
+        - user_id=5582
+        - server_id=$JWQL_SERVER
+        - shiny_ta_data_source=$SHINY_TA_DATA_SOURCE
+        - jwql_version=$JWQL_VERSION
+        - python_version=3.13
+    entrypoint: ./shiny_ta_monitor_run.sh
+    ports:
+      - "4444:8000"
+    volumes:
+      # This mounts the IFS filesystem (if present) or a local equivalent. Only used if
+      # SHINY_TA_DATA_SOURCE=jwql. $RTYPE=rslave on VMs, or rshared locally.
+      - type: bind
+        source: $IFSROOT
+        target: /ifs
+        bind:
+          propagation: $RTYPE
+      - type: bind
+        source: ../../../jwql
+        target: /jwql_shared
+    restart: unless-stopped
+
+#   web:
+#     image: nginx:alpine
+#     container_name: nginx-https-test
+#     ports:
+#       - "4444:443"
+#     volumes:
+#       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+#       - ./ssl:/etc/nginx/ssl:ro
+#     restart: unless-stopped
+
+# Define the external file path globally in the compose file
+secrets:
+  jwql_config_file:
+    file: $JWQL_CONFIG_DIR/config.json

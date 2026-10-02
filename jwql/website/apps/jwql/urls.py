@@ -73,7 +73,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
     re_path(r'^(?P<inst>({}))/edb_monitor/$'.format(instruments), monitor_views.edb_monitor, name='edb_monitor'),
     re_path(r'^(?P<inst>({}))/cosmic_ray_monitor/$'.format(instruments), monitor_views.cosmic_ray_monitor, name='cosmic_ray_monitor'),
-
+    re_path(r'^(?P<inst>({}))/targ_acq_monitor/$'.format(instruments), monitor_views.targ_acq_monitor, name='targ_acq_monitor'),
     # Main site views
     path('about/', views.about, name='about'),
     path('jwql_query/', views.jwql_query, name='jwql_query'),

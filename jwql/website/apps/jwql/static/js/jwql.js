@@ -1341,7 +1341,7 @@ function update_wata_page(base_url) {
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
  */
- function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
+function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
 
     /* if they exist set up the optional parameters before the ajax call*/
     var optional_params = "";
@@ -1399,6 +1399,20 @@ function update_wata_page(base_url) {
             document.getElementById('explore_image_fail').style.display = "inline-block";
         }
     });
+}
+
+
+/**
+ * Loads the shiny app based on the current server URL
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} file_root - The rootname of the file corresponding to the instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
+ */
+function set_ta_monitor_embed_url(inst, server_base) {
+    var iframe_url = "https://" + str(server_base) + ".stsci.edu/shiny_app?inst=" + str(inst);
+    document.getElementById("target_acq_embed").src = iframe_url;
 }
 
 

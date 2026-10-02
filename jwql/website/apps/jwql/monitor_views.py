@@ -270,6 +270,34 @@ def edb_monitor(request, inst):
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
+def targ_acq_monitor(request, inst):
+    """Generate the target aquisition monitor page for given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    host_name = CONFIG["server_name"]
+
+    template = "targ_acq_monitor.html"
+    
+    context = {
+        'inst': inst,
+        'jwql_host': host_name
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
 
 def readnoise_monitor(request, inst):
     """Generate the readnoise monitor page for a given instrument
