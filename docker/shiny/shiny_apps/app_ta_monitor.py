@@ -218,7 +218,9 @@ def miri_tab_server(input, output, session):
         logging.info(f"{new_exposure} == {selected_exposure}: {new_exposure == selected_exposure}")
         if new_exposure != selected_exposure:
             logging.info(f"Changed selected exposure from {selected_exposure}->{new_exposure}")
+            ui.modal_show(show_loading_dialog(f"Retrieving Data for {new_exposure}"))
             await sync_to_async(data_source().select_obs)(new_exposure)
+            ui.modal_remove()
             current_exposure.set(new_exposure)
 
     @reactive.effect

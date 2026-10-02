@@ -76,7 +76,9 @@ def _uncal_acq_from_jwql(current_obs):
     from jwql.utils.utils import filesystem_path
     logging.debug(f"Retrieving uncalibrated data for {current_obs}")
     try:
-        return filesystem_path(f"{current_obs}_uncal.fits")
+        file_path = filesystem_path(f"{current_obs}_uncal.fits")
+        logging.info(f"Returning file from {file_path}")
+        return file_path
     except FileNotFoundError as e:
         logging.info(f"Exposure {current_obs} not found: {e}")
     return None
@@ -96,11 +98,15 @@ def _cal_acq_from_jwql(current_obs):
     from jwql.utils.utils import filesystem_path
     logging.debug(f"Retrieving calibrated data for {current_obs}")
     try:
-        return filesystem_path(f"{current_obs}_cal.fits")
+        file_path = filesystem_path(f"{current_obs}_cal.fits")
+        logging.info(f"Returning file from {file_path}")
+        return file_path
     except FileNotFoundError as e:
         logging.info(f"Exposure {current_obs} not found: {e}")
     try:
-        return filesystem_path(f"{current_obs}_rate.fits")
+        file_path = filesystem_path(f"{current_obs}_rate.fits")
+        logging.info(f"Returning file from {file_path}")
+        return file_path
     except FileNotFoundError as e:
         logging.info(f"Exposure {current_obs} not found: {e}")
     return None
@@ -179,6 +185,7 @@ def _check_acq_from_jwql(instrument, current_obs):
         if check_program == program:
             if check_visit == visit:
                 if check_observation == observation:
+                    logging.info(f"Found check file at {result_path}")
                     return result_path
 
 

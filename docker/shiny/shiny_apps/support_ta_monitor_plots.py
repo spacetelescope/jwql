@@ -24,34 +24,47 @@ from support_ta_monitor_utils import get_siaf, get_visitid
 # ---------------------------------------------------------------------------
 # Image display helpers
 # ---------------------------------------------------------------------------
+def _miri_box_limits(hdul):
+    """
+    Return the display crop regions for a MIRI TA image.
+    """
+    apname = hdul[0].header['APERNAME']
+    xlim = (0, 1023)
+    ylim = (0, 1019)
+
+    boxsize=64
+    if apname =='MIRIM_TAMRS':
+        # crop to upper corner
+        xlim = (1023 - boxsize, 1023)
+        ylim = (1019 - boxsize, 1019)
+    elif apname == 'MIRIM_TASLITLESSPRISM' and hdul[0].header['SUBARRAY'] == 'SLITLESSPRISM':
+        # crop to upper part.
+        xlim = (8, None)
+        ylim = (415 - boxsize, 415)
+    elif apname == 'MIRIM_SLITLESSPRISM' and hdul[0].header['SUBARRAY'] == 'SLITLESSPRISM':
+        # crop to upper part.
+        xlim = (8, None)
+        ylim = (415 - boxsize - 80, 415 - 80)
+    elif apname =='MIRIM_TALRS':
+        xlim = (382, 382 + boxsize)
+        ylim = (258, 258 + boxsize)
+    elif apname =='MIRIM_SLIT':
+        xlim = (294, 294 + boxsize)
+        ylim = (269, 269 + boxsize)
+    return xlim, ylim
+
 
 def _crop_display_for_miri(ax, hdul):
     """ Set xlim and ylim to crop the display region for a MIRI TA image
     Many MIRI TA images use full array, even though only a subarray is of interest.
     """
     # Note, this would be more elegant to look up from siaf but we just hard-code values here since none of this will ever change.
+    xlim, ylim = _miri_box_limits(hdul)
+    if xlim[1] is None:
+        xlim = (xlim[0], )
 
-    apname = hdul[0].header['APERNAME']
-
-    boxsize=64
-    if apname =='MIRIM_TAMRS':
-        # crop to upper corner
-        ax[0].set_xlim(1023-boxsize, 1023)
-        ax[0].set_ylim(1019-boxsize, 1019)
-    elif apname == 'MIRIM_TASLITLESSPRISM' and hdul[0].header['SUBARRAY'] == 'SLITLESSPRISM':
-        # crop to upper part.
-        ax[0].set_ylim(415-boxsize, 415)
-        ax[0].set_xlim(8,)
-    elif apname == 'MIRIM_SLITLESSPRISM' and hdul[0].header['SUBARRAY'] == 'SLITLESSPRISM':
-        # crop to upper part.
-        ax[0].set_ylim(415-boxsize-80, 415-80)
-        ax[0].set_xlim(8,)
-    elif apname =='MIRIM_TALRS':
-        ax[0].set_xlim(382, 382+boxsize )
-        ax[0].set_ylim(258, 258+boxsize)
-    elif apname =='MIRIM_SLIT':
-        ax[0].set_xlim(294, 294+boxsize )
-        ax[0].set_ylim(269, 269+boxsize)
+    ax[0].set_xlim(*xlim)
+    ax[0].set_ylim(*ylim)
 
 
 def _crop_display_for_nirspec(ax, hdul):
@@ -75,6 +88,12 @@ def _crop_display_for_nirspec(ax, hdul):
             # crop displayed region to be consistent with the SUB32 view
             ax[0].set_xlim(1398-0.5, 1398+32-0.5)
             ax[0].set_ylim(974-0.5, 975+32-0.5)
+
+
+def _display_limits(instrument, hdul):
+    if instrument == "MIRI":
+        return _miri_box_limits(hdul)
+    return (None, None), (None, None)
 
 
 def _get_ta_reference_point(inst, hdul, filename):
@@ -294,6 +313,9 @@ class TAPlot:
 
         do_plot = kwargs.get("plot", True)
 
+        xlim, ylim = _display_limits(self.inst, self.hdul)
+        logging.info(f"Plot Limits are {xlim} {ylim}")
+
         fig, ax = plt.subplots(1, 2)
         ax[0].title.set_visible(False)
         ax[1].title.set_visible(False)
@@ -310,9 +332,9 @@ class TAPlot:
         )
 
         if not self.check_image:
-            self._plot_oss_centroid(ax, do_plot)
-        self._plot_wcs_position(ax, do_plot)
-        self._plot_local_centroid(ax, do_plot)
+            self._plot_oss_centroid(ax, do_plot, xlim, ylim)
+        self._plot_wcs_position(ax, do_plot, xlim, ylim)
+        self._plot_local_centroid(ax, do_plot, xlim, ylim)
 
         wcs_text = self._plot_wcs_offsets()
         if wcs_text != "":
@@ -443,12 +465,20 @@ class TAPlot:
 
         return oss_cen_sci_pythonic, oss_centroid_text
 
-    def _plot_oss_centroid(self, ax, plot_centroid):
+    def _plot_oss_centroid(self, ax, plot_centroid, xlim, ylim):
         """
         Add the OSS centroid text to the figure.
         """
         if not np.isnan(self.oss_cen_sci_pythonic[0]):
             if plot_centroid:
+                if xlim[0] is not None and self.oss_cen_sci_pythonic[0] < xlim[0]:
+                    return
+                if xlim[1] is not None and self.oss_cen_sci_pythonic[0] > xlim[1]:
+                    return
+                if ylim[0] is not None and self.oss_cen_sci_pythonic[1] < ylim[0]:
+                    return
+                if ylim[1] is not None and self.oss_cen_sci_pythonic[1] > ylim[1]:
+                    return
                 ax[0].scatter(
                     self.oss_cen_sci_pythonic[0],
                     self.oss_cen_sci_pythonic[1],
@@ -497,8 +527,16 @@ class TAPlot:
 
         return model, targ_coords, targ_coords_pix, wcs_text
 
-    def _plot_wcs_position(self, ax, plot_wcs):
+    def _plot_wcs_position(self, ax, plot_wcs, xlim, ylim):
         if plot_wcs:
+            if xlim[0] is not None and self.targ_coords_pix[0] < xlim[0]:
+                return
+            if xlim[1] is not None and self.targ_coords_pix[0] > xlim[1]:
+                return
+            if ylim[0] is not None and self.targ_coords_pix[1] < ylim[0]:
+                return
+            if ylim[1] is not None and self.targ_coords_pix[1] > ylim[1]:
+                return
             ax[0].scatter(
                self.targ_coords_pix[0], self.targ_coords_pix[1],
                color='magenta', marker='+', s=50
@@ -543,8 +581,16 @@ class TAPlot:
 
         return cen
 
-    def _plot_local_centroid(self, ax, plot_local_centroid):
+    def _plot_local_centroid(self, ax, plot_local_centroid, xlim, ylim):
         if plot_local_centroid:
+            if xlim[0] is not None and self.cen[0] < xlim[0]:
+                return
+            if xlim[1] is not None and self.cen[0] > xlim[1]:
+                return
+            if ylim[0] is not None and self.cen[1] < ylim[0]:
+                return
+            if ylim[1] is not None and self.cen[1] > ylim[1]:
+                return
             ax[0].scatter(
                 self.cen[1], self.cen[0], color='red', marker='+', s=50
             )
@@ -708,6 +754,6 @@ class TAPlot:
         plot_text += f"Analysis on {now.isot[0:16]}.\nFile from MAST SDP {sdp_ver}"
         if "CAL_VER" in self.hdul[0].header:
             plot_text + f", pipeline {self.hdul[0].header['CAL_VER']}"
-        ax[1].text(0.05, 0., plot_text, color='black')
+        ax[1].text(0.05, 0., plot_text, color='black', fontsize='small')
 
         plt.tight_layout()
