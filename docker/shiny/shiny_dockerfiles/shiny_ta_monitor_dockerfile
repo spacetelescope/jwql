@@ -1,0 +1,75 @@
+# syntax=docker/dockerfile:1
+
+ARG python_version
+
+# Get python version
+
+# Create Container
+FROM python:${python_version}-alpine AS base
+
+ARG user_id
+ARG group_id
+ARG server_id
+
+RUN addgroup -g ${group_id} -S svc_jwqladm_${server_id}
+RUN adduser -s -G ${group_id} -u ${user_id} -s /bin/sh -h /shiny_apps svc_jwqladm_${server_id} --disabled-password
+
+# Install necessary base software
+RUN apk update
+RUN echo "http://dl-8.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+RUN apk --no-cache --update-cache add gcc gfortran build-base wget freetype-dev libpng-dev openblas-dev git hdf5-dev
+RUN apk --no-cache --update-cache add nano curl firefox geckodriver firefox-esr python3-dev musl-dev
+RUN apk --no-cache --update-cache add bsd-compat-headers
+
+ARG shiny_ta_data_source
+ARG jwql_version
+
+ENV SHINY_TA_DATA_SOURCE=${shiny_ta_data_source}
+ENV SHINY_LOG_STDERR=1
+ENV SHINY_EMBED=1
+
+RUN pip install shiny
+RUN pip install tqdm
+RUN pip install stpsf
+
+# Install JWQL
+WORKDIR /jwql
+ADD https://api.github.com/repos/spacetelescope/jwql/git/refs/heads/${jwql_version} version.json
+RUN git clone https://github.com/spacetelescope/jwql.git
+WORKDIR /jwql/jwql
+RUN git checkout ${jwql_version}
+RUN pip install -e .
+
+ADD shiny_apps /shiny_apps
+
+WORKDIR /shiny_apps
+
+ADD ./shiny_entry_points/* .
+RUN chmod +x shiny*run.sh
+
+# Docker checks this URL. Because the random byte service returns a different 
+# payload every time, Docker considers the step "changed" and busts the cache.
+ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+
+# Add config.json file if available.  Compose supplies an inert fallback context
+# when PANDEIA_SOURCE is unset.
+# RUN --mount=type=secret,id=jwql_config_file,target=/tmp/jwql/config.json,required=false \
+#     if [ -f /tmp/jwql/config.json ]; then \
+#         echo "Found cache file"; \
+#         cp /tmp/jwql/config.json /jwql/jwql/jwql/config.json; \
+#     fi
+
+RUN --mount=type=bind,from=jwql_config_path,target=/tmp/jwql \
+    if [ -f /tmp/jwql/config.json ]; then \
+        echo "Found config file"; \
+        cp /tmp/jwql/config.json /jwql/jwql/jwql/config.json; \
+    else \
+        echo "No config file found"; \
+        echo *; \
+    fi
+
+USER ${user_id}:${group_id}
+
+EXPOSE 8000
+
+CMD ["tail", "-f", "/dev/null"]
