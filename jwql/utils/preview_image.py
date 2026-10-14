@@ -77,6 +77,27 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     CONFIGS = get_config()
 
 
+def close_handle(handle):
+    """Close an open datamodel or astropy HDUList, if it has a ``close`` method.
+    Anything else (e.g. a pandas DataFrame, or None) is ignored. Errors raised
+    while closing are logged rather than raised, so that cleanup never hides the
+    original problem.
+
+    Parameters
+    ----------
+    handle : obj
+        Datamodel, ``astropy.io.fits.HDUList``, or any other object
+    """
+    # Look the method up on the class rather than the instance, so that a DataFrame
+    # with a column called "close" is not mistaken for something closable
+    close = getattr(type(handle), 'close', None)
+    if callable(close):
+        try:
+            handle.close()
+        except Exception as error:
+            logging.debug(f'Unable to close {type(handle).__name__}: {error}')
+
+
 class PreviewImage():
     """An object for generating and saving preview images, used by
     ``generate_preview_images``.
@@ -147,6 +168,14 @@ class PreviewImage():
             self.model = self.get_spectra_data(self.file)
         else:
             self.data, self.dq = self.get_data(self.file, extension)
+
+    def close(self):
+        """Release the datamodel opened for ``_x1d`` files, along with its open
+        file. Files read with ``get_data`` are already closed by the time
+        ``__init__`` returns, so for those this does nothing. Safe to call more
+        than once.
+        """
+        close_handle(getattr(self, 'model', None))
 
     def determine_map_file(self, header):
         """Determine which file contains the map of non-science pixels given a
@@ -1105,6 +1134,7 @@ class Level3PreviewImage():
         self.thumbnail_images = []
         self.threshold_for_nonsquare_pix = 0.15
         self.figures = []
+        self._open_handles = []
         self.wfss_source_ids = []
         self.min_range_for_logscale = min_range_for_logscale
         self.wfss_nbrightest_sources = wfss_nbrightest_sources
@@ -1114,69 +1144,108 @@ class Level3PreviewImage():
         self.cmap = plt.cm.viridis.copy()
         self.cmap.set_bad(color='black')
 
-        # Read in the data
-        self.get_data()
+        try:
+            # Read in the data
+            self.get_data()
 
-        # Fall back to the standard preview image and thumbnail output directory if a
-        # directory is not given
-        if preview_output_directory is None:
-            try:
-                self.preview_output_directory = os.path.join(CONFIGS["preview_image_filesystem"],
-                                                             self.model.meta.filename[0:7])
-            except AttributeError:
-                self.preview_output_directory = os.path.join(CONFIGS["preview_image_filesystem"],
-                                                             'jw' + self.metadata["program_id"])
-        if thumbnail_output_directory is None:
-            try:
-                self.thumbnail_output_directory = os.path.join(CONFIGS["thumbnail_filesystem"],
-                                                               self.model.meta.filename[0:7])
-            except AttributeError:
-                self.thumbnail_output_directory = os.path.join(CONFIGS["thumbnail_filesystem"],
-                                                               'jw' + self.metadata["program_id"])
+            # Fall back to the standard preview image and thumbnail output directory if a
+            # directory is not given
+            if preview_output_directory is None:
+                try:
+                    self.preview_output_directory = os.path.join(CONFIGS["preview_image_filesystem"],
+                                                                 self.model.meta.filename[0:7])
+                except AttributeError:
+                    self.preview_output_directory = os.path.join(CONFIGS["preview_image_filesystem"],
+                                                                 'jw' + self.metadata["program_id"])
+            if thumbnail_output_directory is None:
+                try:
+                    self.thumbnail_output_directory = os.path.join(CONFIGS["thumbnail_filesystem"],
+                                                                   self.model.meta.filename[0:7])
+                except AttributeError:
+                    self.thumbnail_output_directory = os.path.join(CONFIGS["thumbnail_filesystem"],
+                                                                   'jw' + self.metadata["program_id"])
 
-        if 'x1dints' in self.filename:
-            # Time Series data from NIRCAM
-            if self.exp_type == 'NRC_TSGRISM':
-                self.tso_x1dints_plot()
-            elif self.exp_type == 'MIR_LRS-SLITLESS':
-                self.miri_lrs_slitless_x1dints_plot()
-            elif self.exp_type == 'NIS_SOSS':
-                self.niriss_soss_plot()
-            elif self.exp_type == 'NRS_BRIGHTOBJ':
-                self.miri_lrs_slitless_x1dints_plot()
-        elif self.exp_type == 'NIS_AMI':
-            if 'amilg' in self.filename:
-                self.amilg_preview()
-            elif 'ami-oi' in self.filename or 'aminorm-oi' in self.filename:
-                self.ami_preview()
-        elif 'whtlt.ecsv' in self.filename or 'phot.ecsv' in filename:
-            self.tso_whitelight_curve()
-        elif self.exp_type in ['NRS_MSASPEC', 'NRS_FIXEDSLIT', 'MIR_LRS-FIXEDSLIT'] and ('cal' in self.filename or
-                                                                          'crf' in self.filename or
-                                                                          's2d' in self.filename):
-            self.fixed_slit_cal_crf_s2d()
-        elif 'x1d' in self.filename and self.exp_type in ['NRS_MSASPEC',
-                                                          'NRS_FIXEDSLIT',
-                                                          'NRS_IFU',
-                                                          'MIR_LRS-FIXEDSLIT'
-                                                          ]:
-            self.miri_lrs_fixed_slit_nirspec_ifu_x1d()
-        elif 'x1d' in self.filename and self.exp_type == 'MIR_MRS':
-            self.miri_mrs_x1d()
-        elif ('x1d' in self.filename or 'c1d' in self.filename) and self.exp_type in ['NRC_WFSS', 'NIS_WFSS', 'MIRI_WFSS']:
-            self.wfss_x1d()
-        elif 's3d' in self.filename and self.exp_type in ['NRS_IFU', 'MIR_MRS']:
-            self.nirspec_miri_ifu_s3d()
-        elif (('i2d' in self.filename) and ('mask' in self.filename)):
-            self.coron_i2d()
-        elif (('i2d' in self.filename) or ('segm' in self.filename)):
-            self.i2d_file()
-        elif ('psfstack' in self.filename or 'psfalign' in self.filename or 'psfsub' in self.filename):
-            self.psfstack_file()
-        else:
-            self.figures_created = False
+            if 'x1dints' in self.filename:
+                # Time Series data from NIRCAM
+                if self.exp_type == 'NRC_TSGRISM':
+                    self.tso_x1dints_plot()
+                elif self.exp_type == 'MIR_LRS-SLITLESS':
+                    self.miri_lrs_slitless_x1dints_plot()
+                elif self.exp_type == 'NIS_SOSS':
+                    self.niriss_soss_plot()
+                elif self.exp_type == 'NRS_BRIGHTOBJ':
+                    self.miri_lrs_slitless_x1dints_plot()
+            elif self.exp_type == 'NIS_AMI':
+                if 'amilg' in self.filename:
+                    self.amilg_preview()
+                elif 'ami-oi' in self.filename or 'aminorm-oi' in self.filename:
+                    self.ami_preview()
+            elif 'whtlt.ecsv' in self.filename or 'phot.ecsv' in filename:
+                self.tso_whitelight_curve()
+            elif self.exp_type in ['NRS_MSASPEC', 'NRS_FIXEDSLIT', 'MIR_LRS-FIXEDSLIT'] and ('cal' in self.filename or
+                                                                              'crf' in self.filename or
+                                                                              's2d' in self.filename):
+                self.fixed_slit_cal_crf_s2d()
+            elif 'x1d' in self.filename and self.exp_type in ['NRS_MSASPEC',
+                                                              'NRS_FIXEDSLIT',
+                                                              'NRS_IFU',
+                                                              'MIR_LRS-FIXEDSLIT'
+                                                              ]:
+                self.miri_lrs_fixed_slit_nirspec_ifu_x1d()
+            elif 'x1d' in self.filename and self.exp_type == 'MIR_MRS':
+                self.miri_mrs_x1d()
+            elif ('x1d' in self.filename or 'c1d' in self.filename) and self.exp_type in ['NRC_WFSS', 'NIS_WFSS', 'MIRI_WFSS']:
+                self.wfss_x1d()
+            elif 's3d' in self.filename and self.exp_type in ['NRS_IFU', 'MIR_MRS']:
+                self.nirspec_miri_ifu_s3d()
+            elif (('i2d' in self.filename) and ('mask' in self.filename)):
+                self.coron_i2d()
+            elif (('i2d' in self.filename) or ('segm' in self.filename)):
+                self.i2d_file()
+            elif ('psfstack' in self.filename or 'psfalign' in self.filename or 'psfsub' in self.filename):
+                self.psfstack_file()
+            else:
+                self.figures_created = False
 
-        self.save_figures()
+            self.save_figures()
+        finally:
+            self.close()
+
+    def close(self):
+        """Close all matplotlib figures, along with every datamodel and FITS file that
+        was opened to make them. Nothing here is needed once the images have been saved.
+        Without this, each file processed leaves open file handles and memory-mapped
+        data behind until Python's cyclic garbage collector happens to run, so memory
+        use and run time creep up over the course of a large program. Safe to call more
+        than once.
+        """
+        # Figures first, because they may hold references to arrays from the models
+        for figure in self.figures:
+            plt.close(figure)
+
+        for handle in self._open_handles:
+            close_handle(handle)
+        self._open_handles = []
+
+        close_handle(getattr(self, 'model', None))
+
+    def track_handle(self, handle):
+        """Register a datamodel or FITS HDUList opened while making the figures, so
+        that it is closed in ``close()`` (i.e. after the figures have been saved)
+        rather than while figures may still be using its data.
+
+        Parameters
+        ----------
+        handle : obj
+            Datamodel or ``astropy.io.fits.HDUList``
+
+        Returns
+        -------
+        handle : obj
+            The same object, so this can wrap the call that opens the file
+        """
+        self._open_handles.append(handle)
+        return handle
 
     def ami_preview(self):
         """Given a AmiOIModel datamodel instance, create a preview image. This function was
@@ -1857,7 +1926,7 @@ class Level3PreviewImage():
         # Find s3d file
         s3d_file = self.filename.replace('x1d', 's3d')
         if os.path.isfile(s3d_file):
-            s3d_model = datamodels.open(s3d_file)
+            s3d_model = self.track_handle(datamodels.open(s3d_file))
 
             # Find the index of the brightest point in the 1D spectrum. We'll display
             # that frame from the s3d file
@@ -2100,7 +2169,7 @@ class Level3PreviewImage():
             vmin, vmax = np.nan, np.nan
             for x1dfile in x1dfiles:
 
-                mod = datamodels.open(x1dfile)
+                mod = self.track_handle(datamodels.open(x1dfile))
                 flux = mod.spec[0].spec_table[use_flux]
                 waves = mod.spec[0].spec_table.WAVELENGTH
                 channel_band = f'{mod.meta.instrument.channel} {mod.meta.instrument.band}'
@@ -2931,7 +3000,7 @@ class Level3PreviewImage():
             suffix = self.filename.split('_')[-1].split('.fits')[0]
             cal_files = [self.filename.replace(suffix, 'cal')]
 
-        cal_hdus = [fits.open(cal_file) for cal_file in cal_files]
+        cal_hdus = [self.track_handle(fits.open(cal_file)) for cal_file in cal_files]
 
         for idx in bright_idx:
             # Dictionary to hold all the 1D spectra
@@ -3138,23 +3207,26 @@ def compile_segments(data_products):
 
     for i, product in enumerate(data_products):
 
-        x1d = datamodels.open(product)
+        # Close each product as soon as its data have been copied out. Everything kept
+        # past the end of the with block is copied with np.array(), so that nothing
+        # still refers to data owned by the closed model.
+        with datamodels.open(product) as x1d:
 
-        n_spec, n_pix = x1d.spec[0].spec_table.WAVELENGTH.shape
-        seg_spec_1D = np.zeros([n_spec, n_pix])
-        wave_um = x1d.spec[0].spec_table.WAVELENGTH[0, :]
+            n_spec, n_pix = x1d.spec[0].spec_table.WAVELENGTH.shape
+            seg_spec_1D = np.zeros([n_spec, n_pix])
+            wave_um = np.array(x1d.spec[0].spec_table.WAVELENGTH[0, :])
 
-        for j in range(n_spec):
-            seg_spec_1D[j, :] = x1d.spec[0].spec_table.FLUX[j, :]
+            for j in range(n_spec):
+                seg_spec_1D[j, :] = x1d.spec[0].spec_table.FLUX[j, :]
 
-        if i == 0:
-            all_spec_1D = seg_spec_1D
-            all_times = x1d.int_times.int_mid_BJD_TDB
-        if i > 0:
-            all_spec_1D = np.concatenate((all_spec_1D, seg_spec_1D), axis=0)
-            all_times = np.concatenate((all_times,
-                                        x1d.int_times.int_mid_BJD_TDB),
-                                       axis=0)
+            if i == 0:
+                all_spec_1D = seg_spec_1D
+                all_times = np.array(x1d.int_times.int_mid_BJD_TDB)
+            if i > 0:
+                all_spec_1D = np.concatenate((all_spec_1D, seg_spec_1D), axis=0)
+                all_times = np.concatenate((all_times,
+                                            x1d.int_times.int_mid_BJD_TDB),
+                                           axis=0)
 
     # We also trim several columns at the start and end of the spectra.
     # These belong to the reference pixels and are marked 'nan'.
