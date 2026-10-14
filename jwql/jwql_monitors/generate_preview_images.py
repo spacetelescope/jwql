@@ -27,6 +27,7 @@ Use
 """
 
 import argparse
+import bisect
 import glob
 import logging
 import multiprocessing
@@ -187,7 +188,7 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     return xdim, ydim, module_lowerlefts
 
 
-def check_existence(filename, outdir):
+def check_existence(filename, outdir, existing=None):
     """Given a list of fits files, determine if a preview image has
     already been created in ``outdir``.
 
@@ -200,19 +201,56 @@ def check_existence(filename, outdir):
     outdir : str
         Directory that will contain the preview image if it exists
 
+    existing : list or None
+        Sorted list of the jpg file names present in ``outdir``, as returned by
+        ``list_existing_previews``. If provided, the check is done against this
+        in-memory list rather than by globbing ``outdir``. Globbing has to scan
+        the entire directory on every call, which becomes very slow when a
+        program has thousands of preview images in a single directory.
+
     Returns
     -------
     exists : bool
         ``True`` if preview image exists, ``False`` if it does not
     """
     filename = os.path.split(filename)[1]
-    search_string = filename.split('.fits')[0] + '*jpg'
+    stem = filename.split('.fits')[0]
 
-    current_files = glob.glob(os.path.join(outdir, search_string))
-    if len(current_files) > 0:
-        return True
-    else:
-        return False
+    if existing is None:
+        search_string = stem + '*jpg'
+        current_files = glob.glob(os.path.join(outdir, search_string))
+        return len(current_files) > 0
+
+    # Same semantics as the glob above (any jpg whose name starts with the stem),
+    # but using a binary search on the sorted list of names
+    index = bisect.bisect_left(existing, stem)
+    while index < len(existing) and existing[index].startswith(stem):
+        if existing[index].endswith('jpg'):
+            return True
+        index += 1
+    return False
+
+
+def list_existing_previews(outdir):
+    """Return a sorted list of the jpg file names present in ``outdir``. Used
+    with ``check_existence`` so that the directory only needs to be read once
+    per program rather than once per file.
+
+    Parameters
+    ----------
+    outdir : str
+        Directory containing preview images
+
+    Returns
+    -------
+    names : list
+        Sorted list of file names (not full paths) ending in ``jpg``. Empty if
+        the directory does not exist.
+    """
+    try:
+        return sorted(name for name in os.listdir(outdir) if name.endswith('jpg'))
+    except FileNotFoundError:
+        return []
 
 
 def create_dummy_filename(filelist):
@@ -740,6 +778,7 @@ def preview_img_from_file(fname, file_info, preview_output_directory, thumbnail_
             return (None, None)
 
     elif 'stage_3' not in file_info['filename_type'] and "_x1d" in fname:
+        img = None
         try:
             # Stage 2 x1ds, we build spectra from datamodels extension is None
             img = PreviewImage(fname, None)
@@ -755,6 +794,11 @@ def preview_img_from_file(fname, file_info, preview_output_directory, thumbnail_
         except (ValueError, AttributeError) as error:
             logging.warning(error)
             return (None, None)
+
+        finally:
+            # Release the datamodel (and its open file) as soon as we are done with it
+            if img is not None:
+                img.close()
 
     else:
         # Stage 3 fits file - create thumbnails for all level 3 products
@@ -861,6 +905,12 @@ def process_program(program, overwrite, level3_only, suffixes):
     existing_preview_counter = 0
     thumbnail_files = []
     preview_image_files = []
+
+    # Sorted list of the jpg names already present in each preview output directory,
+    # read once per directory. This replaces a glob of the whole directory for every
+    # file, which gets slower and slower as the directory fills up.
+    existing_previews = {}
+
     for filename in filenames:
 
         logging.debug(f'Working on {filename}')
@@ -881,7 +931,10 @@ def process_program(program, overwrite, level3_only, suffixes):
         if not overwrite:
             # If overwrite is False, we create preview images only for files that
             # don't have them yet.
-            file_exists = check_existence(filename, preview_output_directory)
+            if preview_output_directory not in existing_previews:
+                existing_previews[preview_output_directory] = list_existing_previews(preview_output_directory)
+            file_exists = check_existence(filename, preview_output_directory,
+                                          existing=existing_previews[preview_output_directory])
 
             if file_exists:
                 logging.debug("\tJPG already exists for {}, skipping.".format(filename))
@@ -923,6 +976,13 @@ def process_program(program, overwrite, level3_only, suffixes):
                 new_preview_counter += 1
                 thumbnail_files.extend(thumb_ims)
                 preview_image_files.extend(prev_ims)
+
+                # Keep the in-memory index current, so that later files in this loop
+                # see the images we have just written (as the old glob did)
+                index = existing_previews.get(preview_output_directory)
+                if index is not None:
+                    for preview_image in prev_ims:
+                        bisect.insort(index, os.path.basename(preview_image))
 
         except (ValueError, AttributeError, KeyError, FileNotFoundError) as error:
             logging.warning(f'For file {filename}: {error}')
