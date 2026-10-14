@@ -3408,6 +3408,10 @@ def formatted_tick_labels(tick_vals):
     tick_str = [format_string % number for number in tick_vals]
 
     # For cases with very small ranges in the signal, use scientific notation
+    # but first, if delta is exactly zero, then reset it to something small to
+    # avoid an error when taking the log
+    if delta == 0.:
+        delta = 1e-32
     zeros = np.log10(np.abs(delta))
     if zeros < -3:
         tick_str = [f"{num:.3e}" for num in tick_vals]
