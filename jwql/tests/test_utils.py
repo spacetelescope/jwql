@@ -160,6 +160,38 @@ FILENAME_PARSER_TEST_DATA = [
          'group_root': 'jw01193-c1015_t016_miri_f2300c-masklyot',
          'observation': '007'}),
 
+    # Test stage 3 MIRI file using subarray with "_ip"
+    ('jw12635-o004_t003_miri_p750l-slitlessprism_ip_i2d.fits',
+        {'program_id': '12635',
+         'ac_id': 'o004',
+         'target_id': 't003',
+         'instrument': 'miri',
+         'optical_elements': 'p750l',
+         'subarray': 'slitlessprism_ip',
+         'suffix': 'i2d',
+         'recognized_filename': True,
+         'filename_type': 'stage_3_underscore_subarray',
+         'file_root': 'jw12635-o004_t003_miri_p750l-slitlessprism_ip',
+         'detector': 'Unknown',
+         'group_root': 'jw12635-o004_t003_miri_p750l-slitlessprism_ip',
+         'observation': '004'}),
+
+    # Test stage 3 MIRI file using subarray with "_ips"
+    ('jw11301-o001_t001_miri_p750l-slitlessprism_ips_x1dints.fits',
+        {'program_id': '11301',
+         'ac_id': 'o001',
+         'target_id': 't001',
+         'instrument': 'miri',
+         'optical_elements': 'p750l',
+         'subarray': 'slitlessprism_ips',
+         'suffix': 'x1dints',
+         'recognized_filename': True,
+         'filename_type': 'stage_3_underscore_subarray',
+         'file_root': 'jw11301-o001_t001_miri_p750l-slitlessprism_ips',
+         'detector': 'Unknown',
+         'group_root': 'jw11301-o001_t001_miri_p750l-slitlessprism_ips',
+         'observation': '001'}),
+
     # Test full stage 3 NIRCam c-based coron
     ('jw01193-c1034_t001_nircam_f210m-maskrnd-sub320a430r_i2d.fits',
         {'program_id': '01193',

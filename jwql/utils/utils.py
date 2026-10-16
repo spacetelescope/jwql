@@ -54,7 +54,7 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
     FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
     FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SOURCE_ID_LONG_LEN, FILE_SUFFIX_TYPES, \
     FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
-    JWST_INSTRUMENT_NAMES_SHORTHAND, ON_GITHUB_ACTIONS, STSCI_VO_URL
+    JWST_INSTRUMENT_NAMES_SHORTHAND, MIRI_SUBARRAYS_WITH_UNDERSCORE, ON_GITHUB_ACTIONS, STSCI_VO_URL
 from jwql.utils.mast_queries import get_level2b_or_3_file_obs_nums
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
@@ -438,6 +438,19 @@ def filename_parser(filename):
         r"_ch(?P<channel>[1-4])"\
         r"-(?P<subchannel>(long|medium|short|all)" + ")"
 
+    # Stage 3, MIRI subarrays whose names contain an underscore
+    # e.g. jw01234-o001_t001_miri_f560w-sub128_ip_i2d.fits
+    # Longest names first so "_ips" is tried before "_ip".
+    underscore_subarrays = '|'.join(sorted(MIRI_SUBARRAYS_WITH_UNDERSCORE, key=len, reverse=True))
+    stage_3_underscore_subarray = \
+        r"jw" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"-(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"\
+        r"_(?P<target_id>(t)\d{" + f"{FILE_TARG_ID_LEN}" + "})"\
+        r"_(?P<instrument>miri)"\
+        r"_(?P<optical_elements>[a-zA-Z0-9\-]+?)"\
+        r"-(?P<subarray>(" + underscore_subarrays + "))"
+
     # Stage 3, single optical element, subarray
     # e.g. jw06604-o005_t002_miri_f1800w-brightsky_i2d.fits
     stage_3_optelement_subarray = \
@@ -639,6 +652,7 @@ def filename_parser(filename):
         stage_1_and_2,
         stage_2c,
         stage_2_msa,
+        stage_3_underscore_subarray,
         stage_3_subarray_based,
         stage_3_wfss_source_id,
         stage_3_miri_ifu,
@@ -663,6 +677,7 @@ def filename_parser(filename):
         'stage_1_and_2',
         'stage_2c',
         'stage_2_msa',
+        'stage_3_underscore_subarray',
         'stage_3_subarray_based',
         'stage_3_wfss_source_id',
         'stage_3_miri_ifu',
