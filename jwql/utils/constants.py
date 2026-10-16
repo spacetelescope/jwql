@@ -680,6 +680,9 @@ MIRI_POS_RATIO_VALUES = {
     },
 }
 
+# Names of MIRI subarrays that contain an underscore
+MIRI_SUBARRAYS_WITH_UNDERSCORE = ['sub128_ip', 'sub64_ip', 'slitlessprism_ip', 'slitlessprism_ips']
+
 # Names of all of the monitor database tables
 MONITOR_TABLE_NAMES = [
     "fgs_bad_pixel_query_history", "fgs_bad_pixel_stats",
