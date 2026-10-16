@@ -3358,8 +3358,10 @@ def find_brightest_wfss_sources(model, level=3):
                 medians.append(np.nansum(model.spec[0].spec_table['SURF_BRIGHT'][source, :]))
                 sources.append(source)
         elif level == 2:
-            medians.append(np.nansum(model.spec[0].spec_table['SURF_BRIGHT'][source, :]))
-            sources.append(source)
+            surf_bright = model.spec[0].spec_table['SURF_BRIGHT'][source]
+            if np.isfinite(surf_bright):
+                medians.append(surf_bright)
+                sources.append(source)
         else:
             raise ValueError(f'The level param in find_brightest_wfss_sources must be either 2 or 3. Got {level}.')
 
