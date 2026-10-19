@@ -748,7 +748,8 @@ def filename_parser(filename):
                 obs = get_level2b_or_3_file_obs_nums(filename_dict['instrument'], filename)
 
                 # We don't support having multiple observations associated with a single level 3 file
-                filename_dict['observation'] = str(obs[0]).zfill(3)
+                if len(obs) > 0:
+                    filename_dict['observation'] = str(obs[0]).zfill(3)
 
     # Raise error if unable to parse the filename
     except AttributeError:
@@ -987,14 +988,10 @@ def remove_duplicate_files(file_list):
     unique_files : list
         List of files with unique basenames
     """
-    file_list = np.array(file_list)
-    unique_files = []
-    basenames_only = sorted(list(set([os.path.basename(e) for e in file_list])))
-
-    for basename in basenames_only:
-        matches = np.array([basename in e for e in file_list])
-        unique_files.append(file_list[matches][0])
-    return unique_files
+    seen = {}
+    for path in file_list:
+        seen.setdefault(os.path.basename(path), path)
+    return sorted(seen.values(), key=os.path.basename)
 
 
 def save_png(fig, filename=''):

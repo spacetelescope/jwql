@@ -516,6 +516,29 @@ def find_data_channel(detectors):
     return channel
 
 
+def find_level2_files(base_dir, file_type):
+    """Replacement for glob that is faster for directories with lots of files
+
+    Parameters
+    ----------
+    base_dir : str
+        Base directory to be searched. This should end with the program-level
+        directory. Visit-level subdirectories that start with "jw" will all be searched
+
+    file_type : str
+        File type to look for. e.g. "fits" or "ecsv"
+    """
+    results = []
+    with os.scandir(base_dir) as top:
+        for sub in top:
+            if sub.name.startswith("jw") and sub.is_dir():
+                with os.scandir(sub.path) as inner:
+                    results.extend(
+                        e.path for e in inner if e.name.endswith(f".{file_type}")
+                    )
+    return results
+
+
 def get_base_output_name(filename_dict):
     """Returns the base output name used for preview images and
     thumbnails.
@@ -799,8 +822,8 @@ def process_program(program, overwrite, level3_only, suffixes):
 
     # Gather files to process
     if not level3_only:
-        filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, 'jw*/*.fits'))
-        filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, 'jw*/*.fits')))
+        filenames = find_level2_files(os.path.join(SETTINGS['filesystem'], 'public', program), 'fits')
+        filenames.extend(find_level2_files(os.path.join(SETTINGS['filesystem'], 'proprietary', program), 'fits'))
     else:
         filenames = []
 
@@ -821,16 +844,7 @@ def process_program(program, overwrite, level3_only, suffixes):
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
 
     # Remove guiding files, as these are not currently visible in JWQL anyway
-    filtered_filenames = []
-    for filename in filenames:
-        parsed = filename_parser(filename)
-        if parsed['recognized_filename']:
-            if 'guider_mode' not in parsed:
-                filtered_filenames.append(filename)
-        else:
-            logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
-                             'filename_parser() failed to recognize the file pattern.'))
-    filenames = filtered_filenames
+    filenames = [filename for filename in filenames if filename[13:17] != '_gs-']
 
     # If a list of suffixes is provided, keep only those files
     if suffixes is not None:
