@@ -748,7 +748,8 @@ def filename_parser(filename):
                 obs = get_level2b_or_3_file_obs_nums(filename_dict['instrument'], filename)
 
                 # We don't support having multiple observations associated with a single level 3 file
-                filename_dict['observation'] = str(obs[0]).zfill(3)
+                if len(obs) > 0:
+                    filename_dict['observation'] = str(obs[0]).zfill(3)
 
     # Raise error if unable to parse the filename
     except AttributeError:

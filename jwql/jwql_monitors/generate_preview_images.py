@@ -844,16 +844,7 @@ def process_program(program, overwrite, level3_only, suffixes):
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
 
     # Remove guiding files, as these are not currently visible in JWQL anyway
-    filtered_filenames = []
-    for filename in filenames:
-        parsed = filename_parser(filename)
-        if parsed['recognized_filename']:
-            if 'guider_mode' not in parsed:
-                filtered_filenames.append(filename)
-        else:
-            logging.warning((f'While running generate_preview_images.process_program() on {filename}, the '
-                             'filename_parser() failed to recognize the file pattern.'))
-    filenames = filtered_filenames
+    filenames = [filename for filename in filenames if filename[13:17] != '_gs-']
 
     # If a list of suffixes is provided, keep only those files
     if suffixes is not None:
