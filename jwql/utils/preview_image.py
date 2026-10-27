@@ -753,7 +753,7 @@ class PreviewImage():
                     plt.close(self.fig)
         else:
             if "WFSS" in exp_type:
-                brightest_idx = find_brightest_wfss_sources(self.model)
+                brightest_idx = find_brightest_wfss_sources(self.model, level=2)
 
                 # As with the level 3 WFSS preview images, let's skip the brightest
                 # source, which is often a saturated star, and use the second brightest
@@ -2884,7 +2884,7 @@ class Level3PreviewImage():
            3. Plot of the 1D extracted spectrum (1st and 2nd order if present)
         """
         n_ext = len(self.model.spec)
-        bright_idx = find_brightest_wfss_sources(self.model)
+        bright_idx = find_brightest_wfss_sources(self.model, level=3)
 
         # Often the brightest source is a saturated star. Let's try skipping over the brightest
         # source and creating a preview image for the 2nd brightest source.
@@ -3326,7 +3326,7 @@ def determine_figure_properties(xdim, ydim, threshold=0.15, maxsize=8):
     return aspect_value, cbar_orient, figsize_value
 
 
-def find_brightest_wfss_sources(model):
+def find_brightest_wfss_sources(model, level=3):
     """Determine the `nsources` brightest sources in the WFSS file. Do this using the
     mean value. Work on only the model.spec[0].spec_table. Note that if there are dithers,
     the source may not be present in all extensions.
@@ -3335,6 +3335,9 @@ def find_brightest_wfss_sources(model):
     ----------
     model : stdatamodels.datamodel
         Datamodel instance
+
+    level : int
+        Calibration level of the data. e.g. 2 or 3.
 
     Returns
     -------
@@ -3348,10 +3351,19 @@ def find_brightest_wfss_sources(model):
     sources = []
     for source in range(num_sources):
 
-        # Ignore sources where the source_id is empty, which indicates a larger problem.
-        if model.spec[0].spec_table['SOURCE_TYPE'][source] != '':
-            medians.append(np.nansum(model.spec[0].spec_table['SURF_BRIGHT'][source, :]))
-            sources.append(source)
+        # Level 2 x1d files do not have SOURCE_TYPE columns, while level 3 x1d files do.
+        if level == 3:
+            # Ignore sources where the source_id is empty, which indicates a larger problem.
+            if model.spec[0].spec_table['SOURCE_TYPE'][source] != '':
+                medians.append(np.nansum(model.spec[0].spec_table['SURF_BRIGHT'][source, :]))
+                sources.append(source)
+        elif level == 2:
+            surf_bright = model.spec[0].spec_table['SURF_BRIGHT'][source]
+            if np.isfinite(surf_bright):
+                medians.append(surf_bright)
+                sources.append(source)
+        else:
+            raise ValueError(f'The level param in find_brightest_wfss_sources must be either 2 or 3. Got {level}.')
 
     idxs = np.argsort(medians)[::-1]
     brightest = np.array(sources)[idxs]
