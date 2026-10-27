@@ -987,14 +987,15 @@ def remove_duplicate_files(file_list):
     unique_files : list
         List of files with unique basenames
     """
-    file_list = np.array(file_list)
-    unique_files = []
-    basenames_only = sorted(list(set([os.path.basename(e) for e in file_list])))
+    # Keep the first path seen for each basename. A single pass with a dictionary
+    # scales linearly with the number of files, whereas scanning the full list once
+    # per unique basename scales quadratically (a problem for programs with tens of
+    # thousands of files).
+    first_path_for_basename = {}
+    for path in file_list:
+        first_path_for_basename.setdefault(os.path.basename(path), path)
 
-    for basename in basenames_only:
-        matches = np.array([basename in e for e in file_list])
-        unique_files.append(file_list[matches][0])
-    return unique_files
+    return [first_path_for_basename[basename] for basename in sorted(first_path_for_basename)]
 
 
 def save_png(fig, filename=''):

@@ -27,7 +27,7 @@ from bokeh.plotting import figure
 import numpy as np
 
 from jwql.utils.constants import ON_GITHUB_ACTIONS
-from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, save_png, _validate_config
+from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, remove_duplicate_files, save_png, _validate_config
 
 
 FILENAME_PARSER_TEST_DATA = [
@@ -630,6 +630,14 @@ def test_filesystem_path():
                             'jw02733001001', filename)
 
     assert check == location
+
+
+def test_remove_duplicate_files():
+    """Test the we can remove duplicate files"""
+    file_list = ['/a/b/c/file1.fits', '/a/b/c/file2.fits', '/d/e/f/file1.fits', 'd/e/f/file3.fits']
+    truth = ['/a/b/c/file1.fits', '/a/b/c/file2.fits', 'd/e/f/file3.fits']
+    removed = remove_duplicate_files(file_list)
+    assert truth == removed
 
 
 def test_save_png():
