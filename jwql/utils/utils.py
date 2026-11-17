@@ -795,9 +795,9 @@ def filesystem_path(filename, check_existence=True, search=None):
         parts = filename.split('_')
         id1 = parts[0].split('-')[1]
         id2 = parts[1]
-        # Some source-based filenames use v{source_number}, but these
+        # Some source-based filenames use v{source_number} or b{source_number}, but these
         # will be in the s subdir
-        if id2[0] == 'v':
+        if id2[0] in ['v', 'b']:
             id2 = 's'
         subdir2 = f'L3/{id2[0]}/{id1}'
 
