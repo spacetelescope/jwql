@@ -262,6 +262,7 @@ EXP_TYPE_PER_INSTRUMENT = {
         "MIR_IMAGE",
         "MIR_LRS-FIXEDSLIT",
         "MIR_LRS-SLITLESS",
+        "MIR_WFSS",
         "MIR_CORONCAL",
         "MIR_4QPM",
         "MIR_FLATIMAGE-EXT",
